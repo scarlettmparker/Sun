@@ -16,13 +16,22 @@ declare global {
   }
 }
 
-// Helper to get page name from path
+/**
+ * Get page name from path.
+ *
+ * @param pathname Path of page.
+ */
 function getPageName(pathname: string) {
   const page = pathname.split("/")[1];
-  return page || "home";
+  return page || "";
 }
 
-// Dynamically load translations for a given page/locale
+/**
+ * Dynamically load translations for a given page/locale.
+ *
+ * @param page Page to load translations for.
+ * @param locale Locale.
+ */
 async function loadTranslations(page: string, locale: string) {
   try {
     const res = await fetch(`/locales/${page}/${locale}.json`);
@@ -35,7 +44,9 @@ async function loadTranslations(page: string, locale: string) {
   }
 }
 
-// Wrapper to handle translation loading on route change
+/**
+ * Wrapper to handle translation loading on route change
+ */
 function AppWithI18n() {
   const location = useLocation();
   useEffect(() => {
@@ -50,8 +61,6 @@ function AppWithI18n() {
 }
 
 // Initialize i18n on the client with translations injected from the server
-const user = window.__user__;
-
 i18n
   .use(initReactI18next)
   .init({
@@ -69,10 +78,10 @@ i18n
     ReactDOM.hydrateRoot(
       document.getElementById("app") as HTMLElement,
       <BrowserRouter>
-        <Layout user={user}>
+        <Layout>
           <AppWithI18n />
         </Layout>
-      </BrowserRouter>,
+      </BrowserRouter>
     );
   })
   .catch((error) => {

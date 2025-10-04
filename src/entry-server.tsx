@@ -56,8 +56,7 @@ export async function render({
   );
 
   // Patch useRoutes to detect if a route matched
-  // (react-router-dom v6+ sets a context property for this)
-  const knownRoutes = ["home", "login", "user"];
+  const knownRoutes = ["", "stem-player"];
   if (!knownRoutes.includes(pageName)) {
     didMatch = false;
   } else {
