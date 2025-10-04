@@ -3,8 +3,8 @@
 :root {
   /* text colors */
   --text: #080808;
-  --link: #cf3a5f;
-  --link-hover: #7c1031;
+  --primary: #cf3a5f;
+  --primary-hover: #7c1031;
 
   /* font sizes */
   --text-sm: 11px;
