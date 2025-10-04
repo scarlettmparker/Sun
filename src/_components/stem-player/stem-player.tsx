@@ -1,11 +1,11 @@
 import Button from "~/components/button";
 import { useStemPlayer } from "./hooks/use-stem-player";
 import { Stem } from "./types/stem";
-import { Fragment } from "react/jsx-runtime";
 import Label from "~/components/label";
 import Input from "~/components/input";
-import { ChangeEvent, useEffect, useState } from "react";
+import { ChangeEvent, memo } from "react";
 import { formatTime } from "./utils/format-time";
+import StemSliders from "./stem-sliders";
 
 type StemPlayerProps = {
   /**
@@ -73,19 +73,7 @@ const StemPlayer = (props: StemPlayerProps) => {
           value={position}
           onChange={handleSeek}
         />
-        {stems.map((stem, i) => (
-          <Fragment key={i}>
-            <Label>{stem.name}</Label>
-            <Input
-              type="range"
-              min={0}
-              max={1}
-              step={0.01}
-              defaultValue={1}
-              onChange={(e) => setVolume(i, parseFloat(e.target.value))}
-            />
-          </Fragment>
-        ))}
+        <StemSliders stems={stems} setVolume={setVolume} />
       </div>
     </>
   );

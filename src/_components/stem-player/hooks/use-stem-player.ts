@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { Stem } from "~/_components/stem-player/types/stem";
 
 /**
@@ -108,15 +108,15 @@ export function useStemPlayer(stems: Stem[]) {
   /**
    * Play the audio files.
    */
-  const play = () => {
+  const play = useCallback(() => {
     if (!audioCtx || buffers.length === 0 || playing) return;
     startPlayback(offset.current);
-  };
+  }, [audioCtx, buffers, playing]);
 
   /**
    * Stop playing.
    */
-  const stop = () => {
+  const stop = useCallback(() => {
     sources.current.forEach((src) => {
       try {
         src.stop();
@@ -131,32 +131,38 @@ export function useStemPlayer(stems: Stem[]) {
     }
 
     setPlaying(false);
-  };
+  }, [audioCtx, playing]);
 
   /**
    * Seek to a specific time (in seconds).
    *
    * @param time Second to seek to.
    */
-  const seek = (time: number) => {
-    offset.current = Math.max(0, Math.min(getDuration(), time));
-    setPosition(offset.current); // update position immediately
-    if (playing) startPlayback(offset.current);
-  };
+  const seek = useCallback(
+    (time: number) => {
+      offset.current = Math.max(0, Math.min(getDuration(), time));
+      setPosition(offset.current); // update position immediately
+      if (playing) startPlayback(offset.current);
+    },
+    [audioCtx, buffers, playing]
+  );
 
   /**
    * Skip forward/backward by a given no seconds.
    */
-  const skip = (seconds: number) => {
-    const newTime = Math.max(0, Math.min(getDuration(), position + seconds));
-    seek(newTime);
-  };
+  const skip = useCallback(
+    (seconds: number) => {
+      const newTime = Math.max(0, Math.min(getDuration(), position + seconds));
+      seek(newTime);
+    },
+    [audioCtx, buffers, position, seek]
+  );
 
   /**
    * Get total duration (all stems must therefore be same length).
    * TODO: get longest? Dunno.
    */
-  const getDuration = () => buffers[0]?.duration || 0;
+  const getDuration = useCallback(() => buffers[0]?.duration || 0, [buffers]);
 
   /**
    * Set volume.
@@ -164,20 +170,38 @@ export function useStemPlayer(stems: Stem[]) {
    * @param index Audio to set volume of.
    * @param value Value to set audio volume to.
    */
-  const setVolume = (index: number, value: number) => {
-    const node = gainNodes.current[index];
-    if (node) node.gain.setValueAtTime(value, audioCtx!.currentTime);
-  };
+  const setVolume = useCallback(
+    (index: number, value: number) => {
+      const node = gainNodes.current[index];
+      if (node) node.gain.setValueAtTime(value, audioCtx!.currentTime);
+    },
+    [audioCtx]
+  );
 
-  return {
-    loaded: buffers.length === stems.length,
-    playing,
-    position,
-    duration: getDuration(),
-    play,
-    stop,
-    seek,
-    skip,
-    setVolume,
-  };
+  // memoize the return value to prevent unnecessary re-renders
+  return useMemo(
+    () => ({
+      loaded: buffers.length === stems.length,
+      playing,
+      position,
+      duration: getDuration(),
+      play,
+      stop,
+      seek,
+      skip,
+      setVolume,
+    }),
+    [
+      buffers,
+      stems,
+      playing,
+      position,
+      getDuration,
+      play,
+      stop,
+      seek,
+      skip,
+      setVolume,
+    ]
+  );
 }
