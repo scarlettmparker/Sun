@@ -8,28 +8,67 @@ import NotFound from "./routes/not-found";
 import { matchRoutes } from "react-router-dom";
 
 type i18n = {
+  /**
+   * Record mapping translation keys to their string values.
+   */
   translations: Record<string, string>;
+
+  /**
+   * Current locale.
+   */
   locale: string;
+
+  /**
+   * Name of the page used to load the translation bundle.
+   */
   pageName: string;
 };
 
 type RenderProps = {
+  /**
+   * URL of requested route.
+   */
   url: string;
+
+  /**
+   * Translation strings for current locale/page.
+   */
   translations: i18n["translations"];
+
+  /**
+   * User's locale.
+   */
   locale: string;
+
+  /**
+   * Page name corresponding to current route.
+   */
   pageName: string;
+
+  /**
+   * Path or URL to client-side JS bundle.
+   */
   clientJs: string;
+
+  /**
+   * Path or URL to client-side CSS bundle.
+   */
   clientCss: string;
-  user?: any;
 };
 
+/**
+ * Renders the React application to an HTML stream suitable for server-side rendering.
+ * Sets up i18n, initializes the React Router, and returns a promise
+ * that resolves when the shell is ready to stream HTML to the client.
+ *
+ * @returns A promise that resolves with SSR output metadata and stream.
+ */
 export async function render({
   url,
   locale,
   pageName,
   clientJs,
   clientCss,
-  user,
 }: RenderProps) {
   if (!clientJs || !clientCss) {
     throw new Error("Missing required clientJs or clientCss path");
@@ -82,10 +121,9 @@ export async function render({
                   window.__vite_plugin_react_preamble_installed__ = true
                 </script>
                 <script>
-                  // Inject the translations and user into the client-side window object
+                  // Inject the translations into the client-side window object
                   window.__translations__ = ${JSON.stringify(translations)};
                   window.__locale__ = '${locale}';
-                  window.__user__ = ${JSON.stringify(user)};
                 </script>
                 <body>
                   <div id="app">`,
