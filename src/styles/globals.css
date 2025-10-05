@@ -2,9 +2,14 @@
 
 :root {
   /* text colors */
-  --text: #080808;
-  --primary: #cf3a5f;
-  --primary-hover: #7c1031;
+  --text: #28282B;
+  --primary: #D90429;
+  --primary-hover: #cf3a5f; /* scarlet */
+  --secondary: #FFFFFF;
+  --accent: #DBAD6A; /* earth yellow */
+  --accent-hover: #DFD5A5; /* vanilla */
+  --tertiary: #DC6BAD; /* sky magenta */
+  --tertiary-hover: #EDA2F2; /* plum */
 
   /* font sizes */
   --text-sm: 11px;

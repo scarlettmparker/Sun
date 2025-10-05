@@ -1,22 +1,24 @@
+import styles from "./button.module.css";
+
 type ButtonProps = {
   /**
    * Button variant.
    */
   variant?: "default" | "secondary";
-
-  /**
-   * Button size, icon means square here.
-   */
-  size?: "default" | "icon";
 } & React.ButtonHTMLAttributes<HTMLButtonElement>;
 
 /**
  * Scarlet UI Button.
  */
 const Button = (props: ButtonProps) => {
-  const { ...rest } = props;
+  const { variant: variant_, ...rest } = props;
+  const variant = variant_ ?? "default";
 
-  return <button {...rest}>{rest.children}</button>;
+  return (
+    <button {...rest} className={`${styles.button} ${styles[variant]}`}>
+      {rest.children}
+    </button>
+  );
 };
 
 export default Button;
