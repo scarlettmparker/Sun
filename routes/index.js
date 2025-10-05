@@ -37,7 +37,7 @@ export function setupRoutes(app, vite) {
     const langHeader = req.headers["accept-language"] || "en";
     const locale = langHeader.split(",")[0] || "en";
     const urlPath = url.split("?")[0];
-    const pageName = urlPath.split("/")[1] || "home";
+    const pageName = urlPath.split("/")[1] || "";
 
     try {
       await renderApp(

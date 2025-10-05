@@ -2,9 +2,10 @@ import React from "react";
 import { createI18nInstance } from "./utils/i18n";
 import { renderToPipeableStream } from "react-dom/server";
 import { StaticRouter } from "react-router-dom/server";
-import { Router } from "./router";
+import { Router, routes } from "./router";
 import Layout from "./layout";
 import NotFound from "./routes/not-found";
+import { matchRoutes } from "react-router-dom";
 
 type i18n = {
   translations: Record<string, string>;
@@ -43,8 +44,9 @@ export async function render({
   });
   const translations = i18n.getResourceBundle(locale, pageName) || {};
 
-  // SSR 404 detection: if the route is not matched, render NotFound and set status 404
-  let didMatch = false;
+  const matches = matchRoutes(routes, url);
+  const didMatch = Boolean(matches);
+
   const App = (
     <React.StrictMode>
       <StaticRouter location={url}>
@@ -54,14 +56,6 @@ export async function render({
       </StaticRouter>
     </React.StrictMode>
   );
-
-  // Patch useRoutes to detect if a route matched
-  const knownRoutes = ["", "stem-player"];
-  if (!knownRoutes.includes(pageName)) {
-    didMatch = false;
-  } else {
-    didMatch = true;
-  }
 
   return new Promise((resolve) => {
     const stream = renderToPipeableStream(

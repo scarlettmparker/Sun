@@ -6,7 +6,7 @@ import StemPlayerPage from "./routes/stem-player";
 /**
  * List of routes.
  */
-const routes: RouteObject[] = [
+export const routes: RouteObject[] = [
   {
     path: "/",
     element: <Index />,
