@@ -2,8 +2,6 @@
  * @fileoverview Defines and sets up all application routes.
  * @module routes
  */
-
-import express from "express";
 import { renderApp } from "../utils/ssr.js";
 import { base, isProduction } from "../config.js";
 
@@ -26,7 +24,7 @@ export function setupRoutes(app, vite) {
    */
   app.get("*", async (req, res, next) => {
     // Skip SSR for requests with file extensions (e.g., .js, .css, .png)
-    if (/\.[^\/]+$/.test(req.path)) {
+    if (/\.[^/]+$/.test(req.path)) {
       return next();
     }
 

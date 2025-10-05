@@ -120,7 +120,9 @@ export function useStemPlayer(stems: Stem[]) {
     sources.current.forEach((src) => {
       try {
         src.stop();
-      } catch (_) {} // don't care
+      } catch (_) {
+        // don't care
+      }
     });
     sources.current = [];
 

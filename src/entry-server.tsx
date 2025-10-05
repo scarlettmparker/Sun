@@ -83,6 +83,7 @@ export async function render({
   });
   const translations = i18n.getResourceBundle(locale, pageName) || {};
 
+  // Find if page exists (otherwise 404)
   const matches = matchRoutes(routes, url);
   const didMatch = Boolean(matches);
 
@@ -98,7 +99,7 @@ export async function render({
 
   return new Promise((resolve) => {
     const stream = renderToPipeableStream(
-      didMatch ? App : <NotFound />, // Render NotFound if no match
+      didMatch ? App : <NotFound />, // render 404 if no match
       {
         bootstrapModules: [clientJs],
         onShellReady() {

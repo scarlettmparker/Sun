@@ -14,7 +14,7 @@ type ButtonProps = {
  * Scarlet UI Button.
  */
 const Button = (props: ButtonProps) => {
-  const { variant, size, ...rest } = props;
+  const { ...rest } = props;
 
   return <button {...rest}>{rest.children}</button>;
 };

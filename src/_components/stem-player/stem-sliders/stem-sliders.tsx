@@ -14,6 +14,7 @@ type StemControlsProps = {
    */
   setVolume: (index: number, value: number) => void;
 };
+
 /**
  * Rendering stem controls (labels and volume sliders).
  */
@@ -35,4 +36,5 @@ const StemSliders = memo((props: StemControlsProps) => {
   ));
 });
 
+StemSliders.displayName = "StemSliders";
 export default StemSliders;

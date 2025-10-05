@@ -3,7 +3,7 @@ import { useStemPlayer } from "./hooks/use-stem-player";
 import { Stem } from "./types/stem";
 import Label from "~/components/label";
 import Input from "~/components/input";
-import { ChangeEvent, memo } from "react";
+import { ChangeEvent } from "react";
 import { formatTime } from "./utils/format-time";
 import StemSliders from "./stem-sliders";
 
