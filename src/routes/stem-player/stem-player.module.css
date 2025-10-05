@@ -1,0 +1,12 @@
+.stemPlayer {
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  transform: translate(-50%, -50%);
+  padding: 0 var(--lg);
+
+  @media (max-width: calc(516px)) {
+    left: 0;
+    transform: translateY(-50%);
+  }
+}

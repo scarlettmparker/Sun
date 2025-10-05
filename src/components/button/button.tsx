@@ -15,7 +15,10 @@ const Button = (props: ButtonProps) => {
   const variant = variant_ ?? "default";
 
   return (
-    <button {...rest} className={`${styles.button} ${styles[variant]}`}>
+    <button
+      {...rest}
+      className={`${styles.button} ${styles[variant]} ${rest.className ?? ""}`}
+    >
       {rest.children}
     </button>
   );

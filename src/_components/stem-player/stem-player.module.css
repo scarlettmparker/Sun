@@ -4,6 +4,7 @@
   gap: var(--lg);
   width: 100%;
   max-width: 500px;
+  min-width: 500px;
 }
 
 /* Play, seek controls */

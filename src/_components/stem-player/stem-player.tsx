@@ -54,7 +54,7 @@ const StemPlayer = (props: StemPlayerProps) => {
 
   // TODO: styling
   return (
-    <div {...rest} className={`${styles.container} ${rest.className}`}>
+    <div {...rest} className={`${styles.container} ${rest.className ?? ""}`}>
       <StemSliders stems={stems} setVolume={setVolume} />
       <div className={styles.controls}>
         <Button

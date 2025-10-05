@@ -1,4 +1,5 @@
 import StemPlayer from "~/_components/stem-player";
+import styles from "./stem-player.module.css";
 
 /**
  * Stem Player Page
@@ -10,6 +11,7 @@ const StemPlayerPage = () => {
 
   return (
     <StemPlayer
+      className={styles.stemPlayer}
       stems={[
         { name: "Ambience", url: `${basePath}/ambience.mp3` },
         { name: "Bass", url: `${basePath}/bass.mp3` },
