@@ -1,0 +1,10 @@
+{
+  "controls": {
+    "stop": "Stop",
+    "play": "Play",
+    "seek-back": "Skip back ({{ offset }}s)",
+    "seek-forward": "Skip forward ({{ offset }}s)"
+  },
+  "playback": "Playback time",
+  "seek": "Seek"
+}

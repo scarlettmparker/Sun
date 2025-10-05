@@ -1,7 +1,8 @@
-import { Fragment, memo } from "react";
+import { memo } from "react";
 import Input from "~/components/input";
 import Label from "~/components/label";
 import { Stem } from "~/_components/stem-player/types/stem";
+import styles from "./stem-sliders.module.css";
 
 type StemControlsProps = {
   /**
@@ -21,19 +22,24 @@ type StemControlsProps = {
 const StemSliders = memo((props: StemControlsProps) => {
   const { stems, setVolume } = props;
 
-  return stems.map((stem, i) => (
-    <Fragment key={i}>
-      <Label>{stem.name}</Label>
-      <Input
-        type="range"
-        min={0}
-        max={1}
-        step={0.01}
-        defaultValue={1}
-        onChange={(e) => setVolume(i, parseFloat(e.target.value))}
-      />
-    </Fragment>
-  ));
+  return (
+    <div className={styles.container}>
+      {stems.map((stem, i) => (
+        <div key={i} className={styles.slider}>
+          <Input
+            type="range"
+            orient="vertical"
+            min={0}
+            max={1}
+            step={0.01}
+            defaultValue={1}
+            onChange={(e) => setVolume(i, parseFloat(e.target.value))}
+          />
+          <Label>{stem.name}</Label>
+        </div>
+      ))}
+    </div>
+  );
 });
 
 StemSliders.displayName = "StemSliders";

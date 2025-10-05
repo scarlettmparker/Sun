@@ -2,14 +2,15 @@
 
 :root {
   /* text colors */
-  --text: #28282B;
+  --text: #14141B;
   --primary: #D90429;
-  --primary-hover: #cf3a5f; /* scarlet */
+  --primary-hover: #FB3758; /* imperial red */
+  --primary-active: #A0031D;
   --secondary: #FFFFFF;
-  --accent: #DBAD6A; /* earth yellow */
-  --accent-hover: #DFD5A5; /* vanilla */
-  --tertiary: #DC6BAD; /* sky magenta */
-  --tertiary-hover: #EDA2F2; /* plum */
+  --secondary-hover: #F5F5F5;
+  --accent: #FFDAAD; /* sunset */
+  --accent-hover: #FFE3C2;
+  --tertiary: #D03991; /* mulberry */
 
   /* font sizes */
   --text-sm: 11px;
@@ -19,14 +20,38 @@
   --text-2xl: 19px;
   --text-3xl: 21px;
   --text-4xl: 23px;
-  --normal: 400;
+  --normal: 500;
   --bold: 600;
+
+  /* paddings/border-radii etc. */
+  --sm: 3px;
+  --md: 5px;
+  --lg: 8px;
+
+  /* transitions */
+  --fast: 0.2s;
+
+  /* shadows */
+  --shadow-soft: 
+    0 1px 2px rgba(0, 0, 0, 0.03),
+    0 2px 4px rgba(0, 0, 0, 0.05),
+    0 4px 8px rgba(0, 0, 0, 0.08);
+
+  --shadow-medium:
+    0 2px 4px rgba(0, 0, 0, 0.05),
+    0 4px 8px rgba(0, 0, 0, 0.08),
+    0 6px 12px rgba(0, 0, 0, 0.11);
 }
 
 body {
   margin: 0;
+}
+
+body, button, label {
   font-family: "Open Sans", sans-serif;
   color: var(--text);
+  font-size: var(--text-md);
+  font-weight: var(--normal);
 }
 
 a {

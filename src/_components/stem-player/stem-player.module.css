@@ -1,0 +1,23 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lg);
+  width: 100%;
+  max-width: 500px;
+}
+
+/* Play, seek controls */
+.controls {
+  display: flex;
+  gap: var(--md);
+  align-items: center;
+}
+
+.timeLabel {
+  margin-left: var(--md);
+  text-wrap: nowrap;
+}
+
+.seeker {
+  width: 100%;
+}

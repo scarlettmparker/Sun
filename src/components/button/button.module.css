@@ -1,3 +1,38 @@
 .button {
-  
+  padding: var(--md) var(--lg);
+  border-radius: var(--sm);
+  transition: 
+    background-color var(--fast) ease, 
+    color var(--fast) ease, 
+    box-shadow var(--fast) ease;
+  box-shadow: var(--shadow-soft);
+  border: none;
+}
+
+.button:hover {
+  box-shadow: var(--shadow-medium);
+}
+
+/* Default styles */
+.default {
+  background-color: var(--primary);
+  color: var(--secondary);
+}
+
+.default:hover {
+  background-color: var(--primary-hover);
+}
+
+.default:active {
+  background-color: var(--primary-active);
+}
+
+/* Secondary styles */
+.secondary {
+  background-color: var(--secondary);
+}
+
+.secondary:hover {
+  background-color: var(--secondary-hover);
+  color: var(--tertiary);
 }

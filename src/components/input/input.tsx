@@ -1,33 +1,69 @@
 import styles from "./input.module.css";
 
-type InputProps = React.InputHTMLAttributes<HTMLInputElement>;
+type BaseInputProps = React.InputHTMLAttributes<HTMLInputElement>;
+
+type RangeInputProps = BaseInputProps & {
+  /**
+   * Type (for range inputs).
+   */
+  type: "range";
+
+  /**
+   * Range orientation.
+   */
+  orient?: "horizontal" | "vertical";
+};
+
+type OtherInputProps = BaseInputProps & {
+  /**
+   * Exclude types already used by other props.
+   */
+  type?: Exclude<string, "range">;
+
+  /**
+   * Only range has orientation.
+   */
+  orient?: never;
+};
+
+type InputProps = RangeInputProps | OtherInputProps;
 
 /**
  * Scarlet UI Input.
  */
 const Input = (props: InputProps) => {
-  const { type, ...rest } = props;
+  const { type = "text", ...rest } = props;
 
   switch (type) {
-    case "range":
+    case "range": {
+      const {
+        orient = "horizontal",
+        className,
+        ...rangeProps
+      } = rest as RangeInputProps;
       // TODO: don't know what the pattern for this is, check other UI libraries
       return (
         <input
-          {...rest}
+          {...rangeProps}
           type="range"
-          className={`${rest.className} ${styles.range}`}
+          className={`${className ?? ""} ${styles.range} ${styles[orient]}`}
         />
       );
-    case "checkbox":
+    }
+    case "checkbox": {
+      const { className, ...checkboxProps } = rest;
       return (
         <input
-          {...rest}
+          {...checkboxProps}
           type="checkbox"
-          className={`${rest.className} ${styles.checkbox}`}
+          className={`${className ?? ""} ${styles.checkbox}`}
         />
       );
-    default:
-      return <input {...rest} type={type} />;
+    }
+    default: {
+      const { className, ...defaultProps } = rest;
+      return <input {...defaultProps} type={type} />;
+    }
   }
 };
 

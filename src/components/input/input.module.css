@@ -1,3 +1,19 @@
+/* Range styles */
 .range {
   accent-color: var(--primary);
+}
+
+.range:hover {
+  accent-color: var(--primary-hover);
+}
+
+.range:active {
+  accent-color: var(--primary-active);
+}
+
+.vertical {
+  writing-mode: vertical-lr;
+  direction: rtl;
+  appearance: slider-vertical;
+  vertical-align: bottom;
 }
