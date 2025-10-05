@@ -5,7 +5,7 @@ import ReactDOM from "react-dom/client";
 import i18n from "i18next";
 import { useEffect } from "react";
 
-import Layout from "./layout";
+import Layout from "./components/layout";
 import "./styles/globals.css";
 
 declare global {

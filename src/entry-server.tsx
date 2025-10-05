@@ -3,7 +3,7 @@ import { createI18nInstance } from "./utils/i18n";
 import { renderToPipeableStream } from "react-dom/server";
 import { StaticRouter } from "react-router-dom/server";
 import { Router, routes } from "./router";
-import Layout from "./layout";
+import Layout from "./components/layout";
 import NotFound from "./routes/not-found";
 import { matchRoutes } from "react-router-dom";
 
