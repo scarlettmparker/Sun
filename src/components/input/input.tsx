@@ -61,8 +61,7 @@ const Input = (props: InputProps) => {
       );
     }
     default: {
-      const { className, ...defaultProps } = rest;
-      return <input {...defaultProps} type={type} />;
+      return <input {...rest} type={type} />;
     }
   }
 };
