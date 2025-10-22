@@ -10,6 +10,7 @@ export function useStemPlayer(stems: Stem[]) {
   const [audioCtx, setAudioCtx] = useState<AudioContext | null>(null);
   const [buffers, setBuffers] = useState<AudioBuffer[]>([]);
   const [playing, setPlaying] = useState<boolean>(false);
+  const [ended, setEnded] = useState<boolean>(false);
   const [position, setPosition] = useState<number>(0); // track where we are
 
   const gainNodes = useRef<GainNode[]>([]);
@@ -97,8 +98,14 @@ export function useStemPlayer(stems: Stem[]) {
 
     const update = () => {
       if (playing && audioCtx) {
-        setPosition(audioCtx.currentTime - startTime.current);
-        rafId.current = requestAnimationFrame(update);
+        const currentPos = audioCtx.currentTime - startTime.current;
+        setPosition(currentPos);
+        if (currentPos >= getDuration()) {
+          stop();
+          setEnded(true);
+        } else {
+          rafId.current = requestAnimationFrame(update);
+        }
       }
     };
 
@@ -110,8 +117,12 @@ export function useStemPlayer(stems: Stem[]) {
    */
   const play = useCallback(() => {
     if (!audioCtx || buffers.length === 0 || playing) return;
+    if (ended) {
+      offset.current = 0;
+      setEnded(false);
+    }
     startPlayback(offset.current);
-  }, [audioCtx, buffers, playing]);
+  }, [audioCtx, buffers, playing, ended]);
 
   /**
    * Stop playing.
@@ -136,6 +147,12 @@ export function useStemPlayer(stems: Stem[]) {
   }, [audioCtx, playing]);
 
   /**
+   * Get total duration (all stems must therefore be same length).
+   * TODO: get longest? Dunno.
+   */
+  const getDuration = useCallback(() => buffers[0]?.duration || 0, [buffers]);
+
+  /**
    * Seek to a specific time (in seconds).
    *
    * @param time Second to seek to.
@@ -144,9 +161,17 @@ export function useStemPlayer(stems: Stem[]) {
     (time: number) => {
       offset.current = Math.max(0, Math.min(getDuration(), time));
       setPosition(offset.current); // update position immediately
-      if (playing) startPlayback(offset.current);
+      if (offset.current >= getDuration()) {
+        // End of the song
+        setEnded(true);
+        if (playing) stop();
+      } else {
+        setEnded(false);
+      }
+      if (playing && offset.current < getDuration())
+        startPlayback(offset.current);
     },
-    [audioCtx, buffers, playing]
+    [audioCtx, buffers, playing, getDuration, stop]
   );
 
   /**
@@ -159,12 +184,6 @@ export function useStemPlayer(stems: Stem[]) {
     },
     [audioCtx, buffers, position, seek]
   );
-
-  /**
-   * Get total duration (all stems must therefore be same length).
-   * TODO: get longest? Dunno.
-   */
-  const getDuration = useCallback(() => buffers[0]?.duration || 0, [buffers]);
 
   /**
    * Set volume.
@@ -185,6 +204,7 @@ export function useStemPlayer(stems: Stem[]) {
     () => ({
       loaded: buffers.length === stems.length,
       playing,
+      ended,
       position,
       duration: getDuration(),
       play,
@@ -197,6 +217,7 @@ export function useStemPlayer(stems: Stem[]) {
       buffers,
       stems,
       playing,
+      ended,
       position,
       getDuration,
       play,

@@ -1,10 +1,28 @@
 {
   "controls": {
+    "aria": {
+      "seek-back": "Skip back",
+      "seek-forward": "Skip forward",
+      "stop": "Stop",
+      "play": "Play",
+      "restart": "Restart"
+    },
+    "title": {
+      "seek-back": "Click to skip back ({{ offset }}s)",
+      "seek-forward": "Click to skip forward ({{ offset }}s)",
+      "stop": "Click to stop playing",
+      "play": "Click to start playing",
+      "restart": "Click to restart from the beginning"
+    },
     "stop": "Stop",
     "play": "Play",
-    "seek-back": "Skip back ({{ offset }}s)",
-    "seek-forward": "Skip forward ({{ offset }}s)"
+    "restart": "Restart"
   },
   "playback": "Playback time",
-  "seek": "Seek"
+  "aria": {
+    "seek": "Seek"
+  },
+  "title": {
+    "seek": "Seek to {{ position }}"
+  }
 }
