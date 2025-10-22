@@ -127,7 +127,7 @@ const StemPlayer = (props: StemPlayerProps) => {
           step={0.1}
           value={position}
           onChange={handleSeek}
-          onMouseEnter={handleSeekerMouseMove}
+          onMouseMove={handleSeekerMouseMove}
           className={styles.seeker}
           aria-label={t("aria.seek")}
         />
