@@ -11,7 +11,7 @@
     "lint": "npx eslint",
     "pretty": "prettier --write \"./**/*.{js,jsx,mjs,cjs,ts,tsx,json}\"",
     "preview": "cross-env NODE_ENV=production node server",
-    "test": "jest"
+    "test": "jest --maxWorkers=50%"
   },
   "license": "MIT",
   "devDependencies": {
