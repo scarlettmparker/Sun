@@ -1,6 +1,5 @@
 /**
- * @brief
- * Tests for formatHoverTime utility function.
+ * @fileoverview Tests for formatHoverTime utility function.
  * Tests the formatting of time values for hover display, correct precision based on time ranges.
  */
 import { formatHoverTime } from "~/_components/stem-player/utils/format-hover-time";

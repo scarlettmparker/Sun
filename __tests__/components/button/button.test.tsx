@@ -1,6 +1,5 @@
 /**
- * @brief
- * Tests for Button component.
+ * @fileoverview Tests for Button component.
  * Tests the Button component's variants, styling, and attribute passing.
  */
 

@@ -1,6 +1,5 @@
 /**
- * @brief
- * Tests for formatTime utility function.
+ * @fileoverview Tests for formatTime utility function.
  * Tests the formatting of time from seconds to M:SS format, proper padding and conversion.
  */
 

@@ -1,6 +1,5 @@
 /**
- * @brief
- * Tests for Label component.
+ * @fileoverview Tests for Label component.
  * Tests the Label component's rendering, attribute passing, and children display.
  */
 

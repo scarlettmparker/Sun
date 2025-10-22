@@ -1,6 +1,5 @@
 /**
- * @brief
- * Tests for useStemPlayer hook.
+ * @fileoverview Tests for useStemPlayer hook.
  * Tests the hook's state management, playback controls, seeking, volume control, and audio context handling.
  */
 

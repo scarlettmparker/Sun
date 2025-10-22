@@ -1,6 +1,5 @@
 /**
- * @brief
- * Tests for Input component.
+ * @fileoverview Tests for Input component.
  * Tests the Input component's types, styling, and attribute passing.
  */
 
