@@ -26,6 +26,8 @@ export const mockAudioContext = {
 
 export const mockAudioBuffer = { duration: 120 };
 
-// Setup global mocks
-global.AudioContext = jest.fn(() => mockAudioContext) as any;
+global.AudioContext = jest.fn(() => mockAudioContext) as unknown as {
+  new (contextOptions?: AudioContextOptions | undefined): AudioContext;
+  prototype: AudioContext;
+};
 global.fetch = jest.fn();

@@ -18,18 +18,18 @@ import { useStemPlayer } from "~/_components/stem-player/hooks/use-stem-player";
 jest.mock("~/_components/stem-player/hooks/use-stem-player");
 const mockUseStemPlayer = useStemPlayer as jest.Mock;
 
-let mockPlay: jest.Mock = jest.fn();
-let mockStop: jest.Mock = jest.fn();
-let mockSkip: jest.Mock = jest.fn();
-let mockSeek: jest.Mock = jest.fn();
-let mockSetMasterVolume: jest.Mock = jest.fn();
+const mockPlay: jest.Mock = jest.fn();
+const mockStop: jest.Mock = jest.fn();
+const mockSkip: jest.Mock = jest.fn();
+const mockSeek: jest.Mock = jest.fn();
+const mockSetMasterVolume: jest.Mock = jest.fn();
 
 const mockStems: Stem[] = [
   { name: "Drums", url: "/drums.mp3" },
   { name: "Bass", url: "/bass.mp3" },
 ];
 
-let defaultMockReturnValue = {
+const defaultMockReturnValue = {
   loaded: true,
   playing: false,
   ended: false,
