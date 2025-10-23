@@ -30,6 +30,7 @@ const StemPlayer = (props: StemPlayerProps) => {
 
   const {
     loaded,
+    loadingProgress,
     playing,
     ended,
     play,
@@ -88,8 +89,14 @@ const StemPlayer = (props: StemPlayerProps) => {
     });
   };
 
-  // TODO: fallback pattern
-  if (!loaded) return <></>;
+  // Show loading progress if not fully loaded
+  if (!loaded) {
+    return (
+      <div {...rest} className={`${styles.container} ${rest.className ?? ""}`}>
+        <Label>Loading: {Math.round(loadingProgress)}%</Label>
+      </div>
+    );
+  }
 
   return (
     <div {...rest} className={`${styles.container} ${rest.className ?? ""}`}>

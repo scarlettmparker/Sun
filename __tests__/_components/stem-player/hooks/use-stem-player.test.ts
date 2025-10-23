@@ -38,6 +38,7 @@ describe("useStemPlayer", () => {
     expect(global.fetch).toHaveBeenCalledTimes(2);
     expect(mockAudioContext.decodeAudioData).toHaveBeenCalledTimes(2);
     expect(result.current.loaded).toBe(true);
+    expect(result.current.loadingProgress).toBe(100);
     expect(result.current.duration).toBe(120);
   });
 
@@ -155,5 +156,15 @@ describe("useStemPlayer", () => {
     });
     expect(result.current.ended).toBe(false);
     expect(result.current.position).toBe(0);
+  });
+
+  it("tracks loading progress", async () => {
+    const { result } = renderHook(() => useStemPlayer(mockStems));
+    expect(result.current.loadingProgress).toBe(0);
+    // Wait for effects to run
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    expect(result.current.loadingProgress).toBe(100);
   });
 });

@@ -12,6 +12,7 @@ export function useStemPlayer(stems: Stem[]) {
   const [playing, setPlaying] = useState<boolean>(false);
   const [ended, setEnded] = useState<boolean>(false);
   const [position, setPosition] = useState<number>(0); // track where we are
+  const [loadingProgress, setLoadingProgress] = useState<number>(0);
 
   const gainNodes = useRef<GainNode[]>([]);
   const masterGainNode = useRef<GainNode | null>(null);
@@ -32,15 +33,22 @@ export function useStemPlayer(stems: Stem[]) {
   useEffect(() => {
     if (!audioCtx) return;
     let mounted = true;
+    setLoadingProgress(0);
 
     // Load & decode all the stems
-    Promise.all(
-      stems.map((stem) =>
-        fetch(stem.url)
-          .then((res) => res.arrayBuffer())
-          .then((buf) => audioCtx.decodeAudioData(buf))
-      )
-    ).then((decoded) => {
+    const loadPromises = stems.map((stem, index) =>
+      fetch(stem.url)
+        .then((res) => res.arrayBuffer())
+        .then((buf) => audioCtx.decodeAudioData(buf))
+        .then((decoded) => {
+          if (mounted) {
+            setLoadingProgress((prev) => prev + (1 / stems.length) * 100);
+          }
+          return decoded;
+        })
+    );
+
+    Promise.all(loadPromises).then((decoded) => {
       if (mounted) {
         setBuffers(decoded);
         gainNodes.current = decoded.map(() => audioCtx.createGain());
@@ -229,6 +237,7 @@ export function useStemPlayer(stems: Stem[]) {
   return useMemo(
     () => ({
       loaded: buffers.length === stems.length,
+      loadingProgress,
       playing,
       ended,
       position,
@@ -244,6 +253,7 @@ export function useStemPlayer(stems: Stem[]) {
     [
       buffers,
       stems,
+      loadingProgress,
       playing,
       ended,
       position,

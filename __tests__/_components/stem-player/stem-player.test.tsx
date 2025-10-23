@@ -31,6 +31,7 @@ const mockStems: Stem[] = [
 
 const defaultMockReturnValue = {
   loaded: true,
+  loadingProgress: 100,
   playing: false,
   ended: false,
   play: mockPlay,
@@ -155,14 +156,15 @@ describe("StemPlayer", () => {
     expect(masterSlider.title).toBe("controls.title.master-volume");
   });
 
-  it("shows fallback when not loaded", () => {
+  it("shows loading progress when not loaded", () => {
     mockUseStemPlayer.mockReturnValue({
       ...defaultMockReturnValue,
       loaded: false,
+      loadingProgress: 50,
     });
 
-    const { container } = render(<StemPlayer stems={mockStems} />);
-    expect(container.firstChild).toBeNull();
+    render(<StemPlayer stems={mockStems} />);
+    expect(screen.getByText("Loading: 50%")).toBeInTheDocument();
   });
 
   it("calls play when play button is clicked", () => {
