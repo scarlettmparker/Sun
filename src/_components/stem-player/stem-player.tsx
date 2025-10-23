@@ -102,6 +102,21 @@ const StemPlayer = (props: StemPlayerProps) => {
     <div {...rest} className={`${styles.container} ${rest.className ?? ""}`}>
       <StemSliders stems={stems} setVolume={setVolume} />
       <div className={styles.controls}>
+        <Label htmlFor="master-volume">{t("controls.master")}</Label>
+        <Input
+          id="master-volume"
+          type="range"
+          min={0}
+          max={2}
+          step={0.01}
+          value={masterVolume}
+          onChange={(e) => setMasterVolume(parseFloat(e.target.value))}
+          onMouseMove={handleMasterVolumeMouseMove}
+          className={styles.seeker}
+          aria-label={t("controls.aria.master-volume")}
+        />
+      </div>
+      <div className={styles.controls}>
         <Button
           onClick={playing ? stop : play}
           aria-label={
@@ -161,21 +176,6 @@ const StemPlayer = (props: StemPlayerProps) => {
           onMouseMove={handleSeekerMouseMove}
           className={styles.seeker}
           aria-label={t("controls.aria.seek")}
-        />
-      </div>
-      <div className={styles.controls}>
-        <Label htmlFor="master-volume">{t("controls.master")}</Label>
-        <Input
-          id="master-volume"
-          type="range"
-          min={0}
-          max={2}
-          step={0.01}
-          value={masterVolume}
-          onChange={(e) => setMasterVolume(parseFloat(e.target.value))}
-          onMouseMove={handleMasterVolumeMouseMove}
-          className={styles.seeker}
-          aria-label={t("controls.aria.master-volume")}
         />
       </div>
     </div>
