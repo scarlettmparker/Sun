@@ -195,10 +195,7 @@ export function formatName(name: string): string {
 }
 
 function toTitleCase(value: string): string {
-  return value
-    .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
+  return; // implementation
 }
 ```
 
