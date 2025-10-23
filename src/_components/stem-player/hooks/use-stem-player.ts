@@ -14,12 +14,14 @@ export function useStemPlayer(stems: Stem[]) {
   const [position, setPosition] = useState<number>(0); // track where we are
 
   const gainNodes = useRef<GainNode[]>([]);
+  const masterGainNode = useRef<GainNode | null>(null);
   const sources = useRef<AudioBufferSourceNode[]>([]);
 
   // want controls
   const startTime = useRef<number>(0);
   const offset = useRef<number>(0);
   const rafId = useRef<number | null>(null);
+  const [masterVolume, setMasterVolumeState] = useState<number>(1);
 
   useEffect(() => {
     // Can only be on the client
@@ -42,6 +44,15 @@ export function useStemPlayer(stems: Stem[]) {
       if (mounted) {
         setBuffers(decoded);
         gainNodes.current = decoded.map(() => audioCtx.createGain());
+        masterGainNode.current = audioCtx.createGain();
+        masterGainNode.current.gain.setValueAtTime(
+          masterVolume,
+          audioCtx.currentTime
+        );
+        gainNodes.current.forEach((gainNode) => {
+          gainNode.connect(masterGainNode.current!);
+        });
+        masterGainNode.current.connect(audioCtx.destination);
       }
     });
 
@@ -80,7 +91,7 @@ export function useStemPlayer(stems: Stem[]) {
       const src = audioCtx.createBufferSource();
       src.buffer = buf;
       src.connect(gainNodes.current[i]);
-      gainNodes.current[i].connect(audioCtx.destination);
+      gainNodes.current[i].connect(masterGainNode.current!);
 
       // start that shi
       src.start(now, startOffset);
@@ -199,6 +210,21 @@ export function useStemPlayer(stems: Stem[]) {
     [audioCtx]
   );
 
+  /**
+   * Set master volume.
+   *
+   * @param value Value to set master volume to.
+   */
+  const setMasterVolume = useCallback(
+    (value: number) => {
+      setMasterVolumeState(value);
+      if (masterGainNode.current && audioCtx) {
+        masterGainNode.current.gain.setValueAtTime(value, audioCtx.currentTime);
+      }
+    },
+    [audioCtx]
+  );
+
   // memoize the return value to prevent unnecessary re-renders
   return useMemo(
     () => ({
@@ -207,11 +233,13 @@ export function useStemPlayer(stems: Stem[]) {
       ended,
       position,
       duration: getDuration(),
+      masterVolume,
       play,
       stop,
       seek,
       skip,
       setVolume,
+      setMasterVolume,
     }),
     [
       buffers,
@@ -220,11 +248,13 @@ export function useStemPlayer(stems: Stem[]) {
       ended,
       position,
       getDuration,
+      masterVolume,
       play,
       stop,
       seek,
       skip,
       setVolume,
+      setMasterVolume,
     ]
   );
 }

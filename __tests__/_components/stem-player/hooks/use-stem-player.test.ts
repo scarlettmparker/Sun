@@ -106,6 +106,17 @@ describe("useStemPlayer", () => {
     expect(mockGainNodes[0].gain.setValueAtTime).toHaveBeenCalledWith(0.5, 0);
   });
 
+  it("sets master volume", async () => {
+    const { result } = renderHook(() => useStemPlayer(mockStems));
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    act(() => {
+      result.current.setMasterVolume(1.5);
+    });
+    expect(result.current.masterVolume).toBe(1.5);
+  });
+
   it("handles end of playback", async () => {
     const { result } = renderHook(() => useStemPlayer(mockStems));
     await act(async () => {

@@ -38,7 +38,9 @@ const StemPlayer = (props: StemPlayerProps) => {
     seek,
     position,
     duration,
+    masterVolume,
     setVolume,
+    setMasterVolume,
   } = useStemPlayer(stems);
 
   /**
@@ -64,8 +66,25 @@ const StemPlayer = (props: StemPlayerProps) => {
       0,
       Math.min(duration + SEEK_BUFFER, percentage * (duration + SEEK_BUFFER))
     );
-    e.currentTarget.title = t("title.seek", {
+    e.currentTarget.title = t("controls.title.seek", {
       position: formatHoverTime(hoverTime),
+    });
+  };
+
+  /**
+   * Handle mouse move on master volume to update title with hover position
+   *
+   * @param e Mouse event.
+   */
+  const handleMasterVolumeMouseMove = (
+    e: React.MouseEvent<HTMLInputElement>
+  ) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const percentage = x / rect.width;
+    const volume = percentage * 2;
+    e.currentTarget.title = t("controls.title.master-volume", {
+      volume: Math.round(volume * 100),
     });
   };
 
@@ -78,7 +97,7 @@ const StemPlayer = (props: StemPlayerProps) => {
       <div className={styles.controls}>
         <Button
           onClick={playing ? stop : play}
-          arial-label={
+          aria-label={
             playing
               ? t("controls.aria.stop")
               : ended
@@ -117,10 +136,15 @@ const StemPlayer = (props: StemPlayerProps) => {
         >
           <strong>{">>"}</strong>
         </Button>
-        <Label className={styles.timeLabel} aria-label={t("playback")}>
+        <Label
+          htmlFor="seeker"
+          className={styles.timeLabel}
+          aria-label={t("playback")}
+        >
           {formatTime(position)} / {formatTime(duration)}
         </Label>
         <Input
+          id="seeker"
           type="range"
           min={0}
           max={duration + SEEK_BUFFER}
@@ -129,7 +153,22 @@ const StemPlayer = (props: StemPlayerProps) => {
           onChange={handleSeek}
           onMouseMove={handleSeekerMouseMove}
           className={styles.seeker}
-          aria-label={t("aria.seek")}
+          aria-label={t("controls.aria.seek")}
+        />
+      </div>
+      <div className={styles.controls}>
+        <Label htmlFor="master-volume">{t("controls.master")}</Label>
+        <Input
+          id="master-volume"
+          type="range"
+          min={0}
+          max={2}
+          step={0.01}
+          value={masterVolume}
+          onChange={(e) => setMasterVolume(parseFloat(e.target.value))}
+          onMouseMove={handleMasterVolumeMouseMove}
+          className={styles.seeker}
+          aria-label={t("controls.aria.master-volume")}
         />
       </div>
     </div>

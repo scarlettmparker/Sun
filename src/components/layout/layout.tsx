@@ -1,11 +1,4 @@
-import { JSX } from "react";
-
-type LayoutProps = {
-  /**
-   * Children in layout.
-   */
-  children: JSX.Element;
-};
+type LayoutProps = React.PropsWithChildren;
 
 /**
  * We don't actually have a layout now but maybe we will want one.

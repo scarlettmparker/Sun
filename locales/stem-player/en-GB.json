@@ -5,24 +5,23 @@
       "seek-forward": "Skip forward",
       "stop": "Stop",
       "play": "Play",
-      "restart": "Restart"
+      "restart": "Restart",
+      "seek": "Seek",
+      "master-volume": "Master volume"
     },
     "title": {
       "seek-back": "Click to skip back ({{ offset }}s)",
       "seek-forward": "Click to skip forward ({{ offset }}s)",
       "stop": "Click to stop playing",
       "play": "Click to start playing",
-      "restart": "Click to restart from the beginning"
+      "restart": "Click to restart from the beginning",
+      "seek": "Seek to {{ position }}",
+      "master-volume": "Set master volume to {{ volume }}%"
     },
     "stop": "Stop",
     "play": "Play",
-    "restart": "Restart"
+    "restart": "Restart",
+    "master": "Master"
   },
-  "playback": "Playback time",
-  "aria": {
-    "seek": "Seek"
-  },
-  "title": {
-    "seek": "Seek to {{ position }}"
-  }
+  "playback": "Playback time"
 }
