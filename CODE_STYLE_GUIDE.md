@@ -179,17 +179,26 @@ export type ComponentType = {
 
 ### Utility Functions
 
-Place utility functions in `utils/` directory with proper documentation:
+Utility functions must live in a `utils/` directory colocated with the feature or component they support. Each file should have **a single named export** that represents the primary utility for that file. Supporting helper functions may be included, but must remain unexported.
 
 ```typescript
+// utils/format-name.ts
+
 /**
- * Utility function description.
+ * Formats a name into "Title Case".
  *
- * @param input Description of input.
- * @returns Description of return value.
+ * @param name The input name string.
+ * @returns The formatted name string.
  */
-export function utilityFunction(input: string): string {
-  return input.toUpperCase();
+export function formatName(name: string): string {
+  return toTitleCase(name);
+}
+
+function toTitleCase(value: string): string {
+  return value
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 }
 ```
 

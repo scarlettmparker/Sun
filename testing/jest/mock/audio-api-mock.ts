@@ -32,3 +32,5 @@ global.AudioContext = jest.fn(() => mockAudioContext) as unknown as {
   prototype: AudioContext;
 };
 global.fetch = jest.fn();
+global.requestAnimationFrame = jest.fn();
+global.cancelAnimationFrame = jest.fn();

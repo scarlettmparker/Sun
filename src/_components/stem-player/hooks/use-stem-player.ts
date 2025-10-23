@@ -36,7 +36,7 @@ export function useStemPlayer(stems: Stem[]) {
     setLoadingProgress(0);
 
     // Load & decode all the stems
-    const loadPromises = stems.map((stem, index) =>
+    const loadPromises = stems.map((stem) =>
       fetch(stem.url)
         .then((res) => res.arrayBuffer())
         .then((buf) => audioCtx.decodeAudioData(buf))
@@ -48,21 +48,27 @@ export function useStemPlayer(stems: Stem[]) {
         })
     );
 
-    Promise.all(loadPromises).then((decoded) => {
-      if (mounted) {
-        setBuffers(decoded);
-        gainNodes.current = decoded.map(() => audioCtx.createGain());
-        masterGainNode.current = audioCtx.createGain();
-        masterGainNode.current.gain.setValueAtTime(
-          masterVolume,
-          audioCtx.currentTime
-        );
-        gainNodes.current.forEach((gainNode) => {
-          gainNode.connect(masterGainNode.current!);
-        });
-        masterGainNode.current.connect(audioCtx.destination);
-      }
-    });
+    Promise.all(loadPromises)
+      .then((decoded) => {
+        if (mounted) {
+          setBuffers(decoded);
+          gainNodes.current = decoded.map(() => audioCtx.createGain());
+          masterGainNode.current = audioCtx.createGain();
+          masterGainNode.current.gain.setValueAtTime(
+            masterVolume,
+            audioCtx.currentTime
+          );
+          gainNodes.current.forEach((gainNode) => {
+            gainNode.connect(masterGainNode.current!);
+          });
+          masterGainNode.current.connect(audioCtx.destination);
+        }
+      })
+      .catch((_) => {
+        if (mounted) {
+          // console.error("Failed to load one or more stems:", err);
+        }
+      });
 
     // cleanup
     return () => {
