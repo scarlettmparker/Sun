@@ -1,0 +1,18 @@
+type Song {
+  id: String!
+  name: String
+  stems: [Stem]
+}
+
+type Stem {
+  filePath: String!
+  name: String
+}
+
+type StemPlayerQueries {
+  listSongs: [Song]
+}
+
+type Query {
+  stemPlayerQueries: StemPlayerQueries!
+}
