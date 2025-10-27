@@ -1,5 +1,6 @@
 rootProject.name = 'sun-components'
 
-include 'base-service'
+include 'sun-service'
 include 'apollo-service'
 include 'apollo-graphql'
+include 'sun-graphql'

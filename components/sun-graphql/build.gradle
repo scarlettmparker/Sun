@@ -5,9 +5,25 @@ plugins {
     id 'com.netflix.dgs.codegen' version '7.0.3'
 }
 
+ext {
+    set('netflixDgsVersion', "10.2.1")
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "com.netflix.graphql.dgs:graphql-dgs-platform-dependencies:${netflixDgsVersion}"
+    }
+}
+
+generateJava {
+    schemaPaths = ["${projectDir}/src/main/resources", "${project(':apollo-graphql').projectDir}/src/main/resources"]
+    packageName = 'com.sun.graphql.codegen'
+    generateClient = true
+}
+
 group = 'com.sun'
 version = '0.0.1-SNAPSHOT'
-description = 'apollo'
+description = 'sun-graphql'
 
 java {
     toolchain {
@@ -19,11 +35,8 @@ repositories {
     mavenCentral()
 }
 
-ext {
-    set('netflixDgsVersion', "10.2.1")
-}
-
 dependencies {
+    implementation project(':apollo-graphql')
     implementation project(':apollo-service')
     implementation project(':sun-service')
     implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -33,23 +46,9 @@ dependencies {
     implementation 'io.github.cdimascio:dotenv-java:3.0.0'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'com.netflix.graphql.dgs:graphql-dgs-spring-graphql-starter-test'
-    testImplementation 'com.h2database:h2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-}
-
-dependencyManagement {
-    imports {
-        mavenBom "com.netflix.graphql.dgs:graphql-dgs-platform-dependencies:${netflixDgsVersion}"
-    }
-}
-
-generateJava {
-    schemaPaths = ["${projectDir}/src/main/resources"]
-    packageName = 'com.sun.apollo.codegen'
-    generateClient = true
 }
 
 tasks.named('test') {
     useJUnitPlatform()
 }
-
