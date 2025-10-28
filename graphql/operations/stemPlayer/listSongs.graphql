@@ -1,0 +1,12 @@
+query ListSongs {
+  stemPlayerQueries {
+    listSongs {
+      id
+      name
+      stems {
+        filePath
+        name
+      }
+    }
+  }
+}

@@ -3,6 +3,9 @@ dist/
 public/
 .env
 
+# Generated
+generated/
+
 # Java stuff
 .gradle/
 build/
