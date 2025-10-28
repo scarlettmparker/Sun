@@ -45,7 +45,7 @@ export async function fetchGraphQLData<T>(
 ): Promise<ApiResponse<T>> {
   try {
     const endpoint =
-      process.env.VITE_GRAPHQL_ENDPOINT || "http://localhost:8080/graphql";
+      process.env.GRAPHQL_ENDPOINT || "http://localhost:8080/graphql";
 
     const query = operationRegistry[operationName];
     if (!query) {

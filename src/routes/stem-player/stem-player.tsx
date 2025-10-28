@@ -1,15 +1,14 @@
 import StemPlayer from "~/_components/stem-player";
 import { fetchListSongs } from "~/utils/api";
-import { ListSongsQuery, Stem as GraphQLStem } from "~/generated/graphql";
+import { ListSongsQuery, Stem } from "~/generated/graphql";
 import { pageDataRegistry } from "~/utils/page-data";
 import styles from "./stem-player.module.css";
-import type { Stem } from "~/_components/stem-player/types/stem";
 
 /**
  * Stem Player Page component.
  */
 const StemPlayerPage = () => {
-  const pageData = typeof window !== "undefined" ? window.__pageData__ : null;
+  const pageData = globalThis.__pageData__;
   const initialData =
     pageData?.songs as ListSongsQuery["stemPlayerQueries"]["listSongs"];
 
@@ -28,18 +27,17 @@ const StemPlayerPage = () => {
 
   const stems: Stem[] = fellInAgainSong.stems
     .filter(
-      (stem): stem is GraphQLStem =>
-        stem?.filePath != null && stem?.name != null
+      (stem): stem is Stem => stem?.filePath != null && stem?.name != null
     )
     .map((stem) => ({
       name: stem.name!,
-      url: `/_components/stem-player/fell-in-again/stems/${stem.filePath}`,
+      filePath: `/_components/stem-player/fell-in-again/stems/${stem.filePath}`,
     }));
 
   return (
     <StemPlayer
       className={styles.stemPlayer}
-      stems={stems as unknown as GraphQLStem[]}
+      stems={stems as unknown as Stem[]}
     />
   );
 };
@@ -71,7 +69,5 @@ export async function getStemPlayerData(): Promise<Record<
 export function registerStemPlayerDataLoader(): void {
   pageDataRegistry.registerPageDataLoader("stem-player", getStemPlayerData);
 }
-
-registerStemPlayerDataLoader();
 
 export default StemPlayerPage;

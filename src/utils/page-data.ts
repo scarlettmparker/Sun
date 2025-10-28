@@ -12,6 +12,17 @@ type PageDataLoader = () => Promise<Record<string, unknown> | null>;
 const pageDataLoaders: Record<string, PageDataLoader> = {};
 
 /**
+ * Cache for page data to avoid re-fetching on every request.
+ */
+const pageDataCache: Record<
+  string,
+  { data: Record<string, unknown> | null; timestamp: number }
+> = {};
+
+// Cache expiration time in milliseconds (5 mins)./
+const CACHE_EXPIRATION_MS = 5 * 60 * 1000;
+
+/**
  * Registers a data loader for a specific page.
  * @param pageName The name of the page (e.g., 'stem-player').
  * @param loader Function that fetches data for the page.
@@ -20,7 +31,11 @@ function registerPageDataLoader(
   pageName: string,
   loader: PageDataLoader
 ): void {
+  const currentLoader = pageDataLoaders[pageName];
   pageDataLoaders[pageName] = loader;
+  if (currentLoader !== loader) {
+    delete pageDataCache[pageName];
+  }
 }
 
 /**
@@ -61,8 +76,17 @@ export async function fetchPageData(
     return null;
   }
 
+  const now = Date.now();
+  const cached = pageDataCache[pageName];
+
+  if (cached && now - cached.timestamp < CACHE_EXPIRATION_MS) {
+    return cached.data;
+  }
+
   try {
-    return await loader();
+    const data = await loader();
+    pageDataCache[pageName] = { data, timestamp: now };
+    return data;
   } catch (error) {
     console.error(`Failed to fetch data for page ${pageName}:`, error);
     return null;

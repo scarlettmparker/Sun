@@ -12,13 +12,6 @@ export default defineConfig({
   },
   server: {
     port: 3000,
-    proxy: {
-      "/api": {
-        target: "http://0.0.0.0:443/",
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ""),
-      },
-    },
   },
   assetsInclude: ["**/*.json"],
   json: {

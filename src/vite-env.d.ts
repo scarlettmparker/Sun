@@ -7,3 +7,7 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+export declare global {
+  var __pageData__: Record<string, unknown> | undefined;
+}

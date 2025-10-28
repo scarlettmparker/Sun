@@ -80,6 +80,8 @@ export async function render({
     throw new Error("Missing required clientJs or clientCss path");
   }
 
+  globalThis.__pageData__ = pageData ?? {};
+
   const i18n = createI18nInstance();
   await i18n.init({
     lng: locale,
@@ -131,7 +133,7 @@ export async function render({
                   // Inject the translations and page data into the client-side window object
                   window.__translations__ = ${JSON.stringify(translations)};
                   window.__locale__ = '${locale}';
-                  window.__pageData__ = ${JSON.stringify(pageData || {})};
+                  globalThis.__pageData__ = ${JSON.stringify(pageData || {})};
                 </script>
                 <body>
                   <div id="app">`,

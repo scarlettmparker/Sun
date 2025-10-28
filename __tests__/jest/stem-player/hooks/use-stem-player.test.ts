@@ -5,7 +5,6 @@
 
 import { renderHook, act } from "@testing-library/react";
 import { useStemPlayer } from "~/_components/stem-player/hooks/use-stem-player";
-import { Stem } from "~/_components/stem-player/types/stem";
 import {
   mockAudioContext,
   mockAudioBuffer,
@@ -14,8 +13,10 @@ import {
   restoreConsoleError,
 } from "testing/jest/mock";
 import { deleteGlobalWindow } from "testing/jest/utils/delete-global-window";
+import type { Stem } from "~/generated/graphql";
 
 beforeAll(() => {
+  // Due to some issue with re-rendering that we don't care about in test env
   suppressConsoleErrorsFromTests();
 });
 
@@ -25,8 +26,8 @@ afterAll(() => {
 
 describe("useStemPlayer", () => {
   const mockStems: Stem[] = [
-    { name: "Drums", url: "/drums.mp3" },
-    { name: "Bass", url: "/bass.mp3" },
+    { name: "Drums", filePath: "/drums.mp3" },
+    { name: "Bass", filePath: "/bass.mp3" },
   ];
 
   beforeEach(() => {
@@ -573,7 +574,7 @@ describe("useStemPlayer", () => {
 
       const initialGainNodes = mockGainNodes.length;
 
-      rerender({ stems: [{ name: "New Stem", url: "/new.mp3" }] });
+      rerender({ stems: [{ name: "New Stem", filePath: "/new.mp3" }] });
 
       await act(async () => {
         await new Promise((resolve) => setTimeout(resolve, 0));

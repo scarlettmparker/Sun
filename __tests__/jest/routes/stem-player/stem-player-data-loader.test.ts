@@ -8,6 +8,10 @@ import {
   getStemPlayerData,
   registerStemPlayerDataLoader,
 } from "~/routes/stem-player/stem-player";
+import {
+  restoreConsoleError,
+  suppressConsoleErrorsFromTests,
+} from "testing/jest/mock";
 
 // Mock the API function
 jest.mock("~/utils/api", () => ({
@@ -18,7 +22,16 @@ const mockFetchListSongs = fetchListSongs as jest.MockedFunction<
   typeof fetchListSongs
 >;
 
-describe("stem-player data loader", () => {
+beforeAll(() => {
+  // Due to network errors from non existent gql server in mocked env
+  suppressConsoleErrorsFromTests();
+});
+
+afterAll(() => {
+  restoreConsoleError();
+});
+
+describe("Stem Player Data Loader", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     // Clear all registered loaders before each test

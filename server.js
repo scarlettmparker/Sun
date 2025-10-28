@@ -14,6 +14,7 @@ import {
   backendPort,
 } from "./config.js";
 import { setupRoutes } from "./routes/index.js";
+import "./src/utils/register-loaders.js";
 
 const app = express();
 
