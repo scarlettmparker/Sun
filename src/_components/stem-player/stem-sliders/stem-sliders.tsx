@@ -1,8 +1,8 @@
 import { memo } from "react";
 import Input from "~/components/input";
 import Label from "~/components/label";
-import { Stem } from "~/_components/stem-player/types/stem";
 import styles from "./stem-sliders.module.css";
+import { Stem } from "~/generated/graphql";
 
 type StemControlsProps = {
   /**

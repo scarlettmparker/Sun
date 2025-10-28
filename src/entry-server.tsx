@@ -54,6 +54,11 @@ type RenderProps = {
    * Path or URL to client-side CSS bundle.
    */
   clientCss: string;
+
+  /**
+   * Pre-fetched data for the current page.
+   */
+  pageData?: Record<string, unknown>;
 };
 
 /**
@@ -69,6 +74,7 @@ export async function render({
   pageName,
   clientJs,
   clientCss,
+  pageData,
 }: RenderProps) {
   if (!clientJs || !clientCss) {
     throw new Error("Missing required clientJs or clientCss path");
@@ -122,9 +128,10 @@ export async function render({
                   window.__vite_plugin_react_preamble_installed__ = true
                 </script>
                 <script>
-                  // Inject the translations into the client-side window object
+                  // Inject the translations and page data into the client-side window object
                   window.__translations__ = ${JSON.stringify(translations)};
                   window.__locale__ = '${locale}';
+                  window.__pageData__ = ${JSON.stringify(pageData || {})};
                 </script>
                 <body>
                   <div id="app">`,

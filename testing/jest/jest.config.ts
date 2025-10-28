@@ -11,6 +11,7 @@ const config: Config = {
       "<rootDir>/testing/jest/mock/css-module-mock.ts",
   },
   testMatch: ["<rootDir>/__tests__/**/*.(ts|tsx)"],
+  testPathIgnorePatterns: ["/node_modules/", "\\.d\\.ts$"],
   collectCoverageFrom: ["src/**/*.(ts|tsx)", "!src/**/*.d.ts"],
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
 };

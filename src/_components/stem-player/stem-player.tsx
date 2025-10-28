@@ -1,6 +1,5 @@
 import Button from "~/components/button";
 import { useStemPlayer } from "./hooks/use-stem-player";
-import { Stem } from "./types/stem";
 import Label from "~/components/label";
 import Input from "~/components/input";
 import { ChangeEvent } from "react";
@@ -9,6 +8,7 @@ import { formatHoverTime } from "./utils/format-hover-time";
 import StemSliders from "./stem-sliders";
 import styles from "./stem-player.module.css";
 import { useTranslation } from "react-i18next";
+import { Stem } from "~/generated/graphql";
 
 type StemPlayerProps = {
   /**

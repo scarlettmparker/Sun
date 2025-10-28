@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
-import { Stem } from "~/_components/stem-player/types/stem";
+import { Stem } from "~/generated/graphql";
 
 /**
  * Stem player hook using the Web Audio API.
@@ -37,7 +37,7 @@ export function useStemPlayer(stems: Stem[]) {
 
     // Load & decode all the stems
     const loadPromises = stems.map((stem) =>
-      fetch(stem.url)
+      fetch(stem.filePath)
         .then((res) => res.arrayBuffer())
         .then((buf) => audioCtx.decodeAudioData(buf))
         .then((decoded) => {

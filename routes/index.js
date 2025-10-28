@@ -4,6 +4,7 @@
  */
 import { renderApp } from "../utils/ssr.js";
 import { base, isProduction } from "../config.js";
+import stemPlayerRouter from "./stem-player.js";
 
 /**
  * Sets up all routes for the Express application.
@@ -12,6 +13,9 @@ import { base, isProduction } from "../config.js";
  * @param {object} vite - The Vite dev server instance (optional, only in development).
  */
 export function setupRoutes(app, vite) {
+  // Set up API routes
+  app.use("/api/stem-player", stemPlayerRouter);
+
   /**
    * Catch-all route for server-side rendering of pages.
    * This route handles all GET requests not otherwise handled by static file serving or specific API routes.
@@ -37,6 +41,10 @@ export function setupRoutes(app, vite) {
     const urlPath = url.split("?")[0];
     const pageName = urlPath.split("/")[1] || "";
 
+    // Fetch page-specific data
+    const { fetchPageData } = await import("../src/utils/page-data.js");
+    const pageData = (await fetchPageData(pageName)) || {};
+
     try {
       await renderApp(
         {
@@ -45,6 +53,7 @@ export function setupRoutes(app, vite) {
           url,
           locale,
           pageName,
+          pageData,
         },
         res
       );
