@@ -2,8 +2,6 @@
  * Tests for SSR data injection utilities.
  */
 
-/// <reference path="../types/global.d.ts" />
-
 import { fetchPageData } from "~/utils/page-data";
 import { ListSongsQuery } from "~/generated/graphql";
 

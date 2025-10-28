@@ -1,24 +1,25 @@
 import StemPlayer from "~/_components/stem-player";
 import { fetchListSongs } from "~/utils/api";
-import { ListSongsQuery, Song, Stem } from "~/generated/graphql";
+import { ListSongsQuery, Stem as GraphQLStem } from "~/generated/graphql";
 import { pageDataRegistry } from "~/utils/page-data";
 import styles from "./stem-player.module.css";
+import type { Stem } from "~/_components/stem-player/types/stem";
 
 /**
  * Stem Player Page component.
  */
 const StemPlayerPage = () => {
-  const pageData =
-    typeof window !== "undefined" ? (window as any).__pageData__ : null;
-  const initialData = pageData?.stemPlayer?.songs;
+  const pageData = typeof window !== "undefined" ? window.__pageData__ : null;
+  const initialData =
+    pageData?.songs as ListSongsQuery["stemPlayerQueries"]["listSongs"];
 
   if (!initialData) {
     return <div>Loading...</div>;
   }
 
   // TODO: shouldn't be hard coded like this
-  const fellInAgainSong = initialData.find(
-    (song: Song) => song?.name === "Fell In Again"
+  const fellInAgainSong = initialData?.find(
+    (song) => song?.name === "Fell In Again"
   );
 
   if (!fellInAgainSong?.stems) {
@@ -26,13 +27,21 @@ const StemPlayerPage = () => {
   }
 
   const stems: Stem[] = fellInAgainSong.stems
-    .filter((stem: Stem) => stem?.filePath && stem?.name)
-    .map((stem: Stem) => ({
-      name: stem.name,
+    .filter(
+      (stem): stem is GraphQLStem =>
+        stem?.filePath != null && stem?.name != null
+    )
+    .map((stem) => ({
+      name: stem.name!,
       url: `/_components/stem-player/fell-in-again/stems/${stem.filePath}`,
     }));
 
-  return <StemPlayer className={styles.stemPlayer} stems={stems} />;
+  return (
+    <StemPlayer
+      className={styles.stemPlayer}
+      stems={stems as unknown as GraphQLStem[]}
+    />
+  );
 };
 
 /**

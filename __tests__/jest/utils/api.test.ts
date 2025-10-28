@@ -23,9 +23,9 @@ describe("API utilities", () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: jest.fn().mockResolvedValue(mockResponse),
-      } as any);
+      } as unknown as Response);
 
-      const result: ApiResponse<any> = await fetchGraphQLData("listSongs");
+      const result: ApiResponse<unknown> = await fetchGraphQLData("listSongs");
 
       expect(result.success).toBe(true);
       expect(result.data).toEqual(mockResponse.data);
@@ -37,9 +37,9 @@ describe("API utilities", () => {
         ok: false,
         status: 500,
         statusText: "Internal Server Error",
-      } as any);
+      } as unknown as Response);
 
-      const result: ApiResponse<any> = await fetchGraphQLData("listSongs");
+      const result: ApiResponse<unknown> = await fetchGraphQLData("listSongs");
 
       expect(result.success).toBe(false);
       expect(result.error).toBe("HTTP 500: Internal Server Error");
@@ -54,9 +54,9 @@ describe("API utilities", () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: jest.fn().mockResolvedValue(mockResponse),
-      } as any);
+      } as unknown as Response);
 
-      const result: ApiResponse<any> = await fetchGraphQLData("listSongs");
+      const result: ApiResponse<unknown> = await fetchGraphQLData("listSongs");
 
       expect(result.success).toBe(false);
       expect(result.error).toBe("Field not found");
@@ -66,7 +66,7 @@ describe("API utilities", () => {
     it("should return error response for network errors", async () => {
       mockFetch.mockRejectedValueOnce(new Error("Network error"));
 
-      const result: ApiResponse<any> = await fetchGraphQLData("listSongs");
+      const result: ApiResponse<unknown> = await fetchGraphQLData("listSongs");
 
       expect(result.success).toBe(false);
       expect(result.error).toBe("Network error");
@@ -74,7 +74,9 @@ describe("API utilities", () => {
     });
 
     it("should return error for unknown operation", async () => {
-      const result: ApiResponse<any> = await fetchGraphQLData("unknown" as any);
+      const result: ApiResponse<unknown> = await fetchGraphQLData(
+        "unknown" as string
+      );
 
       expect(result.success).toBe(false);
       expect(result.error).toBe("Unknown operation");
@@ -91,7 +93,7 @@ describe("API utilities", () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: jest.fn().mockResolvedValue(mockResponse),
-      } as any);
+      } as unknown as Response);
 
       const result = await fetchListSongs();
 

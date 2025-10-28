@@ -4,7 +4,7 @@
  */
 
 import { ListSongsDocument } from "../generated/graphql";
-import { print } from "graphql";
+import { print, DocumentNode } from "graphql";
 
 export type ApiResponse<T> = {
   success: boolean;
@@ -17,7 +17,7 @@ export type ApiResponse<T> = {
  * Registry of GraphQL operations mapped to their query documents.
  * This allows for easy expansion by adding new operations.
  */
-const operationRegistry: Record<string, any> = {
+const operationRegistry: Record<string, DocumentNode> = {
   listSongs: ListSongsDocument,
 };
 
@@ -28,7 +28,7 @@ const operationRegistry: Record<string, any> = {
  */
 export function registerGraphQLOperation(
   operationName: string,
-  queryDocument: any
+  queryDocument: DocumentNode
 ): void {
   operationRegistry[operationName] = queryDocument;
 }
@@ -41,7 +41,7 @@ export function registerGraphQLOperation(
  */
 export async function fetchGraphQLData<T>(
   operationName: string,
-  variables?: Record<string, any>
+  variables?: Record<string, unknown>
 ): Promise<ApiResponse<T>> {
   try {
     const endpoint =
