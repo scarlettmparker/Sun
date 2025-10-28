@@ -4,8 +4,8 @@
  */
 
 import express from "express";
-import { fetchListSongs } from "../src/utils/api.js";
-
+import { fetchListSongs } from "../src/utils/api.ts";
+import { handleQuery } from "../utils/query-handler.js";
 const router = express.Router();
 
 /**
@@ -15,32 +15,14 @@ const router = express.Router();
 router.get("/", async (req, res) => {
   const { query } = req.query;
 
-  if (query === "listSongs") {
-    try {
-      const result = await fetchListSongs();
-
-      if (result.success) {
-        res.json({
-          success: true,
-          data: result.data,
-        });
-      } else {
-        res.status(result.statusCode || 500).json({
-          success: false,
-          error: result.error,
-        });
-      }
-    } catch (_error) {
-      res.status(500).json({
+  switch (query) {
+    case "listSongs":
+      return handleQuery(fetchListSongs, res);
+    default:
+      res.status(400).json({
         success: false,
-        error: "Internal server error",
+        error: "Invalid query parameter. Supported: listSongs",
       });
-    }
-  } else {
-    res.status(400).json({
-      success: false,
-      error: "Invalid query parameter. Supported: listSongs",
-    });
   }
 });
 
