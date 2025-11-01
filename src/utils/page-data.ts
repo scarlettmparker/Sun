@@ -14,13 +14,15 @@ type PageDataLoader = (
 // Allow multiple loaders per page name (e.g. layout + outlet)
 const pageDataLoaders: Record<string, PageDataLoader[]> = {};
 
+type PageDataCache = Record<
+  string,
+  { data: Record<string, unknown> | null; timestamp: number }
+>;
+
 /**
  * Cache for page data to avoid re-fetching on every request.
  */
-const pageDataCache: Record<
-  string,
-  { data: Record<string, unknown> | null; timestamp: number }
-> = {};
+const pageDataCache: PageDataCache = {};
 
 // Cache expiration time in milliseconds (5 mins)
 const CACHE_EXPIRATION_MS = 5 * 60 * 1000;
@@ -128,9 +130,21 @@ export async function fetchPageData(
   }
 }
 
-export const pageDataRegistry = {
+/**
+ * Page Data registry interface.
+ */
+interface PageDataRegistry {
+  registerPageDataLoader: (pageName: string, loader: PageDataLoader) => void;
+  unregisterPageDataLoader: (pageName: string) => void;
+  hasPageDataLoader: (pageName: string) => boolean;
+  getRegisteredPageNames: () => string[];
+  pageDataCache: PageDataCache;
+}
+
+export const pageDataRegistry: PageDataRegistry = {
   registerPageDataLoader,
   unregisterPageDataLoader,
   hasPageDataLoader,
   getRegisteredPageNames,
+  pageDataCache,
 };

@@ -51,7 +51,7 @@ const StemPlayer = (props: StemPlayerProps) => {
    */
   const handleSeek = (e: ChangeEvent<HTMLInputElement>) => {
     const newTime = parseFloat(e.target.value);
-    seek(Math.min(newTime, duration));
+    seek(Math.max(0, Math.min(newTime, duration)));
   };
 
   /**
@@ -100,7 +100,7 @@ const StemPlayer = (props: StemPlayerProps) => {
 
   return (
     <div {...rest} className={`${styles.container} ${rest.className ?? ""}`}>
-      <StemSliders stems={song.stems as Stem[]} setVolume={setVolume} />
+      <StemSliders stems={(song.stems as Stem[]) ?? []} setVolume={setVolume} />
       <div className={styles.controls}>
         <Label htmlFor="master-volume">{t("controls.master")}</Label>
         <Input
@@ -110,7 +110,11 @@ const StemPlayer = (props: StemPlayerProps) => {
           max={2}
           step={0.01}
           value={masterVolume}
-          onChange={(e) => setMasterVolume(parseFloat(e.target.value))}
+          onChange={(e) =>
+            setMasterVolume(
+              Math.max(0, Math.min(2, parseFloat(e.target.value)))
+            )
+          }
           onMouseMove={handleMasterVolumeMouseMove}
           className={styles.seeker}
           aria-label={t("controls.aria.master-volume")}

@@ -32,10 +32,11 @@ export async function getStemPlayerData(): Promise<Record<
 > | null> {
   try {
     const result = await fetchList();
-    if (result.success && result.data) {
-      return {
-        songs: (result.data as ListSongsQuery).stemPlayerQueries.list,
-      };
+    if (result?.data && result?.success) {
+      const songs = (result.data as ListSongsQuery).stemPlayerQueries.list;
+      if (songs) {
+        return { songs: songs };
+      }
     }
     return null;
   } catch (error) {

@@ -8,7 +8,7 @@ type StemControlsProps = {
   /**
    * List of stems.
    */
-  stems: Stem[];
+  stems?: Stem[] | null;
 
   /**
    * Callback function to set the volume of the stem.
@@ -24,7 +24,7 @@ const StemSliders = memo((props: StemControlsProps) => {
 
   return (
     <div className={styles.container}>
-      {stems.map((stem, i) => (
+      {stems?.map((stem, i) => (
         <div key={i} className={styles.slider}>
           <Input
             type="range"

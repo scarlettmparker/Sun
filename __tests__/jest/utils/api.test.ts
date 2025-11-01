@@ -105,7 +105,7 @@ describe("API utilities", () => {
           body: expect.stringContaining("query"),
         })
       );
-      expect(result.success).toBe(true);
+      expect(result?.success).toBe(true);
     });
   });
 });

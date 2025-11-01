@@ -601,4 +601,152 @@ describe("useStemPlayer", () => {
       expect(mockGainNodes.length).toBeGreaterThan(initialGainNodes);
     });
   });
+
+  describe("Error handling and edge cases", () => {
+    it("handles song with undefined path", () => {
+      const songWithUndefinedPath = {
+        ...mockSong,
+        path: undefined,
+      } as unknown as Song;
+
+      expect(() => {
+        renderHook(() => useStemPlayer(songWithUndefinedPath));
+      }).not.toThrow();
+    });
+
+    it("handles song with null path", () => {
+      const songWithNullPath = { ...mockSong, path: null } as unknown as Song;
+
+      expect(() => {
+        renderHook(() => useStemPlayer(songWithNullPath));
+      }).not.toThrow();
+    });
+
+    it("handles stems with undefined paths", () => {
+      const stemsWithUndefinedPaths: Stem[] = [
+        { name: "Drums", path: undefined as unknown as string },
+        { name: "Bass", path: "/bass.mp3" },
+      ];
+
+      const songWithUndefinedStemPaths = {
+        ...mockSong,
+        stems: stemsWithUndefinedPaths,
+      };
+
+      expect(() => {
+        renderHook(() => useStemPlayer(songWithUndefinedStemPaths));
+      }).not.toThrow();
+    });
+
+    it("handles stems with null paths", () => {
+      const stemsWithNullPaths: Stem[] = [
+        { name: "Drums", path: null as unknown as string },
+        { name: "Bass", path: "/bass.mp3" },
+      ];
+
+      const songWithNullStemPaths = {
+        ...mockSong,
+        stems: stemsWithNullPaths,
+      };
+
+      expect(() => {
+        renderHook(() => useStemPlayer(songWithNullStemPaths));
+      }).not.toThrow();
+    });
+
+    it("handles stems with empty string paths", () => {
+      const stemsWithEmptyPaths: Stem[] = [
+        { name: "Drums", path: "" },
+        { name: "Bass", path: "/bass.mp3" },
+      ];
+
+      const songWithEmptyStemPaths = {
+        ...mockSong,
+        stems: stemsWithEmptyPaths,
+      };
+
+      expect(() => {
+        renderHook(() => useStemPlayer(songWithEmptyStemPaths));
+      }).not.toThrow();
+    });
+
+    it("handles very large skip values", async () => {
+      const { result } = renderHook(() => useStemPlayer(mockSong));
+
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      });
+
+      act(() => {
+        result.current.skip(1000);
+      });
+
+      expect(result.current.position).toBe(120);
+    });
+
+    it("handles very negative skip values", async () => {
+      const { result } = renderHook(() => useStemPlayer(mockSong));
+
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      });
+
+      act(() => {
+        result.current.skip(-1000);
+      });
+
+      expect(result.current.position).toBe(0);
+    });
+
+    it("handles rapid state changes", async () => {
+      const { result } = renderHook(() => useStemPlayer(mockSong));
+
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      });
+
+      act(() => {
+        result.current.play();
+        result.current.seek(50);
+        result.current.setMasterVolume(0.5);
+        result.current.stop();
+      });
+
+      expect(result.current.position).toBe(50);
+      expect(result.current.masterVolume).toBe(0.5);
+      expect(result.current.playing).toBe(false);
+    });
+
+    it("handles AudioContext suspension", async () => {
+      // This test verifies behavior when AudioContext might be suspended
+      const { result } = renderHook(() => useStemPlayer(mockSong));
+
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      });
+
+      act(() => {
+        result.current.play();
+      });
+
+      // Should still attempt to play even if suspended
+      expect(result.current.playing).toBe(true);
+    });
+
+    it("handles seek during playback restart", async () => {
+      const { result } = renderHook(() => useStemPlayer(mockSong));
+
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      });
+
+      act(() => {
+        result.current.play();
+        result.current.seek(60);
+      });
+
+      expect(result.current.position).toBe(60);
+      expect(result.current.playing).toBe(true);
+    });
+  });
 });

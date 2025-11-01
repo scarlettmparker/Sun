@@ -470,4 +470,180 @@ describe("StemPlayer", () => {
     const container = screen.getByTestId("stem-player");
     expect(container).toBeInTheDocument();
   });
+
+  it("handles invalid song prop gracefully", () => {
+    const invalidSong = { id: "test" } as Song;
+
+    expect(() => {
+      render(<StemPlayer song={invalidSong} />);
+    }).not.toThrow();
+  });
+
+  it("handles song with undefined stems", () => {
+    const songWithUndefinedStems = { ...mockSong, stems: undefined } as Song;
+
+    expect(() => {
+      render(<StemPlayer song={songWithUndefinedStems} />);
+    }).not.toThrow();
+  });
+
+  it("handles song with null stems", () => {
+    const songWithNullStems = { ...mockSong, stems: null };
+
+    expect(() => {
+      render(<StemPlayer song={songWithNullStems} />);
+    }).not.toThrow();
+  });
+
+  it("renders loading state with 0 progress", () => {
+    mockUseStemPlayer.mockReturnValue({
+      ...defaultMockReturnValue,
+      loaded: false,
+      loadingProgress: 0,
+    });
+
+    render(<StemPlayer song={mockSong} />);
+    expect(screen.getByText("Loading: 0%")).toBeInTheDocument();
+  });
+
+  it("renders loading state with 100 progress but not loaded", () => {
+    mockUseStemPlayer.mockReturnValue({
+      ...defaultMockReturnValue,
+      loaded: false,
+      loadingProgress: 100,
+    });
+
+    render(<StemPlayer song={mockSong} />);
+    expect(screen.getByText("Loading: 100%")).toBeInTheDocument();
+  });
+
+  it("handles seek with values beyond duration", () => {
+    mockUseStemPlayer.mockReturnValue({
+      ...defaultMockReturnValue,
+      duration: 10,
+    });
+
+    render(<StemPlayer song={mockSong} />);
+
+    const seeker = screen.getByLabelText("controls.aria.seek");
+    fireEvent.change(seeker, { target: { value: "15" } });
+    expect(mockSeek).toHaveBeenCalledWith(10);
+  });
+
+  it("handles negative seek values", () => {
+    mockUseStemPlayer.mockReturnValue({
+      ...defaultMockReturnValue,
+      duration: 10,
+      position: 5,
+    });
+
+    render(<StemPlayer song={mockSong} />);
+
+    const seeker = screen.getByLabelText("controls.aria.seek");
+    fireEvent.change(seeker, { target: { value: "-5" } });
+    expect(mockSeek).toHaveBeenCalledWith(0);
+  });
+
+  it("handles master volume values beyond range", () => {
+    const mockSetMasterVolume = jest.fn();
+    mockUseStemPlayer.mockReturnValue({
+      ...defaultMockReturnValue,
+      setMasterVolume: mockSetMasterVolume,
+    });
+
+    render(<StemPlayer song={mockSong} />);
+
+    const masterSlider = screen.getByLabelText("controls.aria.master-volume");
+    fireEvent.change(masterSlider, { target: { value: "3" } });
+    expect(mockSetMasterVolume).toHaveBeenCalledWith(2);
+  });
+
+  it("handles negative master volume values", () => {
+    const mockSetMasterVolume = jest.fn();
+    mockUseStemPlayer.mockReturnValue({
+      ...defaultMockReturnValue,
+      setMasterVolume: mockSetMasterVolume,
+    });
+
+    render(<StemPlayer song={mockSong} />);
+
+    const masterSlider = screen.getByLabelText("controls.aria.master-volume");
+    fireEvent.change(masterSlider, { target: { value: "-1" } });
+    expect(mockSetMasterVolume).toHaveBeenCalledWith(0);
+  });
+
+  it("handles stem volume slider changes with invalid indices", () => {
+    const mockSetVolume = jest.fn();
+    mockUseStemPlayer.mockReturnValue({
+      ...defaultMockReturnValue,
+      setVolume: mockSetVolume,
+    });
+
+    render(<StemPlayer song={mockSong} />);
+
+    const sliders = screen.getAllByRole("slider");
+    const stemSliders = sliders.filter(
+      (slider) =>
+        slider.getAttribute("aria-label") !== "controls.aria.master-volume" &&
+        slider.getAttribute("aria-label") !== "controls.aria.seek"
+    );
+    expect(stemSliders.length).toBe(2);
+  });
+
+  it("renders with very long stem names", () => {
+    const longNameStems: Stem[] = [
+      {
+        name: "Very Long Stem Name That Might Cause Layout Issues",
+        path: "/long.mp3",
+      },
+    ];
+
+    const mockSong: Song = {
+      id: "",
+      path: "",
+      stems: longNameStems,
+    };
+
+    render(<StemPlayer song={mockSong} />);
+
+    expect(
+      screen.getByText("Very Long Stem Name That Might Cause Layout Issues")
+    ).toBeInTheDocument();
+  });
+
+  it("handles rapid button clicks", () => {
+    const mockPlay = jest.fn();
+    mockUseStemPlayer.mockReturnValue({
+      ...defaultMockReturnValue,
+      play: mockPlay,
+    });
+
+    render(<StemPlayer song={mockSong} />);
+
+    const playButton = screen.getByLabelText("controls.aria.play");
+
+    // Simulate rapid clicks
+    fireEvent.click(playButton);
+    fireEvent.click(playButton);
+    fireEvent.click(playButton);
+
+    expect(mockPlay).toHaveBeenCalledTimes(3);
+  });
+
+  it("maintains accessibility attributes during state changes", () => {
+    const { rerender } = render(<StemPlayer song={mockSong} />);
+
+    const playButton = screen.getByLabelText("controls.aria.play");
+    expect(playButton).toHaveAttribute("aria-pressed", "false");
+
+    mockUseStemPlayer.mockReturnValue({
+      ...defaultMockReturnValue,
+      playing: true,
+    });
+
+    rerender(<StemPlayer song={mockSong} />);
+
+    const stopButton = screen.getByLabelText("controls.aria.stop");
+    expect(stopButton).toHaveAttribute("aria-pressed", "true");
+  });
 });
