@@ -3,7 +3,7 @@
  * Handles fetching data from the GraphQL server with error handling.
  */
 
-import { ListSongsDocument } from "../generated/graphql";
+import { ListSongsDocument, LocateSongDocument } from "../generated/graphql";
 import { print, DocumentNode } from "graphql";
 
 export type ApiResponse<T> = {
@@ -19,6 +19,7 @@ export type ApiResponse<T> = {
  */
 const operationRegistry: Record<string, DocumentNode> = {
   list: ListSongsDocument,
+  locate: LocateSongDocument,
 };
 
 /**
@@ -104,5 +105,14 @@ export async function fetchGraphQLData<T>(
  * List operation.
  */
 export async function fetchList() {
+  console.log("calling fetch list");
   return fetchGraphQLData("list");
+}
+
+/**
+ * Locate operation.
+ */
+export async function fetchLocate(id: string) {
+  console.log("calling fetch locate");
+  return fetchGraphQLData("locate", { id });
 }

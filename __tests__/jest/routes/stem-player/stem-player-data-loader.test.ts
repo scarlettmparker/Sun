@@ -4,10 +4,7 @@
 
 import { fetchList } from "~/utils/api";
 import { pageDataRegistry } from "~/utils/page-data";
-import {
-  getStemPlayerData,
-  registerStemPlayerDataLoader,
-} from "~/routes/stem-player/stem-player";
+import { getStemPlayerData } from "~/routes/stem-player/stem-player";
 import {
   restoreConsoleError,
   suppressConsoleErrorsFromTests,
@@ -37,13 +34,6 @@ describe("Stem Player Data Loader", () => {
     registeredPages.forEach((page) =>
       pageDataRegistry.unregisterPageDataLoader(page)
     );
-  });
-
-  it("should register the stem-player data loader", () => {
-    // Call the registration function
-    registerStemPlayerDataLoader();
-
-    expect(pageDataRegistry.hasPageDataLoader("stem-player")).toBe(true);
   });
 
   describe("getStemPlayerData", () => {

@@ -3,13 +3,16 @@
  * Provides a registry for page data loaders and a function to fetch data for any page.
  */
 
-type PageDataLoader = () => Promise<Record<string, unknown> | null>;
+type PageDataLoader = (
+  params?: Record<string, unknown>
+) => Promise<Record<string, unknown> | null>;
 
 /**
  * Registry of page data loaders.
  * Maps page names to their data loading functions.
  */
-const pageDataLoaders: Record<string, PageDataLoader> = {};
+// Allow multiple loaders per page name (e.g. layout + outlet)
+const pageDataLoaders: Record<string, PageDataLoader[]> = {};
 
 /**
  * Cache for page data to avoid re-fetching on every request.
@@ -19,7 +22,7 @@ const pageDataCache: Record<
   { data: Record<string, unknown> | null; timestamp: number }
 > = {};
 
-// Cache expiration time in milliseconds (5 mins)./
+// Cache expiration time in milliseconds (5 mins)
 const CACHE_EXPIRATION_MS = 5 * 60 * 1000;
 
 /**
@@ -31,10 +34,18 @@ function registerPageDataLoader(
   pageName: string,
   loader: PageDataLoader
 ): void {
-  const currentLoader = pageDataLoaders[pageName];
-  pageDataLoaders[pageName] = loader;
-  if (currentLoader !== loader) {
-    delete pageDataCache[pageName];
+  const list = pageDataLoaders[pageName] || [];
+  // avoid duplicate registration of the same function
+  if (!list.includes(loader)) {
+    list.push(loader);
+    pageDataLoaders[pageName] = list;
+
+    // invalidate cache entries for this page
+    Object.keys(pageDataCache).forEach((key) => {
+      if (key === pageName || key.startsWith(`${pageName}:`)) {
+        delete pageDataCache[key];
+      }
+    });
   }
 }
 
@@ -42,8 +53,17 @@ function registerPageDataLoader(
  * Unregisters a data loader for a specific page.
  * @param pageName The name of the page to unregister.
  */
+/**
+ * Unregisters all data loaders for a specific page.
+ * If you need to unregister a single loader you can implement that later.
+ */
 function unregisterPageDataLoader(pageName: string): void {
   delete pageDataLoaders[pageName];
+  Object.keys(pageDataCache).forEach((key) => {
+    if (key === pageName || key.startsWith(`${pageName}:`)) {
+      delete pageDataCache[key];
+    }
+  });
 }
 
 /**
@@ -52,7 +72,8 @@ function unregisterPageDataLoader(pageName: string): void {
  * @returns True if a loader is registered, false otherwise.
  */
 function hasPageDataLoader(pageName: string): boolean {
-  return pageName in pageDataLoaders;
+  const list = pageDataLoaders[pageName];
+  return Array.isArray(list) && list.length > 0;
 }
 
 /**
@@ -66,26 +87,43 @@ function getRegisteredPageNames(): string[] {
 /**
  * Fetches data for a given page using the registered loader.
  * @param pageName The name of the page.
+ * @param params Optional parameters to pass to the loader.
  * @returns Promise resolving to page data or null if no loader is registered.
  */
 export async function fetchPageData(
-  pageName: string
+  pageName: string,
+  params?: Record<string, unknown>
 ): Promise<Record<string, unknown> | null> {
-  const loader = pageDataLoaders[pageName];
-  if (!loader) {
+  const loaders = pageDataLoaders[pageName];
+  if (!Array.isArray(loaders) || loaders.length === 0) {
     return null;
   }
 
+  const cacheKey = params ? `${pageName}:${JSON.stringify(params)}` : pageName;
   const now = Date.now();
-  const cached = pageDataCache[pageName];
+  const cached = pageDataCache[cacheKey];
 
   if (cached && now - cached.timestamp < CACHE_EXPIRATION_MS) {
     return cached.data;
   }
 
+  // Run all loaders in parallel. If any loader throws, follow previous
+  // behaviour: log error and return null for the whole page.
   try {
-    const data = await loader();
-    pageDataCache[pageName] = { data, timestamp: now };
+    const results = await Promise.all(loaders.map((l) => l(params)));
+
+    // Merge non-null results into a single object. If all are null, return null.
+    const merged: Record<string, unknown> = {};
+    let hasData = false;
+    for (const r of results) {
+      if (r && typeof r === "object") {
+        Object.assign(merged, r);
+        hasData = true;
+      }
+    }
+
+    const data = hasData ? merged : null;
+    pageDataCache[cacheKey] = { data, timestamp: now };
     return data;
   } catch (error) {
     console.error(`Failed to fetch data for page ${pageName}:`, error);

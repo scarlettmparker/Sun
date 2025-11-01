@@ -4,17 +4,9 @@
  * stem-player etc. data loaders registered here.
  */
 
-import { pageDataRegistry } from "./page-data";
-import { fetchList } from "./api";
-import { ListSongsQuery } from "~/generated/graphql";
+import { registerStemPlayerDetailsDataLoader } from "~/routes/stem-player/[id]/stem-player-details";
+import { registerStemPlayerDataLoader } from "~/routes/stem-player/stem-player";
 
 // Register all loaders
-pageDataRegistry.registerPageDataLoader("stem-player", async () => {
-  const result = await fetchList();
-  if (result.success && result.data) {
-    return {
-      songs: (result.data as ListSongsQuery).stemPlayerQueries.list,
-    };
-  }
-  return null;
-});
+registerStemPlayerDataLoader();
+registerStemPlayerDetailsDataLoader();

@@ -1,8 +1,7 @@
-import StemPlayer from "~/_components/stem-player";
 import { fetchList } from "~/utils/api";
 import { pageDataRegistry } from "~/utils/page-data";
-import styles from "./stem-player.module.css";
 import { ListSongsQuery } from "~/generated/graphql";
+import { Outlet } from "react-router-dom";
 
 /**
  * Stem Player Page component.
@@ -35,7 +34,10 @@ const StemPlayerPage = () => {
   //   }));
 
   return (
-    <></>
+    <>
+      Stem Player
+      <Outlet />
+    </>
     // <StemPlayer
     //   className={styles.stemPlayer}
     //   stems={stems as unknown as Stem[]}
