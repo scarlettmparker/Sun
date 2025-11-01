@@ -5,6 +5,7 @@ public/
 
 # Generated
 generated/
+coverage/
 
 # Java stuff
 .gradle/

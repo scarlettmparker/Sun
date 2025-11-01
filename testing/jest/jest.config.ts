@@ -12,7 +12,10 @@ const config: Config = {
   },
   testMatch: ["<rootDir>/__tests__/**/*.(ts|tsx)"],
   testPathIgnorePatterns: ["/node_modules/", "\\.d\\.ts$"],
+  collectCoverage: true,
   collectCoverageFrom: ["src/**/*.(ts|tsx)", "!src/**/*.d.ts"],
+  coverageReporters: ["text", "html", "text-summary"],
+  coverageDirectory: "coverage",
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
 };
 
