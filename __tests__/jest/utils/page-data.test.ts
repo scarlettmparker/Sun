@@ -7,6 +7,10 @@ import { fetchPageData, pageDataRegistry } from "~/utils/page-data";
 // Mock console.error to avoid noise in tests
 const mockConsoleError = jest.spyOn(console, "error").mockImplementation();
 
+afterAll(() => {
+  mockConsoleError.mockRestore();
+});
+
 describe("page-data utilities", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -15,10 +19,6 @@ describe("page-data utilities", () => {
     registeredPages.forEach((page) =>
       pageDataRegistry.unregisterPageDataLoader(page)
     );
-  });
-
-  afterAll(() => {
-    mockConsoleError.mockRestore();
   });
 
   describe("pageDataRegistry", () => {

@@ -76,6 +76,10 @@ describe("Stem Player Data Loader", () => {
     });
 
     it("should return null when fetchList throws an error", async () => {
+      const mockConsoleError = jest
+        .spyOn(console, "error")
+        .mockImplementation();
+
       const mockError = new Error("Network error");
 
       mockFetchListSongs.mockRejectedValue(mockError);
@@ -84,6 +88,7 @@ describe("Stem Player Data Loader", () => {
 
       expect(result).toBeNull();
       expect(mockFetchListSongs).toHaveBeenCalledTimes(1);
+      mockConsoleError.mockRestore();
     });
 
     it("should return null when response data is missing", async () => {

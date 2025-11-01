@@ -37,14 +37,15 @@ public class SongMapper {
           .collect(Collectors.toList());
     }
 
-    Song graphQLSong = Song.newBuilder()
+    Song song = Song.newBuilder()
         .id(songEntity.getId().toString())
+        .path("/_components/stem-player/" + songEntity.getFilePath() + "/stems/")
         .name(songEntity.getName())
         .stems(stems)
         .build();
 
-    logger.debug("Mapped song {} with id {}", songEntity.getName(), graphQLSong.getId());
+    logger.debug("Mapped song {} with id {}", songEntity.getName(), song.getId());
 
-    return graphQLSong;
+    return song;
   }
 }

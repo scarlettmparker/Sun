@@ -64,7 +64,7 @@ class StemPlayerGraphQLServiceTest {
     songEntity2.setStems(Arrays.asList());
 
     Stem stem1 = Stem.newBuilder()
-        .filePath("drums.mp3")
+        .path("drums.mp3")
         .name("Drums")
         .build();
 

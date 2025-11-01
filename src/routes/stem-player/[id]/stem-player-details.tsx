@@ -1,5 +1,5 @@
 import { fetchLocate } from "~/utils/api";
-import { LocateSongQuery, Stem } from "~/generated/graphql";
+import { LocateSongQuery, Song } from "~/generated/graphql";
 import StemPlayer from "~/_components/stem-player";
 import { pageDataRegistry } from "~/utils/page-data";
 import styles from "./stem-player-details.module.css";
@@ -14,12 +14,7 @@ const StemPlayerDetailsPage = () => {
     return <div>Loading...</div>;
   }
 
-  return (
-    <StemPlayer
-      className={styles.stemPlayer}
-      stems={data.stems as unknown as Stem[]}
-    />
-  );
+  return <StemPlayer className={styles.stemPlayer} song={data as Song} />;
 };
 
 /**

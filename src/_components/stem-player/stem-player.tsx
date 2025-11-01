@@ -8,13 +8,13 @@ import { formatHoverTime } from "./utils/format-hover-time";
 import StemSliders from "./stem-sliders";
 import styles from "./stem-player.module.css";
 import { useTranslation } from "react-i18next";
-import { Stem } from "~/generated/graphql";
+import { Song, Stem } from "~/generated/graphql";
 
 type StemPlayerProps = {
   /**
-   * List of stems.
+   * The song to play stems for.
    */
-  stems: Stem[];
+  song: Song;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 /**
@@ -22,7 +22,7 @@ type StemPlayerProps = {
  * allowing for control over each track.
  */
 const StemPlayer = (props: StemPlayerProps) => {
-  const { stems, ...rest } = props;
+  const { song, ...rest } = props;
   const { t } = useTranslation("stem-player");
 
   const SKIP_OFFSET = 10;
@@ -42,7 +42,7 @@ const StemPlayer = (props: StemPlayerProps) => {
     masterVolume,
     setVolume,
     setMasterVolume,
-  } = useStemPlayer(stems);
+  } = useStemPlayer(song);
 
   /**
    * Handle seek by setting the audio time to the slider level.
@@ -100,7 +100,7 @@ const StemPlayer = (props: StemPlayerProps) => {
 
   return (
     <div {...rest} className={`${styles.container} ${rest.className ?? ""}`}>
-      <StemSliders stems={stems} setVolume={setVolume} />
+      <StemSliders stems={song.stems as Stem[]} setVolume={setVolume} />
       <div className={styles.controls}>
         <Label htmlFor="master-volume">{t("controls.master")}</Label>
         <Input

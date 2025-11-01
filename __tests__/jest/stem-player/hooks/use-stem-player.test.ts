@@ -13,7 +13,7 @@ import {
   restoreConsoleError,
 } from "testing/jest/mock";
 import { deleteGlobalWindow } from "testing/jest/utils/delete-global-window";
-import type { Stem } from "~/generated/graphql";
+import type { Song, Stem } from "~/generated/graphql";
 
 beforeAll(() => {
   // Due to some issue with re-rendering that we don't care about in test env
@@ -24,12 +24,18 @@ afterAll(() => {
   restoreConsoleError();
 });
 
-describe("useStemPlayer", () => {
-  const mockStems: Stem[] = [
-    { name: "Drums", filePath: "/drums.mp3" },
-    { name: "Bass", filePath: "/bass.mp3" },
-  ];
+const mockStems: Stem[] = [
+  { name: "Drums", path: "/drums.mp3" },
+  { name: "Bass", path: "/bass.mp3" },
+];
 
+const mockSong: Song = {
+  id: "",
+  path: "",
+  stems: mockStems,
+};
+
+describe("useStemPlayer", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockGainNodes.length = 0;
@@ -55,7 +61,7 @@ describe("useStemPlayer", () => {
   });
 
   it("loads audio buffers when stems change (& loads initial values)", async () => {
-    const { result } = renderHook(() => useStemPlayer(mockStems));
+    const { result } = renderHook(() => useStemPlayer(mockSong));
     // Wait for effects to run
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
@@ -68,7 +74,7 @@ describe("useStemPlayer", () => {
   });
 
   it("plays audio from start", async () => {
-    const { result } = renderHook(() => useStemPlayer(mockStems));
+    const { result } = renderHook(() => useStemPlayer(mockSong));
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
@@ -79,7 +85,7 @@ describe("useStemPlayer", () => {
   });
 
   it("stops playback", async () => {
-    const { result } = renderHook(() => useStemPlayer(mockStems));
+    const { result } = renderHook(() => useStemPlayer(mockSong));
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
@@ -93,7 +99,7 @@ describe("useStemPlayer", () => {
   });
 
   it("seeks to specific time", async () => {
-    const { result } = renderHook(() => useStemPlayer(mockStems));
+    const { result } = renderHook(() => useStemPlayer(mockSong));
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
@@ -104,7 +110,7 @@ describe("useStemPlayer", () => {
   });
 
   it("skips forward and backward", async () => {
-    const { result } = renderHook(() => useStemPlayer(mockStems));
+    const { result } = renderHook(() => useStemPlayer(mockSong));
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
@@ -122,7 +128,7 @@ describe("useStemPlayer", () => {
   });
 
   it("sets volume for specific stem", async () => {
-    const { result } = renderHook(() => useStemPlayer(mockStems));
+    const { result } = renderHook(() => useStemPlayer(mockSong));
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
@@ -133,7 +139,7 @@ describe("useStemPlayer", () => {
   });
 
   it("sets master volume", async () => {
-    const { result } = renderHook(() => useStemPlayer(mockStems));
+    const { result } = renderHook(() => useStemPlayer(mockSong));
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
@@ -144,7 +150,7 @@ describe("useStemPlayer", () => {
   });
 
   it("handles end of playback", async () => {
-    const { result } = renderHook(() => useStemPlayer(mockStems));
+    const { result } = renderHook(() => useStemPlayer(mockSong));
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
@@ -155,7 +161,7 @@ describe("useStemPlayer", () => {
   });
 
   it("does not play if already playing", async () => {
-    const { result } = renderHook(() => useStemPlayer(mockStems));
+    const { result } = renderHook(() => useStemPlayer(mockSong));
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
@@ -169,7 +175,7 @@ describe("useStemPlayer", () => {
   });
 
   it("restarts from beginning when ended", async () => {
-    const { result } = renderHook(() => useStemPlayer(mockStems));
+    const { result } = renderHook(() => useStemPlayer(mockSong));
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
@@ -184,7 +190,7 @@ describe("useStemPlayer", () => {
   });
 
   it("tracks loading progress", async () => {
-    const { result } = renderHook(() => useStemPlayer(mockStems));
+    const { result } = renderHook(() => useStemPlayer(mockSong));
     expect(result.current.loadingProgress).toBe(0);
     // Wait for effects to run
     await act(async () => {
@@ -198,20 +204,20 @@ describe("useStemPlayer", () => {
       // Mock server-side environment
       deleteGlobalWindow();
 
-      renderHook(() => useStemPlayer(mockStems));
+      renderHook(() => useStemPlayer(mockSong));
       expect(mockAudioContext.createGain).not.toHaveBeenCalled();
     });
 
     it("initializes AudioContext when window is available", () => {
       // Window is already mocked in beforeEach
-      renderHook(() => useStemPlayer(mockStems));
+      renderHook(() => useStemPlayer(mockSong));
       expect(global.AudioContext).toHaveBeenCalled();
     });
   });
 
   describe("Promise loading behavior", () => {
     it("handles successful loading of all stems", async () => {
-      const { result } = renderHook(() => useStemPlayer(mockStems));
+      const { result } = renderHook(() => useStemPlayer(mockSong));
 
       await act(async () => {
         await new Promise((resolve) => setTimeout(resolve, 0));
@@ -231,7 +237,7 @@ describe("useStemPlayer", () => {
         .mockRejectedValueOnce(new Error("Network error"));
 
       await act(async () => {
-        renderHook(() => useStemPlayer(mockStems));
+        renderHook(() => useStemPlayer(mockSong));
       });
 
       expect(global.fetch).toHaveBeenCalledTimes(2);
@@ -244,7 +250,7 @@ describe("useStemPlayer", () => {
         .mockRejectedValueOnce(new Error("Decode error"));
 
       await act(async () => {
-        renderHook(() => useStemPlayer(mockStems));
+        renderHook(() => useStemPlayer(mockSong));
       });
 
       expect(mockAudioContext.decodeAudioData).toHaveBeenCalledTimes(2);
@@ -254,7 +260,7 @@ describe("useStemPlayer", () => {
       const progressUpdates: number[] = [];
 
       renderHook(() => {
-        const hookResult = useStemPlayer(mockStems);
+        const hookResult = useStemPlayer(mockSong);
         progressUpdates.push(hookResult.loadingProgress);
         return hookResult;
       });
@@ -268,7 +274,7 @@ describe("useStemPlayer", () => {
     });
 
     it("does not update state after unmount", async () => {
-      const { result, unmount } = renderHook(() => useStemPlayer(mockStems));
+      const { result, unmount } = renderHook(() => useStemPlayer(mockSong));
 
       unmount();
 
@@ -286,7 +292,7 @@ describe("useStemPlayer", () => {
     it("does not play when no AudioContext", () => {
       deleteGlobalWindow();
 
-      const { result } = renderHook(() => useStemPlayer(mockStems));
+      const { result } = renderHook(() => useStemPlayer(mockSong));
 
       act(() => {
         result.current.play();
@@ -296,7 +302,7 @@ describe("useStemPlayer", () => {
     });
 
     it("does not play when no buffers loaded", () => {
-      const { result } = renderHook(() => useStemPlayer(mockStems));
+      const { result } = renderHook(() => useStemPlayer(mockSong));
 
       act(() => {
         result.current.play();
@@ -306,7 +312,7 @@ describe("useStemPlayer", () => {
     });
 
     it("does not play when already playing", async () => {
-      const { result } = renderHook(() => useStemPlayer(mockStems));
+      const { result } = renderHook(() => useStemPlayer(mockSong));
 
       await act(async () => {
         await new Promise((resolve) => setTimeout(resolve, 0));
@@ -329,7 +335,7 @@ describe("useStemPlayer", () => {
     });
 
     it("restarts from beginning when ended", async () => {
-      const { result } = renderHook(() => useStemPlayer(mockStems));
+      const { result } = renderHook(() => useStemPlayer(mockSong));
 
       await act(async () => {
         await new Promise((resolve) => setTimeout(resolve, 0));
@@ -350,7 +356,13 @@ describe("useStemPlayer", () => {
     });
 
     it("handles empty stems array", () => {
-      const { result } = renderHook(() => useStemPlayer([]));
+      const emptyMockSong: Song = {
+        id: "",
+        path: "",
+        stems: [],
+      };
+
+      const { result } = renderHook(() => useStemPlayer(emptyMockSong));
 
       expect(result.current.loaded).toBe(true); // Empty array is "loaded"
       expect(result.current.duration).toBe(0);
@@ -359,7 +371,7 @@ describe("useStemPlayer", () => {
 
   describe("Volume controls", () => {
     it("sets volume for valid stem index", async () => {
-      const { result } = renderHook(() => useStemPlayer(mockStems));
+      const { result } = renderHook(() => useStemPlayer(mockSong));
 
       await act(async () => {
         await new Promise((resolve) => setTimeout(resolve, 0));
@@ -373,7 +385,7 @@ describe("useStemPlayer", () => {
     });
 
     it("ignores volume set for invalid stem index", async () => {
-      const { result } = renderHook(() => useStemPlayer(mockStems));
+      const { result } = renderHook(() => useStemPlayer(mockSong));
 
       await act(async () => {
         await new Promise((resolve) => setTimeout(resolve, 0));
@@ -387,7 +399,7 @@ describe("useStemPlayer", () => {
     });
 
     it("sets master volume", async () => {
-      const { result } = renderHook(() => useStemPlayer(mockStems));
+      const { result } = renderHook(() => useStemPlayer(mockSong));
 
       await act(async () => {
         await new Promise((resolve) => setTimeout(resolve, 0));
@@ -404,7 +416,7 @@ describe("useStemPlayer", () => {
     it("does not set master volume without AudioContext", () => {
       deleteGlobalWindow();
 
-      const { result } = renderHook(() => useStemPlayer(mockStems));
+      const { result } = renderHook(() => useStemPlayer(mockSong));
 
       act(() => {
         result.current.setMasterVolume(0.8);
@@ -417,7 +429,7 @@ describe("useStemPlayer", () => {
 
   describe("Position tracking and seeking", () => {
     it("seeks to valid time", async () => {
-      const { result } = renderHook(() => useStemPlayer(mockStems));
+      const { result } = renderHook(() => useStemPlayer(mockSong));
 
       await act(async () => {
         await new Promise((resolve) => setTimeout(resolve, 0));
@@ -432,7 +444,7 @@ describe("useStemPlayer", () => {
     });
 
     it("seeks to end and sets ended state", async () => {
-      const { result } = renderHook(() => useStemPlayer(mockStems));
+      const { result } = renderHook(() => useStemPlayer(mockSong));
 
       await act(async () => {
         await new Promise((resolve) => setTimeout(resolve, 0));
@@ -447,7 +459,7 @@ describe("useStemPlayer", () => {
     });
 
     it("clamps seek to valid range", async () => {
-      const { result } = renderHook(() => useStemPlayer(mockStems));
+      const { result } = renderHook(() => useStemPlayer(mockSong));
 
       await act(async () => {
         await new Promise((resolve) => setTimeout(resolve, 0));
@@ -467,7 +479,7 @@ describe("useStemPlayer", () => {
     });
 
     it("starts playback from seek position when playing", async () => {
-      const { result } = renderHook(() => useStemPlayer(mockStems));
+      const { result } = renderHook(() => useStemPlayer(mockSong));
 
       await act(async () => {
         await new Promise((resolve) => setTimeout(resolve, 0));
@@ -492,7 +504,7 @@ describe("useStemPlayer", () => {
         throw new Error("Already stopped");
       });
 
-      const { result } = renderHook(() => useStemPlayer(mockStems));
+      const { result } = renderHook(() => useStemPlayer(mockSong));
 
       await act(async () => {
         await new Promise((resolve) => setTimeout(resolve, 0));
@@ -511,7 +523,7 @@ describe("useStemPlayer", () => {
     });
 
     it("preserves offset when stopping during playback", async () => {
-      const { result } = renderHook(() => useStemPlayer(mockStems));
+      const { result } = renderHook(() => useStemPlayer(mockSong));
 
       await act(async () => {
         await new Promise((resolve) => setTimeout(resolve, 0));
@@ -533,7 +545,7 @@ describe("useStemPlayer", () => {
 
   describe("State management and memoization", () => {
     it("memoizes return object to prevent unnecessary re-renders", async () => {
-      const { result, rerender } = renderHook(() => useStemPlayer(mockStems));
+      const { result, rerender } = renderHook(() => useStemPlayer(mockSong));
 
       await act(async () => {
         await new Promise((resolve) => setTimeout(resolve, 0));
@@ -550,7 +562,7 @@ describe("useStemPlayer", () => {
     });
 
     it("updates return object when dependencies change", async () => {
-      const { result } = renderHook(() => useStemPlayer(mockStems));
+      const { result } = renderHook(() => useStemPlayer(mockSong));
 
       await act(async () => {
         await new Promise((resolve) => setTimeout(resolve, 0));
@@ -564,8 +576,8 @@ describe("useStemPlayer", () => {
     });
 
     it("recreates audio nodes when stems change", async () => {
-      const { rerender } = renderHook(({ stems }) => useStemPlayer(stems), {
-        initialProps: { stems: mockStems },
+      const { rerender } = renderHook(({ song }) => useStemPlayer(song), {
+        initialProps: { song: mockSong },
       });
 
       await act(async () => {
@@ -574,7 +586,13 @@ describe("useStemPlayer", () => {
 
       const initialGainNodes = mockGainNodes.length;
 
-      rerender({ stems: [{ name: "New Stem", filePath: "/new.mp3" }] });
+      rerender({
+        song: {
+          id: "",
+          path: "",
+          stems: [{ name: "New Stem", path: "/new.mp3" }],
+        },
+      });
 
       await act(async () => {
         await new Promise((resolve) => setTimeout(resolve, 0));

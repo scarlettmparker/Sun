@@ -1,11 +1,12 @@
 type Song {
   id: String!
+  path: String!
   name: String
   stems: [Stem]
 }
 
 type Stem {
-  filePath: String!
+  path: String!
   name: String
 }
 

@@ -104,7 +104,6 @@ export async function fetchGraphQLData<T>(
  * List operation.
  */
 export async function fetchList() {
-  console.log("calling fetch list");
   return fetchGraphQLData("list");
 }
 
@@ -112,6 +111,5 @@ export async function fetchList() {
  * Locate operation.
  */
 export async function fetchLocate(id: string) {
-  console.log("calling fetch locate");
   return fetchGraphQLData("locate", { id });
 }

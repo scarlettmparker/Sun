@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
-import { Stem } from "~/generated/graphql";
+import { Song, Stem } from "~/generated/graphql";
 
 /**
  * Stem player hook using the Web Audio API.
  *
- * @param stem List of stems.
+ * @param song Song with stems.
  */
-export function useStemPlayer(stems: Stem[]) {
+export function useStemPlayer(song: Song) {
   const [audioCtx, setAudioCtx] = useState<AudioContext | null>(null);
   const [buffers, setBuffers] = useState<AudioBuffer[]>([]);
   const [playing, setPlaying] = useState<boolean>(false);
@@ -17,6 +17,7 @@ export function useStemPlayer(stems: Stem[]) {
   const gainNodes = useRef<GainNode[]>([]);
   const masterGainNode = useRef<GainNode | null>(null);
   const sources = useRef<AudioBufferSourceNode[]>([]);
+  const stems = song.stems as Stem[];
 
   // want controls
   const startTime = useRef<number>(0);
@@ -37,7 +38,7 @@ export function useStemPlayer(stems: Stem[]) {
 
     // Load & decode all the stems
     const loadPromises = stems.map((stem) =>
-      fetch(stem.filePath)
+      fetch(song.path + stem.path)
         .then((res) => res.arrayBuffer())
         .then((buf) => audioCtx.decodeAudioData(buf))
         .then((decoded) => {

@@ -17,19 +17,19 @@ public class StemMapper {
   /**
    * Maps a domain StemEntity to a GraphQL Stem type.
    *
-   * @param domainStem the domain StemEntity to map
+   * @param stemEntity the domain StemEntity to map
    * @return the mapped GraphQL Stem type
    */
-  public Stem map(StemEntity domainStem) {
-    logger.debug("Mapping stem {}", domainStem.getName());
+  public Stem map(StemEntity stemEntity) {
+    logger.debug("Mapping stem {}", stemEntity.getName());
 
-    Stem graphQLStem = Stem.newBuilder()
-        .filePath(domainStem.getFilePath())
-        .name(domainStem.getName())
+    Stem stem = Stem.newBuilder()
+        .path(stemEntity.getFilePath())
+        .name(stemEntity.getName())
         .build();
 
-    logger.debug("Mapped stem {} with filePath {}", domainStem.getName(), graphQLStem.getFilePath());
+    logger.debug("Mapped stem {} with path {}", stemEntity.getName(), stem.getPath());
 
-    return graphQLStem;
+    return stem;
   }
 }

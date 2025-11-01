@@ -5,7 +5,7 @@
 
 import { render, screen, fireEvent } from "@testing-library/react";
 import StemPlayer from "~/_components/stem-player";
-import { Stem } from "~/_components/stem-player/types/stem";
+import { Song, Stem } from "~/generated/graphql";
 import {
   mockAudioContext,
   mockAudioBuffer,
@@ -25,9 +25,15 @@ const mockSeek: jest.Mock = jest.fn();
 const mockSetMasterVolume: jest.Mock = jest.fn();
 
 const mockStems: Stem[] = [
-  { name: "Drums", url: "/drums.mp3" },
-  { name: "Bass", url: "/bass.mp3" },
+  { name: "Drums", path: "/drums.mp3" },
+  { name: "Bass", path: "/bass.mp3" },
 ];
+
+const mockSong: Song = {
+  id: "",
+  path: "",
+  stems: mockStems,
+};
 
 const defaultMockReturnValue = {
   loaded: true,
@@ -60,7 +66,7 @@ describe("StemPlayer", () => {
   });
 
   it("renders the component with all controls", () => {
-    render(<StemPlayer stems={mockStems} />);
+    render(<StemPlayer song={mockSong} />);
 
     // Check that translation keys are used
     expect(screen.getByText("controls.master")).toBeInTheDocument();
@@ -72,7 +78,7 @@ describe("StemPlayer", () => {
   });
 
   it("renders stem sliders", () => {
-    render(<StemPlayer stems={mockStems} />);
+    render(<StemPlayer song={mockSong} />);
 
     // Check that stem sliders are rendered
     expect(screen.getByText("Drums")).toBeInTheDocument();
@@ -80,7 +86,7 @@ describe("StemPlayer", () => {
   });
 
   it("renders play/pause button with correct initial state", () => {
-    render(<StemPlayer stems={mockStems} />);
+    render(<StemPlayer song={mockSong} />);
 
     const playButton = screen.getByLabelText("controls.aria.play");
     expect(playButton).toBeInTheDocument();
@@ -88,7 +94,7 @@ describe("StemPlayer", () => {
   });
 
   it("renders seek controls", () => {
-    render(<StemPlayer stems={mockStems} />);
+    render(<StemPlayer song={mockSong} />);
 
     expect(
       screen.getByLabelText("controls.aria.seek-back")
@@ -99,12 +105,12 @@ describe("StemPlayer", () => {
   });
 
   it("renders time display", () => {
-    render(<StemPlayer stems={mockStems} />);
+    render(<StemPlayer song={mockSong} />);
     expect(screen.getByLabelText("playback")).toBeInTheDocument();
   });
 
   it("renders seeker with correct range", () => {
-    render(<StemPlayer stems={mockStems} />);
+    render(<StemPlayer song={mockSong} />);
 
     const seeker = screen.getByLabelText("controls.aria.seek");
     expect(seeker).toHaveAttribute("min", "0");
@@ -113,7 +119,7 @@ describe("StemPlayer", () => {
   });
 
   it("renders master volume slider with correct range", () => {
-    render(<StemPlayer stems={mockStems} />);
+    render(<StemPlayer song={mockSong} />);
 
     const masterSlider = screen.getByLabelText("controls.aria.master-volume");
     expect(masterSlider).toHaveAttribute("min", "0");
@@ -128,7 +134,7 @@ describe("StemPlayer", () => {
       setMasterVolume: mockSetMasterVolume,
     });
 
-    render(<StemPlayer stems={mockStems} />);
+    render(<StemPlayer song={mockSong} />);
 
     const masterSlider = screen.getByLabelText("controls.aria.master-volume");
     fireEvent.change(masterSlider, { target: { value: "1.5" } });
@@ -136,7 +142,7 @@ describe("StemPlayer", () => {
   });
 
   it("displays master volume tooltip on hover", () => {
-    render(<StemPlayer stems={mockStems} />);
+    render(<StemPlayer song={mockSong} />);
 
     const masterSlider = screen.getByLabelText("controls.aria.master-volume");
     const mockRect = {
@@ -163,7 +169,7 @@ describe("StemPlayer", () => {
       loadingProgress: 50,
     });
 
-    render(<StemPlayer stems={mockStems} />);
+    render(<StemPlayer song={mockSong} />);
     expect(screen.getByText("Loading: 50%")).toBeInTheDocument();
   });
 
@@ -174,7 +180,7 @@ describe("StemPlayer", () => {
       play: mockPlay,
     });
 
-    render(<StemPlayer stems={mockStems} />);
+    render(<StemPlayer song={mockSong} />);
 
     const playButton = screen.getByLabelText("controls.aria.play");
     fireEvent.click(playButton);
@@ -187,7 +193,7 @@ describe("StemPlayer", () => {
       playing: true,
     });
 
-    render(<StemPlayer stems={mockStems} />);
+    render(<StemPlayer song={mockSong} />);
 
     const stopButton = screen.getByLabelText("controls.aria.stop");
     fireEvent.click(stopButton);
@@ -195,7 +201,7 @@ describe("StemPlayer", () => {
   });
 
   it("calls skip with -10 when seek back is clicked", () => {
-    render(<StemPlayer stems={mockStems} />);
+    render(<StemPlayer song={mockSong} />);
 
     const seekBackButton = screen.getByLabelText("controls.aria.seek-back");
     fireEvent.click(seekBackButton);
@@ -203,7 +209,7 @@ describe("StemPlayer", () => {
   });
 
   it("calls skip with 10 when seek forward is clicked", () => {
-    render(<StemPlayer stems={mockStems} />);
+    render(<StemPlayer song={mockSong} />);
 
     const seekForwardButton = screen.getByLabelText(
       "controls.aria.seek-forward"
@@ -218,7 +224,7 @@ describe("StemPlayer", () => {
       duration: 10,
     });
 
-    render(<StemPlayer stems={mockStems} />);
+    render(<StemPlayer song={mockSong} />);
 
     const seeker = screen.getByLabelText("controls.aria.seek");
     fireEvent.change(seeker, { target: { value: "1" } });
@@ -231,7 +237,7 @@ describe("StemPlayer", () => {
       playing: true,
     });
 
-    render(<StemPlayer stems={mockStems} />);
+    render(<StemPlayer song={mockSong} />);
     expect(screen.getByText("controls.stop")).toBeInTheDocument();
   });
 
@@ -241,12 +247,12 @@ describe("StemPlayer", () => {
       ended: true,
     });
 
-    render(<StemPlayer stems={mockStems} />);
+    render(<StemPlayer song={mockSong} />);
     expect(screen.getByText("controls.restart")).toBeInTheDocument();
   });
 
   it("renders seek controls with correct attributes", () => {
-    render(<StemPlayer stems={mockStems} />);
+    render(<StemPlayer song={mockSong} />);
 
     const seekBack = screen.getByLabelText("controls.aria.seek-back");
     expect(seekBack).toHaveAttribute("aria-label", "controls.aria.seek-back");
@@ -261,7 +267,7 @@ describe("StemPlayer", () => {
   });
 
   it("renders play button with correct attributes", () => {
-    render(<StemPlayer stems={mockStems} />);
+    render(<StemPlayer song={mockSong} />);
 
     const playButton = screen.getByLabelText("controls.aria.play");
     expect(playButton).toHaveAttribute("aria-label", "controls.aria.play");
@@ -270,7 +276,7 @@ describe("StemPlayer", () => {
   });
 
   it("displays seeker tooltip on hover", () => {
-    render(<StemPlayer stems={mockStems} />);
+    render(<StemPlayer song={mockSong} />);
 
     const seeker = screen.getByLabelText("controls.aria.seek");
     const mockRect = {
@@ -291,7 +297,7 @@ describe("StemPlayer", () => {
   });
 
   it("renders stem sliders with correct attributes", () => {
-    render(<StemPlayer stems={mockStems} />);
+    render(<StemPlayer song={mockSong} />);
 
     const drumsSlider = screen.getAllByDisplayValue("1")[0];
     expect(drumsSlider).toHaveAttribute("type", "range");
@@ -308,7 +314,7 @@ describe("StemPlayer", () => {
       setVolume: mockSetVolume,
     });
 
-    render(<StemPlayer stems={mockStems} />);
+    render(<StemPlayer song={mockSong} />);
 
     const drumsSlider = screen.getAllByDisplayValue("1")[0];
     fireEvent.change(drumsSlider, { target: { value: "0.5" } });
@@ -322,7 +328,7 @@ describe("StemPlayer", () => {
       duration: 125,
     });
 
-    render(<StemPlayer stems={mockStems} />);
+    render(<StemPlayer song={mockSong} />);
     expect(screen.getByText("1:05 / 2:05")).toBeInTheDocument();
   });
 
@@ -333,7 +339,7 @@ describe("StemPlayer", () => {
       duration: 100,
     });
 
-    render(<StemPlayer stems={mockStems} />);
+    render(<StemPlayer song={mockSong} />);
 
     const seeker = screen.getByLabelText("controls.aria.seek");
     expect(seeker).toHaveAttribute("max", "100.1");
@@ -346,7 +352,7 @@ describe("StemPlayer", () => {
       masterVolume: 0.75,
     });
 
-    render(<StemPlayer stems={mockStems} />);
+    render(<StemPlayer song={mockSong} />);
     const masterSlider = screen.getByLabelText("controls.aria.master-volume");
     expect(masterSlider).toHaveValue("0.75");
   });
@@ -357,7 +363,7 @@ describe("StemPlayer", () => {
       playing: true,
     });
 
-    render(<StemPlayer stems={mockStems} />);
+    render(<StemPlayer song={mockSong} />);
     expect(screen.getByText("controls.stop")).toBeInTheDocument();
   });
 
@@ -367,7 +373,7 @@ describe("StemPlayer", () => {
       ended: true,
     });
 
-    render(<StemPlayer stems={mockStems} />);
+    render(<StemPlayer song={mockSong} />);
     expect(screen.getByText("controls.restart")).toBeInTheDocument();
   });
 
@@ -377,7 +383,7 @@ describe("StemPlayer", () => {
       ended: true,
     });
 
-    render(<StemPlayer stems={mockStems} />);
+    render(<StemPlayer song={mockSong} />);
     const playButton = screen.getByLabelText("controls.aria.restart");
     expect(playButton).toHaveAttribute("aria-label", "controls.aria.restart");
     expect(playButton).toHaveAttribute("title", "controls.title.restart");
@@ -389,14 +395,14 @@ describe("StemPlayer", () => {
       playing: true,
     });
 
-    render(<StemPlayer stems={mockStems} />);
+    render(<StemPlayer song={mockSong} />);
     const stopButton = screen.getByLabelText("controls.aria.stop");
     expect(stopButton).toHaveAttribute("aria-label", "controls.aria.stop");
     expect(stopButton).toHaveAttribute("title", "controls.title.stop");
   });
 
   it("renders play button with aria-pressed false when not playing", () => {
-    render(<StemPlayer stems={mockStems} />);
+    render(<StemPlayer song={mockSong} />);
     const playButton = screen.getByLabelText("controls.aria.play");
     expect(playButton).toHaveAttribute("aria-pressed", "false");
   });
@@ -407,19 +413,25 @@ describe("StemPlayer", () => {
       playing: true,
     });
 
-    render(<StemPlayer stems={mockStems} />);
+    render(<StemPlayer song={mockSong} />);
     const stopButton = screen.getByLabelText("controls.aria.stop");
     expect(stopButton).toHaveAttribute("aria-pressed", "true");
   });
 
   it("renders multiple stems correctly", () => {
     const multipleStems: Stem[] = [
-      { name: "Drums", url: "/drums.mp3" },
-      { name: "Bass", url: "/bass.mp3" },
-      { name: "Guitar", url: "/guitar.mp3" },
+      { name: "Drums", path: "/drums.mp3" },
+      { name: "Bass", path: "/bass.mp3" },
+      { name: "Guitar", path: "/guitar.mp3" },
     ];
 
-    render(<StemPlayer stems={multipleStems} />);
+    const mockSong: Song = {
+      id: "",
+      path: "",
+      stems: multipleStems,
+    };
+
+    render(<StemPlayer song={mockSong} />);
 
     expect(screen.getByText("Drums")).toBeInTheDocument();
     expect(screen.getByText("Bass")).toBeInTheDocument();
@@ -427,7 +439,13 @@ describe("StemPlayer", () => {
   });
 
   it("handles empty stems array", () => {
-    render(<StemPlayer stems={[]} />);
+    const mockSong: Song = {
+      id: "",
+      path: "",
+      stems: [],
+    };
+
+    render(<StemPlayer song={mockSong} />);
 
     expect(screen.getByText("controls.master")).toBeInTheDocument();
     const sliders = screen.getAllByRole("slider");
@@ -440,14 +458,14 @@ describe("StemPlayer", () => {
   });
 
   it("renders with custom className", () => {
-    render(<StemPlayer stems={mockStems} className="custom-class" />);
+    render(<StemPlayer song={mockSong} className="custom-class" />);
 
     const container = screen.getByText("controls.master").closest(".container");
     expect(container).toHaveClass("custom-class");
   });
 
   it("renders with additional props", () => {
-    render(<StemPlayer stems={mockStems} data-testid="stem-player" />);
+    render(<StemPlayer song={mockSong} data-testid="stem-player" />);
 
     const container = screen.getByTestId("stem-player");
     expect(container).toBeInTheDocument();
