@@ -5,7 +5,8 @@
 import { renderApp } from "../utils/ssr.js";
 import { base, isProduction } from "../config.js";
 import { matchRoutes } from "react-router-dom";
-import { routes } from "../src/router.js";
+import { routes } from "../src/router.tsx";
+import { fetchPageData } from "../src/utils/page-data.ts";
 
 /**
  * Sets up all routes for the Express application.
@@ -49,7 +50,6 @@ export function setupRoutes(app, vite) {
     }
 
     // Fetch page-specific data
-    const { fetchPageData } = await import("../src/utils/page-data.js");
     const pageData = (await fetchPageData(pageName, params)) || {};
 
     try {

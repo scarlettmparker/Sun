@@ -11,7 +11,7 @@
     "graphql:generate": "graphql-codegen --config codegen.ts",
     "lint": "npx eslint",
     "pretty": "prettier --write \"./**/*.{js,jsx,mjs,cjs,ts,tsx,json}\"",
-    "preview": "cross-env NODE_ENV=production node server",
+  "preview": "cross-env NODE_ENV=production tsx --loader ./css-loader.mjs server.js",
     "test": "jest --maxWorkers=50%"
   },
   "license": "MIT",

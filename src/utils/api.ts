@@ -25,7 +25,7 @@ type OperationRegistry = {
 
 /**
  * Registry of GraphQL operations mapped to their query documents.
- * Supports namespaced operations using dot notation (e.g., "songQueries.list").
+ * Supports namespaced operations using dot notation
  */
 const operationRegistry: OperationRegistry = {
   songQueries: {
@@ -36,7 +36,7 @@ const operationRegistry: OperationRegistry = {
 
 /**
  * Retrieves a GraphQL operation document by its namespaced path.
- * @param path The dot-separated path to the operation (e.g., "songQueries.list").
+ * @param path The dot-separated path to the operation
  * @returns The DocumentNode if found, otherwise undefined.
  */
 function getOperation(path: string): DocumentNode | undefined {
