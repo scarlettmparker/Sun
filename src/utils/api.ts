@@ -14,15 +14,53 @@ export type ApiResponse<T> = {
 };
 
 /**
- * Registry of GraphQL operations mapped to their query documents.
+ * Type definition for the operation registry with strong typing.
  */
-const operationRegistry: Record<string, DocumentNode> = {
-  list: ListSongsDocument,
-  locate: LocateSongDocument,
+type OperationRegistry = {
+  songQueries: {
+    list: DocumentNode;
+    locate: DocumentNode;
+  };
 };
 
 /**
+ * Registry of GraphQL operations mapped to their query documents.
+ * Supports namespaced operations using dot notation (e.g., "songQueries.list").
+ */
+const operationRegistry: OperationRegistry = {
+  songQueries: {
+    list: ListSongsDocument,
+    locate: LocateSongDocument,
+  },
+};
+
+/**
+ * Retrieves a GraphQL operation document by its namespaced path.
+ * @param path The dot-separated path to the operation (e.g., "songQueries.list").
+ * @returns The DocumentNode if found, otherwise undefined.
+ */
+function getOperation(path: string): DocumentNode | undefined {
+  const parts = path.split(".");
+  let current: unknown = operationRegistry;
+  for (const part of parts) {
+    if (
+      current &&
+      typeof current === "object" &&
+      current !== null &&
+      part in current
+    ) {
+      current = (current as Record<string, unknown>)[part];
+    } else {
+      return undefined;
+    }
+  }
+  return current as DocumentNode;
+}
+
+/**
  * Registers a new GraphQL operation with its query document.
+ * Note: This function assumes flat registration; for namespaced operations,
+ * update the registry directly or extend this function to handle paths.
  * @param operationName The name of the operation.
  * @param queryDocument The GraphQL query document.
  */
@@ -30,7 +68,7 @@ export function registerGraphQLOperation(
   operationName: string,
   queryDocument: DocumentNode
 ): void {
-  operationRegistry[operationName] = queryDocument;
+  (operationRegistry as Record<string, unknown>)[operationName] = queryDocument;
 }
 
 /**
@@ -47,7 +85,7 @@ export async function fetchGraphQLData<T>(
     const endpoint =
       process.env.GRAPHQL_ENDPOINT || "http://localhost:8080/graphql";
 
-    const query = operationRegistry[operationName];
+    const query = getOperation(operationName);
     if (!query) {
       return {
         success: false,
@@ -101,15 +139,15 @@ export async function fetchGraphQLData<T>(
 }
 
 /**
- * List operation.
+ * List operation for songs.
  */
 export async function fetchList() {
-  return fetchGraphQLData("list");
+  return fetchGraphQLData("songQueries.list");
 }
 
 /**
- * Locate operation.
+ * Locate operation for songs.
  */
 export async function fetchLocate(id: string) {
-  return fetchGraphQLData("locate", { id });
+  return fetchGraphQLData("songQueries.locate", { id });
 }

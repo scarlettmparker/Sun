@@ -97,6 +97,11 @@ describe("Stem Player Data Loader", () => {
     });
 
     it("should return null when stemPlayerQueries is missing", async () => {
+      // Due to intentionally throwing
+      const mockConsoleError = jest
+        .spyOn(console, "error")
+        .mockImplementation();
+
       const mockResponse = {
         success: true,
         data: {},
@@ -108,6 +113,8 @@ describe("Stem Player Data Loader", () => {
 
       expect(result).toBeNull();
       expect(mockFetchListSongs).toHaveBeenCalledTimes(1);
+
+      mockConsoleError.mockRestore();
     });
 
     it("should return null when list is missing from stemPlayerQueries", async () => {
@@ -148,6 +155,11 @@ describe("Stem Player Data Loader", () => {
     });
 
     it("should handle malformed response data", async () => {
+      // Due to intentionally throwing
+      const mockConsoleError = jest
+        .spyOn(console, "error")
+        .mockImplementation();
+
       const mockResponse = {
         success: true,
         data: "not-an-object",
@@ -159,9 +171,16 @@ describe("Stem Player Data Loader", () => {
 
       expect(result).toBeNull();
       expect(mockFetchListSongs).toHaveBeenCalledTimes(1);
+
+      mockConsoleError.mockRestore();
     });
 
     it("should handle response with wrong structure", async () => {
+      // Due to intentionally throwing
+      const mockConsoleError = jest
+        .spyOn(console, "error")
+        .mockImplementation();
+
       const mockResponse = {
         success: true,
         data: {
@@ -177,6 +196,8 @@ describe("Stem Player Data Loader", () => {
 
       expect(result).toBeNull();
       expect(mockFetchListSongs).toHaveBeenCalledTimes(1);
+
+      mockConsoleError.mockRestore();
     });
   });
 

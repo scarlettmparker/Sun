@@ -25,7 +25,8 @@ describe("API utilities", () => {
         json: jest.fn().mockResolvedValue(mockResponse),
       } as unknown as Response);
 
-      const result: ApiResponse<unknown> = await fetchGraphQLData("list");
+      const result: ApiResponse<unknown> =
+        await fetchGraphQLData("songQueries.list");
 
       expect(result.success).toBe(true);
       expect(result.data).toEqual(mockResponse.data);
@@ -39,7 +40,8 @@ describe("API utilities", () => {
         statusText: "Internal Server Error",
       } as unknown as Response);
 
-      const result: ApiResponse<unknown> = await fetchGraphQLData("list");
+      const result: ApiResponse<unknown> =
+        await fetchGraphQLData("songQueries.list");
 
       expect(result.success).toBe(false);
       expect(result.error).toBe("HTTP 500: Internal Server Error");
@@ -56,7 +58,8 @@ describe("API utilities", () => {
         json: jest.fn().mockResolvedValue(mockResponse),
       } as unknown as Response);
 
-      const result: ApiResponse<unknown> = await fetchGraphQLData("list");
+      const result: ApiResponse<unknown> =
+        await fetchGraphQLData("songQueries.list");
 
       expect(result.success).toBe(false);
       expect(result.error).toBe("Field not found");
@@ -66,7 +69,8 @@ describe("API utilities", () => {
     it("should return error response for network errors", async () => {
       mockFetch.mockRejectedValueOnce(new Error("Network error"));
 
-      const result: ApiResponse<unknown> = await fetchGraphQLData("list");
+      const result: ApiResponse<unknown> =
+        await fetchGraphQLData("songQueries.list");
 
       expect(result.success).toBe(false);
       expect(result.error).toBe("Network error");
@@ -81,6 +85,46 @@ describe("API utilities", () => {
       expect(result.success).toBe(false);
       expect(result.error).toBe("Unknown operation");
       expect(result.statusCode).toBe(400);
+    });
+
+    it("should return error for invalid namespaced operation", async () => {
+      const result: ApiResponse<unknown> = await fetchGraphQLData(
+        "songQueries.unknown" as string
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("Unknown operation");
+      expect(result.statusCode).toBe(400);
+    });
+
+    it("should return error for non-existent namespace", async () => {
+      const result: ApiResponse<unknown> = await fetchGraphQLData(
+        "nonExistent.list" as string
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("Unknown operation");
+      expect(result.statusCode).toBe(400);
+    });
+
+    it("should return success response for namespaced locate operation", async () => {
+      const mockResponse = {
+        data: { song: { id: "1", title: "Test Song" } },
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue(mockResponse),
+      } as unknown as Response);
+
+      const result: ApiResponse<unknown> = await fetchGraphQLData(
+        "songQueries.locate",
+        { id: "1" }
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(mockResponse.data);
+      expect(result.error).toBeUndefined();
     });
   });
 
