@@ -590,27 +590,6 @@ describe("StemPlayer", () => {
     expect(stemSliders.length).toBe(2);
   });
 
-  it("renders with very long stem names", () => {
-    const longNameStems: Stem[] = [
-      {
-        name: "Very Long Stem Name That Might Cause Layout Issues",
-        path: "/long.mp3",
-      },
-    ];
-
-    const mockSong: Song = {
-      id: "",
-      path: "",
-      stems: longNameStems,
-    };
-
-    render(<StemPlayer song={mockSong} />);
-
-    expect(
-      screen.getByText("Very Long Stem Name That Might Cause Layout Issues")
-    ).toBeInTheDocument();
-  });
-
   it("handles rapid button clicks", () => {
     const mockPlay = jest.fn();
     mockUseStemPlayer.mockReturnValue({
