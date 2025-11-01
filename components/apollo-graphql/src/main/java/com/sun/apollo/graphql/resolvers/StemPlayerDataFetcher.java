@@ -29,12 +29,23 @@ public class StemPlayerDataFetcher {
   }
 
   /**
-   * Retrieves all songs for the stem player.
+   * Retrieves all songs for the stem player (without stems).
    *
-   * @return a list of GraphQL Song objects
+   * @return a list of Song objects
    */
-  @DgsData(parentType = "StemPlayerQueries", field = "listSongs")
-  public List<Song> listSongs() {
-    return stemPlayerGraphQLService.getAllSongs();
+  @DgsData(parentType = "StemPlayerQueries", field = "list")
+  public List<Song> list() {
+    return stemPlayerGraphQLService.list();
+  }
+
+  /**
+   * Retrieves a specific song with all its stems by ID.
+   *
+   * @param id the song ID
+   * @return the Song object
+   */
+  @DgsData(parentType = "StemPlayerQueries", field = "locate")
+  public Song locate(String id) {
+    return stemPlayerGraphQLService.locate(id);
   }
 }

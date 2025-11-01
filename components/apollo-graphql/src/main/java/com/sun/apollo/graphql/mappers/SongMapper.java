@@ -24,26 +24,26 @@ public class SongMapper {
   /**
    * Maps a domain SongEntity to a GraphQL Song type.
    *
-   * @param domainSong the domain SongEntity to map
+   * @param songEntity the domain SongEntity to map
    * @return the mapped GraphQL Song type
    */
-  public Song map(SongEntity domainSong) {
-    logger.debug("Mapping song {}", domainSong.getName());
+  public Song map(SongEntity songEntity) {
+    logger.debug("Mapping song {}", songEntity.getName());
 
     List<Stem> stems = null;
-    if (domainSong.getStems() != null) {
-      stems = domainSong.getStems().stream()
+    if (songEntity.getStems() != null) {
+      stems = songEntity.getStems().stream()
           .map(stemMapper::map)
           .collect(Collectors.toList());
     }
 
     Song graphQLSong = Song.newBuilder()
-        .id(domainSong.getId().toString())
-        .name(domainSong.getName())
+        .id(songEntity.getId().toString())
+        .name(songEntity.getName())
         .stems(stems)
         .build();
 
-    logger.debug("Mapped song {} with id {}", domainSong.getName(), graphQLSong.getId());
+    logger.debug("Mapped song {} with id {}", songEntity.getName(), graphQLSong.getId());
 
     return graphQLSong;
   }

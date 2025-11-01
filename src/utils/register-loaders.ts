@@ -5,15 +5,15 @@
  */
 
 import { pageDataRegistry } from "./page-data";
-import { fetchListSongs } from "./api";
+import { fetchList } from "./api";
 import { ListSongsQuery } from "~/generated/graphql";
 
 // Register all loaders
 pageDataRegistry.registerPageDataLoader("stem-player", async () => {
-  const result = await fetchListSongs();
+  const result = await fetchList();
   if (result.success && result.data) {
     return {
-      songs: (result.data as ListSongsQuery).stemPlayerQueries.listSongs,
+      songs: (result.data as ListSongsQuery).stemPlayerQueries.list,
     };
   }
   return null;

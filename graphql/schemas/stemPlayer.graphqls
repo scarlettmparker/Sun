@@ -10,7 +10,8 @@ type Stem {
 }
 
 type StemPlayerQueries {
-  listSongs: [Song]
+  list: [Song]
+  locate(id: ID!): Song
 }
 
 extend type Query {

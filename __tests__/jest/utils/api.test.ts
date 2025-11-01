@@ -2,7 +2,7 @@
  * Tests for API utility functions.
  */
 
-import { fetchGraphQLData, fetchListSongs, ApiResponse } from "~/utils/api";
+import { fetchGraphQLData, fetchList, ApiResponse } from "~/utils/api";
 
 // Mock fetch globally
 global.fetch = jest.fn();
@@ -25,7 +25,7 @@ describe("API utilities", () => {
         json: jest.fn().mockResolvedValue(mockResponse),
       } as unknown as Response);
 
-      const result: ApiResponse<unknown> = await fetchGraphQLData("listSongs");
+      const result: ApiResponse<unknown> = await fetchGraphQLData("list");
 
       expect(result.success).toBe(true);
       expect(result.data).toEqual(mockResponse.data);
@@ -39,7 +39,7 @@ describe("API utilities", () => {
         statusText: "Internal Server Error",
       } as unknown as Response);
 
-      const result: ApiResponse<unknown> = await fetchGraphQLData("listSongs");
+      const result: ApiResponse<unknown> = await fetchGraphQLData("list");
 
       expect(result.success).toBe(false);
       expect(result.error).toBe("HTTP 500: Internal Server Error");
@@ -56,7 +56,7 @@ describe("API utilities", () => {
         json: jest.fn().mockResolvedValue(mockResponse),
       } as unknown as Response);
 
-      const result: ApiResponse<unknown> = await fetchGraphQLData("listSongs");
+      const result: ApiResponse<unknown> = await fetchGraphQLData("list");
 
       expect(result.success).toBe(false);
       expect(result.error).toBe("Field not found");
@@ -66,7 +66,7 @@ describe("API utilities", () => {
     it("should return error response for network errors", async () => {
       mockFetch.mockRejectedValueOnce(new Error("Network error"));
 
-      const result: ApiResponse<unknown> = await fetchGraphQLData("listSongs");
+      const result: ApiResponse<unknown> = await fetchGraphQLData("list");
 
       expect(result.success).toBe(false);
       expect(result.error).toBe("Network error");
@@ -84,10 +84,10 @@ describe("API utilities", () => {
     });
   });
 
-  describe("fetchListSongs", () => {
-    it("should call fetchGraphQLData with listSongs operation", async () => {
+  describe("fetchList", () => {
+    it("should call fetchGraphQLData with list operation", async () => {
       const mockResponse = {
-        data: { stemPlayerQueries: { listSongs: [] } },
+        data: { stemPlayerQueries: { list: [] } },
       };
 
       mockFetch.mockResolvedValueOnce({
@@ -95,7 +95,7 @@ describe("API utilities", () => {
         json: jest.fn().mockResolvedValue(mockResponse),
       } as unknown as Response);
 
-      const result = await fetchListSongs();
+      const result = await fetchList();
 
       expect(mockFetch).toHaveBeenCalledWith(
         "http://localhost:8080/graphql",

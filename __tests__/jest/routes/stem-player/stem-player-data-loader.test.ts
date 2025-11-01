@@ -2,7 +2,7 @@
  * Tests for stem-player data loader.
  */
 
-import { fetchListSongs } from "~/utils/api";
+import { fetchList } from "~/utils/api";
 import { pageDataRegistry } from "~/utils/page-data";
 import {
   getStemPlayerData,
@@ -15,12 +15,10 @@ import {
 
 // Mock the API function
 jest.mock("~/utils/api", () => ({
-  fetchListSongs: jest.fn(),
+  fetchList: jest.fn(),
 }));
 
-const mockFetchListSongs = fetchListSongs as jest.MockedFunction<
-  typeof fetchListSongs
->;
+const mockFetchListSongs = fetchList as jest.MockedFunction<typeof fetchList>;
 
 beforeAll(() => {
   // Due to network errors from non existent gql server in mocked env
@@ -49,7 +47,7 @@ describe("Stem Player Data Loader", () => {
   });
 
   describe("getStemPlayerData", () => {
-    it("should return songs data when fetchListSongs succeeds", async () => {
+    it("should return songs data when fetchList succeeds", async () => {
       const mockSongs = [
         { id: "1", name: "Song 1", stems: [] },
         { id: "2", name: "Song 2", stems: [] },
@@ -58,7 +56,7 @@ describe("Stem Player Data Loader", () => {
         success: true,
         data: {
           stemPlayerQueries: {
-            listSongs: mockSongs,
+            list: mockSongs,
           },
         },
       };
@@ -73,7 +71,7 @@ describe("Stem Player Data Loader", () => {
       expect(mockFetchListSongs).toHaveBeenCalledTimes(1);
     });
 
-    it("should return null when fetchListSongs fails", async () => {
+    it("should return null when fetchList fails", async () => {
       const mockResponse = {
         success: false,
         error: "API Error",
@@ -87,7 +85,7 @@ describe("Stem Player Data Loader", () => {
       expect(mockFetchListSongs).toHaveBeenCalledTimes(1);
     });
 
-    it("should return null when fetchListSongs throws an error", async () => {
+    it("should return null when fetchList throws an error", async () => {
       const mockError = new Error("Network error");
 
       mockFetchListSongs.mockRejectedValue(mockError);

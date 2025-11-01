@@ -1,0 +1,12 @@
+query locateSong($id: ID!) {
+  stemPlayerQueries {
+    locate(id: $id) {
+      id
+      name
+      stems {
+        filePath
+        name
+      }
+    }
+  }
+}

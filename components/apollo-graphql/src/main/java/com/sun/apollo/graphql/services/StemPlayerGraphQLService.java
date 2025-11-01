@@ -27,19 +27,37 @@ public class StemPlayerGraphQLService {
   private SongMapper songMapper;
 
   /**
-   * Retrieves all songs for the stem player.
+   * Retrieves all songs for the stem player (without stems).
    *
-   * @return a list of GraphQL Song objects
+   * @return a list of GraphQL Song objects without stems
    */
-  public List<Song> getAllSongs() {
-    logger.info("Retrieving songs for stem player");
+  public List<Song> list() {
+    logger.info("Retrieving songs for stem player (without stems)");
 
-    List<SongEntity> domainSongs = apolloService.findAll();
-    List<Song> graphQLSongs = domainSongs.stream()
+    List<SongEntity> songEntities = apolloService.listSongs();
+    List<Song> songs = songEntities.stream()
         .map(songMapper::map)
         .collect(Collectors.toList());
 
-    logger.info("Retrieved {} songs", graphQLSongs.size());
-    return graphQLSongs;
+    logger.info("Retrieved {} songs", songs.size());
+    return songs;
+  }
+
+  /**
+   * Retrieves a specific song with all its stems by ID.
+   *
+   * @param id the song ID as string
+   * @return the GraphQL Song object with stems
+   */
+  public Song locate(String id) {
+    logger.info("Retrieving song by ID: {}", id);
+
+    SongEntity songEntity = apolloService.locateSong(java.util.UUID.fromString(id))
+        .orElseThrow(() -> new RuntimeException("Song not found with id: " + id));
+
+    Song song = songMapper.map(songEntity);
+
+    logger.info("Retrieved song {} with id {}", songEntity.getName(), song.getId());
+    return song;
   }
 }

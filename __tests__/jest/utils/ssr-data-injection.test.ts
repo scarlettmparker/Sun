@@ -82,8 +82,8 @@ describe("SSR data injection", () => {
   describe("client-side data access in stem-player.tsx", () => {
     it("should access pageData from window object", () => {
       // Mock window object with pageData
-      const mockSongs: ListSongsQuery["stemPlayerQueries"]["listSongs"] = [
-        { __typename: "Song", id: "1", name: "Test Song", stems: [] },
+      const mockSongs: ListSongsQuery["stemPlayerQueries"]["list"] = [
+        { __typename: "Song", id: "1", name: "Test Song" },
       ];
       const mockPageData: Record<string, unknown> = {
         songs: mockSongs,
@@ -92,7 +92,7 @@ describe("SSR data injection", () => {
       // Simulate the logic from stem-player.tsx
       const pageData = mockPageData;
       const initialData =
-        pageData.songs as ListSongsQuery["stemPlayerQueries"]["listSongs"];
+        pageData.songs as ListSongsQuery["stemPlayerQueries"]["list"];
 
       expect(initialData).toEqual(mockSongs);
     });
@@ -100,7 +100,7 @@ describe("SSR data injection", () => {
     it("should handle missing pageData", () => {
       const pageData: Record<string, unknown> | undefined = undefined;
       const initialData = (pageData as Record<string, unknown> | undefined)
-        ?.songs as ListSongsQuery["stemPlayerQueries"]["listSongs"];
+        ?.songs as ListSongsQuery["stemPlayerQueries"]["list"];
 
       expect(initialData).toBeUndefined();
     });

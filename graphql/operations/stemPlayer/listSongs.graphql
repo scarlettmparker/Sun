@@ -1,12 +1,8 @@
-query ListSongs {
+query listSongs {
   stemPlayerQueries {
-    listSongs {
+    list {
       id
       name
-      stems {
-        filePath
-        name
-      }
     }
   }
 }

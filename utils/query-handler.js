@@ -3,7 +3,7 @@
  * Handles try-catch, error codes, and response formatting.
  * Allows overriding success and error messages.
  *
- * @param {Function} fetchFn - The async function to fetch data (e.g., fetchListSongs).
+ * @param {Function} fetchFn - The async function to fetch data.
  * @param {Object} res - Express response object.
  * @param {Object} options - Optional overrides.
  * @param {string} options.successMessage - Custom message for successful responses.

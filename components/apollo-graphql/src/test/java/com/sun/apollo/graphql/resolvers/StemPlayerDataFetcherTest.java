@@ -43,26 +43,24 @@ class StemPlayerDataFetcherTest {
   }
 
   @Test
-  void getStemPlayerQueries_shouldReturnStemPlayerQueriesInstance() {
-    // When
-    StemPlayerQueries result = stemPlayerDataFetcher.getStemPlayerQueries();
-
-    // Then
-    assertThat(result).isNotNull();
-  }
-
-  @Test
   void listSongs_shouldReturnSongsFromService() {
-    // Given
-    when(stemPlayerGraphQLService.getAllSongs()).thenReturn(mockSongs);
-
-    // When
-    List<Song> result = stemPlayerDataFetcher.listSongs();
-
-    // Then
+    when(stemPlayerGraphQLService.list()).thenReturn(mockSongs);
+    List<Song> result = stemPlayerDataFetcher.list();
     assertThat(result).isEqualTo(mockSongs);
     assertThat(result).hasSize(2);
     assertThat(result.get(0).getName()).isEqualTo("Test Song 1");
     assertThat(result.get(1).getName()).isEqualTo("Test Song 2");
+  }
+
+  @Test
+  void locate_shouldReturnSongFromService() {
+    Song mockSong = Song.newBuilder()
+        .id("1")
+        .name("Test Song 1")
+        .build();
+    when(stemPlayerGraphQLService.locate("1")).thenReturn(mockSong);
+    Song result = stemPlayerDataFetcher.locate("1");
+    assertThat(result).isEqualTo(mockSong);
+    assertThat(result.getName()).isEqualTo("Test Song 1");
   }
 }

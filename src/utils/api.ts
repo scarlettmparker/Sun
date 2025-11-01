@@ -18,7 +18,7 @@ export type ApiResponse<T> = {
  * This allows for easy expansion by adding new operations.
  */
 const operationRegistry: Record<string, DocumentNode> = {
-  listSongs: ListSongsDocument,
+  list: ListSongsDocument,
 };
 
 /**
@@ -101,8 +101,8 @@ export async function fetchGraphQLData<T>(
 }
 
 /**
- * ListSongs operation.
+ * List operation.
  */
-export async function fetchListSongs() {
-  return fetchGraphQLData("listSongs");
+export async function fetchList() {
+  return fetchGraphQLData("list");
 }

@@ -1,8 +1,8 @@
 import StemPlayer from "~/_components/stem-player";
-import { fetchListSongs } from "~/utils/api";
-import { ListSongsQuery, Stem } from "~/generated/graphql";
+import { fetchList } from "~/utils/api";
 import { pageDataRegistry } from "~/utils/page-data";
 import styles from "./stem-player.module.css";
+import { ListSongsQuery } from "~/generated/graphql";
 
 /**
  * Stem Player Page component.
@@ -10,35 +10,36 @@ import styles from "./stem-player.module.css";
 const StemPlayerPage = () => {
   const pageData = globalThis.__pageData__;
   const initialData =
-    pageData?.songs as ListSongsQuery["stemPlayerQueries"]["listSongs"];
+    pageData?.songs as ListSongsQuery["stemPlayerQueries"]["list"];
 
   if (!initialData) {
     return <div>Loading...</div>;
   }
 
-  // TODO: shouldn't be hard coded like this
-  const fellInAgainSong = initialData?.find(
-    (song) => song?.name === "Fell In Again"
-  );
+  // // TODO: shouldn't be hard coded like this
+  // const fellInAgainSong = initialData?.find(
+  //   (song) => song?.name === "Fell In Again"
+  // );
 
-  if (!fellInAgainSong?.stems) {
-    return <div>Song not found</div>;
-  }
+  // if (!fellInAgainSong?.stems) {
+  //   return <div>Song not found</div>;
+  // }
 
-  const stems: Stem[] = fellInAgainSong.stems
-    .filter(
-      (stem): stem is Stem => stem?.filePath != null && stem?.name != null
-    )
-    .map((stem) => ({
-      name: stem.name!,
-      filePath: `/_components/stem-player/fell-in-again/stems/${stem.filePath}`,
-    }));
+  // const stems: Stem[] = fellInAgainSong.stems
+  //   .filter(
+  //     (stem): stem is Stem => stem?.filePath != null && stem?.name != null
+  //   )
+  //   .map((stem) => ({
+  //     name: stem.name!,
+  //     filePath: `/_components/stem-player/fell-in-again/stems/${stem.filePath}`,
+  //   }));
 
   return (
-    <StemPlayer
-      className={styles.stemPlayer}
-      stems={stems as unknown as Stem[]}
-    />
+    <></>
+    // <StemPlayer
+    //   className={styles.stemPlayer}
+    //   stems={stems as unknown as Stem[]}
+    // />
   );
 };
 
@@ -50,10 +51,10 @@ export async function getStemPlayerData(): Promise<Record<
   unknown
 > | null> {
   try {
-    const result = await fetchListSongs();
+    const result = await fetchList();
     if (result.success && result.data) {
       return {
-        songs: (result.data as ListSongsQuery).stemPlayerQueries.listSongs,
+        songs: (result.data as ListSongsQuery).stemPlayerQueries.list,
       };
     }
     return null;

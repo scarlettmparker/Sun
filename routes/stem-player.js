@@ -4,24 +4,24 @@
  */
 
 import express from "express";
-import { fetchListSongs } from "../src/utils/api.ts";
+import { fetchList } from "../src/utils/api.ts";
 import { handleQuery } from "../utils/query-handler.js";
 const router = express.Router();
 
 /**
- * GET /api/stem-player?query=listSongs
+ * GET /api/stem-player
  * Fetches list of songs from GraphQL server.
  */
 router.get("/", async (req, res) => {
   const { query } = req.query;
 
   switch (query) {
-    case "listSongs":
-      return handleQuery(fetchListSongs, res);
+    case "list":
+      return handleQuery(fetchList, res);
     default:
       res.status(400).json({
         success: false,
-        error: "Invalid query parameter. Supported: listSongs",
+        error: "Invalid query parameter. Supported: list",
       });
   }
 });
