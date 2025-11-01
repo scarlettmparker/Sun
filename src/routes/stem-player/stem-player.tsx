@@ -15,33 +15,11 @@ const StemPlayerPage = () => {
     return <div>Loading...</div>;
   }
 
-  // // TODO: shouldn't be hard coded like this
-  // const fellInAgainSong = initialData?.find(
-  //   (song) => song?.name === "Fell In Again"
-  // );
-
-  // if (!fellInAgainSong?.stems) {
-  //   return <div>Song not found</div>;
-  // }
-
-  // const stems: Stem[] = fellInAgainSong.stems
-  //   .filter(
-  //     (stem): stem is Stem => stem?.filePath != null && stem?.name != null
-  //   )
-  //   .map((stem) => ({
-  //     name: stem.name!,
-  //     filePath: `/_components/stem-player/fell-in-again/stems/${stem.filePath}`,
-  //   }));
-
   return (
     <>
       Stem Player
       <Outlet />
     </>
-    // <StemPlayer
-    //   className={styles.stemPlayer}
-    //   stems={stems as unknown as Stem[]}
-    // />
   );
 };
 

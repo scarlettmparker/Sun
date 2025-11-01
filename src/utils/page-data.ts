@@ -107,12 +107,9 @@ export async function fetchPageData(
     return cached.data;
   }
 
-  // Run all loaders in parallel. If any loader throws, follow previous
-  // behaviour: log error and return null for the whole page.
+  // Run all loaders.
   try {
     const results = await Promise.all(loaders.map((l) => l(params)));
-
-    // Merge non-null results into a single object. If all are null, return null.
     const merged: Record<string, unknown> = {};
     let hasData = false;
     for (const r of results) {
@@ -131,7 +128,6 @@ export async function fetchPageData(
   }
 }
 
-// Export the registry functions as a single named export object for compliance with code style guide
 export const pageDataRegistry = {
   registerPageDataLoader,
   unregisterPageDataLoader,

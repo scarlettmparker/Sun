@@ -2,27 +2,23 @@ import { fetchLocate } from "~/utils/api";
 import { LocateSongQuery, Stem } from "~/generated/graphql";
 import StemPlayer from "~/_components/stem-player";
 import { pageDataRegistry } from "~/utils/page-data";
-// import styles from "./stem-player-details.module.css";
-
+import styles from "./stem-player-details.module.css";
 /**
  * Stem Player Details Page.
  */
 const StemPlayerDetailsPage = () => {
   const pageData = globalThis.__pageData__;
-  const data = pageData as LocateSongQuery["stemPlayerQueries"]["locate"];
+  const data = pageData?.song as LocateSongQuery["stemPlayerQueries"]["locate"];
 
   if (!data) {
     return <div>Loading...</div>;
   }
 
   return (
-    <div>
-      <h2>Song Detail</h2>
-      {/* <StemPlayer
-        // className={styles.stemPlayer}
-        stems={data.stems as unknown as Stem[]}
-      /> */}
-    </div>
+    <StemPlayer
+      className={styles.stemPlayer}
+      stems={data.stems as unknown as Stem[]}
+    />
   );
 };
 

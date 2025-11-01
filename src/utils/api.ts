@@ -15,7 +15,6 @@ export type ApiResponse<T> = {
 
 /**
  * Registry of GraphQL operations mapped to their query documents.
- * This allows for easy expansion by adding new operations.
  */
 const operationRegistry: Record<string, DocumentNode> = {
   list: ListSongsDocument,
