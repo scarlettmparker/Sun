@@ -6,7 +6,7 @@
   background-color: var(--secondary);
   border-radius: var(--sm);
   box-shadow: var(--shadow-soft);
-  height: 100vh;
+  height: calc(100vh - var(--lg) * 2);
   min-width: 12rem;
   width: fit-content;
 }
