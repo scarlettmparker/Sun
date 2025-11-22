@@ -7,6 +7,8 @@
     box-shadow var(--fast) ease;
   box-shadow: var(--shadow-soft);
   border: none;
+  display: flex;
+  align-items: center;
 }
 
 .button:hover {

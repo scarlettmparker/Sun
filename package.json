@@ -11,7 +11,7 @@
     "graphql:generate": "graphql-codegen --config codegen.ts",
     "lint": "npx eslint",
     "pretty": "prettier --write \"./**/*.{js,jsx,mjs,cjs,ts,tsx,json}\"",
-  "preview": "cross-env NODE_ENV=production tsx --loader ./css-loader.mjs server.js",
+    "preview": "cross-env NODE_ENV=production tsx --loader ./css-loader.mjs server.js",
     "test": "jest --maxWorkers=50%"
   },
   "license": "MIT",
@@ -49,6 +49,7 @@
     "dotenv": "^16.5.0",
     "express": "4.20.0",
     "http-proxy-middleware": "^3.0.5",
+    "lucide-react": "^0.554.0",
     "marked": "^15.0.8",
     "react": "19.0.0",
     "react-dom": "19.0.0",

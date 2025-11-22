@@ -1,0 +1,12 @@
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--md);
+  padding: var(--lg);
+  background-color: var(--secondary);
+  border-radius: var(--sm);
+  box-shadow: var(--shadow-soft);
+  height: 100vh;
+  min-width: 12rem;
+  width: fit-content;
+}

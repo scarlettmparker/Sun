@@ -2,6 +2,11 @@ import { fetchList } from "~/utils/api";
 import { pageDataRegistry } from "~/utils/page-data";
 import { ListSongsQuery } from "~/generated/graphql";
 import { Outlet } from "react-router-dom";
+import Sidebar from "~/components/sidebar";
+import Button from "~/components/button";
+import Label from "~/components/label";
+import styles from "./stem-player.module.css";
+import { Music } from "lucide-react";
 
 /**
  * Stem Player Page component.
@@ -17,7 +22,21 @@ const StemPlayerPage = () => {
 
   return (
     <>
-      Stem Player
+      <Sidebar>
+        <h3 className={styles.header}>Songs</h3>
+        {initialData.map((song, idx) => (
+          <a
+            key={idx}
+            href={`/stem-player/${song?.id}`}
+            className={styles.songLink}
+          >
+            <Button variant="secondary" className={styles.songButton}>
+              <Music width={16} height={16} />
+              {song?.name}
+            </Button>
+          </a>
+        ))}
+      </Sidebar>
       <Outlet />
     </>
   );
