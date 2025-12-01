@@ -1,6 +1,7 @@
 package com.sun.briareus.service;
 
 import com.sun.briareus.model.PostEntity;
+import com.sun.briareus.repository.PostRepository;
 import com.sun.base.service.BaseService;
 import org.springframework.stereotype.Service;
 
@@ -10,6 +11,10 @@ import java.util.List;
 
 @Service
 public class BriareusService extends BaseService<PostEntity> {
+
+  public BriareusService(PostRepository repository) {
+    super(repository);
+  }
 
   /**
    * Retrieves all posts.

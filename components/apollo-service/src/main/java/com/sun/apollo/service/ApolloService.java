@@ -1,6 +1,7 @@
 package com.sun.apollo.service;
 
 import com.sun.apollo.model.SongEntity;
+import com.sun.apollo.repository.SongRepository;
 import com.sun.base.service.BaseService;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -9,6 +10,10 @@ import java.util.UUID;
 
 @Service
 public class ApolloService extends BaseService<SongEntity> {
+
+  public ApolloService(SongRepository repository) {
+    super(repository);
+  }
 
   /**
    * Retrieves all songs.

@@ -17,9 +17,6 @@ public class BlogPostMapper {
 
   private static final Logger logger = LoggerFactory.getLogger(BlogPostMapper.class);
 
-  @Autowired
-  private BlogPostMapper blogPostMapper;
-
   /**
    * Maps a domain PostEntity to a GraphQL BlogPost type.
    * 

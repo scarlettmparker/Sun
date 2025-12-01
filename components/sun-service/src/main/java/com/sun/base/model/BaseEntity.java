@@ -16,11 +16,11 @@ public abstract class BaseEntity {
     private UUID id;
 
     @CreatedDate
-    @Column(nullable = false, updatable = false)
+    @Column(nullable = false, updatable = false, columnDefinition = "timestamp(6) default current_timestamp")
     private LocalDateTime createdAt;
 
     @LastModifiedDate
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "timestamp(6) default current_timestamp")
     private LocalDateTime lastUpdatedAt;
 
     // Getters and setters
