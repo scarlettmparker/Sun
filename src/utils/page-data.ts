@@ -21,6 +21,7 @@ type PageDataCache = Record<
 
 /**
  * Cache for page data to avoid re-fetching on every request.
+ * Only used in production.
  */
 const pageDataCache: PageDataCache = {};
 
@@ -101,12 +102,18 @@ export async function fetchPageData(
     return null;
   }
 
-  const cacheKey = params ? `${pageName}:${JSON.stringify(params)}` : pageName;
-  const now = Date.now();
-  const cached = pageDataCache[cacheKey];
+  // Only use cache in production
+  const isProduction = process.env.NODE_ENV === "production";
+  if (isProduction) {
+    const cacheKey = params
+      ? `${pageName}:${JSON.stringify(params)}`
+      : pageName;
+    const now = Date.now();
+    const cached = pageDataCache[cacheKey];
 
-  if (cached && now - cached.timestamp < CACHE_EXPIRATION_MS) {
-    return cached.data;
+    if (cached && now - cached.timestamp < CACHE_EXPIRATION_MS) {
+      return cached.data;
+    }
   }
 
   // Run all loaders.
@@ -122,7 +129,15 @@ export async function fetchPageData(
     }
 
     const data = hasData ? merged : null;
-    pageDataCache[cacheKey] = { data, timestamp: now };
+
+    // Only cache in production
+    if (isProduction) {
+      const cacheKey = params
+        ? `${pageName}:${JSON.stringify(params)}`
+        : pageName;
+      pageDataCache[cacheKey] = { data, timestamp: Date.now() };
+    }
+
     return data;
   } catch (error) {
     console.error(`Failed to fetch data for page ${pageName}:`, error);

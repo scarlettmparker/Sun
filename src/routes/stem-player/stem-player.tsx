@@ -4,7 +4,6 @@ import { ListSongsQuery } from "~/generated/graphql";
 import { Outlet } from "react-router-dom";
 import Sidebar from "~/components/sidebar";
 import Button from "~/components/button";
-import Label from "~/components/label";
 import styles from "./stem-player.module.css";
 import { Music } from "lucide-react";
 

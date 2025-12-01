@@ -208,36 +208,74 @@ describe("page-data utilities", () => {
       expect(mockLoader).toHaveBeenCalledWith(params);
     });
 
-    it("should use cache for repeated calls within expiration time", async () => {
-      const mockData = { test: "cached-data" };
-      const mockLoader = jest.fn().mockResolvedValue(mockData);
+    it("should use cache for repeated calls within expiration time in production", async () => {
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = "production";
 
-      pageDataRegistry.registerPageDataLoader("test-page", mockLoader);
+      try {
+        const mockData = { test: "cached-data" };
+        const mockLoader = jest.fn().mockResolvedValue(mockData);
 
-      // First call
-      const result1 = await fetchPageData("test-page");
-      expect(result1).toEqual(mockData);
-      expect(mockLoader).toHaveBeenCalledTimes(1);
+        pageDataRegistry.registerPageDataLoader("test-page", mockLoader);
 
-      // Second call should use cache
-      const result2 = await fetchPageData("test-page");
-      expect(result2).toEqual(mockData);
-      expect(mockLoader).toHaveBeenCalledTimes(1); // Still 1 call
+        // First call
+        const result1 = await fetchPageData("test-page");
+        expect(result1).toEqual(mockData);
+        expect(mockLoader).toHaveBeenCalledTimes(1);
+
+        // Second call should use cache
+        const result2 = await fetchPageData("test-page");
+        expect(result2).toEqual(mockData);
+        expect(mockLoader).toHaveBeenCalledTimes(1);
+      } finally {
+        process.env.NODE_ENV = originalEnv;
+      }
     });
 
-    it("should invalidate cache when loader is re-registered", async () => {
-      const mockLoader1 = jest.fn().mockResolvedValue({ data: "old" });
-      const mockLoader2 = jest.fn().mockResolvedValue({ data: "new" });
+    it("should not use cache in development", async () => {
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = "development";
 
-      pageDataRegistry.registerPageDataLoader("test-page", mockLoader1);
-      await fetchPageData("test-page"); // Cache it
+      try {
+        const mockData = { test: "fresh-data" };
+        const mockLoader = jest.fn().mockResolvedValue(mockData);
 
-      pageDataRegistry.registerPageDataLoader("test-page", mockLoader2);
-      const result = await fetchPageData("test-page");
+        pageDataRegistry.registerPageDataLoader("test-page", mockLoader);
 
-      expect(result).toEqual({ data: "new" }); // Last one wins in merge
-      expect(mockLoader1).toHaveBeenCalledTimes(2); // Called again after cache invalidation
-      expect(mockLoader2).toHaveBeenCalledTimes(1);
+        // First call
+        const result1 = await fetchPageData("test-page");
+        expect(result1).toEqual(mockData);
+        expect(mockLoader).toHaveBeenCalledTimes(1);
+
+        // Second call should not use cache
+        const result2 = await fetchPageData("test-page");
+        expect(result2).toEqual(mockData);
+        expect(mockLoader).toHaveBeenCalledTimes(2);
+      } finally {
+        process.env.NODE_ENV = originalEnv;
+      }
+    });
+
+    it("should invalidate cache when loader is re-registered in production", async () => {
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = "production";
+
+      try {
+        const mockLoader1 = jest.fn().mockResolvedValue({ data: "old" });
+        const mockLoader2 = jest.fn().mockResolvedValue({ data: "new" });
+
+        pageDataRegistry.registerPageDataLoader("test-page", mockLoader1);
+        await fetchPageData("test-page");
+
+        pageDataRegistry.registerPageDataLoader("test-page", mockLoader2);
+        const result = await fetchPageData("test-page");
+
+        expect(result).toEqual({ data: "new" });
+        expect(mockLoader1).toHaveBeenCalledTimes(2);
+        expect(mockLoader2).toHaveBeenCalledTimes(1);
+      } finally {
+        process.env.NODE_ENV = originalEnv;
+      }
     });
 
     it("should handle one loader failing in multiple loaders scenario", async () => {
