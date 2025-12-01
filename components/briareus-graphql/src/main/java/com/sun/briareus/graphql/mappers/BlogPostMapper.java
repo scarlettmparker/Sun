@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
  */
 @Component
 public class BlogPostMapper {
-  
+
   private static final Logger logger = LoggerFactory.getLogger(BlogPostMapper.class);
 
   @Autowired
@@ -30,11 +30,13 @@ public class BlogPostMapper {
     logger.debug("Mapping post {}", postEntity.getTitle());
 
     BlogPost blogPost = BlogPost.newBuilder()
-      .id(postEntity.getId().toString())
-      .title(postEntity.getTitle())
-      .content(postEntity.getContent())
-      .tags(postEntity.getTags())
-      .build();
+        .id(postEntity.getId().toString())
+        .title(postEntity.getTitle())
+        .content(postEntity.getContent())
+        .tags(postEntity.getTags())
+        .createdAt(postEntity.getCreatedAt())
+        .updatedAt(postEntity.getLastUpdatedAt())
+        .build();
 
     logger.debug("Mapped blog post {} with id {}", postEntity.getTitle(), postEntity.getId());
     return blogPost;

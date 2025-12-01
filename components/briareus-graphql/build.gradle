@@ -47,6 +47,9 @@ generateJava {
     schemaPaths = ["${projectDir}/src/main/resources"]
     packageName = 'com.sun.briareus.codegen'
     generateClient = true
+    typeMapping = [
+        "Date": "java.time.LocalDateTime"
+    ]
 }
 
 tasks.named('test') {
