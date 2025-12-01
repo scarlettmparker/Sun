@@ -1,0 +1,11 @@
+query locateBlogPost($id: ID!) {
+  blogQueries {
+    locateBlogPost(id: $id) {
+      title
+      content
+      tags
+      createdAt
+      updatedAt
+    }
+  }
+}

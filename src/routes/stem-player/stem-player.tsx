@@ -1,4 +1,4 @@
-import { fetchList } from "~/utils/api";
+import { fetchListSongs } from "~/utils/api";
 import { pageDataRegistry } from "~/utils/page-data";
 import { ListSongsQuery } from "~/generated/graphql";
 import { Outlet } from "react-router-dom";
@@ -16,7 +16,7 @@ const StemPlayerPage = () => {
     pageData?.songs as ListSongsQuery["stemPlayerQueries"]["list"];
 
   if (!initialData) {
-    return <div>Loading...</div>;
+    return <>Loading...</>;
   }
 
   return (
@@ -44,12 +44,9 @@ const StemPlayerPage = () => {
 /**
  * Server-side data fetching function for StemPlayerPage.
  */
-export async function getStemPlayerData(): Promise<Record<
-  string,
-  unknown
-> | null> {
+async function getStemPlayerData(): Promise<Record<string, unknown> | null> {
   try {
-    const result = await fetchList();
+    const result = await fetchListSongs();
     if (result?.data && result?.success) {
       const songs = (result.data as ListSongsQuery).stemPlayerQueries.list;
       if (songs) {

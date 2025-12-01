@@ -21,6 +21,7 @@ public class BlogDataFetcher {
    *
    * @return a new BlogQueries instance
    */
+  @DgsData(parentType = "Query", field = "blogQueries")
   public BlogQueries getBlogQueries() {
     return BlogQueries.newBuilder().build();
   }
@@ -30,8 +31,8 @@ public class BlogDataFetcher {
    *
    * @return a list of BlogPost objects
    */
-  @DgsData(parentType = "BlogQueries", field = "listPosts")
-  public List<BlogPost> listPosts() {
+  @DgsData(parentType = "BlogQueries", field = "listBlogPosts")
+  public List<BlogPost> listBlogPosts() {
     return blogGraphQLService.listBlogPosts();
   }
 
@@ -41,8 +42,8 @@ public class BlogDataFetcher {
    * @param id the blog post ID
    * @return the BlogPost object
    */
-  @DgsData(parentType = "BlogQueries", field = "locateBlog")
-  public BlogPost locateBlog(String id) {
+  @DgsData(parentType = "BlogQueries", field = "locateBlogPost")
+  public BlogPost locateBlogPost(String id) {
     return blogGraphQLService.locateBlogPost(id);
   }
 }

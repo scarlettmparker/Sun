@@ -1,4 +1,4 @@
-import { fetchLocate } from "~/utils/api";
+import { fetchLocateSong } from "~/utils/api";
 import { LocateSongQuery, Song } from "~/generated/graphql";
 import StemPlayer from "~/_components/stem-player";
 import { pageDataRegistry } from "~/utils/page-data";
@@ -26,7 +26,7 @@ export async function getStemPlayerDetailsData(
   id: string
 ): Promise<Record<string, unknown> | null> {
   try {
-    const result = await fetchLocate(id);
+    const result = await fetchLocateSong(id);
     if (result.success && result.data) {
       return {
         song: (result.data as LocateSongQuery).stemPlayerQueries.locate,

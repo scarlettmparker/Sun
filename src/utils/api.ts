@@ -3,7 +3,12 @@
  * Handles fetching data from the GraphQL server with error handling.
  */
 
-import { ListSongsDocument, LocateSongDocument } from "../generated/graphql";
+import {
+  ListSongsDocument,
+  LocateSongDocument,
+  ListBlogPostsDocument,
+  LocateBlogPostDocument,
+} from "../generated/graphql";
 import { print, DocumentNode } from "graphql";
 
 export type ApiResponse<T> = {
@@ -21,6 +26,10 @@ type OperationRegistry = {
     list: DocumentNode;
     locate: DocumentNode;
   };
+  blogQueries: {
+    listBlogPosts: DocumentNode;
+    locateBlogPost: DocumentNode;
+  };
 };
 
 /**
@@ -31,6 +40,10 @@ const operationRegistry: OperationRegistry = {
   songQueries: {
     list: ListSongsDocument,
     locate: LocateSongDocument,
+  },
+  blogQueries: {
+    listBlogPosts: ListBlogPostsDocument,
+    locateBlogPost: LocateBlogPostDocument,
   },
 };
 
@@ -139,15 +152,22 @@ export async function fetchGraphQLData<T>(
 }
 
 /**
- * List operation for songs.
+ * List operation for blog posts.
  */
-export async function fetchList() {
+export async function fetchListBlogPosts() {
+  return fetchGraphQLData("blogQueries.listBlogPosts");
+}
+
+/**
+ * List operation.
+ */
+export async function fetchListSongs() {
   return fetchGraphQLData("songQueries.list");
 }
 
 /**
  * Locate operation for songs.
  */
-export async function fetchLocate(id: string) {
+export async function fetchLocateSong(id: string) {
   return fetchGraphQLData("songQueries.locate", { id });
 }

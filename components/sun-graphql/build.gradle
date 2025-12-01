@@ -21,6 +21,12 @@ generateJava {
     generateClient = true
 }
 
+generateJava {
+    schemaPaths = ["${projectDir}/src/main/resources", "${project(':briareus-graphql').projectDir}/src/main/resources"]
+    packageName = 'com.sun.graphql.codegen'
+    generateClient = true
+}
+
 group = 'com.sun'
 version = '0.0.1-SNAPSHOT'
 description = 'sun-graphql'
@@ -38,6 +44,7 @@ repositories {
 dependencies {
     implementation project(':apollo-graphql')
     implementation project(':apollo-service')
+    implementation project(':briareus-graphql')
     implementation project(':briareus-service')
     implementation project(':sun-service')
     implementation 'org.springframework.boot:spring-boot-starter-web'

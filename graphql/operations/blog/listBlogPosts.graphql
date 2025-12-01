@@ -1,0 +1,10 @@
+query listBlogPosts {
+  blogQueries {
+    listBlogPosts {
+      id
+      title
+      createdAt
+      tags
+    }
+  }
+}
