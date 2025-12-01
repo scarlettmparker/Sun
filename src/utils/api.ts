@@ -159,6 +159,13 @@ export async function fetchListBlogPosts() {
 }
 
 /**
+ * Locate operation for blog posts.
+ */
+export async function fetchLocateBlogPost(id: string) {
+  return fetchGraphQLData("blogQueries.locateBlogPost", { id });
+}
+
+/**
  * List operation.
  */
 export async function fetchListSongs() {

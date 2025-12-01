@@ -26,7 +26,9 @@ const BlogPage = () => {
           <h1>{t(group.monthYear)}</h1>
           <hr />
           {group.posts.map((blogPost) => (
-            <h2 key={blogPost.id}>{blogPost.title}</h2>
+            <a key={blogPost.id} href={`/blog/${blogPost.id}`}>
+              <h2>{blogPost.title}</h2>
+            </a>
           ))}
         </React.Fragment>
       ))}
@@ -39,9 +41,7 @@ const BlogPage = () => {
  */
 async function getBlogData(): Promise<Record<string, unknown> | null> {
   try {
-    console.log("reaching here");
     const result = await fetchListBlogPosts();
-    console.log("result", result);
     if (result?.data && result.success) {
       const blogPosts = (result.data as ListBlogPostsQuery).blogQueries
         .listBlogPosts;
