@@ -22,10 +22,8 @@ const BlogPostPage = () => {
 export async function getBlogPostDetails(
   id: string
 ): Promise<Record<string, unknown> | null> {
-  console.log("reaching here");
   try {
     const result = await fetchLocateBlogPost(id);
-    console.log("result", result);
     if (result.success && result.data) {
       return {
         blogPost: (result.data as LocateBlogPostQuery).blogQueries
