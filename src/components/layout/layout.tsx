@@ -1,3 +1,5 @@
+import TopNavBar from "./menu/top-nav-bar";
+
 type LayoutProps = React.PropsWithChildren;
 
 /**
@@ -6,7 +8,12 @@ type LayoutProps = React.PropsWithChildren;
 const Layout = (props: LayoutProps) => {
   const { children } = props;
 
-  return <>{children}</>;
+  return (
+    <>
+      <TopNavBar />
+      <main>{children}</main>
+    </>
+  );
 };
 
 export default Layout;

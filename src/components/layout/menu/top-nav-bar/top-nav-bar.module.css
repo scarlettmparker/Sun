@@ -1,0 +1,19 @@
+.top_nav_bar {
+  display: flex;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  gap: var(--lg);
+  padding: var(--lg);
+  width: fit-content;
+  min-width: 12rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.divider {
+  width: 1px;
+  height: 1.25rem;
+  margin: 0 var(--lg);
+  background: #ccc;
+}
