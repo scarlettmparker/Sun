@@ -15,11 +15,11 @@ export async function loadModule(vite, srcPath, distPath) {
         ? srcPath
         : srcPath.replace(/^\.?\.?\//, "/");
       return await vite.ssrLoadModule(abs);
-    } catch (err) {
+    } catch (_) {
       // fallback to trying the original path if absolute failed
       try {
         return await vite.ssrLoadModule(srcPath);
-      } catch (e) {
+      } catch (_) {
         // fall through to production path
         // console.warn("vite.ssrLoadModule failed for", srcPath, e);
       }

@@ -1,14 +1,14 @@
 import Button from "~/components/button";
 import menu from "..";
 import styles from "./top-nav-bar.module.css";
-import { useTranslation } from "react-i18next";
+// import { useTranslation } from "react-i18next";
 import React from "react";
 
 /**
  * Top Nav Bar component that displays on all pages.
  */
 const TopNavBar = () => {
-  const { t } = useTranslation("home");
+  // const { t } = useTranslation("home");
   const entries = Object.entries(menu);
 
   return (

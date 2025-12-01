@@ -23,7 +23,7 @@ const BlogPage = () => {
     <div className={styles.blog_wrapper}>
       {groupedPosts.map((group) => (
         <React.Fragment key={group.monthYear}>
-          <h1>{group.monthYear}</h1>
+          <h1>{t(group.monthYear)}</h1>
           <hr />
           {group.posts.map((blogPost) => (
             <h2 key={blogPost.id}>{blogPost.title}</h2>
