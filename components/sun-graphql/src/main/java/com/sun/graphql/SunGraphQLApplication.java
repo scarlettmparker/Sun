@@ -7,15 +7,19 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication(scanBasePackages = "com.sun")
-@EnableJpaRepositories(basePackages = "com.sun")
 @EntityScan(basePackages = "com.sun")
 public class SunGraphQLApplication {
 
     public static void main(String[] args) {
         Dotenv dotenv = Dotenv.configure().load();
-        System.setProperty("spring.datasource.url", dotenv.get("SPRING_DATASOURCE_URL"));
-        System.setProperty("spring.datasource.username", dotenv.get("SPRING_DATASOURCE_USERNAME"));
-        System.setProperty("spring.datasource.password", dotenv.get("SPRING_DATASOURCE_PASSWORD"));
+        // Apollo datasource
+        System.setProperty("APOLLO_SPRING_DATASOURCE_URL", dotenv.get("APOLLO_SPRING_DATASOURCE_URL"));
+        System.setProperty("APOLLO_SPRING_DATASOURCE_USERNAME", dotenv.get("APOLLO_SPRING_DATASOURCE_USERNAME"));
+        System.setProperty("APOLLO_SPRING_DATASOURCE_PASSWORD", dotenv.get("APOLLO_SPRING_DATASOURCE_PASSWORD"));
+        // Briareus datasource
+        System.setProperty("BRI_SPRING_DATASOURCE_URL", dotenv.get("BRI_SPRING_DATASOURCE_URL"));
+        System.setProperty("BRI_SPRING_DATASOURCE_USERNAME", dotenv.get("BRI_SPRING_DATASOURCE_USERNAME"));
+        System.setProperty("BRI_SPRING_DATASOURCE_PASSWORD", dotenv.get("BRI_SPRING_DATASOURCE_PASSWORD"));
         SpringApplication.run(SunGraphQLApplication.class, args);
     }
 
