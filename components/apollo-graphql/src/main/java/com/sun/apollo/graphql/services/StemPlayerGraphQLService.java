@@ -36,8 +36,8 @@ public class StemPlayerGraphQLService {
 
     List<SongEntity> songEntities = apolloService.listSongs();
     List<Song> songs = songEntities.stream()
-        .map(songMapper::map)
-        .collect(Collectors.toList());
+      .map(songMapper::map)
+      .collect(Collectors.toList());
 
     logger.info("Retrieved {} songs", songs.size());
     return songs;
@@ -53,7 +53,7 @@ public class StemPlayerGraphQLService {
     logger.info("Retrieving song by ID: {}", id);
 
     SongEntity songEntity = apolloService.locateSong(java.util.UUID.fromString(id))
-        .orElseThrow(() -> new RuntimeException("Song not found with id: " + id));
+      .orElseThrow(() -> new RuntimeException("Song not found with id: " + id));
 
     Song song = songMapper.map(songEntity);
 

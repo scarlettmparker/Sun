@@ -1,7 +1,9 @@
 package com.sun.briareus.model;
 
 import com.sun.base.model.BaseEntity;
+import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.*;
+import org.hibernate.annotations.Type;
 import java.util.List;
 
 @Entity
@@ -14,7 +16,8 @@ public class PostEntity extends BaseEntity {
   @Column(name = "content")
   private String content;
 
-  @Column(name = "tags")
+  @Type(JsonBinaryType.class)
+  @Column(columnDefinition = "jsonb")
   private List<String> tags;
 
   // Getters and setters
