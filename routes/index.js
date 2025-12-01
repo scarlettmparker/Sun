@@ -38,7 +38,7 @@ export function setupRoutes(app, vite) {
     const langHeader = req.headers["accept-language"] || "en";
     const locale = langHeader.split(",")[0] || "en";
     const urlPath = url.split("?")[0];
-    const pageName = urlPath.split("/")[1] || "home";
+    let pageName = urlPath.split("/")[1] || "home";
 
     // Extract route params
     const matches = matchRoutes(routes, url);
@@ -47,6 +47,11 @@ export function setupRoutes(app, vite) {
       matches.forEach((match) => {
         Object.assign(params, match.params);
       });
+    }
+
+    // Adjust pageName for not-found routes
+    if (matches && matches[0].route.path === "*") {
+      pageName = "not-found";
     }
 
     // Fetch page-specific data

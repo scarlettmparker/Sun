@@ -13,6 +13,9 @@ const menu: MenuType = {
   blog: {
     name: "Blog",
   },
+  "stem-player": {
+    name: "Stem Player",
+  },
 };
 
 export default menu;

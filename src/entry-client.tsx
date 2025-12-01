@@ -1,5 +1,5 @@
-import { BrowserRouter, useLocation } from "react-router-dom";
-import { Router } from "./router";
+import { BrowserRouter, useLocation, matchRoutes } from "react-router-dom";
+import { Router, routes } from "./router";
 import { initReactI18next } from "react-i18next";
 import ReactDOM from "react-dom/client";
 import i18n from "i18next";
@@ -50,7 +50,11 @@ function AppWithI18n() {
   const location = useLocation();
   useEffect(() => {
     const locale = window.__locale__ || "en";
-    const page = getPageName(location.pathname);
+    const matches = matchRoutes(routes, location.pathname);
+    const page =
+      matches && matches[0].route.path === "*"
+        ? "not-found"
+        : getPageName(location.pathname);
     loadTranslations(page, locale).then((translations) => {
       i18n.addResourceBundle(locale, page, translations, true, true);
       i18n.changeLanguage(locale);
