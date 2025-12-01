@@ -4,12 +4,14 @@ import com.sun.briareus.model.PostEntity;
 import com.sun.briareus.repository.PostRepository;
 import com.sun.base.service.BaseService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 import java.util.Optional;
 import java.util.List;
 
 @Service
+@Transactional("briareusTransactionManager")
 public class BriareusService extends BaseService<PostEntity> {
 
   public BriareusService(PostRepository repository) {

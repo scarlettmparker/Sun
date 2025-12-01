@@ -7,13 +7,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 import com.sun.apollo.model.SongEntity;
 
 /**
  * Service for handling GraphQL-specific business logic for the Stem Player.
- * This service acts as an intermediary between the GraphQL layer and the domain services.
+ * This service acts as an intermediary between the GraphQL layer and the domain
+ * services.
  */
 @Service
 public class StemPlayerGraphQLService {
@@ -31,13 +33,14 @@ public class StemPlayerGraphQLService {
    *
    * @return a list of GraphQL Song objects without stems
    */
+  @Transactional("apolloTransactionManager")
   public List<Song> list() {
     logger.info("Retrieving songs for stem player (without stems)");
 
     List<SongEntity> songEntities = apolloService.listSongs();
     List<Song> songs = songEntities.stream()
-      .map(songMapper::map)
-      .collect(Collectors.toList());
+        .map(songEntity -> songMapper.map(songEntity))
+        .collect(Collectors.toList());
 
     logger.info("Retrieved {} songs", songs.size());
     return songs;
@@ -49,11 +52,12 @@ public class StemPlayerGraphQLService {
    * @param id the song ID as string
    * @return the GraphQL Song object with stems
    */
+  @Transactional("apolloTransactionManager")
   public Song locate(String id) {
     logger.info("Retrieving song by ID: {}", id);
 
     SongEntity songEntity = apolloService.locateSong(java.util.UUID.fromString(id))
-      .orElseThrow(() -> new RuntimeException("Song not found with id: " + id));
+        .orElseThrow(() -> new RuntimeException("Song not found with id: " + id));
 
     Song song = songMapper.map(songEntity);
 

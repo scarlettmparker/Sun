@@ -4,11 +4,13 @@ import com.sun.apollo.model.SongEntity;
 import com.sun.apollo.repository.SongRepository;
 import com.sun.base.service.BaseService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@Transactional("apolloTransactionManager")
 public class ApolloService extends BaseService<SongEntity> {
 
   public ApolloService(SongRepository repository) {

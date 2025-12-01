@@ -13,7 +13,8 @@ import com.sun.briareus.model.PostEntity;
 
 /**
  * Service for handling GraphQL-specific business logic for the Blogsite.
- * This service acts as an intermediary between the GraphQL layer and the domain services.
+ * This service acts as an intermediary between the GraphQL layer and the domain
+ * services.
  */
 @Service
 public class BlogGraphQLService {
@@ -31,13 +32,14 @@ public class BlogGraphQLService {
    * 
    * @return a list of GraphQL BlgoPost objects
    */
+  @Transactional("briareusTransactionManager")
   public List<BlogPost> listBlogPosts() {
     logger.info("Retrieving blog posts");
 
     List<PostEntity> postEntities = briareusService.listPosts();
     List<BlogPost> blogPosts = postEntities.stream()
-      .map(blogPostMapper::map)
-      .collect(Collectors.toList());
+        .map(blogPostMapper::map)
+        .collect(Collectors.toList());
 
     logger.info("Retrieved {} blog posts", blogPosts.size());
     return blogPosts;
@@ -49,11 +51,12 @@ public class BlogGraphQLService {
    * @param id the blog post ID as string
    * @return the GraphQL BlogPost object
    */
+  @Transactional("briareusTransactionManager")
   public BlogPost locateBlogPost(String id) {
     logger.info("Retrieving blog post by ID: {}", id);
-    
+
     PostEntity postEntity = briareusService.locatePost(java.util.UUID.fromString(id))
-      .orElseThrow(() -> new RuntimeException("Blog post not found with id: " + id));
+        .orElseThrow(() -> new RuntimeException("Blog post not found with id: " + id));
 
     BlogPost blogPost = blogPostMapper.map(postEntity);
 
