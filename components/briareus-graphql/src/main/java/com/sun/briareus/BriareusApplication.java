@@ -1,4 +1,4 @@
-package com.sun.briareus;
+    package com.sun.briareus;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.boot.SpringApplication;

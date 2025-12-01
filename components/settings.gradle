@@ -1,6 +1,8 @@
 rootProject.name = 'sun-components'
 
-include 'sun-service'
 include 'apollo-service'
 include 'apollo-graphql'
+include 'briareus-service'
+include 'briareus-graphql'
+include 'sun-service'
 include 'sun-graphql'

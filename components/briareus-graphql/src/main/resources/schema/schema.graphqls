@@ -1,1 +1,18 @@
- 
+scalar Date
+
+type BlogPost {
+  id: String!
+  content: String
+  tags: [String!]
+  createdAt: Date
+  updatedAt: Date
+}
+
+type BlogQueries {
+  listPosts: [BlogPost]
+  locateBlog(id: ID!): BlogPost
+}
+
+type Query {
+  blogQueries: BlogQueries!
+}
