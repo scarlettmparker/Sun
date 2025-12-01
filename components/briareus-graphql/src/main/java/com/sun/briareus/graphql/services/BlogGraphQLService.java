@@ -49,7 +49,7 @@ public class BlogGraphQLService {
    * @param id the blog post ID as string
    * @return the GraphQL BlogPost object
    */
-  public BlogPost locate(String id) {
+  public BlogPost locateBlogPost(String id) {
     logger.info("Retrieving blog post by ID: {}", id);
     
     PostEntity postEntity = briareusService.locatePost(java.util.UUID.fromString(id))
