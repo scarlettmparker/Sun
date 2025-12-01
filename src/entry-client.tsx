@@ -22,7 +22,7 @@ declare global {
  */
 function getPageName(pathname: string) {
   const page = pathname.split("/")[1];
-  return page || "";
+  return page || "home";
 }
 
 /**

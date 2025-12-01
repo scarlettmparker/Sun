@@ -38,7 +38,7 @@ export function setupRoutes(app, vite) {
     const langHeader = req.headers["accept-language"] || "en";
     const locale = langHeader.split(",")[0] || "en";
     const urlPath = url.split("?")[0];
-    const pageName = urlPath.split("/")[1] || "";
+    const pageName = urlPath.split("/")[1] || "home";
 
     // Extract route params
     const matches = matchRoutes(routes, url);
