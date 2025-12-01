@@ -44,7 +44,10 @@ const StemPlayerPage = () => {
 /**
  * Server-side data fetching function for StemPlayerPage.
  */
-async function getStemPlayerData(): Promise<Record<string, unknown> | null> {
+export async function getStemPlayerData(): Promise<Record<
+  string,
+  unknown
+> | null> {
   try {
     const result = await fetchListSongs();
     if (result?.data && result?.success) {

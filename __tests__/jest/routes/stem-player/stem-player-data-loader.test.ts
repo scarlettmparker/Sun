@@ -2,7 +2,7 @@
  * Tests for stem-player data loader.
  */
 
-import { ApiResponse, fetchList } from "~/utils/api";
+import { ApiResponse, fetchListSongs } from "~/utils/api";
 import { pageDataRegistry } from "~/utils/page-data";
 import {
   getStemPlayerData,
@@ -12,10 +12,12 @@ import { Song } from "~/generated/graphql";
 
 // Mock the API function
 jest.mock("~/utils/api", () => ({
-  fetchList: jest.fn(),
+  fetchListSongs: jest.fn(),
 }));
 
-const mockFetchListSongs = fetchList as jest.MockedFunction<typeof fetchList>;
+const mockFetchListSongs = fetchListSongs as jest.MockedFunction<
+  typeof fetchListSongs
+>;
 
 describe("Stem Player Data Loader", () => {
   beforeEach(() => {
@@ -28,7 +30,7 @@ describe("Stem Player Data Loader", () => {
   });
 
   describe("getStemPlayerData", () => {
-    it("should return songs data when fetchList succeeds", async () => {
+    it("should return songs data when fetchListSongs succeeds", async () => {
       const mockSongs = [
         { id: "1", name: "Song 1", stems: [] },
         { id: "2", name: "Song 2", stems: [] },
@@ -52,7 +54,7 @@ describe("Stem Player Data Loader", () => {
       expect(mockFetchListSongs).toHaveBeenCalledTimes(1);
     });
 
-    it("should return null when fetchList fails", async () => {
+    it("should return null when fetchListSongs fails", async () => {
       const mockResponse = {
         success: false,
         error: "API Error",
@@ -66,7 +68,7 @@ describe("Stem Player Data Loader", () => {
       expect(mockFetchListSongs).toHaveBeenCalledTimes(1);
     });
 
-    it("should return null when fetchList throws an error", async () => {
+    it("should return null when fetchListSongs throws an error", async () => {
       const mockConsoleError = jest
         .spyOn(console, "error")
         .mockImplementation();
@@ -268,7 +270,7 @@ describe("Stem Player Data Loader", () => {
   });
 
   describe("Error handling edge cases", () => {
-    it("should handle fetchList returning undefined", async () => {
+    it("should handle fetchListSongs returning undefined", async () => {
       mockFetchListSongs.mockResolvedValue(
         undefined as unknown as
           | ApiResponse<unknown>
@@ -281,7 +283,7 @@ describe("Stem Player Data Loader", () => {
       expect(mockFetchListSongs).toHaveBeenCalledTimes(1);
     });
 
-    it("should handle fetchList returning null", async () => {
+    it("should handle fetchListSongs returning null", async () => {
       mockFetchListSongs.mockResolvedValue(
         null as unknown as ApiResponse<unknown> | Promise<ApiResponse<unknown>>
       );

@@ -2,7 +2,7 @@
  * Tests for API utility functions.
  */
 
-import { fetchGraphQLData, fetchList, ApiResponse } from "~/utils/api";
+import { fetchGraphQLData, fetchListSongs, ApiResponse } from "~/utils/api";
 
 // Mock fetch globally
 global.fetch = jest.fn();
@@ -139,7 +139,7 @@ describe("API utilities", () => {
         json: jest.fn().mockResolvedValue(mockResponse),
       } as unknown as Response);
 
-      const result = await fetchList();
+      const result = await fetchListSongs();
 
       expect(mockFetch).toHaveBeenCalledWith(
         "http://localhost:8080/graphql",

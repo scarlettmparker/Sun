@@ -1,0 +1,16 @@
+.blog_wrapper {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  /* realistically should only multiply by powers of 2 */
+  padding: calc(var(--lg) * 8) 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.blog_wrapper hr {
+  border: none;
+  border-top: 1px solid #ccc;
+  width: 100%;
+}

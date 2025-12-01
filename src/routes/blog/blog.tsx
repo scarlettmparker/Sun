@@ -1,23 +1,36 @@
 import { ListBlogPostsQuery } from "~/generated/graphql";
 import { fetchListBlogPosts } from "~/utils/api";
 import { pageDataRegistry } from "~/utils/page-data";
+import { useTranslation } from "react-i18next";
+import styles from "./blog.module.css";
+import { groupPostsByMonthYear } from "./group-posts-by-month-year";
+import React from "react";
 
 const BlogPage = () => {
+  const { t } = useTranslation("blog");
+
   const pageData = globalThis.__pageData__;
   const initialData =
     pageData?.blogPosts as ListBlogPostsQuery["blogQueries"]["listBlogPosts"];
 
-  console.log(initialData);
   if (!initialData) {
     return <>Loading...</>;
   }
 
+  const groupedPosts = groupPostsByMonthYear(initialData);
+
   return (
-    <>
-      {initialData.map((blogPost, idx) => (
-        <h1 key={idx}>{blogPost?.title}</h1>
+    <div className={styles.blog_wrapper}>
+      {groupedPosts.map((group) => (
+        <React.Fragment key={group.monthYear}>
+          <h1>{group.monthYear}</h1>
+          <hr />
+          {group.posts.map((blogPost) => (
+            <h2 key={blogPost.id}>{blogPost.title}</h2>
+          ))}
+        </React.Fragment>
       ))}
-    </>
+    </div>
   );
 };
 
