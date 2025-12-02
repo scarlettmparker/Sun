@@ -15,6 +15,9 @@ import static org.mockito.Mockito.when;
 
 import com.sun.briareus.graphql.services.BlogGraphQLService;
 import com.sun.briareus.codegen.types.BlogPost;
+import com.sun.briareus.codegen.types.BlogPostInput;
+import com.sun.cerberus.codegen.types.QueryResult;
+import com.sun.cerberus.codegen.types.QuerySuccess;
 
 @ExtendWith(MockitoExtension.class)
 class BlogDataFetcherTest {
@@ -80,5 +83,21 @@ class BlogDataFetcherTest {
     assertThat(result.getTitle()).isEqualTo("Test Blog 1");
     assertThat(result.getContent()).isEqualTo("Test Content 1");
     assertThat(result.getTags()).containsExactly("Tag1", "Tag2");
+  }
+
+  @Test
+  void createBlogPost_shouldReturnQueryResultFromService() {
+    BlogPostInput input = BlogPostInput.newBuilder()
+        .content("New content")
+        .tags(Arrays.asList("new", "tag"))
+        .build();
+
+    QueryResult mockResult = QuerySuccess.newBuilder().success(true).build();
+
+    when(blogGraphQLService.createBlogPost("New Title", input)).thenReturn(mockResult);
+
+    QueryResult result = blogDataFetcher.createBlogPost("New Title", input);
+
+    assertThat(result).isEqualTo(mockResult);
   }
 }

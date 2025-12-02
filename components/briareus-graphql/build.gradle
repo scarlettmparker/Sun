@@ -25,6 +25,7 @@ ext {
 
 dependencies {
     implementation project(':briareus-service')
+    implementation project(':cerberus-graphql')
     implementation project(':sun-service')
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
@@ -44,7 +45,7 @@ dependencyManagement {
 }
 
 generateJava {
-    schemaPaths = ["${projectDir}/src/main/resources"]
+    schemaPaths = ["${projectDir}/src/main/resources", "${project(':cerberus-graphql').projectDir}/src/main/resources"]
     packageName = 'com.sun.briareus.codegen'
     generateClient = true
     typeMapping = [

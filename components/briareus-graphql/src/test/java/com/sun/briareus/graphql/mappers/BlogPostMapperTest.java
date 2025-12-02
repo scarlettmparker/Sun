@@ -12,6 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.sun.briareus.model.PostEntity;
 import com.sun.briareus.codegen.types.BlogPost;
+import com.sun.briareus.codegen.types.BlogPostInput;
 
 @ExtendWith(MockitoExtension.class)
 class BlogPostMapperTest {
@@ -39,5 +40,19 @@ class BlogPostMapperTest {
     assertThat(result.getTags()).containsExactly("tag1", "tag2");
     assertThat(result.getCreatedAt()).isEqualTo(createdAt);
     assertThat(result.getUpdatedAt()).isEqualTo(updatedAt);
+  }
+
+  @Test
+  void mapInput_shouldMapAllFields() {
+    BlogPostInput input = BlogPostInput.newBuilder()
+        .content("Test Content")
+        .tags(Arrays.asList("tag1", "tag2"))
+        .build();
+
+    PostEntity result = blogPostMapper.mapInput("Test Title", input);
+
+    assertThat(result.getTitle()).isEqualTo("Test Title");
+    assertThat(result.getContent()).isEqualTo("Test Content");
+    assertThat(result.getTags()).containsExactly("tag1", "tag2");
   }
 }

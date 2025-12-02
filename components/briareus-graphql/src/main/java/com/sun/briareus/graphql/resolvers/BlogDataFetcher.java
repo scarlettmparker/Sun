@@ -9,6 +9,9 @@ import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
 import com.sun.briareus.codegen.types.BlogPost;
 import com.sun.briareus.codegen.types.BlogQueries;
+import com.sun.briareus.codegen.types.BlogMutations;
+import com.sun.briareus.codegen.types.BlogPostInput;
+import com.sun.cerberus.codegen.types.QueryResult;
 
 @DgsComponent
 public class BlogDataFetcher {
@@ -45,5 +48,27 @@ public class BlogDataFetcher {
   @DgsData(parentType = "BlogQueries", field = "locateBlogPost")
   public BlogPost locateBlogPost(String id) {
     return blogGraphQLService.locateBlogPost(id);
+  }
+
+  /**
+   * Provides the blog mutations object.
+   *
+   * @return a new BlogMutations instance
+   */
+  @DgsData(parentType = "Mutation", field = "blogMutations")
+  public BlogMutations getBlogMutations() {
+    return BlogMutations.newBuilder().build();
+  }
+
+  /**
+   * Creates a new blog post.
+   *
+   * @param title the title of the blog post
+   * @param input the input data for the blog post
+   * @return QueryResult indicating success or error
+   */
+  @DgsData(parentType = "BlogMutations", field = "createBlogPost")
+  public QueryResult createBlogPost(String title, BlogPostInput input) {
+    return blogGraphQLService.createBlogPost(title, input);
   }
 }

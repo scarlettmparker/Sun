@@ -10,6 +10,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import com.sun.briareus.model.PostEntity;
 import com.sun.briareus.codegen.types.BlogPost;
+import com.sun.briareus.codegen.types.BlogPostInput;
+import com.sun.cerberus.codegen.types.QueryResult;
+import com.sun.cerberus.codegen.types.QuerySuccess;
+import com.sun.cerberus.codegen.types.StandardError;
 
 import java.util.Arrays;
 import java.util.List;
@@ -18,6 +22,8 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.ArgumentMatchers.any;
 
 @ExtendWith(MockitoExtension.class)
 class BlogGraphQLServiceTest {
@@ -104,5 +110,56 @@ class BlogGraphQLServiceTest {
     assertThatThrownBy(() -> blogGraphQLService.locateBlogPost(postEntity1.getId().toString()))
         .isInstanceOf(RuntimeException.class)
         .hasMessage("Blog post not found with id: " + postEntity1.getId().toString());
+  }
+
+  @Test
+  void createBlogPost_shouldReturnQuerySuccessWhenSuccessful() {
+    BlogPostInput input = BlogPostInput.newBuilder()
+        .content("New blog content")
+        .tags(Arrays.asList("new", "blog"))
+        .build();
+
+    PostEntity postEntity = new PostEntity();
+    postEntity.setTitle("New Blog Post");
+    postEntity.setContent("New blog content");
+    postEntity.setTags(Arrays.asList("new", "blog"));
+
+    PostEntity savedEntity = new PostEntity();
+    savedEntity.setId(UUID.randomUUID());
+    savedEntity.setTitle("New Blog Post");
+    savedEntity.setContent("New blog content");
+    savedEntity.setTags(Arrays.asList("new", "blog"));
+
+    when(blogPostMapper.mapInput("New Blog Post", input)).thenReturn(postEntity);
+    when(briareusService.save(postEntity)).thenReturn(savedEntity);
+
+    QueryResult result = blogGraphQLService.createBlogPost("New Blog Post", input);
+
+    assertThat(result).isInstanceOf(QuerySuccess.class);
+    QuerySuccess success = (QuerySuccess) result;
+    assertThat(success.getSuccess()).isTrue();
+  }
+
+  @Test
+  void createBlogPost_shouldReturnStandardErrorWhenExceptionOccurs() {
+    BlogPostInput input = BlogPostInput.newBuilder()
+        .content("New blog content")
+        .tags(Arrays.asList("new", "blog"))
+        .build();
+
+    PostEntity postEntity = new PostEntity();
+    postEntity.setTitle("New Blog Post");
+    postEntity.setContent("New blog content");
+    postEntity.setTags(Arrays.asList("new", "blog"));
+
+    when(blogPostMapper.mapInput("New Blog Post", input)).thenReturn(postEntity);
+    doThrow(new RuntimeException("Database error")).when(briareusService).save(postEntity);
+
+    QueryResult result = blogGraphQLService.createBlogPost("New Blog Post", input);
+
+    assertThat(result).isInstanceOf(StandardError.class);
+    StandardError error = (StandardError) result;
+    assertThat(error.getMessage()).contains("Failed to create blog post: Database error");
+    assertThat(error.getId()).isNull();
   }
 }

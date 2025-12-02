@@ -1,0 +1,34 @@
+plugins {
+    id 'java-library'
+    id 'com.netflix.dgs.codegen' version '7.0.3'
+}
+
+generateJava {
+    schemaPaths = ["${projectDir}/src/main/resources"]
+    packageName = 'com.sun.cerberus.codegen'
+    generateClient = false
+}
+
+group = 'com.sun'
+version = '0.0.1-SNAPSHOT'
+description = 'cerberus-graphql'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'com.netflix.graphql.dgs:graphql-dgs-spring-graphql-starter'
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

@@ -1,6 +1,7 @@
 package com.sun.briareus.graphql.mappers;
 
 import com.sun.briareus.codegen.types.BlogPost;
+import com.sun.briareus.codegen.types.BlogPostInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +38,25 @@ public class BlogPostMapper {
 
     logger.debug("Mapped blog post {} with id {}", postEntity.getTitle(), postEntity.getId());
     return blogPost;
+  }
+
+  /**
+   * Maps a GraphQL BlogPostInput and title to a domain PostEntity.
+   *
+   * @param title the title of the blog post
+   * @param input the GraphQL BlogPostInput to map
+   * @return the mapped domain PostEntity
+   */
+  public PostEntity mapInput(String title, BlogPostInput input) {
+    logger.debug("Mapping input for blog post with title: {}", title);
+
+    PostEntity postEntity = new PostEntity();
+    postEntity.setTitle(title);
+    postEntity.setContent(input.getContent());
+    postEntity.setTags(input.getTags());
+
+    logger.debug("Mapped input to post entity with title: {}", title);
+    return postEntity;
   }
 
 }

@@ -1,0 +1,13 @@
+mutation createBlogPost($title: String!, $input: BlogPostInput!) {
+  blogMutations {
+    createBlogPost(title: $title, input: $input) {
+      ... on QuerySuccess {
+        success
+      }
+      ... on StandardError {
+        message
+        id
+      }
+    }
+  }
+}
