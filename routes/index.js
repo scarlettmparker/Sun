@@ -7,6 +7,7 @@ import { base, isProduction } from "../config.js";
 import { matchRoutes } from "react-router-dom";
 import { routes } from "../src/router.tsx";
 import { fetchPageData } from "../src/utils/page-data.ts";
+import { mutateCreateBlogPost } from "../src/utils/api.ts";
 
 /**
  * Sets up all routes for the Express application.

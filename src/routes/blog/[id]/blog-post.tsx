@@ -43,7 +43,7 @@ export async function getBlogPostDetails(
 export function registerBlogPageDataLoader(): void {
   pageDataRegistry.registerPageDataLoader("blog/:id", async (params) => {
     const id = params?.id as string;
-    if (!id) return null;
+    if (!id || id == "create") return null;
     return getBlogPostDetails(id);
   });
 }

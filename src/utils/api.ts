@@ -8,6 +8,8 @@ import {
   LocateSongDocument,
   ListBlogPostsDocument,
   LocateBlogPostDocument,
+  CreateBlogPostDocument,
+  BlogPostInput,
 } from "../generated/graphql";
 import { print, DocumentNode } from "graphql";
 
@@ -30,6 +32,9 @@ type OperationRegistry = {
     listBlogPosts: DocumentNode;
     locateBlogPost: DocumentNode;
   };
+  blogMutations: {
+    createBlogPost: DocumentNode;
+  };
 };
 
 /**
@@ -44,6 +49,9 @@ const operationRegistry: OperationRegistry = {
   blogQueries: {
     listBlogPosts: ListBlogPostsDocument,
     locateBlogPost: LocateBlogPostDocument,
+  },
+  blogMutations: {
+    createBlogPost: CreateBlogPostDocument,
   },
 };
 
@@ -177,4 +185,17 @@ export async function fetchListSongs() {
  */
 export async function fetchLocateSong(id: string) {
   return fetchGraphQLData("songQueries.locate", { id });
+}
+
+/**
+ * Create blog post mutation.
+ */
+export async function mutateCreateBlogPost(
+  title: string,
+  input: BlogPostInput
+) {
+  console.log("calling here!");
+  console.log("title", title);
+  console.log("input", input);
+  return fetchGraphQLData("blogMutations.createBlogPost", { title, input });
 }

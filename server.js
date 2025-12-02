@@ -14,8 +14,10 @@ import {
   backendPort,
 } from "./config.js";
 import { setupRoutes } from "./routes/index.js";
+import { executeMutation } from "./src/utils/mutations.ts";
 
 import "./src/utils/register-loaders.ts";
+import "./src/utils/register-mutations.ts";
 
 const app = express();
 
@@ -24,6 +26,9 @@ app.use(express.static(path.resolve("./public")));
 
 // Parse cookies from the request headers
 app.use(cookieParser());
+
+// Parse JSON bodies
+app.use(express.json());
 
 let vite;
 
@@ -66,6 +71,26 @@ if (!isProduction) {
 
 // Set up all defined application routes
 setupRoutes(app, vite);
+
+// Generic POST route for mutations
+app.post("*", async (req, res) => {
+  const path = req.path.slice(1); // Remove leading slash
+  try {
+    const result = await executeMutation(path, req.body);
+    if (result.success) {
+      if (result.redirect) {
+        res.redirect(result.redirect);
+      } else {
+        res.json({ success: true });
+      }
+    } else {
+      res.status(400).json({ error: result.error });
+    }
+  } catch (error) {
+    console.error("Error executing mutation:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 // Start the HTTP server
 app.listen(port, () => {

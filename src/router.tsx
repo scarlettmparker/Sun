@@ -5,6 +5,7 @@ import StemPlayerPage from "./routes/stem-player/stem-player";
 import StemPlayerDetailsPage from "./routes/stem-player/[id]";
 import BlogPage from "./routes/blog";
 import BlogPostPage from "./routes/blog/[id]";
+import CreateBlogPostPage from "./routes/blog/create";
 
 /**
  * List of routes.
@@ -21,6 +22,10 @@ export const routes: RouteObject[] = [
   {
     path: "blog/:id",
     element: <BlogPostPage />,
+  },
+  {
+    path: "blog/create",
+    element: <CreateBlogPostPage />,
   },
   {
     path: "stem-player",
