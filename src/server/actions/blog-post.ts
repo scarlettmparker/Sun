@@ -18,6 +18,7 @@ export async function createBlogPost(
     !content.trim()
   ) {
     return {
+      __typename: "StandardError",
       message: "Invalid input: title and content must be non-empty strings",
     };
   }

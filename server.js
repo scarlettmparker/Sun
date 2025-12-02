@@ -77,18 +77,16 @@ app.post("*", async (req, res) => {
   const path = req.path.slice(1); // Remove leading slash
   try {
     const result = await executeMutation(path, req.body);
-    if (result.success) {
-      if (result.redirect) {
-        res.redirect(result.redirect);
-      } else {
-        res.json({ success: true });
-      }
-    } else {
-      res.status(400).json({ error: result.error });
+    if (result.__typename === "QuerySuccess") {
+      res.json(result);
+    } else if (result.__typename === "StandardError") {
+      res.status(400).json(result);
     }
   } catch (error) {
     console.error("Error executing mutation:", error);
-    res.status(500).json({ error: "Internal server error" });
+    res
+      .status(500)
+      .json({ __typename: "StandardError", message: "Internal server error" });
   }
 });
 

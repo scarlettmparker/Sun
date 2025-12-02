@@ -27,6 +27,7 @@ export async function executeMutation(
 
     if (!response.ok) {
       return {
+        __typename: "StandardError",
         message: `HTTP ${response.status}: ${response.statusText}`,
       };
     }
@@ -35,6 +36,7 @@ export async function executeMutation(
     return result;
   } catch (error) {
     return {
+      __typename: "StandardError",
       message: error instanceof Error ? error.message : "Network error",
     };
   }

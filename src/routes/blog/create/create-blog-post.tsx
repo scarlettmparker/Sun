@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { createBlogPost } from "~/server/actions/blog-post";
 import { mutationRegistry } from "~/utils/mutations";
+import { MutationResult } from "~/server/actions/utils";
+import { mutateCreateBlogPost } from "~/utils/api";
+import { BlogPostInput } from "~/generated/graphql";
 
 const CreateBlogPostPage = () => {
   const [loading, setLoading] = useState(false);
@@ -19,11 +22,12 @@ const CreateBlogPostPage = () => {
 
     const result = await createBlogPost(title, content);
 
-    if (result.success) {
+    if (result.__typename === "QuerySuccess") {
       setSuccess(true);
+      // Optionally reset form or navigate programmatically
       e.currentTarget.reset();
-    } else {
-      setError(result.error || "Failed to create blog post");
+    } else if (result.__typename === "StandardError") {
+      setError(result.message);
     }
 
     setLoading(false);
@@ -44,27 +48,29 @@ const CreateBlogPostPage = () => {
   );
 };
 
-import { mutateCreateBlogPost } from "~/utils/api";
-
 /**
  * Handler for creating a blog post.
  */
-async function handleCreateBlogPost(body: Record<string, unknown>) {
-  const { title, content } = body;
+async function handleCreateBlogPost(
+  body: Record<string, unknown>
+): Promise<MutationResult> {
+  const { title, input } = body;
+  const content = (input as BlogPostInput)?.content;
   if (typeof title !== "string" || typeof content !== "string") {
     return {
-      success: false,
-      error: "Invalid input: title and content must be strings",
+      __typename: "StandardError" as const,
+      message: "Invalid input: title and content must be strings",
     };
   }
-  const result = await mutateCreateBlogPost(title, { content });
+
+  const result = await mutateCreateBlogPost(title, input as BlogPostInput);
   if (result.success) {
-    return { success: true };
+    return { __typename: "QuerySuccess", message: "" } as const;
   } else {
     return {
-      success: false,
-      error: result.error || "Failed to create blog post",
-    };
+      __typename: "StandardError",
+      message: result.error || "Failed to create blog post",
+    } as const;
   }
 }
 

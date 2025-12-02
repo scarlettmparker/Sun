@@ -194,8 +194,5 @@ export async function mutateCreateBlogPost(
   title: string,
   input: BlogPostInput
 ) {
-  console.log("calling here!");
-  console.log("title", title);
-  console.log("input", input);
   return fetchGraphQLData("blogMutations.createBlogPost", { title, input });
 }

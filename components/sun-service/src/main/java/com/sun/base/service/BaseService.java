@@ -2,12 +2,10 @@ package com.sun.base.service;
 
 import com.sun.base.model.BaseEntity;
 import com.sun.base.repository.BaseRepository;
-import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@Transactional
 public abstract class BaseService<T extends BaseEntity> {
 
     protected final BaseRepository<T> repository;

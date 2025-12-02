@@ -3,12 +3,11 @@
  * Provides a registry for mutation handlers and a function to execute mutations.
  */
 
-type MutationHandler = (body: Record<string, unknown>) => Promise<{
-  success: boolean;
-  data?: unknown;
-  error?: string;
-  redirect?: string;
-}>;
+import { MutationResult } from "~/server/actions/utils";
+
+type MutationHandler = (
+  body: Record<string, unknown>
+) => Promise<MutationResult>;
 
 const mutationHandlers: Record<string, MutationHandler> = {};
 
@@ -30,21 +29,16 @@ function registerMutationHandler(path: string, handler: MutationHandler): void {
 export async function executeMutation(
   path: string,
   body: Record<string, unknown>
-): Promise<{
-  success: boolean;
-  data?: unknown;
-  error?: string;
-  redirect?: string;
-}> {
+): Promise<MutationResult> {
   const handler = mutationHandlers[path];
   if (!handler) {
-    return { success: false, error: "Unknown mutation path" };
+    return { __typename: "StandardError", message: "Unknown mutation path" };
   }
   try {
     return await handler(body);
   } catch (error) {
     console.error(`Failed to execute mutation for path ${path}:`, error);
-    return { success: false, error: "Internal server error" };
+    return { __typename: "StandardError", message: "Internal server error" };
   }
 }
 
@@ -56,12 +50,7 @@ interface MutationRegistry {
   executeMutation: (
     path: string,
     body: Record<string, unknown>
-  ) => Promise<{
-    success: boolean;
-    data?: unknown;
-    error?: string;
-    redirect?: string;
-  }>;
+  ) => Promise<MutationResult>;
 }
 
 export const mutationRegistry: MutationRegistry = {
