@@ -1,3 +1,4 @@
+import { invalidateCache } from "~/utils/page-data";
 import { MutationResult, executeMutation } from "./utils";
 
 /**
@@ -17,13 +18,23 @@ export async function createBlogPost(
     !content.trim()
   ) {
     return {
-      success: false,
-      error: "Invalid input: title and content must be non-empty strings",
+      message: "Invalid input: title and content must be non-empty strings",
     };
   }
 
-  return executeMutation("blog/create", {
+  const result = await executeMutation("blog/create", {
     title: title.trim(),
-    content: content.trim(),
+    input: {
+      content: content.trim(),
+    },
   });
+
+  switch (result.__typename) {
+    case "QuerySuccess":
+      // Invalidate cache on success
+      invalidateCache("blog");
+      break;
+  }
+
+  return result;
 }

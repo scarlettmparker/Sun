@@ -100,6 +100,22 @@ function normalizePath(path: string): string {
 }
 
 /**
+ * Invalidates the cache for a specific page pattern and parameters.
+ *
+ * @param pattern Route pattern (e.g., 'blog', 'blog/:id').
+ * @param params Optional parameters that were used for the cached request.
+ */
+export function invalidateCache(
+  pattern: string,
+  params?: Record<string, unknown>
+): void {
+  const normalizedPattern = normalizePath(pattern);
+  const finalParams = params || {};
+  const cacheKey = `${normalizedPattern}:${JSON.stringify(finalParams)}`;
+  delete pageDataCache[cacheKey];
+}
+
+/**
  * Fetches data for a given URL path by finding the matching registered loader.
  * @param urlPath The actual URL path (e.g., 'blog/my-first-post').
  * @param explicitParams Optional manual parameters to override URL params.
@@ -195,6 +211,7 @@ interface PageDataRegistry {
   hasPageDataLoader: (pageName: string) => boolean;
   getRegisteredPageNames: () => string[];
   pageDataCache: PageDataCache;
+  invalidateCache: (pattern: string, params?: Record<string, unknown>) => void;
 }
 
 export const pageDataRegistry: PageDataRegistry = {
@@ -203,4 +220,5 @@ export const pageDataRegistry: PageDataRegistry = {
   hasPageDataLoader,
   getRegisteredPageNames,
   pageDataCache,
+  invalidateCache,
 };

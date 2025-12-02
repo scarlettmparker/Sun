@@ -2,11 +2,11 @@ mutation createBlogPost($title: String!, $input: BlogPostInput!) {
   blogMutations {
     createBlogPost(title: $title, input: $input) {
       ... on QuerySuccess {
-        success
+        message
+        id
       }
       ... on StandardError {
         message
-        id
       }
     }
   }

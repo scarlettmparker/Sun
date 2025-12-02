@@ -1,10 +1,10 @@
 type StandardError {
-  message: String
-  id: ID
+  message: String!
 }
 
 type QuerySuccess {
-  success: Boolean!
+  message: String!
+  id: ID
 }
 
 union QueryResult = QuerySuccess | StandardError

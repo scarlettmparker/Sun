@@ -2,11 +2,9 @@
  * Server actions for blog post operations.
  */
 
-export type MutationResult = {
-  success: boolean;
-  data?: unknown;
-  error?: string;
-};
+import { QuerySuccess, StandardError } from "~/generated/graphql";
+
+export type MutationResult = QuerySuccess | StandardError;
 
 /**
  * Executes a server-side mutation by posting to the registered mutation path.
@@ -29,8 +27,7 @@ export async function executeMutation(
 
     if (!response.ok) {
       return {
-        success: false,
-        error: `HTTP ${response.status}: ${response.statusText}`,
+        message: `HTTP ${response.status}: ${response.statusText}`,
       };
     }
 
@@ -38,8 +35,7 @@ export async function executeMutation(
     return result;
   } catch (error) {
     return {
-      success: false,
-      error: error instanceof Error ? error.message : "Network error",
+      message: error instanceof Error ? error.message : "Network error",
     };
   }
 }

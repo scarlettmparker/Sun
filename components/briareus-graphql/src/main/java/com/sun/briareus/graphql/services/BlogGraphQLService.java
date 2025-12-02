@@ -85,12 +85,14 @@ public class BlogGraphQLService {
       PostEntity savedEntity = briareusService.save(postEntity);
 
       logger.info("Successfully created blog post with id: {}", savedEntity.getId());
-      return QuerySuccess.newBuilder().success(true).build();
+      return QuerySuccess.newBuilder()
+          .message("Blog post created successfully")
+          .id(savedEntity.getId().toString())
+          .build();
     } catch (Exception e) {
       logger.error("Failed to create blog post with title: {}", title, e);
       return StandardError.newBuilder()
           .message("Failed to create blog post: " + e.getMessage())
-          .id(null)
           .build();
     }
   }
