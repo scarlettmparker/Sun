@@ -41,7 +41,7 @@ export async function getBlogPostDetails(
  * Register the data loader.
  */
 export function registerBlogPageDataLoader(): void {
-  pageDataRegistry.registerPageDataLoader("blog", async (params) => {
+  pageDataRegistry.registerPageDataLoader("blog/:id", async (params) => {
     const id = params?.id as string;
     if (!id) return null;
     return getBlogPostDetails(id);

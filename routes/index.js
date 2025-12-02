@@ -34,13 +34,14 @@ export function setupRoutes(app, vite) {
     let url = req.originalUrl.replace(base, "");
     if (!url.startsWith("/")) url = "/" + url;
 
-    // Localization
+    // Localization (Locale derivation is fine)
     const langHeader = req.headers["accept-language"] || "en";
     const locale = langHeader.split(",")[0] || "en";
-    const urlPath = url.split("?")[0];
-    let pageName = urlPath.split("/")[1] || "home";
 
-    // Extract route params
+    // Path for matching/fetching
+    const pathForMatching = url.split("?")[0];
+
+    // Extract route params using React Router's matchRoutes
     const matches = matchRoutes(routes, url);
     const params = {};
     if (matches) {
@@ -49,13 +50,11 @@ export function setupRoutes(app, vite) {
       });
     }
 
-    // Adjust pageName for not-found routes
-    if (matches && matches[0].route.path === "*") {
-      pageName = "not-found";
-    }
+    // You no longer need the 'pageName' variable for data fetching.
 
-    // Fetch page-specific data
-    const pageData = (await fetchPageData(pageName, params)) || {};
+    // Fetch page-specific data: PASS THE FULL PATH
+    // ----------------------------------------------------- 👇 Change is here
+    const pageData = (await fetchPageData(pathForMatching, params)) || {};
 
     try {
       await renderApp(
@@ -64,7 +63,6 @@ export function setupRoutes(app, vite) {
           isProduction,
           url,
           locale,
-          pageName,
           pageData,
         },
         res

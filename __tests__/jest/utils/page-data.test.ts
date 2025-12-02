@@ -4,8 +4,9 @@
 
 import { fetchPageData, pageDataRegistry } from "~/utils/page-data";
 
-// Mock console.error to avoid noise in tests
-const mockConsoleError = jest.spyOn(console, "error").mockImplementation();
+const mockConsoleError = jest
+  .spyOn(console, "error")
+  .mockImplementation(() => {});
 
 afterAll(() => {
   mockConsoleError.mockRestore();
@@ -14,7 +15,6 @@ afterAll(() => {
 describe("page-data utilities", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    // Clear all registered loaders before each test
     const registeredPages = pageDataRegistry.getRegisteredPageNames();
     registeredPages.forEach((page) =>
       pageDataRegistry.unregisterPageDataLoader(page)
@@ -47,7 +47,6 @@ describe("page-data utilities", () => {
         pageDataRegistry.registerPageDataLoader("test-page", mockLoader);
         pageDataRegistry.registerPageDataLoader("test-page", mockLoader);
 
-        // Should still have only one loader
         expect(pageDataRegistry.hasPageDataLoader("test-page")).toBe(true);
       });
     });
@@ -139,7 +138,7 @@ describe("page-data utilities", () => {
   });
 
   describe("fetchPageData", () => {
-    it("should return data from registered loader", async () => {
+    it("should return data from registered loader (exact match)", async () => {
       const mockData = { test: "data" };
       const mockLoader = jest.fn().mockResolvedValue(mockData);
 
@@ -167,7 +166,7 @@ describe("page-data utilities", () => {
 
       expect(result).toBeNull();
       expect(mockConsoleError).toHaveBeenCalledWith(
-        "Failed to fetch data for page test-page:",
+        "Failed to fetch data for pattern test-page:",
         mockError
       );
     });
@@ -183,7 +182,7 @@ describe("page-data utilities", () => {
       expect(mockLoader).toHaveBeenCalledTimes(1);
     });
 
-    it("should merge data from multiple loaders", async () => {
+    it("should merge data from multiple loaders (same pattern)", async () => {
       const mockLoader1 = jest.fn().mockResolvedValue({ data1: "value1" });
       const mockLoader2 = jest.fn().mockResolvedValue({ data2: "value2" });
 
@@ -197,15 +196,37 @@ describe("page-data utilities", () => {
       expect(mockLoader2).toHaveBeenCalledTimes(1);
     });
 
-    it("should pass params to loaders", async () => {
+    it("should pass params to loaders (exact match with params)", async () => {
       const mockLoader = jest.fn().mockResolvedValue({ test: "data" });
-      const params = { id: "123" };
+      const path = "blog/:id";
+      const url = "blog/456";
 
-      pageDataRegistry.registerPageDataLoader("test-page", mockLoader);
+      pageDataRegistry.registerPageDataLoader(path, mockLoader);
 
-      await fetchPageData("test-page", params);
+      await fetchPageData(url);
 
-      expect(mockLoader).toHaveBeenCalledWith(params);
+      expect(mockLoader).toHaveBeenCalledWith({ id: "456" });
+    });
+
+    it("should run only the layout loader for the base path", async () => {
+      const layoutLoader = jest.fn().mockResolvedValue({ layout: "header" });
+      const specificLoader = jest
+        .fn()
+        .mockResolvedValue({ detail: "song-info" });
+
+      pageDataRegistry.registerPageDataLoader("stem-player", layoutLoader);
+      pageDataRegistry.registerPageDataLoader(
+        "stem-player/:id",
+        specificLoader
+      );
+
+      const urlPath = "/stem-player";
+      const result = await fetchPageData(urlPath);
+
+      expect(layoutLoader).toHaveBeenCalledTimes(1);
+      expect(specificLoader).not.toHaveBeenCalled();
+
+      expect(result).toEqual({ layout: "header" });
     });
 
     it("should use cache for repeated calls within expiration time in production", async () => {
@@ -218,12 +239,10 @@ describe("page-data utilities", () => {
 
         pageDataRegistry.registerPageDataLoader("test-page", mockLoader);
 
-        // First call
         const result1 = await fetchPageData("test-page");
         expect(result1).toEqual(mockData);
         expect(mockLoader).toHaveBeenCalledTimes(1);
 
-        // Second call should use cache
         const result2 = await fetchPageData("test-page");
         expect(result2).toEqual(mockData);
         expect(mockLoader).toHaveBeenCalledTimes(1);
@@ -242,12 +261,10 @@ describe("page-data utilities", () => {
 
         pageDataRegistry.registerPageDataLoader("test-page", mockLoader);
 
-        // First call
         const result1 = await fetchPageData("test-page");
         expect(result1).toEqual(mockData);
         expect(mockLoader).toHaveBeenCalledTimes(1);
 
-        // Second call should not use cache
         const result2 = await fetchPageData("test-page");
         expect(result2).toEqual(mockData);
         expect(mockLoader).toHaveBeenCalledTimes(2);
@@ -278,7 +295,7 @@ describe("page-data utilities", () => {
       }
     });
 
-    it("should handle one loader failing in multiple loaders scenario", async () => {
+    it("should return null and log error if one loader fails in a multi-loader scenario (same pattern)", async () => {
       const mockLoader1 = jest.fn().mockResolvedValue({ data1: "value1" });
       const mockLoader2 = jest.fn().mockRejectedValue(new Error("Failed"));
 
@@ -289,7 +306,29 @@ describe("page-data utilities", () => {
 
       expect(result).toBeNull();
       expect(mockConsoleError).toHaveBeenCalledWith(
-        "Failed to fetch data for page test-page:",
+        "Failed to fetch data for pattern test-page:",
+        expect.any(Error)
+      );
+    });
+
+    it("should return null and log error if one loader fails in a nested route scenario", async () => {
+      const layoutLoader = jest.fn().mockResolvedValue({ layout: "header" });
+      const specificLoader = jest
+        .fn()
+        .mockRejectedValue(new Error("Failed Detail Load"));
+
+      pageDataRegistry.registerPageDataLoader("stem-player", layoutLoader);
+      pageDataRegistry.registerPageDataLoader(
+        "stem-player/:id",
+        specificLoader
+      );
+
+      const urlPath = "/stem-player/id";
+      const result = await fetchPageData(urlPath);
+
+      expect(result).toBeNull();
+      expect(mockConsoleError).toHaveBeenCalledWith(
+        "Failed to fetch data for pattern stem-player/:id:",
         expect.any(Error)
       );
     });
@@ -303,7 +342,7 @@ describe("page-data utilities", () => {
 
       const result = await fetchPageData("test-page");
 
-      expect(result).toEqual({ data1: "value1" }); // Only object results merged
+      expect(result).toEqual({ data1: "value1" });
     });
   });
 });

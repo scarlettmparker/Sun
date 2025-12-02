@@ -3,6 +3,8 @@
  * Provides a registry for page data loaders and a function to fetch data for any page.
  */
 
+import { matchPath } from "react-router-dom";
+
 type PageDataLoader = (
   params?: Record<string, unknown>
 ) => Promise<Record<string, unknown> | null>;
@@ -30,22 +32,19 @@ const CACHE_EXPIRATION_MS = 5 * 60 * 1000;
 
 /**
  * Registers a data loader for a specific page.
- * @param pageName The name of the page (e.g., 'stem-player').
+ * @param pattern The route pattern (e.g., 'blog', 'blog/:id').
  * @param loader Function that fetches data for the page.
  */
-function registerPageDataLoader(
-  pageName: string,
-  loader: PageDataLoader
-): void {
-  const list = pageDataLoaders[pageName] || [];
+function registerPageDataLoader(pattern: string, loader: PageDataLoader): void {
+  const list = pageDataLoaders[pattern] || [];
   // avoid duplicate registration of the same function
   if (!list.includes(loader)) {
     list.push(loader);
-    pageDataLoaders[pageName] = list;
+    pageDataLoaders[pattern] = list;
 
     // invalidate cache entries for this page
     Object.keys(pageDataCache).forEach((key) => {
-      if (key === pageName || key.startsWith(`${pageName}:`)) {
+      if (key.includes(pattern)) {
         delete pageDataCache[key];
       }
     });
@@ -54,16 +53,16 @@ function registerPageDataLoader(
 
 /**
  * Unregisters a data loader for a specific page.
- * @param pageName The name of the page to unregister.
+ * @param pattern The route pattern to unregister.
  */
 /**
  * Unregisters all data loaders for a specific page.
  * If you need to unregister a single loader you can implement that later.
  */
-function unregisterPageDataLoader(pageName: string): void {
-  delete pageDataLoaders[pageName];
+function unregisterPageDataLoader(pattern: string): void {
+  delete pageDataLoaders[pattern];
   Object.keys(pageDataCache).forEach((key) => {
-    if (key === pageName || key.startsWith(`${pageName}:`)) {
+    if (key.includes(pattern)) {
       delete pageDataCache[key];
     }
   });
@@ -71,12 +70,11 @@ function unregisterPageDataLoader(pageName: string): void {
 
 /**
  * Checks if a data loader is registered for a given page.
- * @param pageName The name of the page.
+ * @param pageName The route pattern.
  * @returns True if a loader is registered, false otherwise.
  */
-function hasPageDataLoader(pageName: string): boolean {
-  const list = pageDataLoaders[pageName];
-  return Array.isArray(list) && list.length > 0;
+function hasPageDataLoader(pattern: string): boolean {
+  return !!pageDataLoaders[pattern]?.length;
 }
 
 /**
@@ -88,29 +86,74 @@ function getRegisteredPageNames(): string[] {
 }
 
 /**
- * Fetches data for a given page using the registered loader.
- * @param pageName The name of the page.
- * @param params Optional parameters to pass to the loader.
- * @returns Promise resolving to page data or null if no loader is registered.
+ * Normalizes a path string by removing the leading slash, if present.
+ *
+ * @param path The path string to normalize.
+ * @returns The normalized path string.
+ */
+function normalizePath(path: string): string {
+  let normalized = path.replace(/\/+$/, "");
+  if (!normalized.startsWith("/")) {
+    normalized = "/" + normalized;
+  }
+  return normalized;
+}
+
+/**
+ * Fetches data for a given URL path by finding the matching registered loader.
+ * @param urlPath The actual URL path (e.g., 'blog/my-first-post').
+ * @param explicitParams Optional manual parameters to override URL params.
  */
 export async function fetchPageData(
-  pageName: string,
-  params?: Record<string, unknown>
+  urlPath: string,
+  explicitParams?: Record<string, unknown>
 ): Promise<Record<string, unknown> | null> {
-  const loaders = pageDataLoaders[pageName];
-  if (!Array.isArray(loaders) || loaders.length === 0) {
-    return null;
+  // Normalize the incoming URL path
+  const normalizedUrlPath = normalizePath(urlPath);
+
+  const registeredPatterns = Object.keys(pageDataLoaders);
+  let matchedPattern: string | null = null;
+  let urlParams: Record<string, string | undefined> = {};
+
+  for (const pattern of registeredPatterns) {
+    const normalizedPattern = normalizePath(pattern);
+
+    const match = matchPath(
+      { path: normalizedPattern, end: true },
+      normalizedUrlPath
+    );
+
+    if (match) {
+      matchedPattern = pattern;
+      urlParams = match.params;
+      break; // Stop at the first valid match
+    }
   }
+
+  if (!matchedPattern) {
+    // If no match, check if the normalized URL is empty (root path)
+    // and if a loader is registered for the empty string ("") or "/"
+    if (
+      !normalizedUrlPath &&
+      registeredPatterns.some((p) => normalizePath(p) === "")
+    ) {
+      matchedPattern =
+        registeredPatterns.find((p) => normalizePath(p) === "") || null;
+    } else {
+      return null;
+    }
+  }
+
+  const loaders = pageDataLoaders[matchedPattern!];
+  const finalParams = { ...urlParams, ...explicitParams };
 
   // Only use cache in production
   const isProduction = process.env.NODE_ENV === "production";
+  const cacheKey = `${matchedPattern}:${JSON.stringify(finalParams)}`;
+
   if (isProduction) {
-    const cacheKey = params
-      ? `${pageName}:${JSON.stringify(params)}`
-      : pageName;
     const now = Date.now();
     const cached = pageDataCache[cacheKey];
-
     if (cached && now - cached.timestamp < CACHE_EXPIRATION_MS) {
       return cached.data;
     }
@@ -118,9 +161,10 @@ export async function fetchPageData(
 
   // Run all loaders.
   try {
-    const results = await Promise.all(loaders.map((l) => l(params)));
+    const results = await Promise.all(loaders.map((l) => l(finalParams)));
     const merged: Record<string, unknown> = {};
     let hasData = false;
+
     for (const r of results) {
       if (r && typeof r === "object") {
         Object.assign(merged, r);
@@ -132,15 +176,12 @@ export async function fetchPageData(
 
     // Only cache in production
     if (isProduction) {
-      const cacheKey = params
-        ? `${pageName}:${JSON.stringify(params)}`
-        : pageName;
       pageDataCache[cacheKey] = { data, timestamp: Date.now() };
     }
 
     return data;
   } catch (error) {
-    console.error(`Failed to fetch data for page ${pageName}:`, error);
+    console.error(`Failed to fetch data for pattern ${matchedPattern}:`, error);
     return null;
   }
 }

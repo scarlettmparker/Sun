@@ -3,6 +3,7 @@ import { LocateSongQuery, Song } from "~/generated/graphql";
 import StemPlayer from "~/_components/stem-player";
 import { pageDataRegistry } from "~/utils/page-data";
 import styles from "./stem-player-details.module.css";
+import { getStemPlayerData } from "../stem-player";
 /**
  * Stem Player Details Page.
  */
@@ -43,7 +44,9 @@ export async function getStemPlayerDetailsData(
  * Register the data loader.
  */
 export function registerStemPlayerDetailsDataLoader(): void {
-  pageDataRegistry.registerPageDataLoader("stem-player", async (params) => {
+  // We want both the list and the locate to be called for this page
+  pageDataRegistry.registerPageDataLoader("stem-player/:id", getStemPlayerData);
+  pageDataRegistry.registerPageDataLoader("stem-player/:id", async (params) => {
     const id = params?.id as string;
     if (!id) return null;
     return getStemPlayerDetailsData(id);
