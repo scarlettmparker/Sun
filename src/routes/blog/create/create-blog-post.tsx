@@ -63,9 +63,7 @@ async function handleCreateBlogPost(
   }
 
   const result = await mutateCreateBlogPost(title, input as BlogPostInput);
-  console.log("result", result);
   if (result.success) {
-    // Invalidate cache for blog page to ensure data refetches on revisit
     invalidateCache("blog");
     return result.data?.blogMutations.createBlogPost as MutationResult;
   } else {
