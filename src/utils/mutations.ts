@@ -3,9 +3,7 @@
  * Provides a registry for mutation handlers and a function to execute mutations.
  */
 
-type MutationHandler = (
-  body: Record<string, unknown>
-) => Promise<{
+type MutationHandler = (body: Record<string, unknown>) => Promise<{
   success: boolean;
   data?: unknown;
   error?: string;
@@ -70,3 +68,12 @@ export const mutationRegistry: MutationRegistry = {
   registerMutationHandler,
   executeMutation,
 };
+
+/**
+ * Clear all mutation handlers (for testing purposes).
+ */
+export function clearMutationHandlers(): void {
+  for (const key in mutationHandlers) {
+    delete mutationHandlers[key];
+  }
+}
