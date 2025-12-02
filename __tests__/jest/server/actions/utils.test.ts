@@ -2,6 +2,7 @@
  * Tests for server action utilities.
  */
 
+import { QuerySuccess } from "~/generated/graphql";
 import { executeMutation } from "~/server/actions/utils";
 
 // Mock fetch globally
@@ -17,8 +18,9 @@ describe("Server action utilities", () => {
   describe("executeMutation", () => {
     it("should return success response for valid mutation execution", async () => {
       const mockResponse = {
-        success: true,
-        data: { id: "1", title: "Test Post" },
+        __typename: "QuerySuccess",
+        message: "Success",
+        id: "1",
       };
 
       mockFetch.mockResolvedValueOnce({
@@ -26,14 +28,14 @@ describe("Server action utilities", () => {
         json: jest.fn().mockResolvedValue(mockResponse),
       } as unknown as Response);
 
-      const result = await executeMutation("blog/create", {
+      const result = (await executeMutation("blog/create", {
         title: "Test",
         content: "Content",
-      });
+      })) as QuerySuccess;
 
-      expect(result.success).toBe(true);
-      expect(result.data).toEqual(mockResponse.data);
-      expect(result.error).toBeUndefined();
+      expect(result.__typename).toBe("QuerySuccess");
+      expect(result.message).toBe("Success");
+      expect(result.id).toBe("1");
       expect(mockFetch).toHaveBeenCalledWith("/blog/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -50,9 +52,8 @@ describe("Server action utilities", () => {
 
       const result = await executeMutation("blog/create", { title: "Test" });
 
-      expect(result.success).toBe(false);
-      expect(result.error).toBe("HTTP 400: Bad Request");
-      expect(result.data).toBeUndefined();
+      expect(result.__typename).toBe("StandardError");
+      expect(result.message).toBe("HTTP 400: Bad Request");
     });
 
     it("should return error response for network error", async () => {
@@ -60,15 +61,14 @@ describe("Server action utilities", () => {
 
       const result = await executeMutation("blog/create", {});
 
-      expect(result.success).toBe(false);
-      expect(result.error).toBe("Network error");
-      expect(result.data).toBeUndefined();
+      expect(result.__typename).toBe("StandardError");
+      expect(result.message).toBe("Network error");
     });
 
     it("should handle mutation response with error", async () => {
       const mockResponse = {
-        success: false,
-        error: "Validation failed",
+        __typename: "StandardError",
+        message: "Validation failed",
       };
 
       mockFetch.mockResolvedValueOnce({
@@ -78,9 +78,8 @@ describe("Server action utilities", () => {
 
       const result = await executeMutation("blog/create", { title: "" });
 
-      expect(result.success).toBe(false);
-      expect(result.error).toBe("Validation failed");
-      expect(result.data).toBeUndefined();
+      expect(result.__typename).toBe("StandardError");
+      expect(result.message).toBe("Validation failed");
     });
   });
 });

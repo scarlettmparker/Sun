@@ -2,6 +2,7 @@
  * Tests for blog post server actions.
  */
 
+import { QuerySuccess } from "~/generated/graphql";
 import { createBlogPost } from "~/server/actions/blog-post";
 
 // Mock fetch globally
@@ -17,8 +18,9 @@ describe("Blog post server actions", () => {
   describe("createBlogPost", () => {
     it("should return success response for valid blog post creation", async () => {
       const mockResponse = {
-        success: true,
-        data: { id: "1", title: "Test Post", content: "Test content" },
+        __typename: "QuerySuccess",
+        message: "Blog post created",
+        id: "1",
       };
 
       mockFetch.mockResolvedValueOnce({
@@ -26,15 +28,21 @@ describe("Blog post server actions", () => {
         json: jest.fn().mockResolvedValue(mockResponse),
       } as unknown as Response);
 
-      const result = await createBlogPost("Test Title", "Test Content");
+      const result = (await createBlogPost(
+        "Test Title",
+        "Test Content"
+      )) as QuerySuccess;
 
-      expect(result.success).toBe(true);
-      expect(result.data).toEqual(mockResponse.data);
-      expect(result.error).toBeUndefined();
+      expect(result.__typename).toBe("QuerySuccess");
+      expect(result.message).toBe("Blog post created");
+      expect(result.id).toBe("1");
       expect(mockFetch).toHaveBeenCalledWith("/blog/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: "Test Title", content: "Test Content" }),
+        body: JSON.stringify({
+          title: "Test Title",
+          input: { content: "Test Content" },
+        }),
       });
     });
 
@@ -47,9 +55,8 @@ describe("Blog post server actions", () => {
 
       const result = await createBlogPost("Test Title", "Test Content");
 
-      expect(result.success).toBe(false);
-      expect(result.error).toBe("HTTP 400: Bad Request");
-      expect(result.data).toBeUndefined();
+      expect(result.__typename).toBe("StandardError");
+      expect(result.message).toBe("HTTP 400: Bad Request");
     });
 
     it("should return error response for network error", async () => {
@@ -57,9 +64,8 @@ describe("Blog post server actions", () => {
 
       const result = await createBlogPost("Test Title", "Test Content");
 
-      expect(result.success).toBe(false);
-      expect(result.error).toBe("Network error");
-      expect(result.data).toBeUndefined();
+      expect(result.__typename).toBe("StandardError");
+      expect(result.message).toBe("Network error");
     });
 
     it("should return error for invalid input types", async () => {
@@ -68,55 +74,50 @@ describe("Blog post server actions", () => {
         "Test Content"
       );
 
-      expect(result.success).toBe(false);
-      expect(result.error).toBe(
+      expect(result.__typename).toBe("StandardError");
+      expect(result.message).toBe(
         "Invalid input: title and content must be non-empty strings"
       );
-      expect(result.data).toBeUndefined();
       expect(mockFetch).not.toHaveBeenCalled();
     });
 
     it("should return error for empty title", async () => {
       const result = await createBlogPost("", "Test Content");
 
-      expect(result.success).toBe(false);
-      expect(result.error).toBe(
+      expect(result.__typename).toBe("StandardError");
+      expect(result.message).toBe(
         "Invalid input: title and content must be non-empty strings"
       );
-      expect(result.data).toBeUndefined();
       expect(mockFetch).not.toHaveBeenCalled();
     });
 
     it("should return error for empty content", async () => {
       const result = await createBlogPost("Test Title", "");
 
-      expect(result.success).toBe(false);
-      expect(result.error).toBe(
+      expect(result.__typename).toBe("StandardError");
+      expect(result.message).toBe(
         "Invalid input: title and content must be non-empty strings"
       );
-      expect(result.data).toBeUndefined();
       expect(mockFetch).not.toHaveBeenCalled();
     });
 
     it("should return error for whitespace-only title", async () => {
       const result = await createBlogPost("   ", "Test Content");
 
-      expect(result.success).toBe(false);
-      expect(result.error).toBe(
+      expect(result.__typename).toBe("StandardError");
+      expect(result.message).toBe(
         "Invalid input: title and content must be non-empty strings"
       );
-      expect(result.data).toBeUndefined();
       expect(mockFetch).not.toHaveBeenCalled();
     });
 
     it("should return error for whitespace-only content", async () => {
       const result = await createBlogPost("Test Title", "   ");
 
-      expect(result.success).toBe(false);
-      expect(result.error).toBe(
+      expect(result.__typename).toBe("StandardError");
+      expect(result.message).toBe(
         "Invalid input: title and content must be non-empty strings"
       );
-      expect(result.data).toBeUndefined();
       expect(mockFetch).not.toHaveBeenCalled();
     });
   });

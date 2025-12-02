@@ -15,7 +15,7 @@ describe("Mutation registration", () => {
   });
 
   it("should register blog create mutation", async () => {
-    jest.resetModules();
+    // Import the module to trigger the registration
     await import("~/utils/register-mutations");
 
     expect(registerBlogCreateMutation).toHaveBeenCalledTimes(1);

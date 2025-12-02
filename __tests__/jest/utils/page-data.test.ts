@@ -2,18 +2,12 @@
  * Tests for page data utilities.
  */
 
-import {
-  restoreConsoleError,
-  suppressConsoleErrorsFromTests,
-} from "testing/jest/mock";
 import { fetchPageData, pageDataRegistry } from "~/utils/page-data";
 
-beforeAll(() => {
-  suppressConsoleErrorsFromTests();
-});
+const mockConsoleError = jest.spyOn(console, "error").mockImplementation();
 
 afterAll(() => {
-  restoreConsoleError();
+  mockConsoleError.mockRestore();
 });
 
 describe("page-data utilities", () => {

@@ -2,10 +2,7 @@
  * Tests for mutation utilities.
  */
 
-import {
-  restoreConsoleError,
-  suppressConsoleErrorsFromTests,
-} from "testing/jest/mock";
+import { QuerySuccess } from "~/generated/graphql";
 import {
   mutationRegistry,
   executeMutation,
@@ -13,44 +10,43 @@ import {
 } from "~/utils/mutations";
 
 // We're forcing errors here and we don't want to bloat our test output
-beforeAll(() => {
-  suppressConsoleErrorsFromTests();
-});
+const mockConsoleError = jest.spyOn(console, "error").mockImplementation();
 
 afterAll(() => {
-  restoreConsoleError();
+  mockConsoleError.mockRestore();
 });
 
 describe("Mutation utilities", () => {
   beforeEach(() => {
     clearMutationHandlers();
-  });
-
-  afterEach(() => {
-    jest.restoreAllMocks();
+    jest.clearAllMocks();
   });
 
   describe("executeMutation", () => {
     it("should execute a registered mutation handler successfully", async () => {
       const mockHandler = jest.fn().mockResolvedValue({
-        success: true,
-        data: { id: "1" },
+        __typename: "QuerySuccess",
+        message: "Success",
+        id: "1",
       });
 
       mutationRegistry.registerMutationHandler("test/path", mockHandler);
 
-      const result = await executeMutation("test/path", { key: "value" });
+      const result = (await executeMutation("test/path", {
+        key: "value",
+      })) as QuerySuccess;
 
       expect(mockHandler).toHaveBeenCalledWith({ key: "value" });
-      expect(result.success).toBe(true);
-      expect(result.data).toEqual({ id: "1" });
+      expect(result.__typename).toBe("QuerySuccess");
+      expect(result.message).toBe("Success");
+      expect(result.id).toBe("1");
     });
 
     it("should return error for unknown mutation path", async () => {
       const result = await executeMutation("unknown/path", {});
 
-      expect(result.success).toBe(false);
-      expect(result.error).toBe("Unknown mutation path");
+      expect(result.__typename).toBe("StandardError");
+      expect(result.message).toBe("Unknown mutation path");
     });
 
     it("should handle errors thrown by mutation handler", async () => {
@@ -62,29 +58,31 @@ describe("Mutation utilities", () => {
 
       const result = await executeMutation("test/path", {});
 
-      expect(result.success).toBe(false);
-      expect(result.error).toBe("Internal server error");
+      expect(result.__typename).toBe("StandardError");
+      expect(result.message).toBe("Internal server error");
     });
 
     it("should return the result from mutation handler", async () => {
       const mockHandler = jest.fn().mockResolvedValue({
-        success: false,
-        error: "Validation failed",
+        __typename: "StandardError",
+        message: "Validation failed",
       });
 
       mutationRegistry.registerMutationHandler("test/path", mockHandler);
 
       const result = await executeMutation("test/path", {});
 
-      expect(result.success).toBe(false);
-      expect(result.error).toBe("Validation failed");
+      expect(result.__typename).toBe("StandardError");
+      expect(result.message).toBe("Validation failed");
     });
   });
 
   describe("mutationRegistry", () => {
     it("should register and execute mutation handlers", async () => {
       const mockHandler = jest.fn().mockResolvedValue({
-        success: true,
+        __typename: "QuerySuccess",
+        message: "Success",
+        id: "1",
       });
 
       mutationRegistry.registerMutationHandler("blog/create", mockHandler);
@@ -94,7 +92,7 @@ describe("Mutation utilities", () => {
       });
 
       expect(mockHandler).toHaveBeenCalledWith({ title: "Test" });
-      expect(result.success).toBe(true);
+      expect(result.__typename).toBe("QuerySuccess");
     });
   });
 });
