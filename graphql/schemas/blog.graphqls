@@ -9,11 +9,24 @@ type BlogPost {
   updatedAt: Date
 }
 
+type BlogPostInput {
+  content: String
+  tags: [String!]
+}
+
 type BlogQueries {
   listBlogPosts: [BlogPost]
   locateBlogPost(id: ID!): BlogPost
 }
 
+type BlogMutations {
+  createBlogPost(title: String!, input: BlogPostInput): QueryResult
+}
+
 extend type Query {
   blogQueries: BlogQueries!
+}
+
+extend type Mutation {
+  blogMutations: BlogMutations!
 }

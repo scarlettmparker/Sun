@@ -1,3 +1,18 @@
+type StandardError {
+  message: String
+  id: ID
+}
+
+type QuerySuccess {
+  success: Boolean!
+}
+
+union QueryResult = QuerySuccess | StandardError
+
 type Query {
   # Base Query type for schema extensions
+}
+
+type Mutation {
+  # Base Mutation type for schema extensions
 }
