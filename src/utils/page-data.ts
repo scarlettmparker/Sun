@@ -109,9 +109,8 @@ export function invalidateCache(
   pattern: string,
   params?: Record<string, unknown>
 ): void {
-  const normalizedPattern = normalizePath(pattern);
   const finalParams = params || {};
-  const cacheKey = `${normalizedPattern}:${JSON.stringify(finalParams)}`;
+  const cacheKey = `${pattern}:${JSON.stringify(finalParams)}`;
   delete pageDataCache[cacheKey];
 }
 

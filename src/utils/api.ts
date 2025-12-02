@@ -10,6 +10,7 @@ import {
   LocateBlogPostDocument,
   CreateBlogPostDocument,
   BlogPostInput,
+  CreateBlogPostMutation,
 } from "../generated/graphql";
 import { print, DocumentNode } from "graphql";
 
@@ -194,5 +195,8 @@ export async function mutateCreateBlogPost(
   title: string,
   input: BlogPostInput
 ) {
-  return fetchGraphQLData("blogMutations.createBlogPost", { title, input });
+  return fetchGraphQLData<CreateBlogPostMutation>(
+    "blogMutations.createBlogPost",
+    { title, input }
+  );
 }

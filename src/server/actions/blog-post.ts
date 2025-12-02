@@ -1,4 +1,3 @@
-import { invalidateCache } from "~/utils/page-data";
 import { MutationResult, executeMutation } from "./utils";
 
 /**
@@ -29,13 +28,6 @@ export async function createBlogPost(
       content: content.trim(),
     },
   });
-
-  switch (result.__typename) {
-    case "QuerySuccess":
-      // Invalidate cache on success
-      invalidateCache("blog");
-      break;
-  }
 
   return result;
 }

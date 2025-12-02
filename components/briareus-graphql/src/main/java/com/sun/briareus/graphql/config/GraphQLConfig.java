@@ -3,12 +3,14 @@ package com.sun.briareus.graphql.config;
 import graphql.schema.GraphQLScalarType;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.graphql.execution.RuntimeWiringConfigurer;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 @Configuration
+@EnableJpaAuditing
 public class GraphQLConfig {
 
   @Bean

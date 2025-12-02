@@ -4,6 +4,7 @@ import { mutationRegistry } from "~/utils/mutations";
 import { MutationResult } from "~/server/actions/utils";
 import { mutateCreateBlogPost } from "~/utils/api";
 import { BlogPostInput } from "~/generated/graphql";
+import { invalidateCache } from "~/utils/page-data";
 
 const CreateBlogPostPage = () => {
   const [loading, setLoading] = useState(false);
@@ -24,8 +25,6 @@ const CreateBlogPostPage = () => {
 
     if (result.__typename === "QuerySuccess") {
       setSuccess(true);
-      // Optionally reset form or navigate programmatically
-      e.currentTarget.reset();
     } else if (result.__typename === "StandardError") {
       setError(result.message);
     }
@@ -64,8 +63,11 @@ async function handleCreateBlogPost(
   }
 
   const result = await mutateCreateBlogPost(title, input as BlogPostInput);
+  console.log("result", result);
   if (result.success) {
-    return { __typename: "QuerySuccess", message: "" } as const;
+    // Invalidate cache for blog page to ensure data refetches on revisit
+    invalidateCache("blog");
+    return result.data?.blogMutations.createBlogPost as MutationResult;
   } else {
     return {
       __typename: "StandardError",

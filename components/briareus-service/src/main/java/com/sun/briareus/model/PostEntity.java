@@ -9,11 +9,11 @@ import java.util.List;
 @Entity
 @Table(name = "posts")
 public class PostEntity extends BaseEntity {
-  
+
   @Column(name = "title")
   private String title;
 
-  @Column(name = "content")
+  @Column(name = "content", columnDefinition = "TEXT")
   private String content;
 
   @Type(JsonBinaryType.class)
