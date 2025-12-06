@@ -17,3 +17,26 @@
   appearance: slider-vertical;
   vertical-align: bottom;
 }
+
+/* Text styles */
+
+.text {
+  padding: var(--md) var(--lg);
+  border-radius: var(--sm);
+  border: 1px solid var(--primary);
+  background-color: var(--secondary);
+  color: var(--text);
+  font-family: inherit;
+  font-size: inherit;
+  transition: border-color var(--fast) ease, box-shadow var(--fast) ease;
+}
+
+.text:focus {
+  outline: none;
+  border-color: var(--primary-hover);
+  box-shadow: 0 0 0 2px rgba(217, 4, 41, 0.2);
+}
+
+.text:hover {
+  border-color: var(--primary-hover);
+}

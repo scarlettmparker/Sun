@@ -304,7 +304,7 @@ describe("StemPlayer", () => {
     expect(drumsSlider).toHaveAttribute("min", "0");
     expect(drumsSlider).toHaveAttribute("max", "1");
     expect(drumsSlider).toHaveAttribute("step", "0.01");
-    expect(drumsSlider).toHaveAttribute("class", " range vertical");
+    expect(drumsSlider).toHaveAttribute("class", "range vertical");
   });
 
   it("calls setVolume when stem slider changes", () => {

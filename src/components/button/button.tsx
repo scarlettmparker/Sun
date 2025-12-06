@@ -1,3 +1,4 @@
+import { cn } from "~/utils/cn";
 import styles from "./button.module.css";
 
 type ButtonProps = {
@@ -17,7 +18,7 @@ const Button = (props: ButtonProps) => {
   return (
     <button
       {...rest}
-      className={`${styles.button} ${styles[variant]} ${rest.className ?? ""}`}
+      className={cn(styles.button, styles[variant], rest.className)}
     >
       {rest.children}
     </button>

@@ -1,3 +1,4 @@
+import { cn } from "~/utils/cn";
 import styles from "./input.module.css";
 
 type BaseInputProps = React.InputHTMLAttributes<HTMLInputElement>;
@@ -46,7 +47,7 @@ const Input = (props: InputProps) => {
         <input
           {...rangeProps}
           type="range"
-          className={`${className ?? ""} ${styles.range} ${styles[orient]}`}
+          className={cn(className, styles.range, styles[orient])}
         />
       );
     }
@@ -56,7 +57,17 @@ const Input = (props: InputProps) => {
         <input
           {...checkboxProps}
           type="checkbox"
-          className={`${className ?? ""} ${styles.checkbox}`}
+          className={cn(className, styles.checkbox)}
+        />
+      );
+    }
+    case "text": {
+      const { className, ...textProps } = rest;
+      return (
+        <input
+          {...textProps}
+          type="text"
+          className={cn(className, styles.text)}
         />
       );
     }
