@@ -1,11 +1,13 @@
 import { RouteObject, useRoutes } from "react-router-dom";
-import Index from "~/routes/index";
-import NotFound from "~/routes/not-found";
-import StemPlayerPage from "./routes/stem-player/stem-player";
-import StemPlayerDetailsPage from "./routes/stem-player/[id]";
-import BlogPage from "./routes/blog";
-import BlogPostPage from "./routes/blog/[id]";
-import CreateBlogPostPage from "./routes/blog/create";
+import { lazy } from "react";
+
+const Index = lazy(() => import("~/routes/index"));
+const NotFound = lazy(() => import("~/routes/not-found"));
+const StemPlayerPage = lazy(() => import("~/routes/stem-player/stem-player"));
+const StemPlayerDetailsPage = lazy(() => import("~/routes/stem-player/[id]"));
+const BlogPage = lazy(() => import("~/routes/blog"));
+const BlogPostPage = lazy(() => import("~/routes/blog/[id]"));
+const CreateBlogPostPage = lazy(() => import("~/routes/blog/create"));
 
 /**
  * List of routes.
