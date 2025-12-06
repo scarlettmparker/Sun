@@ -62,13 +62,6 @@ describe("Button", () => {
     expect(button).toHaveClass("button", "default");
   });
 
-  it("applies hover and active states implicitly through CSS classes", () => {
-    render(<Button>Hover test</Button>);
-    const button = screen.getByRole("button", { name: /hover test/i });
-    // pseudo-classes like :hover cannot be tested directly in jsdom but we can verify the base classes are applied
-    expect(button).toHaveClass("button");
-  });
-
   it("handles multiple props correctly", () => {
     const props = {
       variant: "secondary" as const,

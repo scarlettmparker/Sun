@@ -15,6 +15,10 @@
   box-shadow: var(--shadow-medium);
 }
 
+.button:disabled:hover {
+  box-shadow: var(--shadow-soft);
+}
+
 /* Default styles */
 .default {
   background-color: var(--primary);
@@ -29,12 +33,24 @@
   background-color: var(--primary-active);
 }
 
+.default:disabled {
+  background-color: color-mix(in srgb, var(--primary) 50%, var(--secondary) 50%);
+}
+
 /* Secondary styles */
 .secondary {
   background-color: var(--secondary);
 }
 
+.secondary:disabled, .secondary:disabled:hover {
+  color: var(--text-disabled);
+}
+
 .secondary:hover {
   background-color: var(--secondary-hover);
   color: var(--tertiary);
+}
+
+.secondary:disabled:hover {
+  background-color: inherit;
 }

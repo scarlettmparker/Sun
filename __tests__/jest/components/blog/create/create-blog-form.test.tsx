@@ -257,8 +257,9 @@ describe("CreateBlogForm", () => {
     });
 
     expect(submitButton).toBeDisabled();
-    expect(screen.getByText("form.creating")).toBeInTheDocument();
-    expect(mockT).toHaveBeenCalledWith("form.creating");
+    expect(screen.getByText("form.creating.label")).toBeInTheDocument();
+    expect(mockT).toHaveBeenCalledWith("form.creating.label");
+    expect(mockT).toHaveBeenCalledWith("form.creating.title");
 
     await waitFor(() => {
       expect(mockCreateBlogPost).toHaveBeenCalled();

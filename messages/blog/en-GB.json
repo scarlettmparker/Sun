@@ -16,7 +16,10 @@
       "label": "Create Blog Post",
       "title": "Click here to Create Blog Post"
     },
-    "creating": "Loading..."
+    "creating": {
+      "label": "Loading...",
+      "title": "Please wait while the Blog Post is being created..."
+    }
   },
   "months": {
     "January": "January",

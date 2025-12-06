@@ -3,6 +3,7 @@
 :root {
   /* text colors */
   --text: #14141B;
+  --text-disabled: #7F7F7F;
   --primary: #D90429;
   --primary-hover: #FB3758; /* imperial red */
   --primary-active: #A0031D;

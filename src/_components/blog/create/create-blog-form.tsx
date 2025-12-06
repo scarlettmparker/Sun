@@ -74,11 +74,11 @@ const CreateBlogForm = () => {
         </Button>
         <Button
           type="submit"
-          title={t("form.create.title")}
+          title={loading ? t("form.creating.title") : t("form.create.title")}
           disabled={loading}
           data-testid="create-blog-submit-button"
         >
-          {loading ? t("form.creating") : t("form.create.label")}
+          {loading ? t("form.creating.label") : t("form.create.label")}
         </Button>
       </FormFooter>
     </Form>
