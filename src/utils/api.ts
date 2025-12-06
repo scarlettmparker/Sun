@@ -40,7 +40,6 @@ type OperationRegistry = {
 
 /**
  * Registry of GraphQL operations mapped to their query documents.
- * Supports namespaced operations using dot notation
  */
 const operationRegistry: OperationRegistry = {
   songQueries: {
@@ -58,6 +57,7 @@ const operationRegistry: OperationRegistry = {
 
 /**
  * Retrieves a GraphQL operation document by its namespaced path.
+ *
  * @param path The dot-separated path to the operation
  * @returns The DocumentNode if found, otherwise undefined.
  */
@@ -81,8 +81,7 @@ function getOperation(path: string): DocumentNode | undefined {
 
 /**
  * Registers a new GraphQL operation with its query document.
- * Note: This function assumes flat registration; for namespaced operations,
- * update the registry directly or extend this function to handle paths.
+ *
  * @param operationName The name of the operation.
  * @param queryDocument The GraphQL query document.
  */
@@ -95,6 +94,7 @@ export function registerGraphQLOperation(
 
 /**
  * Generic function to fetch data from GraphQL server.
+ *
  * @param operationName The name of the GraphQL operation to execute.
  * @param variables Variables for the operation (if any).
  * @returns Promise resolving to ApiResponse.
