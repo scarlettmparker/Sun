@@ -33,12 +33,12 @@ function getPageName(pathname: string) {
  */
 async function loadTranslations(page: string, locale: string) {
   try {
-    const res = await fetch(`/locales/${page}/${locale}.json`);
+    const res = await fetch(`/messages/${page}/${locale}.json`);
     if (!res.ok) throw new Error("Not found");
     return await res.json();
   } catch {
     // fallback to en
-    const res = await fetch(`/locales/${page}/en.json`);
+    const res = await fetch(`/messages/${page}/en.json`);
     return await res.json();
   }
 }

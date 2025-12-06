@@ -55,7 +55,7 @@ if (!isProduction) {
       dev: false,
     })
   );
-  app.use("/locales", express.static(path.resolve("./locales")));
+  app.use("/messages", express.static(path.resolve("./messages")));
 
   // Proxy API requests to the backend server
   app.use(
