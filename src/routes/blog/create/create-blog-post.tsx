@@ -5,46 +5,10 @@ import { MutationResult } from "~/server/actions/utils";
 import { mutateCreateBlogPost } from "~/utils/api";
 import { BlogPostInput } from "~/generated/graphql";
 import { invalidateCache } from "~/utils/page-data";
+import CreateBlogForm from "~/_components/blog/create/create-blog-form";
 
 const CreateBlogPostPage = () => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    setSuccess(false);
-
-    const formData = new FormData(e.currentTarget);
-    const title = formData.get("title") as string;
-    const content = formData.get("content") as string;
-
-    const result = await createBlogPost(title, content);
-
-    if (result.__typename === "QuerySuccess") {
-      setSuccess(true);
-    } else if (result.__typename === "StandardError") {
-      setError(result.message);
-    }
-
-    setLoading(false);
-  };
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <input type="text" name="title" placeholder="Title" required />
-      <textarea name="content" placeholder="Content" required />
-      <button type="submit" disabled={loading}>
-        {loading ? "Submitting..." : "Submit"}
-      </button>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      {success && (
-        <p style={{ color: "green" }}>Blog post created successfully!</p>
-      )}
-    </form>
-  );
+  return <CreateBlogForm />;
 };
 
 /**

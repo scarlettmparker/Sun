@@ -1,4 +1,23 @@
 {
+  "form": {
+    "title": {
+      "label": "Title",
+      "placeholder": "Enter title..."
+    },
+    "content": {
+      "label": "Content",
+      "placeholder": "Enter content..."
+    },
+    "cancel": {
+      "label": "Cancel",
+      "title": "Click here to go back"
+    },
+    "create": {
+      "label": "Create Blog Post",
+      "title": "Click here to Create Blog Post"
+    },
+    "creating": "Loading..."
+  },
   "months": {
     "January": "January",
     "February": "February",

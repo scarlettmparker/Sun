@@ -1,1 +1,7 @@
-export { default as Form, FormItem } from "./form";
+export {
+  default as Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormFooter,
+} from "./form";

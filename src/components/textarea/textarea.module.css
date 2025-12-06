@@ -1,0 +1,24 @@
+/* TextArea styles */
+
+.textarea {
+  padding: var(--md) var(--lg);
+  border-radius: var(--sm);
+  border: 1px solid var(--primary);
+  background-color: var(--secondary);
+  color: var(--text);
+  font-family: inherit;
+  font-size: inherit;
+  transition: border-color var(--fast) ease, box-shadow var(--fast) ease;
+  resize: vertical;
+  min-height: 80px;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: var(--primary-hover);
+  box-shadow: 0 0 0 2px rgba(217, 4, 41, 0.2);
+}
+
+.textarea:hover {
+  border-color: var(--primary-hover);
+}

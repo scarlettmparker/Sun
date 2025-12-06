@@ -2,6 +2,8 @@
  * Tests for blog post server actions.
  */
 
+jest.unmock("~/server/actions/blog-post");
+
 import { QuerySuccess } from "~/generated/graphql";
 import { createBlogPost } from "~/server/actions/blog-post";
 

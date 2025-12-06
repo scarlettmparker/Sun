@@ -1,0 +1,88 @@
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import {
+  Form,
+  FormField,
+  FormLabel,
+  FormItem,
+  FormFooter,
+} from "~/components/form";
+import Input from "~/components/input";
+import { createBlogPost } from "~/server/actions/blog-post";
+import styles from "./create-blog-form.module.css";
+import TextArea from "~/components/textarea";
+import Button from "~/components/button";
+
+/**
+ * Form for creating a new blog post.
+ */
+const CreateBlogForm = () => {
+  const { t } = useTranslation("blog");
+
+  const DEFAULT_ROWS = 10;
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (loading) return;
+    setLoading(true);
+    setError(null);
+    setSuccess(false);
+
+    const formData = new FormData(e.currentTarget);
+    const title = formData.get("title") as string;
+    const content = formData.get("content") as string;
+
+    const result = await createBlogPost(title, content);
+
+    if (result.__typename === "QuerySuccess") {
+      setSuccess(true);
+    } else if (result.__typename === "StandardError") {
+      setError(result.message);
+    }
+
+    setLoading(false);
+  };
+
+  return (
+    <Form
+      onSubmit={handleSubmit}
+      className={styles.create_blog_form}
+      data-testid="create-blog-form"
+    >
+      <FormField name="title">
+        <FormLabel>{t("form.title.label")}</FormLabel>
+        <FormItem>
+          <Input type="text" placeholder={t("form.title.placeholder")} />
+        </FormItem>
+      </FormField>
+      <FormField name="content">
+        <FormLabel>{t("form.content.label")}</FormLabel>
+        <FormItem>
+          <TextArea
+            placeholder={t("form.content.placeholder")}
+            rows={DEFAULT_ROWS}
+          />
+        </FormItem>
+      </FormField>
+      <FormFooter>
+        <Button variant="secondary" title={t("form.cancel.title")}>
+          {t("form.cancel.label")}
+        </Button>
+        <Button
+          type="submit"
+          title={t("form.create.title")}
+          disabled={loading}
+          data-testid="create-blog-submit-button"
+        >
+          {loading ? t("form.creating") : t("form.create.label")}
+        </Button>
+      </FormFooter>
+    </Form>
+  );
+};
+
+export default CreateBlogForm;

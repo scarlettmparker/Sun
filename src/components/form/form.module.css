@@ -1,0 +1,17 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  row-gap: var(--lg);
+}
+
+.form_item {
+  display: flex;
+  flex-direction: column;
+  row-gap: var(--md);
+}
+
+.form_footer {
+  display: flex;
+  column-gap: var(--md);
+  margin-left: auto;
+}
