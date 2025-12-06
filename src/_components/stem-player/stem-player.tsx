@@ -9,6 +9,7 @@ import StemSliders from "./stem-sliders";
 import styles from "./stem-player.module.css";
 import { useTranslation } from "react-i18next";
 import { Song, Stem } from "~/generated/graphql";
+import { cn } from "~/utils/cn";
 
 type StemPlayerProps = {
   /**
@@ -92,14 +93,14 @@ const StemPlayer = (props: StemPlayerProps) => {
   // Show loading progress if not fully loaded
   if (!loaded) {
     return (
-      <div {...rest} className={`${styles.container} ${rest.className ?? ""}`}>
+      <div {...rest} className={cn(styles.container, rest.className)}>
         <Label>Loading: {Math.round(loadingProgress)}%</Label>
       </div>
     );
   }
 
   return (
-    <div {...rest} className={`${styles.container} ${rest.className ?? ""}`}>
+    <div {...rest} className={cn(styles.container, rest.className)}>
       <StemSliders stems={(song.stems as Stem[]) ?? []} setVolume={setVolume} />
       <div className={styles.controls}>
         <Label htmlFor="master-volume">{t("controls.master")}</Label>
