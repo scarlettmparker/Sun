@@ -12,10 +12,15 @@ import { Music } from "lucide-react";
  */
 const StemPlayerPage = () => {
   const pageData = globalThis.__pageData__;
-  const initialData =
-    pageData?.songs as ListSongsQuery["stemPlayerQueries"]["list"];
+  const { error } = pageData || {};
 
-  if (!initialData) {
+  if (error) {
+    return <div>Error: {error as string}</div>;
+  }
+
+  const songs = pageData?.songs as ListSongsQuery["stemPlayerQueries"]["list"];
+
+  if (!songs) {
     return <>Loading...</>;
   }
 
@@ -23,7 +28,7 @@ const StemPlayerPage = () => {
     <>
       <Sidebar>
         <h3 className={styles.header}>Songs</h3>
-        {initialData.map((song, idx) => (
+        {songs?.map((song, idx) => (
           <a
             key={idx}
             href={`/stem-player/${song?.id}`}
@@ -56,10 +61,14 @@ export async function getStemPlayerData(): Promise<Record<
         return { songs: songs };
       }
     }
-    return null;
+    return {
+      error: result.error || "Failed to fetch song data",
+    };
   } catch (error) {
-    console.error("Failed to fetch stem player data:", error);
-    return null;
+    console.error("Failed to fetch stem player details data:", error);
+    return {
+      error: "An error occurred while fetching data",
+    };
   }
 }
 

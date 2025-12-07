@@ -1,12 +1,12 @@
 type LabelProps = React.LabelHTMLAttributes<HTMLLabelElement>;
 
 /**
- * Scarlet UI Button.
+ * Scarlet UI Label.
  */
-const Button = (props: LabelProps) => {
+const Label = (props: LabelProps) => {
   const { ...rest } = props;
 
   return <label {...rest}>{rest.children}</label>;
 };
 
-export default Button;
+export default Label;

@@ -9,13 +9,17 @@ import { getStemPlayerData } from "../stem-player";
  */
 const StemPlayerDetailsPage = () => {
   const pageData = globalThis.__pageData__;
-  const data = pageData?.song as LocateSongQuery["stemPlayerQueries"]["locate"];
+  const { song, error } = pageData || {};
 
-  if (!data) {
+  if (error) {
+    return <div>Error: {error as string}</div>;
+  }
+
+  if (!song) {
     return <div>Loading...</div>;
   }
 
-  return <StemPlayer className={styles.stemPlayer} song={data as Song} />;
+  return <StemPlayer className={styles.stemPlayer} song={song as Song} />;
 };
 
 /**
@@ -33,10 +37,14 @@ export async function getStemPlayerDetailsData(
         song: (result.data as LocateSongQuery).stemPlayerQueries.locate,
       };
     }
-    return null;
+    return {
+      error: result.error || "Failed to fetch song data",
+    };
   } catch (error) {
     console.error("Failed to fetch stem player details data:", error);
-    return null;
+    return {
+      error: "An error occurred while fetching data",
+    };
   }
 }
 
