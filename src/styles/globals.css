@@ -16,13 +16,13 @@
   --tertiary: #D03991; /* mulberry */
 
   /* font sizes */
-  --text-sm: 11px;
-  --text-md: 13px;
-  --text-lg: 15px;
-  --text-xl: 17px;
-  --text-2xl: 19px;
-  --text-3xl: 21px;
-  --text-4xl: 23px;
+  --text-sm: 12px;
+  --text-md: 14px;
+  --text-lg: 16px;
+  --text-xl: 18px;
+  --text-2xl: 20px;
+  --text-3xl: 22px;
+  --text-4xl: 24px;
   --normal: 500;
   --bold: 600;
 
