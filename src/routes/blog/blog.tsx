@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import styles from "./blog.module.css";
 import { groupPostsByMonthYear } from "./group-posts-by-month-year";
 import React from "react";
+import BlogSkeleton from "~/_components/blog/skeleton/blog-skeleton";
 
 const BlogPage = () => {
   const { t } = useTranslation("blog");
@@ -14,7 +15,11 @@ const BlogPage = () => {
     pageData?.blogPosts as ListBlogPostsQuery["blogQueries"]["listBlogPosts"];
 
   if (!initialData) {
-    return <>Loading...</>;
+    return (
+      <div className={styles.blog_wrapper}>
+        <BlogSkeleton />
+      </div>
+    );
   }
 
   const groupedPosts = groupPostsByMonthYear(initialData);

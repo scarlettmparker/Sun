@@ -1,5 +1,5 @@
 .skeleton {
   border-radius: var(--sm);
-  background: var(--muted);
-  animation: pulse var(--very-slow) ease-in-out infinite;
+  background: var(--muted-light);
+  animation: global(pulse) 2s ease-in-out infinite;
 }
