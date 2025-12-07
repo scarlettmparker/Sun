@@ -9,8 +9,20 @@ type MarkdownEditorProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
 };
 
 type HighlightFunction = (
+  /**
+   * Raw text content to highlight.
+   */
   text: string,
+
+  /**
+   * HTMLDivElement where the highlighted content will be applied
+   */
   el: HTMLDivElement,
+
+  /**
+   * Callback function that restores the cursor
+   * position after the inner HTML has been updated
+   */
   restoreCursor: (el: HTMLElement) => void
 ) => void;
 
