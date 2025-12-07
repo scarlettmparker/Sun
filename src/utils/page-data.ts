@@ -4,7 +4,6 @@
  */
 
 import { matchPath } from "react-router-dom";
-import { cache } from "react";
 
 type PageDataLoader = (
   params?: Record<string, unknown>

@@ -312,4 +312,89 @@ describe("MarkdownEditor", () => {
     const textarea = screen.getByTestId("markdown-editor-textarea");
     expect(textarea).toHaveValue("Hello world");
   });
+
+  it("handles undo with Ctrl+Z", async () => {
+    const user = userEvent.setup();
+    const onChange = jest.fn();
+    render(
+      <MarkdownEditor onChange={onChange} name="content" data-testid="editor" />
+    );
+
+    const editor = screen.getByTestId("editor");
+    await user.type(editor, "Hello");
+
+    await user.keyboard("{Control>}z{/Control}");
+
+    await waitFor(() => {
+      expect(editor.textContent).toBe("Hell");
+    });
+
+    const textarea = screen.getByTestId("markdown-editor-textarea");
+    expect(textarea).toHaveValue("Hell");
+  });
+
+  it("handles redo with Ctrl+Y", async () => {
+    const user = userEvent.setup();
+    const onChange = jest.fn();
+    render(
+      <MarkdownEditor onChange={onChange} name="content" data-testid="editor" />
+    );
+
+    const editor = screen.getByTestId("editor");
+    await user.type(editor, "Hello");
+
+    await user.keyboard("{Control>}z{/Control}");
+    await user.keyboard("{Control>}y{/Control}");
+
+    await waitFor(() => {
+      expect(editor.textContent).toBe("Hello");
+    });
+
+    const textarea = screen.getByTestId("markdown-editor-textarea");
+    expect(textarea).toHaveValue("Hello");
+  });
+
+  it("handles redo with Ctrl+Shift+Z", async () => {
+    const user = userEvent.setup();
+    const onChange = jest.fn();
+    render(
+      <MarkdownEditor onChange={onChange} name="content" data-testid="editor" />
+    );
+
+    const editor = screen.getByTestId("editor");
+    await user.type(editor, "Hello");
+
+    await user.keyboard("{Control>}z{/Control}");
+    await user.keyboard("{Control>}{Shift>}z{/Shift}{/Control}");
+
+    await waitFor(() => {
+      expect(editor.textContent).toBe("Hello");
+    });
+
+    const textarea = screen.getByTestId("markdown-editor-textarea");
+    expect(textarea).toHaveValue("Hello");
+  });
+
+  it("handles paste without selection", async () => {
+    const onChange = jest.fn();
+    render(
+      <MarkdownEditor onChange={onChange} name="content" data-testid="editor" />
+    );
+
+    const editor = screen.getByTestId("editor");
+    // Clear selection to simulate no selection
+    window.getSelection()?.removeAllRanges();
+
+    const pasteData = "Pasted text";
+    fireEvent.paste(editor, {
+      clipboardData: {
+        getData: () => pasteData,
+      },
+    });
+
+    await waitFor(() => {
+      const textarea = screen.getByTestId("markdown-editor-textarea");
+      expect(textarea).toHaveValue(pasteData);
+    });
+  });
 });

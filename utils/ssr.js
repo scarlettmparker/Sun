@@ -54,9 +54,10 @@ export async function renderApp(
       const productionManifest = await loadManifest();
       render = (await import("../dist/server/entry-server.js")).render;
       clientJs = "/" + productionManifest["src/entry-client.tsx"].file;
+
       // Collect all CSS files from the manifest
       const allCss = new Set();
-      for (const [key, chunk] of Object.entries(productionManifest)) {
+      for (const [_, chunk] of Object.entries(productionManifest)) {
         if (chunk.css) {
           chunk.css.forEach((css) => allCss.add("/" + css));
         }
