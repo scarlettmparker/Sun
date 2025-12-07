@@ -70,9 +70,15 @@ const CreateBlogForm = () => {
         </FormItem>
       </FormField>
       <FormFooter>
-        <Button variant="secondary" title={t("form.cancel.title")}>
-          {t("form.cancel.label")}
-        </Button>
+        <a href="/blog">
+          <Button
+            type="button"
+            variant="secondary"
+            title={t("form.cancel.title")}
+          >
+            {t("form.cancel.label")}
+          </Button>
+        </a>
         <Button
           type="submit"
           title={loading ? t("form.creating.title") : t("form.create.title")}

@@ -281,4 +281,16 @@ describe("CreateBlogForm", () => {
       expect(screen.getByText("form.create.label")).toBeInTheDocument();
     });
   });
+
+  it("renders cancel button with correct attributes", () => {
+    render(<CreateBlogForm />);
+
+    const cancelButton = screen.getByRole("button", {
+      name: "form.cancel.label",
+    });
+
+    expect(cancelButton).toHaveAttribute("type", "button");
+    expect(cancelButton.parentElement?.tagName).toBe("A");
+    expect(cancelButton.parentElement).toHaveAttribute("href", "/blog");
+  });
 });
