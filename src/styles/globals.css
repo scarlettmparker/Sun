@@ -57,17 +57,6 @@ body, button, label {
   font-weight: var(--normal);
 }
 
-a {
-  color: var(--link);
-  text-decoration: var(--underline);
-  transition: var(--color-transition), background-color 0.2s ease-in-out;
-}
-
-a:hover {
-  color: var(--link-hover);
-  text-decoration: var(--underline-hover);
-}
-
 h1,
 h2,
 h3,

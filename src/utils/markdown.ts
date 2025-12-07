@@ -48,7 +48,10 @@ export const stripMarkdown = (html: string): string => {
     '<span class="md-h6">$1</span>'
   );
 
-  result = result.replace(/<span class="md-list">[-*+]\s*<\/span>\s*/g, "");
+  result = result.replace(
+    /<span class="md-list">([-*+])\s*<\/span>\s*/g,
+    '<span class="md-list">•</span> '
+  );
 
   result = result.replace(
     /<span class="md-quote">&gt;\s+(.*?)<\/span>/g,
@@ -85,8 +88,10 @@ export const stripMarkdown = (html: string): string => {
   );
   result = result.replace(
     /<span class="md-link">\[([^\]]+)\]\(([^)]+)\)<\/span>/g,
-    '<span class="md-link">$1</span>'
+    '<a href="$2" target="_blank" class="md-link">$1</a>'
   );
+
+  result = result.replace(/\n/g, "<br>\n");
 
   return result;
 };

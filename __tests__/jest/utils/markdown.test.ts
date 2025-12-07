@@ -219,13 +219,15 @@ describe("stripMarkdown", () => {
   it("should strip markdown from links", () => {
     const highlighted = highlightMarkdown("[text](url)");
     const stripped = stripMarkdown(highlighted);
-    expect(stripped).toContain('<span class="md-link">text</span>');
+    expect(stripped).toContain(
+      '<a href="url" target="_blank" class="md-link">text</a>'
+    );
   });
 
   it("should strip markdown from lists", () => {
     const highlighted = highlightMarkdown("- item");
     const stripped = stripMarkdown(highlighted);
-    expect(stripped).toBe("item");
+    expect(stripped).toBe('<span class="md-list">•</span> item');
   });
 
   it("should strip markdown from quotes", () => {
@@ -242,14 +244,22 @@ describe("stripMarkdown", () => {
     expect(stripped).toContain('<span class="md-h1">Title</span>');
     expect(stripped).toContain('<span class="md-bold">Bold</span>');
     expect(stripped).toContain('<span class="md-italic">italic</span>');
-    expect(stripped).toContain("List item");
+    expect(stripped).toContain('<span class="md-list">•</span> List item');
     expect(stripped).toContain('<span class="md-code">code</span>');
-    expect(stripped).toContain('<span class="md-link">link</span>');
+    expect(stripped).toContain(
+      '<a href="url" target="_blank" class="md-link">link</a>'
+    );
   });
 
   it("should handle empty string", () => {
     const highlighted = highlightMarkdown("");
     const stripped = stripMarkdown(highlighted);
     expect(stripped).toBe("");
+  });
+
+  it("should convert line breaks to <br> tags", () => {
+    const highlighted = highlightMarkdown("line1\nline2\n\nline4");
+    const stripped = stripMarkdown(highlighted);
+    expect(stripped).toContain("line1<br>\nline2<br>\n<br>\nline4");
   });
 });

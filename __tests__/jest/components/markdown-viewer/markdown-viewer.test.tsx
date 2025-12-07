@@ -66,7 +66,9 @@ Some text with **bold**, *italic*, and \`code\`.
     );
     expect(viewer.innerHTML).toContain("List item 1");
     expect(viewer.innerHTML).toContain("List item 2");
-    expect(viewer.innerHTML).toContain('<span class="md-link">Link</span>');
+    expect(viewer.innerHTML).toContain(
+      '<a href=\"http://example.com\" target=\"_blank\" class=\"md-link\">Link</a>'
+    );
   });
 
   it("merges custom className with default class", () => {
