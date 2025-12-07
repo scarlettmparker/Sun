@@ -37,10 +37,8 @@ const MarkdownEditor = (props: MarkdownEditorProps) => {
     placeholder,
     style,
     id,
-    "aria-label": ariaLabel,
-    "aria-labelledby": ariaLabelledBy,
     "data-testid": testId,
-    ...rest
+    ...textareaProps
   } = props;
 
   const contentEditableRef = useRef<HTMLDivElement>(null);
@@ -276,8 +274,8 @@ const MarkdownEditor = (props: MarkdownEditorProps) => {
         role="textbox"
         aria-multiline="true"
         id={id}
-        aria-label={ariaLabel}
-        aria-labelledby={ariaLabelledBy}
+        aria-label={textareaProps["aria-label"]}
+        aria-labelledby={textareaProps["aria-labelledby"]}
         style={{
           whiteSpace: "pre-wrap",
           overflowWrap: "break-word",
@@ -289,6 +287,7 @@ const MarkdownEditor = (props: MarkdownEditorProps) => {
         onChange={() => {}} // noop
         placeholder={placeholder}
         id={id}
+        data-testid="markdown-editor-textarea"
         style={{
           position: "absolute",
           top: 0,
@@ -302,7 +301,7 @@ const MarkdownEditor = (props: MarkdownEditorProps) => {
           background: "transparent",
         }}
         readOnly
-        {...rest}
+        {...textareaProps}
       />
     </>
   );

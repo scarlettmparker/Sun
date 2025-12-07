@@ -18,9 +18,11 @@ import {
   suppressConsoleErrorsFromTests,
 } from "testing/jest/mock";
 import { registerBlogCreateMutation } from "~/routes/blog/create/create-blog-post";
-import cssModuleMock from "~/../testing/jest/mock/css-module-mock";
 
-jest.mock("~/components/textarea/textarea.module.css", () => cssModuleMock);
+jest.mock(
+  "~/components/textarea/textarea.module.css",
+  async () => await import("~/../testing/jest/mock/css-module-mock")
+);
 
 beforeAll(() => {
   // Due to some issue with re-rendering that we don't care about in test env
@@ -49,7 +51,7 @@ describe("CreateBlogForm", () => {
       screen.getByPlaceholderText("form.title.placeholder")
     ).toBeInTheDocument();
 
-    expect(screen.getByLabelText("form.content.label")).toBeInTheDocument();
+    expect(screen.getByTestId("markdown-editor-textarea")).toBeInTheDocument();
     expect(
       screen.getByPlaceholderText("form.content.placeholder")
     ).toBeInTheDocument();
@@ -210,15 +212,13 @@ describe("CreateBlogForm", () => {
 
     const titleInput = screen.getByLabelText("form.title.label");
     const contentEditor = screen.getByTestId("create-blog-content-editor");
-    const contentTextarea = screen.getByRole("textbox", {
-      name: "form.content.label",
-    });
 
     fireEvent.change(titleInput, { target: { value: "Test Title" } });
     contentEditor.textContent = "Test Content";
     fireEvent.input(contentEditor);
 
     expect(titleInput).toHaveValue("Test Title");
+    const contentTextarea = screen.getByDisplayValue("Test Content");
     expect(contentTextarea).toHaveValue("Test Content");
   });
 
@@ -226,7 +226,9 @@ describe("CreateBlogForm", () => {
     render(<CreateBlogForm />);
 
     const titleInput = screen.getByLabelText("form.title.label");
-    const contentTextarea = screen.getByLabelText("form.content.label");
+    const contentTextarea = document.querySelector(
+      'textarea[name="content"]'
+    ) as HTMLTextAreaElement;
 
     expect(titleInput).toHaveAttribute("name", "title");
     expect(contentTextarea).toHaveAttribute("name", "content");
@@ -248,7 +250,9 @@ describe("CreateBlogForm", () => {
   it("uses correct default values", () => {
     render(<CreateBlogForm />);
 
-    const contentTextarea = screen.getByLabelText("form.content.label");
+    const contentTextarea = document.querySelector(
+      'textarea[name="content"]'
+    ) as HTMLTextAreaElement;
     expect(contentTextarea).toHaveAttribute("rows", "10");
   });
 

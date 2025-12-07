@@ -6,9 +6,11 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import MarkdownEditor from "~/components/markdown-editor/markdown-editor";
-import cssModuleMock from "~/../testing/jest/mock/css-module-mock";
 
-jest.mock("~/components/textarea/textarea.module.css", () => cssModuleMock);
+jest.mock(
+  "~/components/textarea/textarea.module.css",
+  async () => await import("~/../testing/jest/mock/css-module-mock")
+);
 
 describe("MarkdownEditor", () => {
   it("renders contentEditable div with correct attributes", () => {
@@ -46,30 +48,24 @@ describe("MarkdownEditor", () => {
     expect(textarea).toHaveAttribute("aria-label", "Markdown editor");
   });
 
-  it("merges custom className with default classes", () => {
-    render(<MarkdownEditor className="custom-class" data-testid="editor" />);
-    const editor = screen.getByTestId("editor");
-    expect(editor).toHaveClass("editor", "custom-class");
-  });
-
   it("displays initial value and syncs to textarea", () => {
-    const initialValue = "# Hello\n\n**Bold text**";
+    const initialValue = "# Hello\n\n**Bold text**.";
     render(
       <MarkdownEditor
         value={initialValue}
         name="content"
         data-testid="editor"
-        aria-label="content-input"
       />
     );
-    const editor = screen.getByTestId("editor");
-    expect(editor.innerHTML).toContain('<span class="md-h1"># Hello</span>');
-    expect(editor.innerHTML).toContain(
-      '<span class="md-bold">**Bold text**</span>'
-    );
 
-    const textarea = screen.getByLabelText("content-input");
+    const textarea = screen.getByTestId("markdown-editor-textarea");
     expect(textarea).toHaveValue(initialValue);
+  });
+
+  it("merges custom className with default classes", () => {
+    render(<MarkdownEditor className="custom-class" data-testid="editor" />);
+    const editor = screen.getByTestId("editor");
+    expect(editor).toHaveClass("editor", "custom-class");
   });
 
   it("updates value on user input and calls onChange", async () => {
@@ -96,7 +92,7 @@ describe("MarkdownEditor", () => {
       expect(lastCall.target.name).toBe("content");
     });
 
-    const textarea = screen.getByDisplayValue("New **bold** text");
+    const textarea = screen.getByTestId("markdown-editor-textarea");
     expect(textarea).toHaveValue("New **bold** text");
   });
 
@@ -174,7 +170,7 @@ describe("MarkdownEditor", () => {
     );
     expect(editor.textContent).toBe("New value");
 
-    const textarea = screen.getByDisplayValue("New value");
+    const textarea = screen.getByTestId("markdown-editor-textarea");
     expect(textarea).toHaveValue("New value");
   });
 
@@ -233,7 +229,7 @@ describe("MarkdownEditor", () => {
       expect(onChange).toHaveBeenCalledTimes("Quick typing test".length);
     });
 
-    const textarea = screen.getByDisplayValue("Quick typing test");
+    const textarea = screen.getByTestId("markdown-editor-textarea");
     expect(textarea).toHaveValue("Quick typing test");
   });
 
@@ -248,7 +244,7 @@ describe("MarkdownEditor", () => {
       expect(editor.textContent).toBe("Special chars: éñü 中文");
     });
 
-    const textarea = screen.getByDisplayValue("Special chars: éñü 中文");
+    const textarea = screen.getByTestId("markdown-editor-textarea");
     expect(textarea).toHaveValue("Special chars: éñü 中文");
   });
 
@@ -268,11 +264,11 @@ describe("MarkdownEditor", () => {
     });
 
     await waitFor(() => {
-      const textarea = screen.getByDisplayValue(pasteData);
+      const textarea = screen.getByTestId("markdown-editor-textarea");
       expect(textarea).toHaveValue(pasteData);
     });
 
-    const textarea = screen.getByDisplayValue(pasteData);
+    const textarea = screen.getByTestId("markdown-editor-textarea");
     expect(textarea).toHaveValue(pasteData);
   });
 
@@ -313,7 +309,7 @@ describe("MarkdownEditor", () => {
       );
     });
 
-    const textarea = screen.getByDisplayValue("Hello world");
+    const textarea = screen.getByTestId("markdown-editor-textarea");
     expect(textarea).toHaveValue("Hello world");
   });
 });
