@@ -5,11 +5,9 @@
 
 import { render, screen } from "@testing-library/react";
 import MarkdownViewer from "~/components/markdown-viewer/markdown-viewer";
+import cssModuleMock from "~/../testing/jest/mock/css-module-mock";
 
-jest.mock(
-  "~/components/textarea/textarea.module.css",
-  () => require("~/../testing/jest/mock/css-module-mock").default
-);
+jest.mock("~/components/textarea/textarea.module.css", () => cssModuleMock);
 
 describe("MarkdownViewer", () => {
   it("renders markdown content with highlighting", () => {
@@ -67,7 +65,7 @@ Some text with **bold**, *italic*, and \`code\`.
     expect(viewer.innerHTML).toContain("List item 1");
     expect(viewer.innerHTML).toContain("List item 2");
     expect(viewer.innerHTML).toContain(
-      '<a href=\"http://example.com\" target=\"_blank\" class=\"md-link\">Link</a>'
+      '<a href="http://example.com" target="_blank" class="md-link">Link</a>'
     );
   });
 

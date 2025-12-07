@@ -18,11 +18,9 @@ import {
   suppressConsoleErrorsFromTests,
 } from "testing/jest/mock";
 import { registerBlogCreateMutation } from "~/routes/blog/create/create-blog-post";
+import cssModuleMock from "~/../testing/jest/mock/css-module-mock";
 
-jest.mock(
-  "~/components/textarea/textarea.module.css",
-  () => require("~/../testing/jest/mock/css-module-mock").default
-);
+jest.mock("~/components/textarea/textarea.module.css", () => cssModuleMock);
 
 beforeAll(() => {
   // Due to some issue with re-rendering that we don't care about in test env

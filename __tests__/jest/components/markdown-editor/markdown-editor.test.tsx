@@ -6,11 +6,9 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import MarkdownEditor from "~/components/markdown-editor/markdown-editor";
+import cssModuleMock from "~/../testing/jest/mock/css-module-mock";
 
-jest.mock(
-  "~/components/textarea/textarea.module.css",
-  () => require("~/../testing/jest/mock/css-module-mock").default
-);
+jest.mock("~/components/textarea/textarea.module.css", () => cssModuleMock);
 
 describe("MarkdownEditor", () => {
   it("renders contentEditable div with correct attributes", () => {

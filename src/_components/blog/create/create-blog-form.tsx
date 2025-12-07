@@ -22,8 +22,8 @@ const CreateBlogForm = () => {
   const DEFAULT_ROWS = 10;
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const [_error, setError] = useState<string | null>(null);
+  const [_success, setSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
