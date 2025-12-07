@@ -66,6 +66,7 @@ const CreateBlogForm = () => {
             placeholder={t("form.content.placeholder")}
             rows={DEFAULT_ROWS}
             data-testid="create-blog-content-editor"
+            aria-label={t("form.content.label")}
           />
         </FormItem>
       </FormField>

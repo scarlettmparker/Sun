@@ -50,7 +50,7 @@ type FormLabelProps = React.LabelHTMLAttributes<HTMLLabelElement>;
  */
 const FormLabel = (props: FormLabelProps) => {
   const { name } = useContext(FormItemContext);
-  return <Label {...props} htmlFor={name} />;
+  return <Label {...props} htmlFor={name} id={`${name}-label`} />;
 };
 
 type FormItemChildProps =
@@ -78,7 +78,11 @@ const FormItem = (props: FormItemProps) => {
     throw new Error("FormItem only accepts Input or TextArea as children");
   }
 
-  return React.cloneElement(children, { name, id: name });
+  return React.cloneElement(children, {
+    name,
+    id: name,
+    "aria-labelledby": `${name}-label`,
+  });
 };
 
 type FormFooterProps = React.HTMLAttributes<HTMLDivElement>;

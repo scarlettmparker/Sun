@@ -36,6 +36,9 @@ const MarkdownEditor = (props: MarkdownEditorProps) => {
     onChange,
     placeholder,
     style,
+    id,
+    "aria-label": ariaLabel,
+    "aria-labelledby": ariaLabelledBy,
     "data-testid": testId,
     ...rest
   } = props;
@@ -272,6 +275,9 @@ const MarkdownEditor = (props: MarkdownEditorProps) => {
         aria-placeholder={placeholder}
         role="textbox"
         aria-multiline="true"
+        id={id}
+        aria-label={ariaLabel}
+        aria-labelledby={ariaLabelledBy}
         style={{
           whiteSpace: "pre-wrap",
           overflowWrap: "break-word",
@@ -282,6 +288,7 @@ const MarkdownEditor = (props: MarkdownEditorProps) => {
         value={currentValue}
         onChange={() => {}} // noop
         placeholder={placeholder}
+        id={id}
         style={{
           position: "absolute",
           top: 0,
