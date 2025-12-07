@@ -13,12 +13,30 @@
   text-decoration: none;
 }
 
-.md-h1 { font-size: 1.5em; line-height: 1.2; }
-.md-h2 { font-size: 1.3em; }
-.md-h3 { font-size: 1.1em; }
-.md-h4 { font-size: 1em; }
-.md-h5 { font-size: 0.9em; }
-.md-h6 { font-size: 0.8em; }
+
+.md-h1, h1 {
+  font-size: var(--text-4xl);
+}
+
+.md-h2, h2 {
+  font-size: var(--text-3xl);
+}
+
+.md-h3, h3 {
+  font-size: var(--text-2xl);
+}
+
+.md-h4, h4 {
+  font-size: var(--text-xl);
+}
+
+.md-h5, h5 {
+  font-size: var(--text-lg);
+}
+
+.md-h6 {
+  font-size: var(--text-md);
+}
 
 .md-bold {
   font-weight: bold;
@@ -61,7 +79,7 @@
   transition: color var(--fast) ease;
 }
 
-.md-link:hover, a:not(:has(button)):hover  {
+.md-link:hover, a:not(:has(button)):hover {
   color: var(--accent-dark-hover)
 }
 

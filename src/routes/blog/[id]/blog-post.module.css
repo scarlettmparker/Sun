@@ -2,8 +2,8 @@
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  width: 100%;
-  max-width: 24rem;
+  width: calc(100% - var(--lg) * 2);
+  max-width: 36rem;
   /* realistically should only multiply by powers of 2 */
   margin: calc(var(--lg) * 8) 0;
 }
