@@ -1,21 +1,8 @@
-import React, { useRef, useLayoutEffect, useState, useMemo } from "react";
+import React, { useRef, useLayoutEffect, useState } from "react";
 import { cn } from "~/utils/cn";
 import { highlightMarkdown } from "~/utils/markdown";
 import styles from "./markdown-editor.module.css";
 import textAreaStyles from "~/components/textarea/textarea.module.css";
-
-const debounce = (
-  func: HighlightFunction,
-  delay: number
-): HighlightFunction => {
-  let timeout: ReturnType<typeof setTimeout> | undefined;
-  return (text, el, restoreCursor) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => {
-      func(text, el, restoreCursor);
-    }, delay);
-  };
-};
 
 type MarkdownEditorProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
   "data-testid"?: string;
@@ -213,7 +200,9 @@ const MarkdownEditor = (props: MarkdownEditorProps) => {
    */
   const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
     e.preventDefault();
-    const pasteText = e.clipboardData.getData("text");
+    let pasteText = e.clipboardData.getData("text");
+    pasteText = pasteText.replace(/\r/g, "");
+
     const el = contentEditableRef.current;
     if (!el) return;
 

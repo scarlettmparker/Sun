@@ -128,8 +128,9 @@ function processLine(line: string): string {
 
 /**
  * Wraps content in a span with the given CSS class.
- * @param cls - The CSS class name.
- * @param content - The content to wrap.
+ *
+ * @param cls - CSS class name.
+ * @param content - Content to wrap.
  * @returns HTML span element.
  */
 function wrap(cls: string, content: string) {
@@ -139,8 +140,9 @@ function wrap(cls: string, content: string) {
 /**
  * Processes inline markdown elements within text, wrapping them with styled spans.
  * Handles overlapping matches by prioritizing patterns and using greedy selection.
- * @param text - The text to process for inline elements.
- * @returns The processed text with HTML spans for inline styling.
+ *
+ * @param text - Text to process for inline elements.
+ * @returns Processed text with HTML spans for inline styling.
  */
 function processInline(text: string): string {
   // Protect existing spans first
@@ -243,9 +245,9 @@ function extractSpans(input: string) {
 
 /**
  * Restores the original span elements from tokens.
- * @param input - The string with tokens to replace.
+ * @param input - String with tokens to replace.
  * @param tokens - Array of original span strings.
- * @returns The string with spans restored.
+ * @returns String with spans restored.
  */
 function restoreSpans(input: string, tokens: string[]) {
   let out = input;
