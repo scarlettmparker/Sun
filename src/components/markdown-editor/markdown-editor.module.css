@@ -7,3 +7,9 @@
   resize: vertical;
   overflow: auto;
 }
+
+.editor:empty::before {
+  content: attr(data-placeholder);
+  color: var(--text-disabled);
+  pointer-events: none;
+}
