@@ -1,0 +1,9 @@
+/*
+  We are inheriting the base textarea and markdown look from the passed-in classes,
+  so this file focuses purely on the editor-specific styles.
+ */
+
+.editor {
+  resize: vertical;
+  overflow: auto;
+}

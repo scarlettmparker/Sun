@@ -9,6 +9,7 @@
   border: none;
   display: flex;
   align-items: center;
+  text-wrap: nowrap;
 }
 
 .button:hover {

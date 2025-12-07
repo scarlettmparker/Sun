@@ -1,0 +1,9 @@
+.blog_post {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 24rem;
+  /* realistically should only multiply by powers of 2 */
+  margin: calc(var(--lg) * 8) 0;
+}

@@ -19,6 +19,11 @@ import {
 } from "testing/jest/mock";
 import { registerBlogCreateMutation } from "~/routes/blog/create/create-blog-post";
 
+jest.mock(
+  "~/components/textarea/textarea.module.css",
+  () => require("~/../testing/jest/mock/css-module-mock").default
+);
+
 beforeAll(() => {
   // Due to some issue with re-rendering that we don't care about in test env
   suppressConsoleErrorsFromTests();
@@ -80,10 +85,11 @@ describe("CreateBlogForm", () => {
     render(<CreateBlogForm />);
 
     const titleInput = screen.getByLabelText("form.title.label");
-    const contentTextarea = screen.getByLabelText("form.content.label");
+    const contentEditor = screen.getByTestId("create-blog-content-editor");
 
     fireEvent.change(titleInput, { target: { value: "Test Title" } });
-    fireEvent.change(contentTextarea, { target: { value: "Test Content" } });
+    contentEditor.textContent = "Test Content";
+    fireEvent.input(contentEditor);
 
     const submitButton = screen.getByTestId("create-blog-submit-button");
     await act(async () => {
@@ -205,9 +211,14 @@ describe("CreateBlogForm", () => {
     render(<CreateBlogForm />);
 
     const titleInput = screen.getByLabelText("form.title.label");
-    const contentTextarea = screen.getByLabelText("form.content.label");
+    const contentEditor = screen.getByTestId("create-blog-content-editor");
+    const contentTextarea = screen.getByRole("textbox", {
+      name: "form.content.label",
+    });
+
     fireEvent.change(titleInput, { target: { value: "Test Title" } });
-    fireEvent.change(contentTextarea, { target: { value: "Test Content" } });
+    contentEditor.textContent = "Test Content";
+    fireEvent.input(contentEditor);
 
     expect(titleInput).toHaveValue("Test Title");
     expect(contentTextarea).toHaveValue("Test Content");

@@ -9,9 +9,9 @@ import {
 } from "~/components/form";
 import Input from "~/components/input";
 import { createBlogPost } from "~/server/actions/blog-post";
-import styles from "./create-blog-form.module.css";
-import TextArea from "~/components/textarea";
 import Button from "~/components/button";
+import styles from "./create-blog-form.module.css";
+import MarkdownEditor from "~/components/markdown-editor";
 
 /**
  * Form for creating a new blog post.
@@ -62,9 +62,10 @@ const CreateBlogForm = () => {
       <FormField name="content">
         <FormLabel>{t("form.content.label")}</FormLabel>
         <FormItem>
-          <TextArea
+          <MarkdownEditor
             placeholder={t("form.content.placeholder")}
             rows={DEFAULT_ROWS}
+            data-testid="create-blog-content-editor"
           />
         </FormItem>
       </FormField>

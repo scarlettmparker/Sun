@@ -7,6 +7,7 @@ import { useEffect } from "react";
 
 import Layout from "./components/layout";
 import "./styles/globals.css";
+import "./styles/markdown.css";
 
 declare global {
   interface Window {

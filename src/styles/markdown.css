@@ -1,0 +1,86 @@
+/*
+  Shared markdown styles for both editor and viewer.
+*/
+
+.md-h1,
+.md-h2,
+.md-h3,
+.md-h4,
+.md-h5,
+.md-h6 {
+  font-weight: bold;
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.md-h1 { font-size: 1.5em; line-height: 1.2; }
+.md-h2 { font-size: 1.3em; }
+.md-h3 { font-size: 1.1em; }
+.md-h4 { font-size: 1em; }
+.md-h5 { font-size: 0.9em; }
+.md-h6 { font-size: 0.8em; }
+
+.md-bold {
+  font-weight: bold;
+  color: var(--primary);
+}
+
+.md-italic {
+  font-style: italic;
+  opacity: 0.9;
+}
+
+.md-underline {
+  text-decoration: underline;
+  text-decoration-color: var(--primary);
+}
+
+.md-bold-italic {
+  font-weight: bold;
+  font-style: italic;
+  color: var(--primary);
+}
+
+.md-strike {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.md-code {
+  font-family: monospace;
+  background-color: rgba(0, 0, 0, 0.08);
+  padding: 0 4px;
+  border-radius: 4px;
+  color: var(--primary);
+}
+
+.md-link, a:not(:has(button)) {
+  color: var(--accent-dark);
+  text-decoration: underline;
+  cursor: pointer;
+  transition: color var(--fast) ease;
+}
+
+.md-link:hover, a:not(:has(button)):hover  {
+  color: var(--accent-dark-hover)
+}
+
+.md-quote {
+  color: var(--text);
+  opacity: 0.8;
+  border-left: 3px solid var(--primary);
+  padding-left: 8px;
+  display: inline-block;
+}
+
+.md-list {
+  color: var(--primary);
+  font-weight: bold;
+}
+
+.md-hr {
+  color: transparent;
+  border-bottom: 2px solid var(--secondary);
+  display: block;
+  margin: 8px 0;
+}

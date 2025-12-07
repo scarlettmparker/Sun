@@ -4,6 +4,7 @@ import styles from "./form.module.css";
 import Label from "../label";
 import Input from "../input";
 import TextArea from "../textarea";
+import MarkdownEditor from "../markdown-editor";
 
 const FormItemContext = createContext<{ name?: string }>({});
 
@@ -54,7 +55,8 @@ const FormLabel = (props: FormLabelProps) => {
 
 type FormItemChildProps =
   | React.ComponentProps<typeof Input>
-  | React.ComponentProps<typeof TextArea>;
+  | React.ComponentProps<typeof TextArea>
+  | React.ComponentProps<typeof MarkdownEditor>;
 
 type FormItemProps = {
   children: React.ReactElement<FormItemChildProps>;
@@ -68,7 +70,11 @@ const FormItem = (props: FormItemProps) => {
   const { name } = useContext(FormItemContext);
 
   // Tighten typing
-  if (children.type !== Input && children.type !== TextArea) {
+  if (
+    children.type !== Input &&
+    children.type !== TextArea &&
+    children.type != MarkdownEditor
+  ) {
     throw new Error("FormItem only accepts Input or TextArea as children");
   }
 

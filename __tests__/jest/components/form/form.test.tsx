@@ -3,6 +3,10 @@
  * Tests the Form, FormItem, FormLabel, and FormInput components' rendering, context usage, and attribute passing.
  */
 
+jest.mock("~/components/markdown-editor", () => ({
+  default: () => <div data-testid="markdown-editor" />,
+}));
+
 import { render, screen } from "@testing-library/react";
 import {
   Form,

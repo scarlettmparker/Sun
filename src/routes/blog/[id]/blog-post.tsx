@@ -1,6 +1,8 @@
+import MarkdownViewer from "~/components/markdown-viewer";
 import { LocateBlogPostQuery } from "~/generated/graphql";
 import { fetchLocateBlogPost } from "~/utils/api";
 import { pageDataRegistry } from "~/utils/page-data";
+import styles from "./blog-post.module.css";
 
 const BlogPostPage = () => {
   const pageData = globalThis.__pageData__;
@@ -8,10 +10,13 @@ const BlogPostPage = () => {
     pageData?.blogPost as LocateBlogPostQuery["blogQueries"]["locateBlogPost"];
 
   if (!data) {
+    // TODO: suspense properly
     return <div>Loading...</div>;
   }
 
-  return <>{data.content}</>;
+  return (
+    <MarkdownViewer className={styles.blog_post}>{data.content}</MarkdownViewer>
+  );
 };
 
 /**
