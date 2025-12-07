@@ -49,12 +49,19 @@ export async function renderApp(
     if (!isProduction) {
       render = (await vite.ssrLoadModule("/src/entry-server.tsx")).render;
       clientJs = "/src/entry-client.tsx";
-      clientCss = "/src/styles/globals.css";
+      clientCss = ["/src/styles/globals.css"];
     } else {
       const productionManifest = await loadManifest();
       render = (await import("../dist/server/entry-server.js")).render;
       clientJs = "/" + productionManifest["src/entry-client.tsx"].file;
-      clientCss = "/" + productionManifest["src/entry-client.tsx"].css[0];
+      // Collect all CSS files from the manifest
+      const allCss = new Set();
+      for (const [key, chunk] of Object.entries(productionManifest)) {
+        if (chunk.css) {
+          chunk.css.forEach((css) => allCss.add("/" + css));
+        }
+      }
+      clientCss = Array.from(allCss);
     }
 
     // Pass user and other data to SSR render function
@@ -66,6 +73,7 @@ export async function renderApp(
       clientCss,
       user,
       pageData,
+      isProduction,
     });
 
     res.statusCode = rendered.statusCode;

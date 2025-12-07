@@ -6,6 +6,7 @@ import { Router, routes } from "./router";
 import Layout from "./components/layout";
 import NotFound from "./routes/not-found";
 import { matchRoutes } from "react-router-dom";
+import { inlineCss, generateCssTag } from "./utils/css-inlining";
 
 type i18n = {
   /**
@@ -51,14 +52,19 @@ type RenderProps = {
   clientJs: string;
 
   /**
-   * Path or URL to client-side CSS bundle.
+   * Paths or URLs to client-side CSS bundles.
    */
-  clientCss: string;
+  clientCss: string[];
 
   /**
    * Pre-fetched data for the current page.
    */
   pageData?: Record<string, unknown>;
+
+  /**
+   * Whether running in production mode.
+   */
+  isProduction: boolean;
 };
 
 /**
@@ -75,9 +81,10 @@ export async function render({
   clientJs,
   clientCss,
   pageData,
+  isProduction,
 }: RenderProps) {
-  if (!clientJs || !clientCss) {
-    throw new Error("Missing required clientJs or clientCss path");
+  if (!clientJs) {
+    throw new Error("Missing required clientJs path");
   }
 
   globalThis.__pageData__ = pageData ?? {};
@@ -105,21 +112,23 @@ export async function render({
     </React.StrictMode>
   );
 
+  // In production, inline CSS to avoid extra fetch
+  const cssContent = await inlineCss(isProduction, clientCss);
+
   return new Promise((resolve) => {
-    const stream = renderToPipeableStream(
-      didMatch ? App : <NotFound />, // render 404 if no match
-      {
-        bootstrapModules: [clientJs],
-        onShellReady() {
-          resolve({
-            statusCode: didMatch ? 200 : 404,
-            headers: { "Content-Type": "text/html" },
-            prelude: `<!DOCTYPE html>
+    const stream = renderToPipeableStream(didMatch ? App : <NotFound />, {
+      bootstrapModules: [clientJs],
+      onShellReady() {
+        const cssTag = generateCssTag(isProduction, cssContent, clientCss);
+        resolve({
+          statusCode: didMatch ? 200 : 404,
+          headers: { "Content-Type": "text/html" },
+          prelude: `<!DOCTYPE html>
               <html lang="en">
                 <head>
                   <meta charset="UTF-8" />
                   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-                  <link rel="stylesheet" href="${clientCss}" />
+                  ${cssTag}
                   <title>Scarlett Sun</title>
                 </head>
                 <script type="module">
@@ -137,14 +146,13 @@ export async function render({
                 </script>
                 <body>
                   <div id="app">`,
-            postlude: `</div>
+          postlude: `</div>
                   <script type="module" src="${clientJs}"></script>
                 </body>
               </html>`,
-            stream,
-          });
-        },
-      }
-    );
+          stream,
+        });
+      },
+    });
   });
 }
