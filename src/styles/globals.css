@@ -3,7 +3,7 @@
 :root {
   /* text colors */
   --text: #14141B;
-  --text-disabled: #7F7F7F;
+  --muted: #7F7F7F;
   --primary: #D90429;
   --primary-hover: #FB3758; /* imperial red */
   --primary-active: #A0031D;
@@ -33,6 +33,7 @@
 
   /* transitions */
   --fast: 0.2s;
+  --very-slow: 2s;
 
   /* shadows */
   --shadow-soft: 
@@ -45,6 +46,7 @@
     0 4px 8px rgba(0, 0, 0, 0.08),
     0 6px 12px rgba(0, 0, 0, 0.11);
 }
+
 
 body {
   margin: 0;
@@ -73,4 +75,14 @@ ul {
   margin-bottom: 0 !important;
   margin-block-start: 0 !important;
   margin-block-end: 0 !important;
+}
+
+/* animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }

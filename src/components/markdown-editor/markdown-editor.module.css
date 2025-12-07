@@ -10,6 +10,6 @@
 
 .editor:empty::before {
   content: attr(data-placeholder);
-  color: var(--text-disabled);
+  color: var(--muted);
   pointer-events: none;
 }
