@@ -14,8 +14,8 @@ const StemPlayerPage = () => {
   const pageData = globalThis.__pageData__;
   const { error } = pageData || {};
 
-  if (error) {
-    return <div>Error: {error as string}</div>;
+  if (error || !pageData) {
+    return <div>Error: {(error as string) || "Failed to load data"}</div>;
   }
 
   const songs = pageData?.songs as ListSongsQuery["stemPlayerQueries"]["list"];
@@ -61,14 +61,10 @@ export async function getStemPlayerData(): Promise<Record<
         return { songs: songs };
       }
     }
-    return {
-      error: result.error || "Failed to fetch song data",
-    };
+    return null;
   } catch (error) {
     console.error("Failed to fetch stem player details data:", error);
-    return {
-      error: "An error occurred while fetching data",
-    };
+    return null;
   }
 }
 

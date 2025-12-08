@@ -17,6 +17,7 @@ import {
 } from "~/components/form";
 import Input from "~/components/input";
 import TextArea from "~/components/textarea";
+import Select from "~/components/select";
 
 describe("Form", () => {
   it("renders form element with correct attributes", () => {
@@ -328,7 +329,7 @@ describe("Form components integration", () => {
     expect(input).toHaveAttribute("name", "nested-field");
   });
 
-  it("only accepts Input or TextArea as children", () => {
+  it("only accepts Input, TextArea, MarkdownEditor, or Select as children", () => {
     expect(() => {
       render(
         <FormField name="test">
@@ -353,10 +354,28 @@ describe("Form components integration", () => {
       render(
         <FormField name="test">
           <FormItem>
+            <Select
+              data-testid="select"
+              options={[
+                { value: "option1", label: "Option 1" },
+                { value: "option2", label: "Option 2" },
+              ]}
+            />
+          </FormItem>
+        </FormField>
+      );
+    }).not.toThrow();
+
+    expect(() => {
+      render(
+        <FormField name="test">
+          <FormItem>
             <div data-testid="invalid">Invalid</div>
           </FormItem>
         </FormField>
       );
-    }).toThrow("FormItem only accepts Input or TextArea as children");
+    }).toThrow(
+      "FormItem only accepts Input, TextArea, MarkdownEditor, or Select as children"
+    );
   });
 });

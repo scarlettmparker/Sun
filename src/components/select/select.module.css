@@ -1,0 +1,58 @@
+.selectContainer {
+  position: relative;
+  display: inline-block;
+}
+
+.select {
+  padding: var(--md) var(--lg);
+  border-radius: var(--sm);
+  border: 1px solid var(--primary);
+  background-color: var(--secondary);
+  color: var(--text);
+  font-family: inherit;
+  font-size: inherit;
+  transition: border-color var(--fast) ease, box-shadow var(--fast) ease;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+}
+
+.select:focus {
+  outline: none;
+  border-color: var(--primary-hover);
+  box-shadow: var(--focus-shadow);
+}
+
+.select:hover {
+  border-color: var(--primary-hover);
+}
+
+.dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: var(--secondary);
+  border: 1px solid var(--primary);
+  border-radius: var(--sm);
+  box-shadow: var(--shadow-medium);
+  z-index: 1000;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.option {
+  padding: var(--md) var(--lg);
+  cursor: pointer;
+  transition: background-color var(--fast) ease, color var(--fast) ease;
+}
+
+.option:hover {
+  background-color: var(--primary-hover);
+  color: white;
+}
+
+.selected {
+  background-color: var(--primary-active);
+  color: white;
+}

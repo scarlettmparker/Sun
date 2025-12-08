@@ -5,6 +5,7 @@ import Label from "../label";
 import Input from "../input";
 import TextArea from "../textarea";
 import MarkdownEditor from "../markdown-editor";
+import Select from "../select";
 
 const FormItemContext = createContext<{ name?: string }>({});
 
@@ -56,7 +57,8 @@ const FormLabel = (props: FormLabelProps) => {
 type FormItemChildProps =
   | React.ComponentProps<typeof Input>
   | React.ComponentProps<typeof TextArea>
-  | React.ComponentProps<typeof MarkdownEditor>;
+  | React.ComponentProps<typeof MarkdownEditor>
+  | React.ComponentProps<typeof Select>;
 
 type FormItemProps = {
   children: React.ReactElement<FormItemChildProps>;
@@ -73,9 +75,12 @@ const FormItem = (props: FormItemProps) => {
   if (
     children.type !== Input &&
     children.type !== TextArea &&
-    children.type != MarkdownEditor
+    children.type !== MarkdownEditor &&
+    children.type !== Select
   ) {
-    throw new Error("FormItem only accepts Input or TextArea as children");
+    throw new Error(
+      "FormItem only accepts Input, TextArea, MarkdownEditor, or Select as children"
+    );
   }
 
   return React.cloneElement(children, {
