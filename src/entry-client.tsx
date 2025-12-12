@@ -9,7 +9,6 @@ import Layout from "./components/layout";
 import "./styles/globals.css";
 import "./styles/markdown.css";
 import "./utils/register-loaders";
-import { hydratePageData } from "./utils/page-data";
 
 declare global {
   interface Window {
@@ -80,15 +79,13 @@ i18n
       [window.__locale__ || "en"]: {
         home: window.__translations__ || {},
         login: window.__translations__ || {},
+        blog: window.__translations__ || {},
       },
     },
     interpolation: { escapeValue: false },
     react: { useSuspense: true },
   })
   .then(() => {
-    const serverPageData = window.__pageData__ || {};
-    hydratePageData(serverPageData);
-
     ReactDOM.hydrateRoot(
       document.getElementById("app") as HTMLElement,
       <BrowserRouter>

@@ -9,7 +9,7 @@ type PageDataLoader = (
   params?: Record<string, unknown>
 ) => Promise<Record<string, unknown> | null>;
 
-const suspenseCache = new Map<
+export const suspenseCache = new Map<
   string,
   { status: string; result?: any; promise?: Promise<any>; error?: any }
 >();
@@ -206,12 +206,12 @@ export async function fetchPageData(
   }
 }
 
-export function hydratePageData(initialData: Record<string, any>) {
-  if (!initialData) return;
-
-  Object.keys(initialData).forEach((key) => {
-    suspenseCache.set(key, { status: "resolved", result: initialData[key] });
-  });
+export function makeCacheKey(
+  pattern: string,
+  params?: Record<string, unknown>
+) {
+  const normalized = pattern.startsWith("/") ? pattern : "/" + pattern;
+  return `${normalized}:${JSON.stringify(params || {})}`;
 }
 
 function readPageData<T>(
@@ -238,11 +238,10 @@ function readPageData<T>(
             Object.assign(merged, r);
           }
         }
-        const data = merged[key];
 
         record!.status = "resolved";
-        record!.result = data;
-        return data;
+        record!.result = merged;
+        return merged[key];
       })
       .catch((err) => {
         console.error(`Error fetching page data for ${key} (${pattern}):`, err);
@@ -262,7 +261,7 @@ function readPageData<T>(
   }
 
   // Return the resolved data
-  return { data: record.result as T };
+  return { data: record.result[key] as T };
 }
 
 /**
@@ -277,17 +276,11 @@ export function usePageData<T>(
   pattern: string,
   params?: Record<string, unknown>
 ): { data: T } {
-  const cacheKey = key;
-  let record = suspenseCache.get(cacheKey);
+  const complexCacheKey = makeCacheKey(pattern, params);
+  let record = suspenseCache.get(complexCacheKey);
 
   if (typeof window === "undefined") {
     return readPageData(key, pattern, params);
-  }
-
-  if (!record && window.__pageData__ && window.__pageData__[key]) {
-    record = { status: "resolved", result: window.__pageData__[key] };
-    suspenseCache.set(cacheKey, record);
-    delete window.__pageData__[key];
   }
 
   if (!record) {
@@ -298,14 +291,10 @@ export function usePageData<T>(
     }
   }
 
-  if (record.status === "pending") {
-    throw record.promise;
-  }
-  if (record.status === "rejected") {
-    throw record.error;
-  }
+  if (record.status === "pending") throw record.promise;
+  if (record.status === "rejected") throw record.error;
 
-  return { data: record.result as T };
+  return { data: (record.result as Record<string, unknown>)[key] as T };
 }
 
 /**
