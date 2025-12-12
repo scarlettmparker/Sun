@@ -302,14 +302,29 @@ export function usePageData<T>(
   params?: Record<string, unknown>
 ): { data: T } {
   const complexCacheKey = makeCacheKey(pattern, params);
-  const record = suspenseCache.get(complexCacheKey);
+  let record = suspenseCache.get(complexCacheKey);
 
   if (typeof window === "undefined") {
     return readPageData(key, pattern, params);
   }
 
   if (!record) {
-    return readPageData(key, pattern, params);
+    const serverPageData = (globalThis.__pageData__ as Record<string, any>)?.[
+      complexCacheKey
+    ];
+
+    if (serverPageData) {
+      const initialData = serverPageData;
+      record = {
+        status: "resolved",
+        result: initialData,
+      };
+      suspenseCache.set(complexCacheKey, record);
+
+      delete globalThis.__pageData__?.[complexCacheKey];
+    } else {
+      return readPageData(key, pattern, params);
+    }
   }
 
   if (record!.status === "pending") throw record!.promise;
