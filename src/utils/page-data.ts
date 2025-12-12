@@ -196,6 +196,12 @@ function readPageData<T>(
           }
         }
 
+        if (merged[key] == null) {
+          record!.status = "rejected";
+          record!.error = new Error("No data returned");
+          return null;
+        }
+
         record!.status = "resolved";
         record!.result = merged;
         return merged[key];
@@ -204,6 +210,7 @@ function readPageData<T>(
         console.error(`Error fetching page data for ${key} (${pattern}):`, err);
         record!.status = "rejected";
         record!.error = err;
+        throw err;
       });
 
     record = { status: "pending", promise };

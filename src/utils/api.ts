@@ -93,6 +93,27 @@ export function registerGraphQLOperation(
 }
 
 /**
+ * Retry with backoff function.
+ */
+const retryWithBackoff = async <T>(
+  fn: () => Promise<T>,
+  delays: number[]
+): Promise<T> => {
+  let lastError: unknown;
+  for (let i = 0; i <= delays.length; i++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      if (i < delays.length) {
+        await new Promise((resolve) => setTimeout(resolve, delays[i]));
+      }
+    }
+  }
+  throw lastError;
+};
+
+/**
  * Generic function to fetch data from GraphQL server.
  *
  * @param operationName The name of the GraphQL operation to execute.
@@ -103,54 +124,48 @@ export async function fetchGraphQLData<T>(
   operationName: string,
   variables?: Record<string, unknown>
 ): Promise<ApiResponse<T>> {
-  try {
-    const endpoint =
-      process.env.GRAPHQL_ENDPOINT || "http://localhost:8080/graphql";
+  const endpoint =
+    process.env.GRAPHQL_ENDPOINT || "http://localhost:8080/graphql";
 
-    const query = getOperation(operationName);
-    if (!query) {
-      return {
-        success: false,
-        error: "Unknown operation",
-        statusCode: 400,
-      };
-    }
-
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        query: print(query),
-        variables,
-      }),
-    });
-
-    if (!response.ok) {
-      return {
-        success: false,
-        error: `HTTP ${response.status}: ${response.statusText}`,
-        statusCode: response.status,
-      };
-    }
-
-    const result = await response.json();
-
-    if (result.errors) {
-      return {
-        success: false,
-        error: result.errors
-          .map((e: { message: string }) => e.message)
-          .join(", "),
-        statusCode: 400,
-      };
-    }
-
+  const query = getOperation(operationName);
+  if (!query) {
     return {
-      success: true,
-      data: result.data,
+      success: false,
+      error: "Unknown operation",
+      statusCode: 400,
     };
+  }
+
+  try {
+    return await retryWithBackoff(async () => {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          query: print(query),
+          variables,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+
+      if (result.errors) {
+        throw new Error(
+          result.errors.map((e: { message: string }) => e.message).join(", ")
+        );
+      }
+
+      return {
+        success: true,
+        data: result.data,
+      };
+    }, [500, 2000, 4000, 6000]);
   } catch (error) {
     return {
       success: false,
