@@ -11,7 +11,7 @@ import "./styles/markdown.css";
 import { hydratePageData, onCacheHydrated } from "./utils/page-data";
 
 // Define the postlude hydration function on window for SSR
-(window as any).hydratePageDataFromPostlude = hydratePageData;
+window.hydratePageDataFromPostlude = hydratePageData;
 
 /**
  * Get page name from path.
@@ -91,10 +91,10 @@ i18n
     react: { useSuspense: true },
   })
   .then(() => {
-    const serverCacheData = (window as any).__serverCacheData__ || {};
+    const serverCacheData = window.__serverCacheData__ || {};
     if (Object.keys(serverCacheData).length > 0) {
       hydratePageData(serverCacheData);
-      (window as any).__serverCacheData__ = {};
+      window.__serverCacheData__ = {};
     }
 
     ReactDOM.hydrateRoot(

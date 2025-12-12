@@ -37,22 +37,36 @@ export const suspenseCache = new Map<
   }
 >();
 
-export function hydratePageData(initialData: Record<string, any>) {
+/**
+ * Hydrates the page data cache with initial data from the server.
+ * This populates the suspense cache with resolved data for each key in the initialData object.
+ * It also handles normalized keys by adding a leading slash if missing and creates duplicate entries for normalized patterns.
+ * After hydration, it notifies all registered listeners that the cache has been hydrated.
+ *
+ * @param initialData - An object containing initial page data keyed by cache keys, where each value is the data for that key.
+ */
+export function hydratePageData(
+  initialData: Record<string, Record<string, unknown>>
+) {
   if (!initialData) {
     return;
   }
 
   Object.keys(initialData).forEach((key) => {
+    // Set the data in the suspense cache as resolved
     suspenseCache.set(key, { status: "resolved", result: initialData[key] });
 
+    // Handle normalized keys: if the key contains a colon, normalize the pattern part
     const colonIndex = key.indexOf(":");
     if (colonIndex !== -1) {
       const patternPart = key.slice(0, colonIndex);
       const rest = key.slice(colonIndex);
+      // Ensure the pattern starts with a slash
       const normalizedPattern = patternPart.startsWith("/")
         ? patternPart
         : "/" + patternPart;
       const normalizedKey = `${normalizedPattern}${rest}`;
+      // Avoid overwriting existing normalized keys
       if (!suspenseCache.has(normalizedKey)) {
         suspenseCache.set(normalizedKey, {
           status: "resolved",
