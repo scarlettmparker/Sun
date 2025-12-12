@@ -7,7 +7,7 @@ import { QuerySuccess, StandardError } from "~/generated/graphql";
 export type MutationResult =
   | QuerySuccess
   | StandardError
-  | { __typename: "Redirecting"; redirectTo: string };
+  | { __typename: "Redirect"; redirectTo: string };
 
 /**
  * Executes a server-side mutation by posting to the registered mutation path.
@@ -39,7 +39,7 @@ export async function executeMutation(
 
     const result: MutationResult = await response.json();
 
-    if (result.__typename === "Redirecting") {
+    if (result.__typename === "Redirect") {
       window.location.assign(result.redirectTo);
       return result;
     }

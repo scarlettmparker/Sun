@@ -9,6 +9,7 @@ import { matchRoutes } from "react-router-dom";
 import { inlineCss, generateCssTag } from "./utils/css-inlining";
 import "./utils/register-loaders";
 import { suspenseCache } from "./utils/page-data";
+import { MutationResult } from "./server/actions/utils";
 
 type i18n = {
   /**
@@ -66,8 +67,7 @@ type RenderProps = {
   /**
    * Payload for displaying toasts, etc. on client after redirect
    */
-  //TODO: type it
-  mutationPayload: any;
+  mutationPayload: MutationResult;
 
   /**
    * Cookie to invalidate the entry-server suspense cache.

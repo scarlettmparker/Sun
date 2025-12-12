@@ -3,8 +3,6 @@
  * Provides a registry for page data loaders and a function to fetch data for any page.
  */
 
-import React from "react";
-
 type PageDataLoader = (
   params?: Record<string, unknown>
 ) => Promise<Record<string, unknown> | null>;

@@ -2,7 +2,7 @@
  * Tests for server action utilities.
  */
 
-import { QuerySuccess } from "~/generated/graphql";
+import { QuerySuccess, StandardError } from "~/generated/graphql";
 import { executeMutation } from "~/server/actions/utils";
 
 // Mock fetch globally
@@ -39,6 +39,8 @@ describe("Server action utilities", () => {
       expect(mockFetch).toHaveBeenCalledWith("/blog/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        redirect: "manual",
         body: JSON.stringify({ title: "Test", content: "Content" }),
       });
     });
@@ -52,8 +54,8 @@ describe("Server action utilities", () => {
 
       const result = await executeMutation("blog/create", { title: "Test" });
 
-      expect(result.__typename).toBe("StandardError");
-      expect(result.message).toBe("HTTP 400: Bad Request");
+      expect((result as StandardError).__typename).toBe("StandardError");
+      expect((result as StandardError).message).toBe("HTTP 400: Bad Request");
     });
 
     it("should return error response for network error", async () => {
@@ -61,8 +63,8 @@ describe("Server action utilities", () => {
 
       const result = await executeMutation("blog/create", {});
 
-      expect(result.__typename).toBe("StandardError");
-      expect(result.message).toBe("Network error");
+      expect((result as StandardError).__typename).toBe("StandardError");
+      expect((result as StandardError).message).toBe("Network error");
     });
 
     it("should handle mutation response with error", async () => {
@@ -78,8 +80,8 @@ describe("Server action utilities", () => {
 
       const result = await executeMutation("blog/create", { title: "" });
 
-      expect(result.__typename).toBe("StandardError");
-      expect(result.message).toBe("Validation failed");
+      expect((result as StandardError).__typename).toBe("StandardError");
+      expect((result as StandardError).message).toBe("Validation failed");
     });
   });
 });

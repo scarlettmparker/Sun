@@ -5,7 +5,6 @@
 
 import express from "express";
 import path from "path";
-import zlib from "zlib";
 import cookieParser from "cookie-parser";
 import {
   port,
@@ -16,8 +15,8 @@ import {
 } from "./config.js";
 import { setupRoutes } from "./routes/index.js";
 import { executeMutation } from "./src/utils/mutations.ts";
-// 💡 IMPORTANT: Import the ServerRedirectError class to check against it
 import { ServerRedirectError } from "./src/utils/server-redirect";
+import { Buffer } from "buffer";
 
 import "./src/utils/register-loaders.ts";
 import "./src/utils/register-mutations.ts";
@@ -119,7 +118,7 @@ app.post("*", async (req, res) => {
       res.setHeader("Set-Cookie", cookieHeaders);
 
       return res.json({
-        __typename: "Redirecting",
+        __typename: "Redirect",
         redirectTo: error.redirectTo,
       });
     }

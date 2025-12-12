@@ -4,7 +4,7 @@
 
 jest.unmock("~/server/actions/blog-post");
 
-import { QuerySuccess } from "~/generated/graphql";
+import { QuerySuccess, StandardError } from "~/generated/graphql";
 import { createBlogPost } from "~/server/actions/blog-post";
 
 // Mock fetch globally
@@ -41,6 +41,8 @@ describe("Blog post server actions", () => {
       expect(mockFetch).toHaveBeenCalledWith("/blog/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        redirect: "manual",
         body: JSON.stringify({
           title: "Test Title",
           input: { content: "Test Content" },
@@ -57,8 +59,8 @@ describe("Blog post server actions", () => {
 
       const result = await createBlogPost("Test Title", "Test Content");
 
-      expect(result.__typename).toBe("StandardError");
-      expect(result.message).toBe("HTTP 400: Bad Request");
+      expect((result as StandardError).__typename).toBe("StandardError");
+      expect((result as StandardError).message).toBe("HTTP 400: Bad Request");
     });
 
     it("should return error response for network error", async () => {
@@ -66,8 +68,8 @@ describe("Blog post server actions", () => {
 
       const result = await createBlogPost("Test Title", "Test Content");
 
-      expect(result.__typename).toBe("StandardError");
-      expect(result.message).toBe("Network error");
+      expect((result as StandardError).__typename).toBe("StandardError");
+      expect((result as StandardError).message).toBe("Network error");
     });
 
     it("should return error for invalid input types", async () => {
@@ -76,8 +78,8 @@ describe("Blog post server actions", () => {
         "Test Content"
       );
 
-      expect(result.__typename).toBe("StandardError");
-      expect(result.message).toBe(
+      expect((result as StandardError).__typename).toBe("StandardError");
+      expect((result as StandardError).message).toBe(
         "Invalid input: title and content must be non-empty strings"
       );
       expect(mockFetch).not.toHaveBeenCalled();
@@ -86,8 +88,8 @@ describe("Blog post server actions", () => {
     it("should return error for empty title", async () => {
       const result = await createBlogPost("", "Test Content");
 
-      expect(result.__typename).toBe("StandardError");
-      expect(result.message).toBe(
+      expect((result as StandardError).__typename).toBe("StandardError");
+      expect((result as StandardError).message).toBe(
         "Invalid input: title and content must be non-empty strings"
       );
       expect(mockFetch).not.toHaveBeenCalled();
@@ -96,8 +98,8 @@ describe("Blog post server actions", () => {
     it("should return error for empty content", async () => {
       const result = await createBlogPost("Test Title", "");
 
-      expect(result.__typename).toBe("StandardError");
-      expect(result.message).toBe(
+      expect((result as StandardError).__typename).toBe("StandardError");
+      expect((result as StandardError).message).toBe(
         "Invalid input: title and content must be non-empty strings"
       );
       expect(mockFetch).not.toHaveBeenCalled();
@@ -106,8 +108,8 @@ describe("Blog post server actions", () => {
     it("should return error for whitespace-only title", async () => {
       const result = await createBlogPost("   ", "Test Content");
 
-      expect(result.__typename).toBe("StandardError");
-      expect(result.message).toBe(
+      expect((result as StandardError).__typename).toBe("StandardError");
+      expect((result as StandardError).message).toBe(
         "Invalid input: title and content must be non-empty strings"
       );
       expect(mockFetch).not.toHaveBeenCalled();
@@ -116,8 +118,8 @@ describe("Blog post server actions", () => {
     it("should return error for whitespace-only content", async () => {
       const result = await createBlogPost("Test Title", "   ");
 
-      expect(result.__typename).toBe("StandardError");
-      expect(result.message).toBe(
+      expect((result as StandardError).__typename).toBe("StandardError");
+      expect((result as StandardError).message).toBe(
         "Invalid input: title and content must be non-empty strings"
       );
       expect(mockFetch).not.toHaveBeenCalled();

@@ -6,7 +6,7 @@ import { renderApp } from "../utils/ssr.js";
 import { base, isProduction } from "../config.js";
 import { matchRoutes } from "react-router-dom";
 import { routes } from "../src/router.tsx";
-import { suspenseCache } from "../src/utils/page-data";
+import { Buffer } from "buffer";
 
 /**
  * Sets up all routes for the Express application.
@@ -34,7 +34,9 @@ export function setupRoutes(app, vite) {
         mutationPayload = JSON.parse(
           Buffer.from(mutationPayloadCookie, "base64").toString("utf-8")
         );
-      } catch {}
+      } catch (_) {
+        // Do nothing
+      }
     }
 
     // Skip SSR for requests with file extensions (e.g., .js, .css, .png)
