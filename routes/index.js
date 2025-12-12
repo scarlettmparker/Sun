@@ -67,11 +67,6 @@ export function setupRoutes(app, vite) {
         },
         res
       );
-
-      fetchPageData(pathForMatching, params).then((data) => {
-        globalThis.__pageData__ = globalThis.__pageData__ || {};
-        globalThis.__pageData__[cacheKey] = data || {};
-      });
     } catch (e) {
       console.error("Error during route handling:", e);
       res.status(500).end("Internal Server Error: " + e.message);

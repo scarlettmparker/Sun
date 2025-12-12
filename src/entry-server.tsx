@@ -8,6 +8,7 @@ import NotFound from "./routes/not-found";
 import { matchRoutes } from "react-router-dom";
 import { inlineCss, generateCssTag } from "./utils/css-inlining";
 import "./utils/register-loaders";
+import { suspenseCache, makeCacheKey } from "./utils/page-data";
 
 type i18n = {
   /**
@@ -119,42 +120,70 @@ export async function render({
   const cssContent = await inlineCss(isProduction, clientCss);
 
   return new Promise((resolve) => {
+    let resolved = false;
+    let postludeData = "";
+
     const stream = renderToPipeableStream(didMatch ? App : <NotFound />, {
       bootstrapModules: [clientJs],
       onShellReady() {
         const cssTag = generateCssTag(isProduction, cssContent, clientCss);
-        resolve({
-          statusCode: didMatch ? 200 : 404,
-          headers: { "Content-Type": "text/html" },
-          prelude: `<!DOCTYPE html>
-              <html lang="en">
-                <head>
-                  <meta charset="UTF-8" />
-                  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-                  ${cssTag}
-                  <title>Scarlett Sun</title>
-                </head>
-                <script type="module">
-                  import RefreshRuntime from 'http://${process.env.SERVER_BASE || "localhost"}:${process.env.SERVER_PORT || "5173"}/@react-refresh'
-                  RefreshRuntime.injectIntoGlobalHook(window)
-                  window.$RefreshReg$ = () => {}
-                  window.$RefreshSig$ = () => (type) => type
-                  window.__vite_plugin_react_preamble_installed__ = true
-                </script>
-                <script>
-                  // Inject the translations and page data into the client-side window object
-                  window.__translations__ = ${JSON.stringify(translations)};
-                  window.__locale__ = '${locale}';
-                  globalThis.__pageData__ = ${JSON.stringify(pageData || {})};
-                </script>
-                <body>
-                  <div id="app">`,
-          postlude: `</div>
-                  <script type="module" src="${clientJs}"></script>
-                </body>
-              </html>`,
-          stream,
-        });
+        const prelude = `<!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta charset="UTF-8" />
+              <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+              ${cssTag}
+              <title>Scarlett Sun</title>
+            </head>
+            <script type="module">
+              import RefreshRuntime from 'http://${process.env.SERVER_BASE || "localhost"}:${process.env.SERVER_PORT || "5173"}/@react-refresh'
+              RefreshRuntime.injectIntoGlobalHook(window)
+              window.$RefreshReg$ = () => {}
+              window.$RefreshSig$ = () => (type) => type
+              window.__vite_plugin_react_preamble_installed__ = true
+            </script>
+            <script>
+              // Inject the translations and locale into the client-side window object
+              window.__translations__ = ${JSON.stringify(translations)};
+              window.__locale__ = '${locale}';
+              // Initialize server cache data (will be updated in postlude)
+              window.__serverCacheData__ = {};
+            </script>
+            <body>
+              <div id="app">`;
+        if (!resolved) {
+          resolved = true;
+          resolve({
+            statusCode: didMatch ? 200 : 404,
+            headers: { "Content-Type": "text/html" },
+            prelude,
+            postlude: () => postludeData,
+            stream,
+          });
+        }
+      },
+      onAllReady() {
+        // Collect all resolved data after ALL rendering/data loading completes
+        const serverCacheData: Record<string, unknown> = {};
+        for (const [key, record] of suspenseCache.entries()) {
+          if (record.status === "resolved") {
+            serverCacheData[key] = record.result;
+          }
+        }
+
+        postludeData = `</div>
+          <script>
+          // Inject server-side cache data so client doesn't re-fetch
+          if (window.__serverCacheData__ !== undefined) {
+            Object.assign(window.__serverCacheData__, ${JSON.stringify(serverCacheData)});
+            if (window.hydratePageDataFromPostlude) {
+              window.hydratePageDataFromPostlude(window.__serverCacheData__);
+            }
+          }
+          </script>
+          <script type="module" src="${clientJs}"></script>
+        </body>
+      </html>`;
       },
     });
   });

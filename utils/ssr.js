@@ -90,7 +90,12 @@ export async function renderApp(
         callback();
       },
       final(callback) {
-        res.write(rendered.postlude);
+        const postludeContent =
+          typeof rendered.postlude === "function"
+            ? rendered.postlude()
+            : rendered.postlude;
+
+        res.write(postludeContent);
         res.end();
         callback();
       },

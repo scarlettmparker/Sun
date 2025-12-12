@@ -3,12 +3,15 @@ import { Router, routes } from "./router";
 import { initReactI18next } from "react-i18next";
 import ReactDOM from "react-dom/client";
 import i18n from "i18next";
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 import Layout from "./components/layout";
 import "./styles/globals.css";
 import "./styles/markdown.css";
-import "./utils/register-loaders";
+import { hydratePageData, onCacheHydrated } from "./utils/page-data";
+
+// Define the postlude hydration function on window for SSR
+(window as any).hydratePageDataFromPostlude = hydratePageData;
 
 /**
  * Get page name from path.
@@ -43,6 +46,16 @@ async function loadTranslations(page: string, locale: string) {
  */
 function AppWithI18n() {
   const location = useLocation();
+  const [, setHydrated] = useState(0);
+
+  useEffect(() => {
+    // Listen for cache hydration events from postlude
+    const unsubscribe = onCacheHydrated(() => {
+      setHydrated((prev) => prev + 1);
+    });
+    return unsubscribe;
+  }, []);
+
   useEffect(() => {
     const locale = window.__locale__ || "en";
     const matches = matchRoutes(routes, location.pathname);
@@ -78,6 +91,12 @@ i18n
     react: { useSuspense: true },
   })
   .then(() => {
+    const serverCacheData = (window as any).__serverCacheData__ || {};
+    if (Object.keys(serverCacheData).length > 0) {
+      hydratePageData(serverCacheData);
+      (window as any).__serverCacheData__ = {};
+    }
+
     ReactDOM.hydrateRoot(
       document.getElementById("app") as HTMLElement,
       <BrowserRouter>

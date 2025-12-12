@@ -9,6 +9,19 @@ type PageDataLoader = (
   params?: Record<string, unknown>
 ) => Promise<Record<string, unknown> | null>;
 
+// Event emitter for cache hydration
+type CacheHydratedListener = () => void;
+const cacheHydratedListeners: Set<CacheHydratedListener> = new Set();
+
+export function onCacheHydrated(listener: CacheHydratedListener): () => void {
+  cacheHydratedListeners.add(listener);
+  return () => cacheHydratedListeners.delete(listener);
+}
+
+function notifyCacheHydrated() {
+  cacheHydratedListeners.forEach((listener) => listener());
+}
+
 /**
  * Cache for React Suspense-based data loading.
  * Stores the status of data fetches: 'pending', 'resolved', or 'rejected'.
@@ -24,12 +37,41 @@ export const suspenseCache = new Map<
   }
 >();
 
+export function hydratePageData(initialData: Record<string, any>) {
+  if (!initialData) {
+    return;
+  }
+
+  Object.keys(initialData).forEach((key) => {
+    suspenseCache.set(key, { status: "resolved", result: initialData[key] });
+
+    const colonIndex = key.indexOf(":");
+    if (colonIndex !== -1) {
+      const patternPart = key.slice(0, colonIndex);
+      const rest = key.slice(colonIndex);
+      const normalizedPattern = patternPart.startsWith("/")
+        ? patternPart
+        : "/" + patternPart;
+      const normalizedKey = `${normalizedPattern}${rest}`;
+      if (!suspenseCache.has(normalizedKey)) {
+        suspenseCache.set(normalizedKey, {
+          status: "resolved",
+          result: initialData[key],
+        });
+      }
+    }
+  });
+
+  // Notify listeners that cache has been hydrated
+  notifyCacheHydrated();
+}
+
 /**
  * Registry of page data loaders.
  * Maps page names to their data loading functions.
  */
 // Allow multiple loaders per page name (e.g. layout + outlet)
-const pageDataLoaders: Record<string, PageDataLoader[]> = {};
+export const pageDataLoaders: Record<string, PageDataLoader[]> = {};
 
 type PageDataCache = Record<
   string,
@@ -52,6 +94,7 @@ const CACHE_EXPIRATION_MS = 5 * 60 * 1000;
  */
 function registerPageDataLoader(pattern: string, loader: PageDataLoader): void {
   const list = pageDataLoaders[pattern] || [];
+
   // avoid duplicate registration of the same function
   if (!list.includes(loader)) {
     list.push(loader);
@@ -69,10 +112,6 @@ function registerPageDataLoader(pattern: string, loader: PageDataLoader): void {
 /**
  * Unregisters a data loader for a specific page.
  * @param pattern The route pattern to unregister.
- */
-/**
- * Unregisters all data loaders for a specific page.
- * If you need to unregister a single loader you can implement that later.
  */
 function unregisterPageDataLoader(pattern: string): void {
   delete pageDataLoaders[pattern];
@@ -124,8 +163,7 @@ export function invalidateCache(
   pattern: string,
   params?: Record<string, unknown>
 ): void {
-  const finalParams = params || {};
-  const cacheKey = `${pattern}:${JSON.stringify(finalParams)}`;
+  const cacheKey = makeCacheKey(pattern, params || {});
   delete pageDataCache[cacheKey];
 }
 
@@ -179,7 +217,7 @@ export async function fetchPageData(
 
   // Only use cache in production
   const isProduction = process.env.NODE_ENV === "production";
-  const cacheKey = `${matchedPattern}:${JSON.stringify(finalParams)}`;
+  const cacheKey = makeCacheKey(matchedPattern!, finalParams);
 
   if (isProduction) {
     const now = Date.now();
@@ -203,6 +241,12 @@ export async function fetchPageData(
     }
 
     const data = hasData ? merged : null;
+
+    // Store in suspenseCache so readPageData can find it
+    suspenseCache.set(cacheKey, {
+      status: "resolved",
+      result: data || {},
+    });
 
     // Only cache in production
     if (isProduction) {
@@ -244,7 +288,8 @@ function readPageData<T>(
   pattern: string,
   params?: Record<string, unknown>
 ): { data: T } {
-  const cacheKey = `${pattern}:${JSON.stringify(params || {})}`;
+  const cacheKey = makeCacheKey(pattern, params || {});
+
   let record = suspenseCache.get(cacheKey);
 
   if (!record) {
@@ -301,30 +346,15 @@ export function usePageData<T>(
   pattern: string,
   params?: Record<string, unknown>
 ): { data: T } {
-  const complexCacheKey = makeCacheKey(pattern, params);
-  let record = suspenseCache.get(complexCacheKey);
+  const normalizedCacheKey = makeCacheKey(pattern, params);
+  const rawCacheKey = `${pattern}:${JSON.stringify(params || {})}`;
 
-  if (typeof window === "undefined") {
+  // Try normalized (leading slash) key first, then the raw key used during SSR.
+  let record =
+    suspenseCache.get(normalizedCacheKey) || suspenseCache.get(rawCacheKey);
+
+  if (typeof window === "undefined" || !record) {
     return readPageData(key, pattern, params);
-  }
-
-  if (!record) {
-    const serverPageData = (globalThis.__pageData__ as Record<string, any>)?.[
-      complexCacheKey
-    ];
-
-    if (serverPageData) {
-      const initialData = serverPageData;
-      record = {
-        status: "resolved",
-        result: initialData,
-      };
-      suspenseCache.set(complexCacheKey, record);
-
-      delete globalThis.__pageData__?.[complexCacheKey];
-    } else {
-      return readPageData(key, pattern, params);
-    }
   }
 
   if (record!.status === "pending") throw record!.promise;
