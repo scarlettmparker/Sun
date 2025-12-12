@@ -1,5 +1,5 @@
 import { fetchListSongs } from "~/utils/api";
-import { pageDataRegistry, usePageData } from "~/utils/page-data";
+import { pageDataRegistry, getPageData } from "~/utils/page-data";
 import { ListSongsQuery } from "~/generated/graphql";
 import { Outlet } from "react-router-dom";
 import Sidebar from "~/components/sidebar";
@@ -11,7 +11,7 @@ import { Music } from "lucide-react";
  * Stem Player Page component.
  */
 const StemPlayerPage = () => {
-  const { data: songs } = usePageData<
+  const { data: songs } = getPageData<
     ListSongsQuery["stemPlayerQueries"]["list"]
   >("songs", "stem-player");
 

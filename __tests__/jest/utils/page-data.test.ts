@@ -10,7 +10,7 @@ declare const global: typeof globalThis & {
 import {
   pageDataRegistry,
   makeCacheKey,
-  usePageData,
+  getPageData,
   suspenseCache,
 } from "~/utils/page-data";
 
@@ -184,11 +184,11 @@ describe("page-data utilities", () => {
     });
   });
 
-  describe("usePageData", () => {
+  describe("getPageData", () => {
     it("should return data from loader on server side", async () => {
       const mockLoader = jest.fn().mockResolvedValue({ posts: [{ id: 1 }] });
       pageDataRegistry.registerPageDataLoader("blog", mockLoader);
-      expect(() => usePageData("posts", "blog")).toThrow(Promise);
+      expect(() => getPageData("posts", "blog")).toThrow(Promise);
     });
 
     it("should return resolved data on client side if cached", () => {
@@ -203,7 +203,7 @@ describe("page-data utilities", () => {
           result: { posts: [{ id: 1 }] },
         });
 
-        const result = usePageData("posts", "blog");
+        const result = getPageData("posts", "blog");
 
         expect(result).toEqual({ data: [{ id: 1 }] });
       } finally {
@@ -223,7 +223,7 @@ describe("page-data utilities", () => {
           promise: mockPromise,
         });
 
-        expect(() => usePageData("posts", "blog")).toThrow();
+        expect(() => getPageData("posts", "blog")).toThrow();
       } finally {
         global.window = originalWindow;
       }
@@ -241,7 +241,7 @@ describe("page-data utilities", () => {
           error: mockError,
         });
 
-        expect(() => usePageData("posts", "blog")).toThrow(mockError);
+        expect(() => getPageData("posts", "blog")).toThrow(mockError);
       } finally {
         global.window = originalWindow;
       }

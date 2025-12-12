@@ -23,7 +23,7 @@ function notifyCacheHydrated() {
 /**
  * Cache for React Suspense-based data loading.
  * Stores the status of data fetches: 'pending', 'resolved', or 'rejected'.
- * Used by usePageData hook to suspend components until data is available.
+ * Used by getPageData to suspend components until data is available.
  */
 export const suspenseCache = new Map<
   string,
@@ -235,7 +235,7 @@ function readPageData<T>(
  * @param pattern The route pattern (e.g., 'blog')
  * @param params API parameters
  */
-export function usePageData<T>(
+export function getPageData<T>(
   key: string,
   pattern: string,
   params?: Record<string, unknown>

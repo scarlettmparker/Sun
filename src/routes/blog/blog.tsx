@@ -1,6 +1,6 @@
 import { ListBlogPostsQuery } from "~/generated/graphql";
 import { fetchListBlogPosts } from "~/utils/api";
-import { pageDataRegistry, usePageData } from "~/utils/page-data";
+import { pageDataRegistry, getPageData } from "~/utils/page-data";
 import { useTranslation } from "react-i18next";
 import styles from "./blog.module.css";
 import { groupPostsByMonthYear } from "./group-posts-by-month-year";
@@ -9,7 +9,7 @@ import React from "react";
 const BlogPage = () => {
   const { t } = useTranslation("blog");
 
-  const { data: initialData } = usePageData<
+  const { data: initialData } = getPageData<
     ListBlogPostsQuery["blogQueries"]["listBlogPosts"]
   >("blogPosts", "blog");
 

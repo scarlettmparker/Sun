@@ -3,12 +3,12 @@ import { LocateBlogPostQuery } from "~/generated/graphql";
 import { fetchLocateBlogPost } from "~/utils/api";
 import { useParams } from "react-router-dom";
 
-import { pageDataRegistry, usePageData } from "~/utils/page-data";
+import { pageDataRegistry, getPageData } from "~/utils/page-data";
 import styles from "./blog-post.module.css";
 
 const BlogPostPage = () => {
   const { id } = useParams<{ id: string }>();
-  const { data } = usePageData<
+  const { data } = getPageData<
     LocateBlogPostQuery["blogQueries"]["locateBlogPost"]
   >("blogPost", "blog/:id", { id });
 

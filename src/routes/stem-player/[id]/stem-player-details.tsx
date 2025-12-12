@@ -1,7 +1,7 @@
 import { fetchLocateSong } from "~/utils/api";
 import { LocateSongQuery, Song } from "~/generated/graphql";
 import StemPlayer from "~/_components/stem-player";
-import { pageDataRegistry, usePageData } from "~/utils/page-data";
+import { pageDataRegistry, getPageData } from "~/utils/page-data";
 import { useParams } from "react-router-dom";
 import styles from "./stem-player-details.module.css";
 import { getStemPlayerData } from "../stem-player";
@@ -10,7 +10,7 @@ import { getStemPlayerData } from "../stem-player";
  */
 const StemPlayerDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
-  const { data: song } = usePageData<
+  const { data: song } = getPageData<
     LocateSongQuery["stemPlayerQueries"]["locate"]
   >("song", "stem-player/:id", { id });
 
