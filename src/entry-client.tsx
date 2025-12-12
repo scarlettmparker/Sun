@@ -10,14 +10,6 @@ import "./styles/globals.css";
 import "./styles/markdown.css";
 import "./utils/register-loaders";
 
-declare global {
-  interface Window {
-    __locale__?: string;
-    __translations__?: Record<string, unknown>;
-    __pageData__?: Record<string, unknown>;
-  }
-}
-
 /**
  * Get page name from path.
  *

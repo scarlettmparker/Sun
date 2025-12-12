@@ -9,9 +9,19 @@ type PageDataLoader = (
   params?: Record<string, unknown>
 ) => Promise<Record<string, unknown> | null>;
 
+/**
+ * Cache for React Suspense-based data loading.
+ * Stores the status of data fetches: 'pending', 'resolved', or 'rejected'.
+ * Used by usePageData hook to suspend components until data is available.
+ */
 export const suspenseCache = new Map<
   string,
-  { status: string; result?: any; promise?: Promise<any>; error?: any }
+  {
+    status: "pending" | "resolved" | "rejected";
+    result?: Record<string, unknown>;
+    promise?: Promise<unknown>;
+    error?: unknown;
+  }
 >();
 
 /**
@@ -206,6 +216,12 @@ export async function fetchPageData(
   }
 }
 
+/**
+ * Creates a normalized cache key for the given pattern and params.
+ * @param pattern The route pattern.
+ * @param params Optional parameters.
+ * @returns The cache key string.
+ */
 export function makeCacheKey(
   pattern: string,
   params?: Record<string, unknown>
@@ -214,6 +230,15 @@ export function makeCacheKey(
   return `${normalized}:${JSON.stringify(params || {})}`;
 }
 
+/**
+ * Reads page data from the suspense cache, initiating fetch if not cached.
+ * Used internally for suspense-based data loading.
+ *
+ * @param key The data key to retrieve.
+ * @param pattern The route pattern.
+ * @param params Optional parameters for the data loader.
+ * @returns An object with the data, or throws a promise if pending.
+ */
 function readPageData<T>(
   key: string,
   pattern: string,
@@ -253,15 +278,15 @@ function readPageData<T>(
     suspenseCache.set(cacheKey, record);
   }
 
-  if (record.status === "pending") {
-    throw record.promise;
+  if (record!.status === "pending") {
+    throw record!.promise;
   }
-  if (record.status === "rejected") {
-    throw record.error; // Error Boundary will catch this
+  if (record!.status === "rejected") {
+    throw record!.error; // Error Boundary will catch this
   }
 
   // Return the resolved data
-  return { data: record.result[key] as T };
+  return { data: record!.result![key] as T };
 }
 
 /**
@@ -277,24 +302,20 @@ export function usePageData<T>(
   params?: Record<string, unknown>
 ): { data: T } {
   const complexCacheKey = makeCacheKey(pattern, params);
-  let record = suspenseCache.get(complexCacheKey);
+  const record = suspenseCache.get(complexCacheKey);
 
   if (typeof window === "undefined") {
     return readPageData(key, pattern, params);
   }
 
   if (!record) {
-    try {
-      return readPageData(key, pattern, params);
-    } catch (promise) {
-      throw promise;
-    }
+    return readPageData(key, pattern, params);
   }
 
-  if (record.status === "pending") throw record.promise;
-  if (record.status === "rejected") throw record.error;
+  if (record!.status === "pending") throw record!.promise;
+  if (record!.status === "rejected") throw record!.error;
 
-  return { data: (record.result as Record<string, unknown>)[key] as T };
+  return { data: (record!.result as Record<string, unknown>)![key] as T };
 }
 
 /**

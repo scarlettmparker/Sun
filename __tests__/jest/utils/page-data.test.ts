@@ -2,7 +2,19 @@
  * Tests for page data utilities.
  */
 
-import { fetchPageData, pageDataRegistry } from "~/utils/page-data";
+declare const global: typeof globalThis & {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  window?: any;
+};
+
+import {
+  fetchPageData,
+  pageDataRegistry,
+  invalidateCache,
+  makeCacheKey,
+  usePageData,
+  suspenseCache,
+} from "~/utils/page-data";
 
 const mockConsoleError = jest.spyOn(console, "error").mockImplementation();
 
@@ -17,6 +29,7 @@ describe("page-data utilities", () => {
     registeredPages.forEach((page) =>
       pageDataRegistry.unregisterPageDataLoader(page)
     );
+    suspenseCache.clear();
   });
 
   describe("pageDataRegistry", () => {
@@ -341,6 +354,156 @@ describe("page-data utilities", () => {
       const result = await fetchPageData("test-page");
 
       expect(result).toEqual({ data1: "value1" });
+    });
+  });
+
+  describe("invalidateCache", () => {
+    it("should invalidate cache for a specific pattern and params", () => {
+      const cache = pageDataRegistry.pageDataCache;
+      const pattern = "test-page";
+      const params = { id: "123" };
+      const cacheKey = `${pattern}:${JSON.stringify(params)}`;
+
+      cache[cacheKey] = { data: { test: "cached" }, timestamp: Date.now() };
+
+      invalidateCache(pattern, params);
+
+      expect(cache[cacheKey]).toBeUndefined();
+    });
+
+    it("should invalidate cache when params is undefined", () => {
+      const cache = pageDataRegistry.pageDataCache;
+      const pattern = "test-page";
+      const cacheKey = `${pattern}:${JSON.stringify({})}`;
+
+      cache[cacheKey] = { data: { test: "cached" }, timestamp: Date.now() };
+
+      invalidateCache(pattern);
+
+      expect(cache[cacheKey]).toBeUndefined();
+    });
+
+    it("should not affect other cache entries", () => {
+      const cache = pageDataRegistry.pageDataCache;
+      const pattern1 = "test-page1";
+      const pattern2 = "test-page2";
+      const params1 = { id: "123" };
+      const params2 = { id: "456" };
+      const cacheKey1 = `${pattern1}:${JSON.stringify(params1)}`;
+      const cacheKey2 = `${pattern2}:${JSON.stringify(params2)}`;
+
+      cache[cacheKey1] = { data: { test: "cached1" }, timestamp: Date.now() };
+      cache[cacheKey2] = { data: { test: "cached2" }, timestamp: Date.now() };
+
+      invalidateCache(pattern1, params1);
+
+      expect(cache[cacheKey1]).toBeUndefined();
+      expect(cache[cacheKey2]).toEqual({
+        data: { test: "cached2" },
+        timestamp: expect.any(Number),
+      });
+    });
+  });
+
+  describe("makeCacheKey", () => {
+    it("should create a normalized cache key with pattern and params", () => {
+      const pattern = "blog";
+      const params = { id: "123" };
+      const result = makeCacheKey(pattern, params);
+
+      expect(result).toBe('/blog:{"id":"123"}');
+    });
+
+    it("should normalize pattern by adding leading slash if missing", () => {
+      const pattern = "blog";
+      const result = makeCacheKey(pattern);
+
+      expect(result).toBe("/blog:{}");
+    });
+
+    it("should handle pattern that already has leading slash", () => {
+      const pattern = "/blog";
+      const result = makeCacheKey(pattern);
+
+      expect(result).toBe("/blog:{}");
+    });
+
+    it("should stringify empty params as empty object", () => {
+      const pattern = "blog";
+      const result = makeCacheKey(pattern, {});
+
+      expect(result).toBe("/blog:{}");
+    });
+
+    it("should handle undefined params", () => {
+      const pattern = "blog";
+      const result = makeCacheKey(pattern, undefined);
+
+      expect(result).toBe("/blog:{}");
+    });
+  });
+
+  describe("usePageData", () => {
+    it("should return data from loader on server side", async () => {
+      const mockLoader = jest.fn().mockResolvedValue({ posts: [{ id: 1 }] });
+      pageDataRegistry.registerPageDataLoader("blog", mockLoader);
+      expect(() => usePageData("posts", "blog")).toThrow(Promise);
+    });
+
+    it("should return resolved data on client side if cached", () => {
+      // Simulate client
+      const originalWindow = global.window;
+      global.window = {};
+
+      try {
+        const cacheKey = makeCacheKey("blog");
+        suspenseCache.set(cacheKey, {
+          status: "resolved",
+          result: { posts: [{ id: 1 }] },
+        });
+
+        const result = usePageData("posts", "blog");
+
+        expect(result).toEqual({ data: [{ id: 1 }] });
+      } finally {
+        global.window = originalWindow;
+      }
+    });
+
+    it("should throw promise on client side if pending", () => {
+      const originalWindow = global.window;
+      global.window = {};
+
+      try {
+        const cacheKey = makeCacheKey("blog");
+        const mockPromise = Promise.resolve();
+        suspenseCache.set(cacheKey, {
+          status: "pending",
+          promise: mockPromise,
+        });
+
+        expect(() => usePageData("posts", "blog")).toThrow();
+      } finally {
+        global.window = originalWindow;
+      }
+    });
+
+    it("should throw error on client side if rejected", () => {
+      const originalWindow = global.window;
+      global.window = {};
+
+      try {
+        const cacheKey = makeCacheKey("blog");
+        const mockError = new Error("Failed");
+        suspenseCache.set(cacheKey, {
+          status: "rejected",
+          error: mockError,
+        });
+
+        expect(() => usePageData("posts", "blog")).toThrow(mockError);
+      } finally {
+        global.window = originalWindow;
+      }
     });
   });
 });
