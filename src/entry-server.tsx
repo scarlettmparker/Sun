@@ -100,6 +100,13 @@ export async function render({
     suspenseCache.delete(invalidateCacheCookie);
   }
 
+  // Clean up rejected cache entries
+  for (const [key, record] of suspenseCache.entries()) {
+    if (record.status === "rejected") {
+      suspenseCache.delete(key);
+    }
+  }
+
   const i18n = createI18nInstance();
   await i18n.init({
     lng: locale,
