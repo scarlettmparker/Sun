@@ -82,14 +82,11 @@ export async function render({
   pageName,
   clientJs,
   clientCss,
-  pageData,
   isProduction,
 }: RenderProps) {
   if (!clientJs) {
     throw new Error("Missing required clientJs path");
   }
-
-  globalThis.__pageData__ = pageData ?? {};
 
   const i18n = createI18nInstance();
   await i18n.init({

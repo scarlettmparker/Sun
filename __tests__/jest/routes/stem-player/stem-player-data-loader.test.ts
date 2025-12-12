@@ -218,57 +218,6 @@ describe("Stem Player Data Loader", () => {
     });
   });
 
-  describe("Integration with page data fetching", () => {
-    it("should be callable through fetchPageData after registration", async () => {
-      const { fetchPageData } = await import("~/utils/page-data");
-
-      registerStemPlayerDataLoader();
-
-      const mockSongs = [{ id: "1", name: "Song 1", stems: [] }];
-      const mockResponse = {
-        success: true,
-        data: {
-          stemPlayerQueries: {
-            list: mockSongs,
-          },
-        },
-      };
-
-      mockFetchListSongs.mockResolvedValue(mockResponse);
-
-      const result = await fetchPageData("stem-player");
-
-      expect(result).toEqual({
-        songs: mockSongs,
-      });
-    });
-
-    it("should handle params passed to fetchPageData", async () => {
-      const { fetchPageData } = await import("~/utils/page-data");
-
-      registerStemPlayerDataLoader();
-
-      const mockSongs = [{ id: "1", name: "Song 1", stems: [] }];
-      const mockResponse = {
-        success: true,
-        data: {
-          stemPlayerQueries: {
-            list: mockSongs,
-          },
-        },
-      };
-
-      mockFetchListSongs.mockResolvedValue(mockResponse);
-
-      const params = { filter: "popular" };
-      const result = await fetchPageData("stem-player", params);
-
-      expect(result).toEqual({
-        songs: mockSongs,
-      });
-    });
-  });
-
   describe("Error handling edge cases", () => {
     it("should handle fetchListSongs returning undefined", async () => {
       mockFetchListSongs.mockResolvedValue(

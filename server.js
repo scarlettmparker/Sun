@@ -5,6 +5,7 @@
 
 import express from "express";
 import path from "path";
+import zlib from "zlib";
 import cookieParser from "cookie-parser";
 import {
   port,
@@ -48,7 +49,22 @@ if (!isProduction) {
   const sirv = (await import("sirv")).default;
   const { createProxyMiddleware } = await import("http-proxy-middleware");
 
-  app.use(compression());
+  app.use(
+    compression({
+      filter: (req, res) => {
+        if (
+          req.accepts("html") &&
+          req.method === "GET" &&
+          !/\.[^/]+$/.test(req.path)
+        ) {
+          return false;
+        }
+
+        return compression.filter(req, res);
+      },
+    })
+  );
+
   app.use(
     sirv(path.resolve("dist/client"), {
       extensions: ["html", "js", "css"],

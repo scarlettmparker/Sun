@@ -41,7 +41,6 @@ const BlogPage = () => {
  */
 async function getBlogData(): Promise<Record<string, unknown> | null> {
   try {
-    await new Promise((resolve) => setTimeout(resolve, 5000));
     const result = await fetchListBlogPosts();
     if (result?.data && result.success) {
       const blogPosts = (result.data as ListBlogPostsQuery).blogQueries

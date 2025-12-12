@@ -9,8 +9,6 @@ interface ImportMeta {
 }
 
 export declare global {
-  var __pageData__: Record<string, unknown> | undefined;
-
   interface Window {
     hydratePageDataFromPostlude?: (
       initialData: Record<string, Record<string, unknown>>

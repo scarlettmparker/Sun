@@ -3,12 +3,12 @@ import { Router, routes } from "./router";
 import { initReactI18next } from "react-i18next";
 import ReactDOM from "react-dom/client";
 import i18n from "i18next";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect } from "react";
 
 import Layout from "./components/layout";
 import "./styles/globals.css";
 import "./styles/markdown.css";
-import { hydratePageData, onCacheHydrated } from "./utils/page-data";
+import { hydratePageData } from "./utils/page-data";
 
 // Define the postlude hydration function on window for SSR
 window.hydratePageDataFromPostlude = hydratePageData;
@@ -46,15 +46,6 @@ async function loadTranslations(page: string, locale: string) {
  */
 function AppWithI18n() {
   const location = useLocation();
-  const [, setHydrated] = useState(0);
-
-  useEffect(() => {
-    // Listen for cache hydration events from postlude
-    const unsubscribe = onCacheHydrated(() => {
-      setHydrated((prev) => prev + 1);
-    });
-    return unsubscribe;
-  }, []);
 
   useEffect(() => {
     const locale = window.__locale__ || "en";
@@ -68,6 +59,7 @@ function AppWithI18n() {
       i18n.changeLanguage(locale);
     });
   }, [location.pathname]);
+
   return (
     <Suspense fallback={null}>
       <Router />

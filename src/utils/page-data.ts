@@ -98,9 +98,6 @@ type PageDataCache = Record<
  */
 const pageDataCache: PageDataCache = {};
 
-// Cache expiration time in milliseconds (5 mins)
-const CACHE_EXPIRATION_MS = 5 * 60 * 1000;
-
 /**
  * Registers a data loader for a specific page.
  * @param pattern The route pattern (e.g., 'blog', 'blog/:id').
@@ -154,20 +151,6 @@ function getRegisteredPageNames(): string[] {
 }
 
 /**
- * Normalizes a path string by removing the leading slash, if present.
- *
- * @param path The path string to normalize.
- * @returns The normalized path string.
- */
-function normalizePath(path: string): string {
-  let normalized = path.replace(/\/+$/, "");
-  if (!normalized.startsWith("/")) {
-    normalized = "/" + normalized;
-  }
-  return normalized;
-}
-
-/**
  * Invalidates the cache for a specific page pattern and parameters.
  *
  * @param pattern Route pattern (e.g., 'blog', 'blog/:id').
@@ -179,99 +162,6 @@ export function invalidateCache(
 ): void {
   const cacheKey = makeCacheKey(pattern, params || {});
   delete pageDataCache[cacheKey];
-}
-
-/**
- * Fetches data for a given URL path by finding the matching registered loader.
- * @param urlPath The actual URL path (e.g., 'blog/my-first-post').
- * @param explicitParams Optional manual parameters to override URL params.
- */
-export async function fetchPageData(
-  urlPath: string,
-  explicitParams?: Record<string, unknown>
-): Promise<Record<string, unknown> | null> {
-  // Normalize the incoming URL path
-  const normalizedUrlPath = normalizePath(urlPath);
-
-  const registeredPatterns = Object.keys(pageDataLoaders);
-  let matchedPattern: string | null = null;
-  let urlParams: Record<string, string | undefined> = {};
-
-  for (const pattern of registeredPatterns) {
-    const normalizedPattern = normalizePath(pattern);
-
-    const match = matchPath(
-      { path: normalizedPattern, end: true },
-      normalizedUrlPath
-    );
-
-    if (match) {
-      matchedPattern = pattern;
-      urlParams = match.params;
-      break; // Stop at the first valid match
-    }
-  }
-
-  if (!matchedPattern) {
-    // If no match, check if the normalized URL is empty (root path)
-    // and if a loader is registered for the empty string ("") or "/"
-    if (
-      !normalizedUrlPath &&
-      registeredPatterns.some((p) => normalizePath(p) === "")
-    ) {
-      matchedPattern =
-        registeredPatterns.find((p) => normalizePath(p) === "") || null;
-    } else {
-      return null;
-    }
-  }
-
-  const loaders = pageDataLoaders[matchedPattern!];
-  const finalParams = { ...urlParams, ...explicitParams };
-
-  // Only use cache in production
-  const isProduction = process.env.NODE_ENV === "production";
-  const cacheKey = makeCacheKey(matchedPattern!, finalParams);
-
-  if (isProduction) {
-    const now = Date.now();
-    const cached = pageDataCache[cacheKey];
-    if (cached && now - cached.timestamp < CACHE_EXPIRATION_MS) {
-      return cached.data;
-    }
-  }
-
-  // Run all loaders.
-  try {
-    const results = await Promise.all(loaders.map((l) => l(finalParams)));
-    const merged: Record<string, unknown> = {};
-    let hasData = false;
-
-    for (const r of results) {
-      if (r && typeof r === "object") {
-        Object.assign(merged, r);
-        hasData = true;
-      }
-    }
-
-    const data = hasData ? merged : null;
-
-    // Store in suspenseCache so readPageData can find it
-    suspenseCache.set(cacheKey, {
-      status: "resolved",
-      result: data || {},
-    });
-
-    // Only cache in production
-    if (isProduction) {
-      pageDataCache[cacheKey] = { data, timestamp: Date.now() };
-    }
-
-    return data;
-  } catch (error) {
-    console.error(`Failed to fetch data for pattern ${matchedPattern}:`, error);
-    return null;
-  }
 }
 
 /**
