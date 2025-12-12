@@ -12,6 +12,15 @@ const mockFetch = global.fetch as jest.MockedFunction<typeof fetch>;
 describe("API utilities", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Mock setTimeout to resolve immediately for retry backoff
+    jest.spyOn(global, "setTimeout").mockImplementation((cb: () => void) => {
+      cb();
+      return {} as unknown as NodeJS.Timeout;
+    });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   describe("fetchGraphQLData", () => {
@@ -34,7 +43,7 @@ describe("API utilities", () => {
     });
 
     it("should return error response for HTTP error", async () => {
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: false,
         status: 500,
         statusText: "Internal Server Error",
@@ -53,7 +62,7 @@ describe("API utilities", () => {
         errors: [{ message: "Field not found" }],
       };
 
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: true,
         json: jest.fn().mockResolvedValue(mockResponse),
       } as unknown as Response);
@@ -67,7 +76,7 @@ describe("API utilities", () => {
     });
 
     it("should return error response for network errors", async () => {
-      mockFetch.mockRejectedValueOnce(new Error("Network error"));
+      mockFetch.mockRejectedValue(new Error("Network error"));
 
       const result: ApiResponse<unknown> =
         await fetchGraphQLData("songQueries.list");

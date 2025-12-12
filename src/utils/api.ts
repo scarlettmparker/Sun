@@ -150,15 +150,25 @@ export async function fetchGraphQLData<T>(
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        throw {
+          message: `HTTP ${response.status}: ${response.statusText}`,
+          statusCode: response.status,
+        };
       }
 
       const result = await response.json();
 
       if (result.errors) {
-        throw new Error(
-          result.errors.map((e: { message: string }) => e.message).join(", ")
-        );
+        throw {
+          message: result.errors
+            .map((e: { message: string }) => e.message)
+            .join(", "),
+          statusCode: 400,
+        };
+      }
+
+      if (!result.data) {
+        throw { message: "No data returned", statusCode: 400 };
       }
 
       return {
@@ -167,6 +177,18 @@ export async function fetchGraphQLData<T>(
       };
     }, [500, 2000, 4000, 6000]);
   } catch (error) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "message" in error &&
+      "statusCode" in error
+    ) {
+      return {
+        success: false,
+        error: error.message as string,
+        statusCode: error.statusCode as number,
+      };
+    }
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
