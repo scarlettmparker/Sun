@@ -364,7 +364,7 @@ export function usePageData<T>(
   const rawCacheKey = `${pattern}:${JSON.stringify(params || {})}`;
 
   // Try normalized (leading slash) key first, then the raw key used during SSR.
-  let record =
+  const record =
     suspenseCache.get(normalizedCacheKey) || suspenseCache.get(rawCacheKey);
 
   if (typeof window === "undefined" || !record) {

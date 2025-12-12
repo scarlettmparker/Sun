@@ -6,7 +6,7 @@ import { renderApp } from "../utils/ssr.js";
 import { base, isProduction } from "../config.js";
 import { matchRoutes } from "react-router-dom";
 import { routes } from "../src/router.tsx";
-import { fetchPageData, makeCacheKey } from "../src/utils/page-data.ts";
+import { makeCacheKey } from "../src/utils/page-data.ts";
 
 /**
  * Sets up all routes for the Express application.

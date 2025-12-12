@@ -8,7 +8,7 @@ import NotFound from "./routes/not-found";
 import { matchRoutes } from "react-router-dom";
 import { inlineCss, generateCssTag } from "./utils/css-inlining";
 import "./utils/register-loaders";
-import { suspenseCache, makeCacheKey } from "./utils/page-data";
+import { suspenseCache } from "./utils/page-data";
 
 type i18n = {
   /**
