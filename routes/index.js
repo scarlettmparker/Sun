@@ -6,6 +6,7 @@ import { renderApp } from "../utils/ssr.js";
 import { base, isProduction } from "../config.js";
 import { matchRoutes } from "react-router-dom";
 import { routes } from "../src/router.tsx";
+import { suspenseCache } from "../src/utils/page-data";
 
 /**
  * Sets up all routes for the Express application.
@@ -25,6 +26,17 @@ export function setupRoutes(app, vite) {
    * @param {import("express").NextFunction} next - Express next middleware function.
    */
   app.get("*", async (req, res, next) => {
+    const mutationPayloadCookie = req.cookies["mutation_payload"];
+    const invalidateCacheCookie = req.cookies["invalidate_cache"];
+    let mutationPayload = null;
+    if (mutationPayloadCookie) {
+      try {
+        mutationPayload = JSON.parse(
+          Buffer.from(mutationPayloadCookie, "base64").toString("utf-8")
+        );
+      } catch {}
+    }
+
     // Skip SSR for requests with file extensions (e.g., .js, .css, .png)
     if (/\.[^/]+$/.test(req.path)) {
       return next();
@@ -53,7 +65,8 @@ export function setupRoutes(app, vite) {
           isProduction,
           url,
           locale,
-          pageData: null,
+          mutationPayload,
+          invalidateCacheCookie,
         },
         res
       );

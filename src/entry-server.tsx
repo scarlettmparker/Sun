@@ -59,14 +59,20 @@ type RenderProps = {
   clientCss: string[];
 
   /**
-   * Pre-fetched data for the current page.
-   */
-  pageData?: Record<string, unknown>;
-
-  /**
    * Whether running in production mode.
    */
   isProduction: boolean;
+
+  /**
+   * Payload for displaying toasts, etc. on client after redirect
+   */
+  //TODO: type it
+  mutationPayload: any;
+
+  /**
+   * Cookie to invalidate the entry-server suspense cache.
+   */
+  invalidateCacheCookie?: string;
 };
 
 /**
@@ -83,9 +89,15 @@ export async function render({
   clientJs,
   clientCss,
   isProduction,
+  mutationPayload: _mutationPayload,
+  invalidateCacheCookie,
 }: RenderProps) {
   if (!clientJs) {
     throw new Error("Missing required clientJs path");
+  }
+
+  if (invalidateCacheCookie) {
+    suspenseCache.delete(invalidateCacheCookie);
   }
 
   const i18n = createI18nInstance();
@@ -162,6 +174,7 @@ export async function render({
       onAllReady() {
         // Collect all resolved data after ALL rendering/data loading completes
         const serverCacheData: Record<string, unknown> = {};
+
         for (const [key, record] of suspenseCache.entries()) {
           if (record.status === "resolved") {
             serverCacheData[key] = record.result;

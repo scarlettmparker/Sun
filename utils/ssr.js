@@ -34,12 +34,22 @@ async function loadManifest() {
  * @param {string} params.locale - Current locale.
  * @param {string} params.pageName - Name of the current page.
  * @param {object|null} params.user - Authenticated user object, or null if not authenticated.
- * @param {object} params.pageData - Pre-fetched data for the current page.
+ * @param {object} params.mutationPayload - Payload for displaying toasts, etc. on client after redirect.
+ * @param {string} params.invalidateCacheCookie - Cookie to invalidate the entry-server suspense cache.
  * @param {import("express").Response} res - Express response object to which the HTML will be streamed.
  * @returns {Promise<void>} A promise that resolves when the rendering and streaming are complete.
  */
 export async function renderApp(
-  { vite, isProduction, url, locale, pageName, user, pageData },
+  {
+    vite,
+    isProduction,
+    url,
+    locale,
+    pageName,
+    user,
+    mutationPayload,
+    invalidateCacheCookie,
+  },
   res
 ) {
   try {
@@ -73,8 +83,9 @@ export async function renderApp(
       clientJs,
       clientCss,
       user,
-      pageData,
       isProduction,
+      mutationPayload,
+      invalidateCacheCookie,
     });
 
     res.statusCode = rendered.statusCode;

@@ -8,7 +8,7 @@ import { Suspense, useEffect } from "react";
 import Layout from "./components/layout";
 import "./styles/globals.css";
 import "./styles/markdown.css";
-import { hydratePageData } from "./utils/page-data";
+import { hydratePageData, suspenseCache } from "./utils/page-data";
 
 // Define the postlude hydration function on window for SSR
 window.hydratePageDataFromPostlude = hydratePageData;
@@ -39,6 +39,13 @@ async function loadTranslations(page: string, locale: string) {
     const res = await fetch(`/messages/${page}/en.json`);
     return await res.json();
   }
+}
+
+function getCookie(name: string): string | null {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(";").shift() || null;
+  return null;
 }
 
 /**
@@ -87,6 +94,11 @@ i18n
     if (Object.keys(serverCacheData).length > 0) {
       hydratePageData(serverCacheData);
       window.__serverCacheData__ = {};
+    }
+
+    const keyToInvalidate = getCookie("invalidate_cache");
+    if (keyToInvalidate) {
+      document.cookie = "invalidate_cache=; Path=/; Max-Age=0;";
     }
 
     ReactDOM.hydrateRoot(

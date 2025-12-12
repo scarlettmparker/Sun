@@ -9,7 +9,6 @@ declare const global: typeof globalThis & {
 
 import {
   pageDataRegistry,
-  invalidateCache,
   makeCacheKey,
   usePageData,
   suspenseCache,
@@ -143,54 +142,6 @@ describe("page-data utilities", () => {
         const registeredPages = pageDataRegistry.getRegisteredPageNames();
 
         expect(registeredPages).toEqual(["test-page"]);
-      });
-    });
-  });
-
-  describe("invalidateCache", () => {
-    it("should invalidate cache for a specific pattern and params", () => {
-      const cache = pageDataRegistry.pageDataCache;
-      const pattern = "test-page";
-      const params = { id: "123" };
-      const cacheKey = `${pattern}:${JSON.stringify(params)}`;
-
-      cache[cacheKey] = { data: { test: "cached" }, timestamp: Date.now() };
-
-      invalidateCache(pattern, params);
-
-      expect(cache[cacheKey]).toBeUndefined();
-    });
-
-    it("should invalidate cache when params is undefined", () => {
-      const cache = pageDataRegistry.pageDataCache;
-      const pattern = "test-page";
-      const cacheKey = `${pattern}:${JSON.stringify({})}`;
-
-      cache[cacheKey] = { data: { test: "cached" }, timestamp: Date.now() };
-
-      invalidateCache(pattern);
-
-      expect(cache[cacheKey]).toBeUndefined();
-    });
-
-    it("should not affect other cache entries", () => {
-      const cache = pageDataRegistry.pageDataCache;
-      const pattern1 = "test-page1";
-      const pattern2 = "test-page2";
-      const params1 = { id: "123" };
-      const params2 = { id: "456" };
-      const cacheKey1 = `${pattern1}:${JSON.stringify(params1)}`;
-      const cacheKey2 = `${pattern2}:${JSON.stringify(params2)}`;
-
-      cache[cacheKey1] = { data: { test: "cached1" }, timestamp: Date.now() };
-      cache[cacheKey2] = { data: { test: "cached2" }, timestamp: Date.now() };
-
-      invalidateCache(pattern1, params1);
-
-      expect(cache[cacheKey1]).toBeUndefined();
-      expect(cache[cacheKey2]).toEqual({
-        data: { test: "cached2" },
-        timestamp: expect.any(Number),
       });
     });
   });

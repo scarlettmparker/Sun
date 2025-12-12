@@ -4,6 +4,7 @@
  */
 
 import { MutationResult } from "~/server/actions/utils";
+import { ServerRedirectError } from "./server-redirect";
 
 type MutationHandler = (
   body: Record<string, unknown>
@@ -37,6 +38,10 @@ export async function executeMutation(
   try {
     return await handler(body);
   } catch (error) {
+    if (error instanceof ServerRedirectError) {
+      throw error;
+    } // Only catch and log genuine internal errors
+
     console.error(`Failed to execute mutation for path ${path}:`, error);
     return { __typename: "StandardError", message: "Internal server error" };
   }

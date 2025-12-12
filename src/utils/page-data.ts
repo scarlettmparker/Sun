@@ -3,7 +3,7 @@
  * Provides a registry for page data loaders and a function to fetch data for any page.
  */
 
-import { matchPath } from "react-router-dom";
+import React from "react";
 
 type PageDataLoader = (
   params?: Record<string, unknown>
@@ -36,7 +36,6 @@ export const suspenseCache = new Map<
     error?: unknown;
   }
 >();
-
 /**
  * Hydrates the page data cache with initial data from the server.
  * This populates the suspense cache with resolved data for each key in the initialData object.
@@ -151,20 +150,6 @@ function getRegisteredPageNames(): string[] {
 }
 
 /**
- * Invalidates the cache for a specific page pattern and parameters.
- *
- * @param pattern Route pattern (e.g., 'blog', 'blog/:id').
- * @param params Optional parameters that were used for the cached request.
- */
-export function invalidateCache(
-  pattern: string,
-  params?: Record<string, unknown>
-): void {
-  const cacheKey = makeCacheKey(pattern, params || {});
-  delete pageDataCache[cacheKey];
-}
-
-/**
  * Creates a normalized cache key for the given pattern and params.
  * @param pattern The route pattern.
  * @param params Optional parameters.
@@ -251,12 +236,15 @@ export function usePageData<T>(
   params?: Record<string, unknown>
 ): { data: T } {
   const normalizedCacheKey = makeCacheKey(pattern, params);
+
+  // Force a refetch when cacheVersion changes (triggered by cache invalidation)
   const rawCacheKey = `${pattern}:${JSON.stringify(params || {})}`;
 
   // Try normalized (leading slash) key first, then the raw key used during SSR.
   const record =
     suspenseCache.get(normalizedCacheKey) || suspenseCache.get(rawCacheKey);
 
+  // If cache is invalidated or doesn't exist, force a refetch
   if (typeof window === "undefined" || !record) {
     return readPageData(key, pattern, params);
   }
@@ -276,7 +264,6 @@ interface PageDataRegistry {
   hasPageDataLoader: (pageName: string) => boolean;
   getRegisteredPageNames: () => string[];
   pageDataCache: PageDataCache;
-  invalidateCache: (pattern: string, params?: Record<string, unknown>) => void;
 }
 
 export const pageDataRegistry: PageDataRegistry = {
@@ -285,5 +272,4 @@ export const pageDataRegistry: PageDataRegistry = {
   hasPageDataLoader,
   getRegisteredPageNames,
   pageDataCache,
-  invalidateCache,
 };

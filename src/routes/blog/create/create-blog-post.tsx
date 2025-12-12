@@ -2,8 +2,9 @@ import { mutationRegistry } from "~/utils/mutations";
 import { MutationResult } from "~/server/actions/utils";
 import { mutateCreateBlogPost } from "~/utils/api";
 import { BlogPostInput } from "~/generated/graphql";
-import { invalidateCache } from "~/utils/page-data";
+import { makeCacheKey } from "~/utils/page-data";
 import CreateBlogForm from "~/_components/blog/create/";
+import { ServerRedirectError } from "~/utils/server-redirect";
 
 const CreateBlogPostPage = () => {
   return <CreateBlogForm />;
@@ -26,8 +27,10 @@ async function handleCreateBlogPost(
 
   const result = await mutateCreateBlogPost(title, input as BlogPostInput);
   if (result.success) {
-    invalidateCache("blog");
-    return result.data?.blogMutations.createBlogPost as MutationResult;
+    const mutationResult = result.data?.blogMutations
+      .createBlogPost as MutationResult;
+    const keyToInvalidate = makeCacheKey("blog", {});
+    throw new ServerRedirectError("/blog", keyToInvalidate, mutationResult);
   } else {
     return {
       __typename: "StandardError",

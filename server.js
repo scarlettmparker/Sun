@@ -16,6 +16,8 @@ import {
 } from "./config.js";
 import { setupRoutes } from "./routes/index.js";
 import { executeMutation } from "./src/utils/mutations.ts";
+// 💡 IMPORTANT: Import the ServerRedirectError class to check against it
+import { ServerRedirectError } from "./src/utils/server-redirect";
 
 import "./src/utils/register-loaders.ts";
 import "./src/utils/register-mutations.ts";
@@ -73,7 +75,6 @@ if (!isProduction) {
   );
   app.use("/messages", express.static(path.resolve("./messages")));
 
-  // Proxy API requests to the backend server
   app.use(
     "/api",
     createProxyMiddleware({
@@ -90,15 +91,39 @@ setupRoutes(app, vite);
 
 // Generic POST route for mutations
 app.post("*", async (req, res) => {
-  const path = req.path.slice(1); // Remove leading slash
+  const path = req.path.slice(1);
   try {
     const result = await executeMutation(path, req.body);
+
     if (result.__typename === "QuerySuccess") {
       res.json(result);
     } else if (result.__typename === "StandardError") {
       res.status(400).json(result);
     }
   } catch (error) {
+    if (error instanceof ServerRedirectError) {
+      const payloadString = JSON.stringify(error.clientPayload || {});
+      const encodedPayload = Buffer.from(payloadString).toString("base64");
+
+      const cookieHeaders = [
+        `mutation_payload=${encodedPayload}; Path=/; Max-Age=5; SameSite=Lax;`,
+        `redirect_to=${error.redirectTo}; Path=/; Max-Age=5; SameSite=Lax;`,
+      ];
+
+      if (error.cacheInvalidateKey) {
+        cookieHeaders.push(
+          `invalidate_cache=${error.cacheInvalidateKey}; Path=/; Max-Age=5; SameSite=Lax;`
+        );
+      }
+
+      res.setHeader("Set-Cookie", cookieHeaders);
+
+      return res.json({
+        __typename: "Redirecting",
+        redirectTo: error.redirectTo,
+      });
+    }
+
     console.error("Error executing mutation:", error);
     res
       .status(500)
@@ -106,7 +131,6 @@ app.post("*", async (req, res) => {
   }
 });
 
-// Start the HTTP server
 app.listen(port, () => {
   console.log(`Server started at http://localhost:${port}`);
 });
