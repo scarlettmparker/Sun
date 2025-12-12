@@ -1,5 +1,5 @@
 import { fetchListSongs } from "~/utils/api";
-import { pageDataRegistry } from "~/utils/page-data";
+import { pageDataRegistry, usePageData } from "~/utils/page-data";
 import { ListSongsQuery } from "~/generated/graphql";
 import { Outlet } from "react-router-dom";
 import Sidebar from "~/components/sidebar";
@@ -11,14 +11,9 @@ import { Music } from "lucide-react";
  * Stem Player Page component.
  */
 const StemPlayerPage = () => {
-  const pageData = globalThis.__pageData__;
-  const { error } = pageData || {};
-
-  if (error || !pageData) {
-    return <div>Error: {(error as string) || "Failed to load data"}</div>;
-  }
-
-  const songs = pageData?.songs as ListSongsQuery["stemPlayerQueries"]["list"];
+  const { data: songs } = usePageData<
+    ListSongsQuery["stemPlayerQueries"]["list"]
+  >("songs", "stem-player");
 
   if (!songs) {
     return <>Loading...</>;

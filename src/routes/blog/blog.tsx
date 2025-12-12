@@ -1,6 +1,6 @@
 import { ListBlogPostsQuery } from "~/generated/graphql";
 import { fetchListBlogPosts } from "~/utils/api";
-import { pageDataRegistry } from "~/utils/page-data";
+import { pageDataRegistry, usePageData } from "~/utils/page-data";
 import { useTranslation } from "react-i18next";
 import styles from "./blog.module.css";
 import { groupPostsByMonthYear } from "./group-posts-by-month-year";
@@ -10,9 +10,9 @@ import BlogSkeleton from "~/_components/blog/skeleton/blog-skeleton";
 const BlogPage = () => {
   const { t } = useTranslation("blog");
 
-  const pageData = globalThis.__pageData__;
-  const initialData =
-    pageData?.blogPosts as ListBlogPostsQuery["blogQueries"]["listBlogPosts"];
+  const { data: initialData } = usePageData<
+    ListBlogPostsQuery["blogQueries"]["listBlogPosts"]
+  >("blogPosts", "blog");
 
   if (!initialData) {
     return (
@@ -46,6 +46,7 @@ const BlogPage = () => {
  */
 async function getBlogData(): Promise<Record<string, unknown> | null> {
   try {
+    await new Promise((resolve) => setTimeout(resolve, 5000));
     const result = await fetchListBlogPosts();
     if (result?.data && result.success) {
       const blogPosts = (result.data as ListBlogPostsQuery).blogQueries

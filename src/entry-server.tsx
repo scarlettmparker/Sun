@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense } from "react";
 import { createI18nInstance } from "./utils/i18n";
 import { renderToPipeableStream } from "react-dom/server";
 import { StaticRouter } from "react-router-dom/server";
@@ -7,6 +7,7 @@ import Layout from "./components/layout";
 import NotFound from "./routes/not-found";
 import { matchRoutes } from "react-router-dom";
 import { inlineCss, generateCssTag } from "./utils/css-inlining";
+import "./utils/register-loaders";
 
 type i18n = {
   /**
@@ -106,7 +107,9 @@ export async function render({
     <React.StrictMode>
       <StaticRouter location={url}>
         <Layout>
-          <Router />
+          <Suspense fallback={null}>
+            <Router />
+          </Suspense>
         </Layout>
       </StaticRouter>
     </React.StrictMode>

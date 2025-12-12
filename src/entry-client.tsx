@@ -3,16 +3,19 @@ import { Router, routes } from "./router";
 import { initReactI18next } from "react-i18next";
 import ReactDOM from "react-dom/client";
 import i18n from "i18next";
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 
 import Layout from "./components/layout";
 import "./styles/globals.css";
 import "./styles/markdown.css";
+import "./utils/register-loaders";
+import { hydratePageData } from "./utils/page-data";
 
 declare global {
   interface Window {
     __locale__?: string;
     __translations__?: Record<string, unknown>;
+    __pageData__?: Record<string, unknown>;
   }
 }
 
@@ -61,7 +64,11 @@ function AppWithI18n() {
       i18n.changeLanguage(locale);
     });
   }, [location.pathname]);
-  return <Router />;
+  return (
+    <Suspense fallback={null}>
+      <Router />
+    </Suspense>
+  );
 }
 
 // Initialize i18n on the client with translations injected from the server
@@ -79,6 +86,9 @@ i18n
     react: { useSuspense: true },
   })
   .then(() => {
+    const serverPageData = window.__pageData__ || {};
+    hydratePageData(serverPageData);
+
     ReactDOM.hydrateRoot(
       document.getElementById("app") as HTMLElement,
       <BrowserRouter>

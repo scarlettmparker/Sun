@@ -6,7 +6,6 @@ import { renderApp } from "../utils/ssr.js";
 import { base, isProduction } from "../config.js";
 import { matchRoutes } from "react-router-dom";
 import { routes } from "../src/router.tsx";
-import { fetchPageData } from "../src/utils/page-data.ts";
 
 /**
  * Sets up all routes for the Express application.
@@ -38,9 +37,6 @@ export function setupRoutes(app, vite) {
     const langHeader = req.headers["accept-language"] || "en";
     const locale = langHeader.split(",")[0] || "en";
 
-    // Path for matching/fetching
-    const pathForMatching = url.split("?")[0];
-
     // Extract route params using React Router's matchRoutes
     const matches = matchRoutes(routes, url);
     const params = {};
@@ -50,7 +46,7 @@ export function setupRoutes(app, vite) {
       });
     }
 
-    const pageData = (await fetchPageData(pathForMatching, params)) || {};
+    const pageData = {};
 
     try {
       await renderApp(

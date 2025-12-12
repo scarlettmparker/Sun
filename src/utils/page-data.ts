@@ -9,6 +9,11 @@ type PageDataLoader = (
   params?: Record<string, unknown>
 ) => Promise<Record<string, unknown> | null>;
 
+const suspenseCache = new Map<
+  string,
+  { status: string; result?: any; promise?: Promise<any>; error?: any }
+>();
+
 /**
  * Registry of page data loaders.
  * Maps page names to their data loading functions.
@@ -199,6 +204,108 @@ export async function fetchPageData(
     console.error(`Failed to fetch data for pattern ${matchedPattern}:`, error);
     return null;
   }
+}
+
+export function hydratePageData(initialData: Record<string, any>) {
+  if (!initialData) return;
+
+  Object.keys(initialData).forEach((key) => {
+    suspenseCache.set(key, { status: "resolved", result: initialData[key] });
+  });
+}
+
+function readPageData<T>(
+  key: string,
+  pattern: string,
+  params?: Record<string, unknown>
+): { data: T } {
+  const cacheKey = `${pattern}:${JSON.stringify(params || {})}`;
+  let record = suspenseCache.get(cacheKey);
+
+  if (!record) {
+    // Find the loaders registered for this pattern
+    const loaders = pageDataLoaders[pattern];
+    if (!loaders || !loaders.length) {
+      return { data: null as T };
+    }
+
+    // Initiate the data fetch
+    const promise = Promise.all(loaders.map((l) => l(params)))
+      .then((results) => {
+        const merged: Record<string, unknown> = {};
+        for (const r of results) {
+          if (r && typeof r === "object") {
+            Object.assign(merged, r);
+          }
+        }
+        const data = merged[key];
+
+        record!.status = "resolved";
+        record!.result = data;
+        return data;
+      })
+      .catch((err) => {
+        console.error(`Error fetching page data for ${key} (${pattern}):`, err);
+        record!.status = "rejected";
+        record!.error = err;
+      });
+
+    record = { status: "pending", promise };
+    suspenseCache.set(cacheKey, record);
+  }
+
+  if (record.status === "pending") {
+    throw record.promise;
+  }
+  if (record.status === "rejected") {
+    throw record.error; // Error Boundary will catch this
+  }
+
+  // Return the resolved data
+  return { data: record.result as T };
+}
+
+/**
+ * Hook to read page data.
+ *
+ * @param key Data key to read (e.g., 'blogPosts')
+ * @param pattern The route pattern (e.g., 'blog')
+ * @param params API parameters
+ */
+export function usePageData<T>(
+  key: string,
+  pattern: string,
+  params?: Record<string, unknown>
+): { data: T } {
+  const cacheKey = key;
+  let record = suspenseCache.get(cacheKey);
+
+  if (typeof window === "undefined") {
+    return readPageData(key, pattern, params);
+  }
+
+  if (!record && window.__pageData__ && window.__pageData__[key]) {
+    record = { status: "resolved", result: window.__pageData__[key] };
+    suspenseCache.set(cacheKey, record);
+    delete window.__pageData__[key];
+  }
+
+  if (!record) {
+    try {
+      return readPageData(key, pattern, params);
+    } catch (promise) {
+      throw promise;
+    }
+  }
+
+  if (record.status === "pending") {
+    throw record.promise;
+  }
+  if (record.status === "rejected") {
+    throw record.error;
+  }
+
+  return { data: record.result as T };
 }
 
 /**

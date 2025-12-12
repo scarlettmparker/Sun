@@ -1,13 +1,16 @@
 import MarkdownViewer from "~/components/markdown-viewer";
 import { LocateBlogPostQuery } from "~/generated/graphql";
 import { fetchLocateBlogPost } from "~/utils/api";
-import { pageDataRegistry } from "~/utils/page-data";
+import { useParams } from "react-router-dom";
+
+import { pageDataRegistry, usePageData } from "~/utils/page-data";
 import styles from "./blog-post.module.css";
 
 const BlogPostPage = () => {
-  const pageData = globalThis.__pageData__;
-  const data =
-    pageData?.blogPost as LocateBlogPostQuery["blogQueries"]["locateBlogPost"];
+  const { id } = useParams<{ id: string }>();
+  const { data } = usePageData<
+    LocateBlogPostQuery["blogQueries"]["locateBlogPost"]
+  >("blogPost", "blog/:id", { id });
 
   if (!data) {
     // TODO: suspense properly

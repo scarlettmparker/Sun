@@ -4,10 +4,10 @@
  * stem-player etc. data loaders registered here.
  */
 
-import { registerBlogPageDataLoader } from "~/routes/blog/[id]/blog-post";
-import { registerBlogDataLoader } from "~/routes/blog/blog";
-import { registerStemPlayerDetailsDataLoader } from "~/routes/stem-player/[id]/stem-player-details";
-import { registerStemPlayerDataLoader } from "~/routes/stem-player/stem-player";
+import { registerBlogPageDataLoader } from "../routes/blog/[id]/blog-post";
+import { registerBlogDataLoader } from "../routes/blog/blog";
+import { registerStemPlayerDetailsDataLoader } from "../routes/stem-player/[id]/stem-player-details";
+import { registerStemPlayerDataLoader } from "../routes/stem-player/stem-player";
 
 // Register all loaders
 registerBlogDataLoader();
