@@ -111,7 +111,7 @@ app.post("*", async (req, res) => {
 
       if (error.cacheInvalidateKey) {
         cookieHeaders.push(
-          `invalidate_cache=${error.cacheInvalidateKey}; Path=/; Max-Age=5; SameSite=Lax;`
+          `invalidate_cache=${error.cacheInvalidateKey}; Path=/; Max-Age=31536000; SameSite=Lax;`
         );
       }
 

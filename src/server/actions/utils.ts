@@ -2,6 +2,7 @@
  * Server actions for blog post operations.
  */
 
+import { useNavigate } from "react-router-dom";
 import { QuerySuccess, StandardError } from "~/generated/graphql";
 
 export type MutationResult =
@@ -19,6 +20,7 @@ export async function executeMutation(
   mutationName: string,
   body: Record<string, unknown>
 ): Promise<MutationResult> {
+  const navigate = useNavigate();
   try {
     const response = await fetch(`/${mutationName}`, {
       method: "POST",
@@ -40,7 +42,7 @@ export async function executeMutation(
     const result: MutationResult = await response.json();
 
     if (result.__typename === "Redirect") {
-      window.location.assign(result.redirectTo);
+      navigate(result.redirectTo);
       return result;
     }
 

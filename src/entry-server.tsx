@@ -8,7 +8,7 @@ import NotFound from "./routes/not-found";
 import { matchRoutes } from "react-router-dom";
 import { inlineCss, generateCssTag } from "./utils/css-inlining";
 import "./utils/register-loaders";
-import { suspenseCache } from "./utils/page-data";
+import { suspenseCache, makeCacheKey } from "./utils/page-data";
 import { MutationResult } from "./server/actions/utils";
 
 type i18n = {
@@ -76,6 +76,30 @@ type RenderProps = {
 };
 
 /**
+ * Invalidates the suspense cache if the invalidateCacheCookie matches the cache key for the current route.
+ *
+ * @param invalidateCacheCookie Cookie value to check.
+ * @param url Current URL.
+ * @returns True if the cache was invalidated, false otherwise.
+ */
+function invalidateCache(invalidateCacheCookie: string, url: string): boolean {
+  const matches = matchRoutes(routes, url);
+  if (matches && matches.length > 0) {
+    const matched = matches[0];
+    const pattern = matched.route.path;
+    if (pattern) {
+      const params = matched.params;
+      const currentCacheKey = makeCacheKey(pattern, params);
+      if (invalidateCacheCookie === currentCacheKey) {
+        suspenseCache.delete(invalidateCacheCookie);
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+/**
  * Renders the React application to an HTML stream suitable for server-side rendering.
  * Sets up i18n, initializes the React Router, and returns a promise
  * that resolves when the shell is ready to stream HTML to the client.
@@ -96,8 +120,9 @@ export async function render({
     throw new Error("Missing required clientJs path");
   }
 
+  let shouldDeleteCookie = false;
   if (invalidateCacheCookie) {
-    suspenseCache.delete(invalidateCacheCookie);
+    shouldDeleteCookie = invalidateCache(invalidateCacheCookie, url);
   }
 
   // Clean up rejected cache entries
@@ -143,6 +168,11 @@ export async function render({
       bootstrapModules: [clientJs],
       onShellReady() {
         const cssTag = generateCssTag(isProduction, cssContent, clientCss);
+        const headers: Record<string, string> = { "Content-Type": "text/html" };
+        if (shouldDeleteCookie) {
+          headers["Set-Cookie"] =
+            "invalidate_cache=; Path=/; Max-Age=0; SameSite=Lax;";
+        }
         const prelude = `<!DOCTYPE html>
           <html lang="en">
             <head>
@@ -171,7 +201,7 @@ export async function render({
           resolved = true;
           resolve({
             statusCode: didMatch ? 200 : 404,
-            headers: { "Content-Type": "text/html" },
+            headers,
             prelude,
             postlude: () => postludeData,
             stream,
