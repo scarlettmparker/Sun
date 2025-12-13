@@ -29,10 +29,9 @@ async function handleCreateBlogPost(
   const result = await mutateCreateBlogPost(title, input as BlogPostInput);
   const data = result.data?.blogMutations.createBlogPost as MutationResult;
 
-  switch (data?.__typename) {
-    case "QuerySuccess":
-      const keyToInvalidate = makeCacheKey("blog", {});
-      throw new ServerRedirectError(`/blog/${data.id}`, keyToInvalidate, data);
+  if (data?.__typename == "QuerySuccess") {
+    const keyToInvalidate = makeCacheKey("blog", {});
+    throw new ServerRedirectError(`/blog/${data.id}`, keyToInvalidate, data);
   }
 
   return {
