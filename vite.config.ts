@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { visualizer } from "rollup-plugin-visualizer";
 import path from "path";
 
 export default defineConfig({
@@ -22,6 +23,14 @@ export default defineConfig({
       input: {
         client: "/src/entry-client.tsx",
       },
+      plugins: [
+        visualizer({
+          filename: "stats.html",
+          open: false,
+          gzipSize: true,
+          brotliSize: true,
+        }),
+      ],
     },
     outDir: "dist/client",
     cssCodeSplit: true,

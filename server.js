@@ -52,6 +52,9 @@ if (!isProduction) {
 
   app.use(
     compression({
+      brotli: {
+        enabled: true,
+      },
       filter: (req, res) => {
         if (
           req.accepts("html") &&
