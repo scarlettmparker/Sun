@@ -18,6 +18,7 @@ async function handleCreateBlogPost(
 ): Promise<MutationResult> {
   const { title, input } = body;
   const content = (input as BlogPostInput)?.content;
+
   if (typeof title !== "string" || typeof content !== "string") {
     return {
       __typename: "StandardError" as const,
@@ -26,17 +27,18 @@ async function handleCreateBlogPost(
   }
 
   const result = await mutateCreateBlogPost(title, input as BlogPostInput);
-  if (result.success) {
-    const mutationResult = result.data?.blogMutations
-      .createBlogPost as MutationResult;
-    const keyToInvalidate = makeCacheKey("blog", {});
-    throw new ServerRedirectError("/blog", keyToInvalidate, mutationResult);
-  } else {
-    return {
-      __typename: "StandardError",
-      message: result.error || "Failed to create blog post",
-    } as const;
+  const data = result.data?.blogMutations.createBlogPost as MutationResult;
+
+  switch (data?.__typename) {
+    case "QuerySuccess":
+      const keyToInvalidate = makeCacheKey("blog", {});
+      throw new ServerRedirectError(`/blog/${data.id}`, keyToInvalidate, data);
   }
+
+  return {
+    __typename: "StandardError",
+    message: result.error || "Failed to create blog post",
+  } as const;
 }
 
 /**
