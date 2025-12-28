@@ -13,9 +13,12 @@ const menu: MenuType = {
   blog: {
     name: "Blog",
   },
-  "stem-player": {
-    name: "Stem Player",
+  gallery: {
+    name: "Gallery",
   },
+  // "stem-player": {
+  //   name: "Stem Player",
+  // },
 };
 
 export default menu;

@@ -1,0 +1,12 @@
+.gallery_wrapper {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: calc(var(--lg) * 8) 0;
+  width: calc(100% - var(--lg) * 2);
+  max-width: 36rem;
+}
+
+.gallery_card {
+  width: 24rem;
+}

@@ -1,0 +1,30 @@
+.card {
+  border-radius: var(--lg);
+  box-shadow: var(--shadow-soft);
+  background-color: var(--secondary);
+  overflow: hidden;
+}
+
+.card_header {
+  padding: var(--lg) var(--xl);
+}
+
+.card_title {
+  font-size: var(--text-xl);
+  color: var(--primary);
+  font-weight: var(--bold);
+  margin-bottom: var(--md);
+}
+
+.card_description {
+  color: var(--muted);
+  font-size: var(--text-md);
+}
+
+.card_body {
+  padding: var(--lg) var(--xl);
+}
+
+.card_footer {
+  padding: var(--lg) var(--xl);
+}

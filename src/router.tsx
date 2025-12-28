@@ -1,6 +1,7 @@
 import { RouteObject, useRoutes } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import BlogSkeleton from "./_components/blog/skeleton/blog-skeleton";
+import Gallery from "./routes/gallery";
 
 const Index = lazy(() => import("~/routes/index"));
 const NotFound = lazy(() => import("~/routes/not-found"));
@@ -33,6 +34,10 @@ export const routes: RouteObject[] = [
   {
     path: "blog/create",
     element: <CreateBlogPostPage />,
+  },
+  {
+    path: "gallery",
+    element: <Gallery />,
   },
   {
     path: "stem-player",
