@@ -28,6 +28,11 @@ public class DatabaseConfig {
   public static class BriareusJpaConfig {
   }
 
+  @Configuration
+  @EnableJpaRepositories(basePackages = "com.sun.cerberus.repository", entityManagerFactoryRef = "cerberusEntityManagerFactory", transactionManagerRef = "cerberusTransactionManager")
+  public static class CerberusJpaConfig {
+  }
+
   @Bean(name = "apolloDataSource")
   @ConfigurationProperties(prefix = "spring.datasource.apollo")
   public DataSource apolloDataSource() {
@@ -37,6 +42,12 @@ public class DatabaseConfig {
   @Bean(name = "briareusDataSource")
   @ConfigurationProperties(prefix = "spring.datasource.briareus")
   public DataSource briareusDataSource() {
+    return DataSourceBuilder.create().build();
+  }
+
+  @Bean(name = "cerberusDataSource")
+  @ConfigurationProperties(prefix = "spring.datasource.cerberus")
+  public DataSource cerberusDataSource() {
     return DataSourceBuilder.create().build();
   }
 
@@ -80,6 +91,26 @@ public class DatabaseConfig {
     return em;
   }
 
+  @Bean(name = "cerberusEntityManagerFactory")
+  public LocalContainerEntityManagerFactoryBean cerberusEntityManagerFactory(
+      @Qualifier("cerberusDataSource") DataSource dataSource) {
+    LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
+    em.setDataSource(dataSource);
+    em.setPackagesToScan("com.sun.cerberus.model");
+
+    HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
+    em.setJpaVendorAdapter(vendorAdapter);
+
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("hibernate.hbm2ddl.auto", "update");
+    properties.put("hibernate.show_sql", "true");
+    properties.put("hibernate.format_sql", "true");
+    properties.put("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
+    em.setJpaPropertyMap(properties);
+
+    return em;
+  }
+
   @Bean(name = "apolloTransactionManager")
   public PlatformTransactionManager apolloTransactionManager(
       @Qualifier("apolloEntityManagerFactory") LocalContainerEntityManagerFactoryBean entityManagerFactory) {
@@ -89,6 +120,12 @@ public class DatabaseConfig {
   @Bean(name = "briareusTransactionManager")
   public PlatformTransactionManager briareusTransactionManager(
       @Qualifier("briareusEntityManagerFactory") LocalContainerEntityManagerFactoryBean entityManagerFactory) {
+    return new JpaTransactionManager(entityManagerFactory.getObject());
+  }
+
+  @Bean(name = "cerberusTransactionManager")
+  public PlatformTransactionManager cerberusTransactionManager(
+      @Qualifier("cerberusEntityManagerFactory") LocalContainerEntityManagerFactoryBean entityManagerFactory) {
     return new JpaTransactionManager(entityManagerFactory.getObject());
   }
 }

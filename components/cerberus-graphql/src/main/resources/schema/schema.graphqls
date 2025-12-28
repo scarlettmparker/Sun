@@ -1,3 +1,41 @@
+scalar Date
+
+type GalleryItem {
+  id: String!
+  title: String!
+  description: String
+  content: String
+  imagePath: String
+  foreignObject: [String!]
+  createdAt: Date
+  updatedAt: Date
+}
+
+input GalleryItemInput {
+  title: String!
+  description: String
+  content: String
+  imagePath: String
+  foreignObject: [String!]
+}
+
+type GalleryQueries {
+  list: [GalleryItem]
+  locate(id: ID!): GalleryItem
+}
+
+type GalleryMutations {
+  create(input: GalleryItemInput): QueryResult
+}
+
+extend type Query {
+  galleryQueries: GalleryQueries!
+}
+
+extend type Mutation {
+  galleryMutations: GalleryMutations!
+}
+
 type StandardError {
   message: String!
 }

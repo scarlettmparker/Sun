@@ -20,6 +20,10 @@ public class SunGraphQLApplication {
         System.setProperty("BRI_SPRING_DATASOURCE_URL", dotenv.get("BRI_SPRING_DATASOURCE_URL"));
         System.setProperty("BRI_SPRING_DATASOURCE_USERNAME", dotenv.get("BRI_SPRING_DATASOURCE_USERNAME"));
         System.setProperty("BRI_SPRING_DATASOURCE_PASSWORD", dotenv.get("BRI_SPRING_DATASOURCE_PASSWORD"));
+        // Cerberus datasource
+        System.setProperty("CERB_SPRING_DATASOURCE_URL", dotenv.get("CERB_SPRING_DATASOURCE_URL"));
+        System.setProperty("CERB_SPRING_DATASOURCE_USERNAME", dotenv.get("CERB_SPRING_DATASOURCE_USERNAME"));
+        System.setProperty("CERB_SPRING_DATASOURCE_PASSWORD", dotenv.get("CERB_SPRING_DATASOURCE_PASSWORD"));
         SpringApplication.run(SunGraphQLApplication.class, args);
     }
 
