@@ -5,7 +5,14 @@ import styles from "./stem-sliders.module.css";
 import { Stem } from "~/generated/graphql";
 
 type StemControlsProps = {
+  /**
+   * List of stems.
+   */
   stems?: Stem[] | null;
+
+  /**
+   * Callback functio to set the volume of the stem.
+   */
   setVolume: (index: number, value: number) => void;
 };
 
@@ -24,16 +31,19 @@ function valueFromPointerY(y: number, rect: DOMRect): number {
   return clamp((rect.bottom - y) / rect.height);
 }
 
+/**
+ * Rendering stem controls (labels and volume sliders).
+ */
 const StemSliders = memo(({ stems, setVolume }: StemControlsProps) => {
   const [values, setValues] = useState<number[]>(
     () => stems?.map(() => 1) ?? []
   );
-
   const isDown = useRef(false);
   const activeIndex = useRef<number | null>(null);
   const lastValue = useRef(1);
   const overlayRefs = useRef<(HTMLDivElement | null)[]>([]);
 
+  // Update slider value on pointer move
   useEffect(() => {
     function onPointerMove(e: PointerEvent): void {
       if (!isDown.current || activeIndex.current === null) return;
@@ -59,6 +69,7 @@ const StemSliders = memo(({ stems, setVolume }: StemControlsProps) => {
     function onPointerUp(): void {
       isDown.current = false;
       activeIndex.current = null;
+      lastValue.current = 1;
     }
 
     window.addEventListener("pointermove", onPointerMove);
@@ -69,6 +80,33 @@ const StemSliders = memo(({ stems, setVolume }: StemControlsProps) => {
       window.removeEventListener("pointerup", onPointerUp);
     };
   }, [setVolume]);
+
+  /**
+   * Handle pointer down on slider overlay.
+   * Immediately sets the slider value.
+   */
+  const handlePointerDown = (
+    i: number,
+    e: React.PointerEvent<HTMLDivElement>
+  ) => {
+    e.preventDefault();
+    isDown.current = true;
+    activeIndex.current = i;
+
+    const overlay = overlayRefs.current[i];
+    if (!overlay) return;
+    const rect = overlay.getBoundingClientRect();
+    const value = valueFromPointerY(e.clientY, rect);
+    lastValue.current = value;
+
+    setValues((prev) => {
+      const next = [...prev];
+      next[i] = value;
+      return next;
+    });
+
+    setVolume(i, value);
+  };
 
   return (
     <div className={styles.container}>
@@ -86,14 +124,12 @@ const StemSliders = memo(({ stems, setVolume }: StemControlsProps) => {
           />
 
           <div
-            ref={(el) => (overlayRefs.current[i] = el)}
-            className={styles.overlay}
-            aria-label={`stem-${i}`}
-            onPointerDown={(e) => {
-              e.preventDefault();
-              isDown.current = true;
-              activeIndex.current = i;
+            ref={(el) => {
+              overlayRefs.current[i] = el;
             }}
+            className={styles.overlay}
+            aria-label={stem.name ?? "stem"}
+            onPointerDown={(e) => handlePointerDown(i, e)}
             onPointerEnter={() => {
               if (isDown.current) activeIndex.current = i;
             }}
