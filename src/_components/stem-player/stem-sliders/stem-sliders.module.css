@@ -3,8 +3,27 @@
 }
 
 .slider {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 0;
-  align-items: center;
+  position: relative;
+  user-select: none;
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  bottom: 1.5rem;
+  left: 0;
+  right: 0;
+  touch-action: none;
+}
+
+.slider:hover .range {
+  accent-color: var(--primary-hover);
+}
+
+.slider:active .range {
+  accent-color: var(--primary-active);
+}
+
+.range {
+  pointer-events: none;
 }
