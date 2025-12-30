@@ -21,17 +21,17 @@ type StemControlsProps = {
  */
 type SliderProps = {
   /**
-   * The stem data.
+   * Stem data.
    */
   stem: Stem;
 
   /**
-   * The current value of the slider.
+   * Current value of the slider.
    */
   value: number;
 
   /**
-   * The index of the slider.
+   * Index of the slider.
    */
   i: number;
 
@@ -71,50 +71,53 @@ function valueFromPointerY(y: number, rect: DOMRect): number {
   return clamp((rect.bottom - y) / rect.height);
 }
 
-const Slider = memo((props: SliderProps) => {
-  const {
-    stem,
-    value,
-    i,
-    onPointerDown,
-    onPointerEnter,
-    onPointerLeave,
-    setOverlayRef,
-  } = props;
-
-  return (
-    <div className={styles.slider}>
-      <Input
-        type="range"
-        orient="vertical"
-        min={0}
-        max={1}
-        step={0.01}
-        value={value}
-        className={styles.range}
-        readOnly
-      />
-
-      <div
-        ref={(el) => setOverlayRef(i, el)}
-        className={styles.overlay}
-        aria-label={stem.name ?? "stem"}
-        onPointerDown={(e) => onPointerDown(i, e)}
-        onPointerEnter={() => onPointerEnter(i)}
-        onPointerLeave={() => onPointerLeave(i)}
-      />
-
-      <Label>{stem.name}</Label>
-    </div>
-  );
-});
+/**
+ * An individual slider.
+ */
+const Slider = memo(
+  (props: SliderProps) => {
+    const {
+      stem,
+      value,
+      i,
+      onPointerDown,
+      onPointerEnter,
+      onPointerLeave,
+      setOverlayRef,
+    } = props;
+    return (
+      <div className={styles.slider}>
+        <Input
+          type="range"
+          orient="vertical"
+          min={0}
+          max={1}
+          step={0.01}
+          value={value}
+          className={styles.range}
+          readOnly
+        />
+        <div
+          ref={(el) => setOverlayRef(i, el)}
+          className={styles.overlay}
+          aria-label={stem.name ?? "stem"}
+          onPointerDown={(e) => onPointerDown(i, e)}
+          onPointerEnter={() => onPointerEnter(i)}
+          onPointerLeave={() => onPointerLeave(i)}
+        />
+        <Label>{stem.name}</Label>
+      </div>
+    );
+  },
+  (prev, next) => prev.value === next.value && prev.stem === next.stem
+);
 
 Slider.displayName = "Slider";
 
 /**
  * Rendering stem controls (labels and volume sliders).
  */
-const StemSliders = memo(({ stems, setVolume }: StemControlsProps) => {
+const StemSliders = ({ stems, setVolume }: StemControlsProps) => {
   const [values, setValues] = useState<number[]>(
     () => stems?.map(() => 1) ?? []
   );
@@ -171,26 +174,29 @@ const StemSliders = memo(({ stems, setVolume }: StemControlsProps) => {
     overlayRefs.current[i] = el;
   }, []);
 
-  function onPointerMove(e: PointerEvent): void {
-    if (!isDown.current || activeIndex.current === null) return;
+  const onPointerMove = useCallback(
+    (e: PointerEvent): void => {
+      if (!isDown.current || activeIndex.current === null) return;
 
-    const overlay = overlayRefs.current[activeIndex.current];
-    if (!overlay) return;
+      const overlay = overlayRefs.current[activeIndex.current];
+      if (!overlay) return;
 
-    const rect = overlay.getBoundingClientRect();
-    const raw = valueFromPointerY(e.clientY, rect);
-    const value = e.shiftKey ? lastValue.current : raw;
+      const rect = overlay.getBoundingClientRect();
+      const raw = valueFromPointerY(e.clientY, rect);
+      const value = e.shiftKey ? lastValue.current : raw;
 
-    lastValue.current = value;
+      lastValue.current = value;
 
-    setValues((prev) => {
-      const next = [...prev];
-      next[activeIndex.current!] = value;
-      return next;
-    });
+      setValues((prev) => {
+        const next = [...prev];
+        next[activeIndex.current!] = value;
+        return next;
+      });
 
-    setVolume(activeIndex.current, value);
-  }
+      setVolume(activeIndex.current, value);
+    },
+    [setVolume]
+  );
 
   function onPointerUp(): void {
     isDown.current = false;
@@ -224,7 +230,7 @@ const StemSliders = memo(({ stems, setVolume }: StemControlsProps) => {
       ))}
     </div>
   );
-});
+};
 
 StemSliders.displayName = "StemSliders";
 export default StemSliders;
