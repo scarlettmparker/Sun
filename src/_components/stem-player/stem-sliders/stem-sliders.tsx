@@ -66,9 +66,15 @@ function clamp(value: number): number {
 /**
  * Convert vertical pointer position to slider value.
  * Top = 1, Bottom = 0 (matches vertical RTL range).
+ * Includes buffer zone for easier dragging to extremes.
  */
 function valueFromPointerY(y: number, rect: DOMRect): number {
-  return clamp((rect.bottom - y) / rect.height);
+  const buffer = 32;
+  const visualTop = rect.top + buffer;
+  const visualBottom = rect.bottom - buffer;
+  if (y <= visualTop) return 1;
+  if (y >= visualBottom) return 0;
+  return clamp((visualBottom - y) / (visualBottom - visualTop));
 }
 
 /**
