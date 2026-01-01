@@ -11,6 +11,9 @@ import {
   CreateBlogPostDocument,
   BlogPostInput,
   CreateBlogPostMutation,
+  ListGalleryItemsDocument,
+  ListGalleryItemsByForeignObjectsDocument,
+  LocateGalleryItemDocument,
 } from "../generated/graphql";
 import { print, DocumentNode } from "graphql";
 
@@ -25,10 +28,6 @@ export type ApiResponse<T> = {
  * Type definition for the operation registry with strong typing.
  */
 type OperationRegistry = {
-  songQueries: {
-    list: DocumentNode;
-    locate: DocumentNode;
-  };
   blogQueries: {
     listBlogPosts: DocumentNode;
     locateBlogPost: DocumentNode;
@@ -36,22 +35,36 @@ type OperationRegistry = {
   blogMutations: {
     createBlogPost: DocumentNode;
   };
+  galleryQueries: {
+    listGalleryItems: DocumentNode;
+    listGalleryItemsByForeignObjects: DocumentNode;
+    locateGalleryItem: DocumentNode;
+  };
+  songQueries: {
+    list: DocumentNode;
+    locate: DocumentNode;
+  };
 };
 
 /**
  * Registry of GraphQL operations mapped to their query documents.
  */
 const operationRegistry: OperationRegistry = {
-  songQueries: {
-    list: ListSongsDocument,
-    locate: LocateSongDocument,
-  },
   blogQueries: {
     listBlogPosts: ListBlogPostsDocument,
     locateBlogPost: LocateBlogPostDocument,
   },
   blogMutations: {
     createBlogPost: CreateBlogPostDocument,
+  },
+  galleryQueries: {
+    listGalleryItems: ListGalleryItemsDocument,
+    listGalleryItemsByForeignObjects: ListGalleryItemsByForeignObjectsDocument,
+    locateGalleryItem: LocateGalleryItemDocument,
+  },
+  songQueries: {
+    list: ListSongsDocument,
+    locate: LocateSongDocument,
   },
 };
 
@@ -223,6 +236,15 @@ export async function fetchListSongs() {
  */
 export async function fetchLocateSong(id: string) {
   return fetchGraphQLData("songQueries.locate", { id });
+}
+
+/**
+ * List gallery items by foreign objects.
+ */
+export async function fetchListGalleryItemsByForeignObjects(ids: string[]) {
+  return fetchGraphQLData("galleryQueries.listGalleryItemsByForeignObjects", {
+    ids,
+  });
 }
 
 /**

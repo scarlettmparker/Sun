@@ -1,10 +1,18 @@
 import { fetchLocateSong } from "~/utils/api";
-import { LocateSongQuery, Song } from "~/generated/graphql";
+import {
+  ListGalleryItemsByForeignObjectsQuery,
+  LocateSongQuery,
+  Song,
+} from "~/generated/graphql";
 import StemPlayer from "~/_components/stem-player";
 import { pageDataRegistry, getPageData } from "~/utils/page-data";
 import { useParams } from "react-router-dom";
 import styles from "./stem-player-details.module.css";
 import { getStemPlayerData } from "../stem-player";
+import { getGalleryItemsByForeignObjects } from "~/routes/utils";
+
+const PAGE = "stem-player/:id";
+
 /**
  * Stem Player Details Page.
  */
@@ -12,7 +20,10 @@ const StemPlayerDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
   const { data: song } = getPageData<
     LocateSongQuery["stemPlayerQueries"]["locate"]
-  >("song", "stem-player/:id", { id });
+  >("song", PAGE, { id });
+  const { data: galleryItems } = getPageData<
+    ListGalleryItemsByForeignObjectsQuery["galleryQueries"]["listByForeignObjects"]
+  >("galleryItems", PAGE, { ids: [id] });
 
   if (!song) {
     return <div>Loading...</div>;
@@ -51,12 +62,18 @@ export async function getStemPlayerDetailsData(
  * Register the data loader.
  */
 export function registerStemPlayerDetailsDataLoader(): void {
-  // We want both the list and the locate to be called for this page
-  pageDataRegistry.registerPageDataLoader("stem-player/:id", getStemPlayerData);
-  pageDataRegistry.registerPageDataLoader("stem-player/:id", async (params) => {
+  pageDataRegistry.registerPageDataLoader(PAGE, getStemPlayerData);
+  pageDataRegistry.registerPageDataLoader(PAGE, async (params) => {
     const id = params?.id as string;
     if (!id) return null;
     return getStemPlayerDetailsData(id);
+  });
+
+  // Gallery items
+  pageDataRegistry.registerPageDataLoader(PAGE, async (params) => {
+    const ids = params?.ids as string[];
+    if (!ids) return null;
+    return getGalleryItemsByForeignObjects(ids);
   });
 }
 

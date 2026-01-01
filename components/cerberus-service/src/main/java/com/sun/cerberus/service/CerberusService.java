@@ -46,7 +46,7 @@ public class CerberusService extends BaseService<GalleryItemEntity> {
    * @param ids the list of foreign object IDs to search for
    * @return a list of GalleryItemEntity objects
    */
-  public List<GalleryItemEntity> listByForeignObject(List<String> ids) {
-    return galleryItemRepository.findByForeignObjectIn(ids.toArray(new String[0]));
+  public List<GalleryItemEntity> listByForeignObjects(List<String> ids) {
+    return galleryItemRepository.findByForeignObjectsIn(ids.toArray(new String[0]));
   }
 }

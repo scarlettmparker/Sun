@@ -76,10 +76,10 @@ public class GalleryGraphQLService {
    * @return a list of GraphQL GalleryItem objects
    */
   @Transactional("cerberusTransactionManager")
-  public List<GalleryItem> listByForeignObject(List<String> ids) {
+  public List<GalleryItem> listByForeignObjects(List<String> ids) {
     logger.info("Retrieving gallery items by foreign object ids: {}", ids);
 
-    List<GalleryItemEntity> galleryItemEntities = cerberusService.listByForeignObject(ids);
+    List<GalleryItemEntity> galleryItemEntities = cerberusService.listByForeignObjects(ids);
     List<GalleryItem> galleryItems = galleryItemEntities.stream()
         .map(galleryItemEntity -> galleryItemMapper.map(galleryItemEntity))
         .collect(Collectors.toList());

@@ -163,13 +163,13 @@ class GalleryGraphQLServiceTest {
   }
 
   @Test
-  void listByForeignObject() {
+  void listByForeignObjects() {
     List<String> ids = Arrays.asList("id1", "id3");
     List<GalleryItemEntity> galleryItemEntities = Arrays.asList(galleryItemEntity1); // Only first has id1
-    when(cerberusService.listByForeignObject(ids)).thenReturn(galleryItemEntities);
+    when(cerberusService.listByForeignObjects(ids)).thenReturn(galleryItemEntities);
     when(galleryItemMapper.map(galleryItemEntity1)).thenReturn(galleryItem1);
 
-    List<GalleryItem> result = galleryGraphQLService.listByForeignObject(ids);
+    List<GalleryItem> result = galleryGraphQLService.listByForeignObjects(ids);
 
     assertThat(result).hasSize(1);
     assertThat(result.get(0).getTitle()).isEqualTo("Test Gallery Item 1");
@@ -180,11 +180,11 @@ class GalleryGraphQLServiceTest {
   }
 
   @Test
-  void listByForeignObject_shouldReturnEmptyListWhenNoMatches() {
+  void listByForeignObjects_shouldReturnEmptyListWhenNoMatches() {
     List<String> ids = Arrays.asList("nonexistent");
-    when(cerberusService.listByForeignObject(ids)).thenReturn(Arrays.asList());
+    when(cerberusService.listByForeignObjects(ids)).thenReturn(Arrays.asList());
 
-    List<GalleryItem> result = galleryGraphQLService.listByForeignObject(ids);
+    List<GalleryItem> result = galleryGraphQLService.listByForeignObjects(ids);
 
     assertThat(result).isEmpty();
   }

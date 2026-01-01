@@ -10,6 +10,6 @@ import java.util.List;
 public interface GalleryItemRepository extends BaseRepository<GalleryItemEntity> {
   // Domain-specific query methods can be added here
 
-  @Query(value = "SELECT * FROM gallery_items WHERE foreign_object ?| :ids", nativeQuery = true)
-  List<GalleryItemEntity> findByForeignObjectIn(@Param("ids") String[] ids);
+  @Query(value = "SELECT * FROM gallery_items WHERE EXISTS (SELECT 1 FROM jsonb_array_elements_text(foreignobject) AS elem WHERE elem = ANY(?1))", nativeQuery = true)
+  List<GalleryItemEntity> findByForeignObjectsIn(String[] ids);
 }

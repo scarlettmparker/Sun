@@ -20,7 +20,7 @@ input GalleryItemInput {
 type GalleryQueries {
   list: [GalleryItem]
   locate(id: ID!): GalleryItem
-  listByForeignObject(ids: [String!]!): [GalleryItem]
+  listByForeignObjects(ids: [String!]!): [GalleryItem]
 }
 
 type GalleryMutations {
