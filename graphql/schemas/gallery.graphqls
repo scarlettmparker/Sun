@@ -34,14 +34,3 @@ extend type Query {
 extend type Mutation {
   galleryMutations: GalleryMutations!
 }
-
-type StandardError {
-  message: String!
-}
-
-type QuerySuccess {
-  message: String!
-  id: ID
-}
-
-union QueryResult = QuerySuccess | StandardError

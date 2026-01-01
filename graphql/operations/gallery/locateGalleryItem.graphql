@@ -1,0 +1,14 @@
+query locateGalleryItem($id: ID!) {
+  galleryQueries {
+    locate(id: $id) {
+      id
+      title
+      description
+      content
+      imagePath
+      foreignObject
+      createdAt
+      updatedAt
+    }
+  }
+}

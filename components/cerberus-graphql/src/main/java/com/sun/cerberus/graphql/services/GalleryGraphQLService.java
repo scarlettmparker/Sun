@@ -70,6 +70,25 @@ public class GalleryGraphQLService {
   }
 
   /**
+   * Retrieves gallery items that have any of the specified foreign object IDs.
+   *
+   * @param ids the list of foreign object IDs to search for
+   * @return a list of GraphQL GalleryItem objects
+   */
+  @Transactional("cerberusTransactionManager")
+  public List<GalleryItem> listByForeignObject(List<String> ids) {
+    logger.info("Retrieving gallery items by foreign object ids: {}", ids);
+
+    List<GalleryItemEntity> galleryItemEntities = cerberusService.listByForeignObject(ids);
+    List<GalleryItem> galleryItems = galleryItemEntities.stream()
+        .map(galleryItemEntity -> galleryItemMapper.map(galleryItemEntity))
+        .collect(Collectors.toList());
+
+    logger.info("Retrieved {} gallery items matching foreign object ids", galleryItems.size());
+    return galleryItems;
+  }
+
+  /**
    * Creates a new gallery item.
    *
    * @param input the input data for the gallery item

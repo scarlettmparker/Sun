@@ -98,6 +98,21 @@ class GalleryDataFetcherTest {
   }
 
   @Test
+  void listByForeignObject() {
+    List<String> ids = Arrays.asList("id1", "id3");
+    List<GalleryItem> expectedItems = Arrays.asList(mockGalleryItems.get(0)); // Only first item has id1
+
+    when(galleryGraphQLService.listByForeignObject(ids)).thenReturn(expectedItems);
+
+    List<GalleryItem> result = galleryDataFetcher.listByForeignObject(ids);
+
+    assertThat(result).isEqualTo(expectedItems);
+    assertThat(result).hasSize(1);
+    assertThat(result.get(0).getTitle()).isEqualTo("Test Gallery 1");
+    assertThat(result.get(0).getForeignObject()).contains("id1");
+  }
+
+  @Test
   void create_shouldReturnQueryResultFromService() {
     GalleryItemInput input = GalleryItemInput.newBuilder()
         .title("New Title")

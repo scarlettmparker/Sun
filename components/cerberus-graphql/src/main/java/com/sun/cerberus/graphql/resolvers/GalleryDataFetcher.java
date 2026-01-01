@@ -51,6 +51,17 @@ public class GalleryDataFetcher {
   }
 
   /**
+   * Retrieves gallery items that have any of the specified foreign object IDs.
+   *
+   * @param ids the list of foreign object IDs to search for
+   * @return a list of GalleryItem objects
+   */
+  @DgsData(parentType = "GalleryQueries", field = "listByForeignObject")
+  public List<GalleryItem> listByForeignObject(List<String> ids) {
+    return galleryGraphQLService.listByForeignObject(ids);
+  }
+
+  /**
    * Provides the gallery mutations object.
    *
    * @return a new GalleryMutations instance

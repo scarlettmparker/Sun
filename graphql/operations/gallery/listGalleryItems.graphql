@@ -1,0 +1,14 @@
+query listGalleryItems {
+  galleryQueries {
+    list {
+      id
+      title
+      description
+      content
+      imagePath
+      foreignObject
+      createdAt
+      updatedAt
+    }
+  }
+}

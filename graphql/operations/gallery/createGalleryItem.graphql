@@ -1,0 +1,13 @@
+mutation createGalleryItem($input: GalleryItemInput!) {
+  galleryMutations {
+    create(input: $input) {
+      ... on QuerySuccess {
+        message
+        id
+      }
+      ... on StandardError {
+        message
+      }
+    }
+  }
+}

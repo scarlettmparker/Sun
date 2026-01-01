@@ -14,8 +14,11 @@ import java.util.List;
 @Transactional("cerberusTransactionManager")
 public class CerberusService extends BaseService<GalleryItemEntity> {
 
+  private final GalleryItemRepository galleryItemRepository;
+
   public CerberusService(GalleryItemRepository repository) {
     super(repository);
+    this.galleryItemRepository = repository;
   }
 
   /**
@@ -35,5 +38,15 @@ public class CerberusService extends BaseService<GalleryItemEntity> {
    */
   public Optional<GalleryItemEntity> locate(UUID id) {
     return findById(id);
+  }
+
+  /**
+   * Retrieves gallery items that have any of the specified foreign object IDs.
+   *
+   * @param ids the list of foreign object IDs to search for
+   * @return a list of GalleryItemEntity objects
+   */
+  public List<GalleryItemEntity> listByForeignObject(List<String> ids) {
+    return galleryItemRepository.findByForeignObjectIn(ids.toArray(new String[0]));
   }
 }

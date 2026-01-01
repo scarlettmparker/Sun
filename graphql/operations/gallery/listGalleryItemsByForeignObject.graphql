@@ -1,0 +1,14 @@
+query listGalleryItemsByForeignObject($ids: [String!]!) {
+  galleryQueries {
+    listByForeignObject(ids: $ids) {
+      id
+      title
+      description
+      content
+      imagePath
+      foreignObject
+      createdAt
+      updatedAt
+    }
+  }
+}
