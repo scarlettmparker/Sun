@@ -175,19 +175,31 @@ function readPageData<T>(
   pattern: string,
   params?: Record<string, unknown>
 ): { data: T } {
-  const cacheKey = makeCacheKey(pattern, params || {});
-
+  const cacheKey = makeCacheKey(`${pattern}:${key}`, params);
   let record = suspenseCache.get(cacheKey);
 
   if (!record) {
     // Find the loaders registered for this pattern
     const loaders = pageDataLoaders[pattern];
-    if (!loaders || !loaders.length) {
+
+    // Find loaders that return the specific key we need
+    const relevantLoaders =
+      loaders?.filter(() => {
+        // We can't easily check what key a loader returns without calling it
+        // So we'll call it and let it handle the logic
+        return true;
+      }) || [];
+
+    if (!relevantLoaders.length) {
       return { data: null as T };
     }
 
+    // Create record FIRST to ensure consistent reference in promise callbacks
+    record = { status: "pending" };
+    suspenseCache.set(cacheKey, record);
+
     // Initiate the data fetch
-    const promise = Promise.all(loaders.map((l) => l(params)))
+    const promise = Promise.all(relevantLoaders.map((l) => l(params)))
       .then((results) => {
         const merged: Record<string, unknown> = {};
         for (const r of results) {
@@ -198,7 +210,7 @@ function readPageData<T>(
 
         if (merged[key] == null) {
           record!.status = "rejected";
-          record!.error = new Error("No data returned");
+          record!.error = new Error(`No data returned for key: ${key}`);
           return null;
         }
 
@@ -213,8 +225,7 @@ function readPageData<T>(
         throw err;
       });
 
-    record = { status: "pending", promise };
-    suspenseCache.set(cacheKey, record);
+    record.promise = promise;
   }
 
   if (record!.status === "pending") {
@@ -240,14 +251,10 @@ export function getPageData<T>(
   pattern: string,
   params?: Record<string, unknown>
 ): { data: T } {
-  const normalizedCacheKey = makeCacheKey(pattern, params);
+  // Use the same cache key format as readPageData to ensure consistency
+  const cacheKey = makeCacheKey(`${pattern}:${key}`, params);
 
-  // Force a refetch when cacheVersion changes (triggered by cache invalidation)
-  const rawCacheKey = `${pattern}:${JSON.stringify(params || {})}`;
-
-  // Try normalized (leading slash) key first, then the raw key used during SSR.
-  const record =
-    suspenseCache.get(normalizedCacheKey) || suspenseCache.get(rawCacheKey);
+  const record = suspenseCache.get(cacheKey);
 
   // If cache is invalidated or doesn't exist, force a refetch
   if (typeof window === "undefined" || !record) {
