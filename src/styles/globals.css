@@ -38,6 +38,7 @@
 
   /* transitions */
   --fast: 0.2s;
+  --medium: 0.3s;
   --very-slow: 2s;
 
   /* shadows */
@@ -52,6 +53,10 @@
     0 6px 12px rgba(0, 0, 0, 0.11);
 
   --focus-shadow: 0 0 0 2px rgba(217, 4, 41, 0.2);
+
+  /* opacities */
+  --very-visible: 0.8;
+  --visible: 0.6;
 }
 
 
@@ -64,6 +69,7 @@ body, button, label {
   color: var(--text);
   font-size: var(--text-md);
   font-weight: var(--normal);
+  background-color: #FEEBEF;
 }
 
 a {

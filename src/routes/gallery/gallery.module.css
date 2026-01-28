@@ -4,9 +4,40 @@
   transform: translateX(-50%);
   margin: calc(var(--lg) * 8) 0;
   width: calc(100% - var(--lg) * 2);
-  max-width: 36rem;
 }
 
 .gallery_card {
-  width: 24rem;
+  width: fit-content;
+  position: relative;
+}
+
+.gallery_item {
+  opacity: 1;
+  object-fit: contain;
+  overflow: hidden;
+  clip-path: inset(round var(--md));
+  width: 36rem;
+  cursor: pointer;
+  transition: all var(--medium) ease;
+  border-radius: var(--md);
+  box-shadow: var(--shadow-soft);
+}
+
+.gallery_item:hover {
+  opacity: 0.1;
+  filter: blur(var(--sm));
+}
+
+.gallery_item:hover + .gallery_content {
+  opacity: 1;
+}
+
+.gallery_content {
+  opacity: 0;
+  transition: all var(--medium) ease;
+  position: absolute;
+  bottom: var(--xl);
+  right: var(--xl);
+  padding: var(--xl);
+  text-align: right;
 }

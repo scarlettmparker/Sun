@@ -239,6 +239,13 @@ export async function fetchLocateSong(id: string) {
 }
 
 /**
+ * List gallery items.
+ */
+export async function fetchListGalleryItems() {
+  return fetchGraphQLData("galleryQueries.listGalleryItems");
+}
+
+/**
  * List gallery items by foreign objects.
  */
 export async function fetchListGalleryItemsByForeignObjects(ids: string[]) {

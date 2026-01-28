@@ -1,7 +1,8 @@
 .card {
   border-radius: var(--lg);
   box-shadow: var(--shadow-soft);
-  background-color: var(--secondary);
+  background-color: rgb(from var(--secondary) r g b / var(--visible));
+  /*  rgb(from var(--red-hex) r g b / var(--color-opacity)); */
   overflow: hidden;
 }
 
