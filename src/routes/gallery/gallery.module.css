@@ -42,4 +42,5 @@
   pointer-events: none;
   border-bottom-left-radius: 0;
   border-top-right-radius: 0;
+  box-shadow: none;
 }
