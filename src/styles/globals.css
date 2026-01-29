@@ -57,6 +57,8 @@
   /* opacities */
   --very-visible: 0.8;
   --visible: 0.6;
+  --somewhat-visible: 0.4;
+  --barely-visible: 0.2;
 }
 
 
@@ -76,8 +78,7 @@ body::before {
   content: "";
   position: fixed;
   inset: 0;
-  background: url("/background/background.png") no-repeat center / cover;
-  opacity: 0.9;
+  /* Background image will go here */
   z-index: 0;
 }
 

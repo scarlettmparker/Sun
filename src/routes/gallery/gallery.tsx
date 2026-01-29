@@ -42,9 +42,11 @@ const Gallery = () => {
                   draggable={false}
                 />
                 {galleryItem?.content && (
-                  <MarkdownViewer className={styles.gallery_content}>
-                    {galleryItem.content}
-                  </MarkdownViewer>
+                  <Card className={styles.gallery_content}>
+                    <CardBody>
+                      <MarkdownViewer>{galleryItem.content}</MarkdownViewer>
+                    </CardBody>
+                  </Card>
                 )}
               </>
             )}

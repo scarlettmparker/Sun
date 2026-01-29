@@ -19,13 +19,12 @@
   width: 36rem;
   cursor: pointer;
   transition: all var(--medium) ease;
-  border-radius: var(--md);
+  border-radius: var(--lg);
   box-shadow: var(--shadow-soft);
 }
 
 .gallery_item:hover {
-  opacity: 0.1;
-  filter: blur(var(--sm));
+  opacity: var(--somewhat-visible);
 }
 
 .gallery_item:hover + .gallery_content {
@@ -38,7 +37,9 @@
   position: absolute;
   bottom: var(--xl);
   right: var(--xl);
-  padding: var(--xl);
+  padding: var(--md);
   text-align: right;
   pointer-events: none;
+  border-bottom-left-radius: 0;
+  border-top-right-radius: 0;
 }
