@@ -1,9 +1,14 @@
 .card {
   border-radius: var(--lg);
-  box-shadow: var(--shadow-soft);
+  box-shadow: var(--  shadow-soft);
   background-color: rgb(from var(--secondary) r g b / var(--visible));
-  /*  rgb(from var(--red-hex) r g b / var(--color-opacity)); */
   overflow: hidden;
+  transition: all var(--medium);
+  backdrop-filter: blur(var(--sm));
+}
+
+.card:hover {
+  box-shadow: var(--shadow-medium);
 }
 
 .card_header {

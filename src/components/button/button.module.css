@@ -40,7 +40,8 @@
 
 /* Secondary styles */
 .secondary {
-  background-color: var(--secondary);
+  background-color: rgb(from var(--secondary) r g b / var(--visible));
+  backdrop-filter: blur(var(--sm));
 }
 
 .secondary:disabled, .secondary:disabled:hover {
@@ -48,7 +49,7 @@
 }
 
 .secondary:hover {
-  background-color: var(--secondary-hover);
+  background-color: rgb(from var(--secondary-hover) r g b / var(--visible));
   color: var(--tertiary);
 }
 

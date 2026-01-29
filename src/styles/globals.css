@@ -72,6 +72,15 @@ body, button, label {
   background-color: #FEEBEF;
 }
 
+body::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("/background/background.png") no-repeat center / cover;
+  opacity: 0.9;
+  z-index: 0;
+}
+
 a {
   text-decoration: none;
 }

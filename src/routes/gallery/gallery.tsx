@@ -1,7 +1,6 @@
 import Card, {
   CardBody,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "~/components/card";
@@ -40,6 +39,7 @@ const Gallery = () => {
                   src={galleryItem.imagePath}
                   title={galleryItem.title}
                   className={styles.gallery_item}
+                  draggable={false}
                 />
                 {galleryItem?.content && (
                   <MarkdownViewer className={styles.gallery_content}>

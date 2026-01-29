@@ -40,4 +40,5 @@
   right: var(--xl);
   padding: var(--xl);
   text-align: right;
+  pointer-events: none;
 }
