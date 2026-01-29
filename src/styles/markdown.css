@@ -8,7 +8,7 @@
 .md-h4,
 .md-h5,
 .md-h6 {
-  font-weight: bold;
+  font-weight: var(--bold);
   color: var(--primary);
   text-decoration: none;
 }
@@ -39,7 +39,7 @@
 }
 
 .md-bold {
-  font-weight: bold;
+  font-weight: var(--bold);
   color: var(--primary);
 }
 
@@ -73,14 +73,14 @@
 }
 
 .md-link, a:not(:has(button)) {
-  color: var(--accent-dark);
+  color: var(--tertiary);
   text-decoration: underline;
   cursor: pointer;
   transition: color var(--fast) ease;
 }
 
 .md-link:hover, a:not(:has(button)):hover {
-  color: var(--accent-dark-hover)
+  color: var(--tertiary-hover)
 }
 
 .md-quote {
