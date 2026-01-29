@@ -77,6 +77,8 @@
   text-decoration: underline;
   cursor: pointer;
   transition: color var(--fast) ease;
+  width: fit-content;
+  display: block;
 }
 
 .md-link:hover, a:not(:has(button)):hover {
