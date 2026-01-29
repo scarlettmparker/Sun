@@ -5,6 +5,7 @@ import { useParams } from "react-router-dom";
 
 import { pageDataRegistry, getPageData } from "~/utils/page-data";
 import styles from "./blog-post.module.css";
+import Card, { CardBody } from "~/components/card";
 
 const BlogPostPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -18,7 +19,13 @@ const BlogPostPage = () => {
   }
 
   return (
-    <MarkdownViewer className={styles.blog_post}>{data.content}</MarkdownViewer>
+    <div className={styles.blog_post}>
+      <Card>
+        <CardBody>
+          <MarkdownViewer>{data.content}</MarkdownViewer>
+        </CardBody>
+      </Card>
+    </div>
   );
 };
 

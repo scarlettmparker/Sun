@@ -10,7 +10,6 @@
   row-gap: var(--md);
   width: calc(100% - var(--lg) * 2);
   max-width: 36rem;
-  text-align: center;
 }
 
 .blog_wrapper hr {

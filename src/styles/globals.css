@@ -74,7 +74,7 @@ body, button, label {
 
 body::before {
   content: "";
-  position: absolute;
+  position: fixed;
   inset: 0;
   background: url("/background/background.png") no-repeat center / cover;
   opacity: 0.9;
@@ -108,3 +108,4 @@ ul {
     opacity: 0.5;
   }
 }
+
