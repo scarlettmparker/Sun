@@ -18,6 +18,7 @@ const Layout = (props: LayoutProps) => {
 
   useEffect(() => {
     const interval = setInterval(() => updateBackgroundColour(), 5000); // 5 second
+    // css transitions handle the step though it's so little of a change who cares?
     return () => clearInterval(interval);
   }),
     [];
