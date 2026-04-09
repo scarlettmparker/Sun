@@ -1,9 +1,5 @@
 .blog_wrapper {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  /* realistically should only multiply by powers of 2 */
-  margin: calc(var(--lg) * 8) 0;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;

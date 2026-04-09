@@ -1,9 +1,8 @@
 .gallery_wrapper {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  margin: calc(var(--lg) * 8) 0;
-  width: calc(100% - var(--lg) * 2);
+  width: calc(100% - var(--lg) * 8);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--lg);
 }
 
 .gallery_card {
@@ -16,7 +15,7 @@
   object-fit: contain;
   overflow: hidden;
   clip-path: inset(round var(--md));
-  width: 36rem;
+  height: 24rem;
   cursor: pointer;
   transition: all var(--medium) ease;
   border-radius: var(--lg);
@@ -43,4 +42,8 @@
   border-bottom-left-radius: 0;
   border-top-right-radius: 0;
   box-shadow: none;
+}
+
+.gallery_content br {
+  display: none;
 }

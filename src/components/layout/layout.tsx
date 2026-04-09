@@ -1,4 +1,5 @@
 import TopNavBar from "./menu/top-nav-bar";
+import styles from "./layout.module.css";
 
 type LayoutProps = React.PropsWithChildren;
 
@@ -11,7 +12,7 @@ const Layout = (props: LayoutProps) => {
   return (
     <>
       <TopNavBar />
-      <main>{children}</main>
+      <main className={styles.main}>{children}</main>
     </>
   );
 };
