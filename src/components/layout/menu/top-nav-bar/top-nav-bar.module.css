@@ -1,6 +1,7 @@
 .top_nav_bar {
   display: flex;
   margin: 0 auto;
+  margin-bottom: var(--lg);
   gap: var(--lg);
   padding: var(--lg);
   width: fit-content;

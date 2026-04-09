@@ -1,4 +1,5 @@
 .main {
   min-height: 100vh;
-  padding: calc(var(--lg) * 2);
+  padding: var(--lg) calc(var(--lg) * 2);
+  transition: background-color 5s linear;
 }
