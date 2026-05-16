@@ -1,28 +1,43 @@
-import {
-  PostHogProvider as PHProvider,
-  useFeatureFlagEnabled,
-  usePostHog,
-} from "@posthog/react";
+import { PostHogProvider as PHProvider } from "@posthog/react";
 import posthog from "posthog-js";
 
-type PostHogProviderProps = React.PropsWithChildren;
+type PostHogProviderProps = {
+  /**
+   * Check if on client.
+   */
+  client?: boolean;
+} & React.PropsWithChildren;
 
 /**
- * All allowed posthog events. We don't need to capture $pageview
- * here, it's just used as an example for the typing.
- */
-type PostHogEvent = "$pageview";
-
-/**
- * Creates PostHog provider and initialises posthog
- * Use only as a server component
+ * Creates PostHog provider and initialises posthog.
  */
 const PostHogProvider = (props: PostHogProviderProps) => {
-  const { children } = props;
-  const posthogKey = process.env.POSTHOG_API_KEY ?? "";
-  const posthogHost = process.env.POSTHOG_HOST ?? "";
+  const { children, client } = props;
 
-  // Create posthog if not yet loaded
+  // Don't initialize if client-only prop is set but we're on server
+  if (client && typeof window === "undefined") {
+    return children;
+  }
+
+  let posthogKey: string;
+  let posthogHost: string;
+
+  // Get configuration based on environment
+  if (typeof window !== "undefined") {
+    // Client-side
+    posthogKey = window.__posthog_key__ || "";
+    posthogHost = window.__posthog_host__ || "";
+  } else {
+    // Server-side
+    posthogKey = process.env.POSTHOG_API_KEY || "";
+    posthogHost = process.env.POSTHOG_HOST || "";
+  }
+
+  if (!posthogKey || !posthogHost) {
+    return children;
+  }
+
+  // Initialize posthog if not yet loaded
   if (!posthog.__loaded) {
     posthog.init(posthogKey, {
       api_host: posthogHost,
@@ -32,24 +47,4 @@ const PostHogProvider = (props: PostHogProviderProps) => {
   return <PHProvider client={posthog}>{children}</PHProvider>;
 };
 
-/**
- * Capture an event of a single type.
- *
- * @param event Event to capture.
- */
-const captureEvent = (event: PostHogEvent) => {
-  const posthog = usePostHog();
-  posthog.capture(event);
-};
-
-/**
- * Use feature flag event hook. We likely won't need to
- * type flags.
- *
- * @param flag Flag to check.
- */
-const useFeatureFlag = (flag: string) => {
-  return useFeatureFlagEnabled(flag) ?? false;
-};
-
-export { PostHogProvider, captureEvent, useFeatureFlag };
+export { PostHogProvider };

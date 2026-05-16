@@ -36,6 +36,6 @@ export default defineConfig({
     cssCodeSplit: true,
   },
   ssr: {
-    noExternal: ["react-router-dom"],
+    noExternal: ["react-router-dom", "posthog-js", "@posthog/react"],
   },
 });

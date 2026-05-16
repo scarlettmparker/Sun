@@ -10,7 +10,6 @@ import { inlineCss, generateCssTag } from "./utils/css-inlining";
 import "./utils/register-loaders";
 import { suspenseCache, makeCacheKey } from "./utils/page-data";
 import { MutationResult } from "./server/actions/utils";
-import { PostHogProvider } from "./utils/hooks/posthog";
 
 type i18n = {
   /**
@@ -117,6 +116,9 @@ export async function render({
   mutationPayload: _mutationPayload,
   invalidateCacheCookie,
 }: RenderProps) {
+  const posthogKey = process.env.POSTHOG_API_KEY ?? "";
+  const posthogHost = process.env.POSTHOG_HOST ?? "";
+
   if (!clientJs) {
     throw new Error("Missing required clientJs path");
   }
@@ -151,13 +153,11 @@ export async function render({
   const App = (
     <React.StrictMode>
       <StaticRouter location={url}>
-        <PostHogProvider>
-          <Layout>
-            <Suspense fallback={null}>
-              <Router />
-            </Suspense>
-          </Layout>
-        </PostHogProvider>
+        <Layout>
+          <Suspense fallback={null}>
+            <Router />
+          </Suspense>
+        </Layout>
       </StaticRouter>
     </React.StrictMode>
   );
@@ -196,6 +196,11 @@ export async function render({
             <script>
               // Inject the translations and locale into the client-side window object
               window.__translations__ = ${JSON.stringify(translations)};
+              // We can expose posthog key and posthog host so if we want to stop using it
+              // just remove the key/host from the environment. TODO is to write some
+              // script for all of this shit.
+              window.__posthog_key__ = '${posthogKey}';
+              window.__posthog_host__ = '${posthogHost}';
               window.__locale__ = '${locale}';
               // Initialize server cache data (will be updated in postlude)
               window.__serverCacheData__ = {};

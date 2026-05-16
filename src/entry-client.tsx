@@ -9,6 +9,7 @@ import Layout from "./components/layout";
 import "./styles/globals.css";
 import "./styles/markdown.css";
 import { hydratePageData } from "./utils/page-data";
+import { PostHogProvider } from "./utils/hooks/posthog";
 
 // Define the postlude hydration function on window for SSR
 window.hydratePageDataFromPostlude = hydratePageData;
@@ -91,11 +92,14 @@ i18n
 
     ReactDOM.hydrateRoot(
       document.getElementById("app") as HTMLElement,
-      <BrowserRouter>
-        <Layout>
-          <AppWithI18n />
-        </Layout>
-      </BrowserRouter>
+
+      <PostHogProvider client>
+        <BrowserRouter>
+          <Layout>
+            <AppWithI18n />
+          </Layout>
+        </BrowserRouter>
+      </PostHogProvider>,
     );
   })
   .catch((error) => {
