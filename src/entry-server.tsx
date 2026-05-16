@@ -10,6 +10,7 @@ import { inlineCss, generateCssTag } from "./utils/css-inlining";
 import "./utils/register-loaders";
 import { suspenseCache, makeCacheKey } from "./utils/page-data";
 import { MutationResult } from "./server/actions/utils";
+import { PostHogProvider } from "./utils/hooks/posthog";
 
 type i18n = {
   /**
@@ -126,12 +127,14 @@ export async function render({
   }
 
   // Clean up rejected cache entries
+  // TODO: should probably move a lot of this elsewhere
   for (const [key, record] of suspenseCache.entries()) {
     if (record.status === "rejected") {
       suspenseCache.delete(key);
     }
   }
 
+  // Create i18n
   const i18n = createI18nInstance();
   await i18n.init({
     lng: locale,
@@ -148,11 +151,13 @@ export async function render({
   const App = (
     <React.StrictMode>
       <StaticRouter location={url}>
-        <Layout>
-          <Suspense fallback={null}>
-            <Router />
-          </Suspense>
-        </Layout>
+        <PostHogProvider>
+          <Layout>
+            <Suspense fallback={null}>
+              <Router />
+            </Suspense>
+          </Layout>
+        </PostHogProvider>
       </StaticRouter>
     </React.StrictMode>
   );

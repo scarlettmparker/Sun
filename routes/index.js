@@ -32,7 +32,7 @@ export function setupRoutes(app, vite) {
     if (mutationPayloadCookie) {
       try {
         mutationPayload = JSON.parse(
-          Buffer.from(mutationPayloadCookie, "base64").toString("utf-8")
+          Buffer.from(mutationPayloadCookie, "base64").toString("utf-8"),
         );
       } catch (_) {
         // Do nothing
@@ -70,7 +70,7 @@ export function setupRoutes(app, vite) {
           mutationPayload,
           invalidateCacheCookie,
         },
-        res
+        res,
       );
     } catch (e) {
       console.error("Error during route handling:", e);
