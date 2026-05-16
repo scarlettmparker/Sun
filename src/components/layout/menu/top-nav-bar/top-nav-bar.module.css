@@ -4,10 +4,14 @@
   margin-bottom: var(--lg);
   gap: var(--lg);
   padding: var(--lg);
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   width: fit-content;
-  min-width: 12rem;
   justify-content: center;
   align-items: center;
+  min-width: 12rem;
+  z-index: 501;
 }
 
 .divider {

@@ -1,5 +1,7 @@
 .gallery_wrapper {
   width: calc(100% - var(--lg) * 8);
+  padding: calc(var(--lg) * 2);
+  padding-top: calc(var(--lg) * 4);
   display: flex;
   flex-wrap: wrap;
   gap: var(--lg);
