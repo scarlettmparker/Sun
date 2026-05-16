@@ -5,6 +5,8 @@ import com.sun.base.repository.BaseRepository;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;
 
 public abstract class BaseService<T extends BaseEntity> {
 
@@ -16,6 +18,10 @@ public abstract class BaseService<T extends BaseEntity> {
 
     public List<T> findAll() {
         return repository.findAll();
+    }
+
+    public Page<T> findAllPaged(Pageable pageable) {
+        return repository.findAll(pageable);
     }
 
     public Optional<T> findById(UUID id) {

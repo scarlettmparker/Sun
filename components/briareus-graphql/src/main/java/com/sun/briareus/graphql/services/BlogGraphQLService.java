@@ -15,6 +15,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 import com.sun.briareus.model.PostEntity;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 
 /**
  * Service for handling GraphQL-specific business logic for the Blogsite.
@@ -41,7 +45,9 @@ public class BlogGraphQLService {
   public List<BlogPost> listBlogPosts() {
     logger.info("Retrieving blog posts");
 
-    List<PostEntity> postEntities = briareusService.listPosts();
+    // TODO: pass in pagination object and map through some sun-graphql nonsense
+    Pageable sort = Pageable.unpaged(Sort.by("title").ascending());
+    Page<PostEntity> postEntities = briareusService.listPostsPaged(sort);
     List<BlogPost> blogPosts = postEntities.stream()
         .map(blogPostMapper::map)
         .collect(Collectors.toList());

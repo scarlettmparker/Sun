@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Pageable; // Added for Pageable support
 import com.sun.briareus.model.PostEntity;
 import com.sun.briareus.codegen.types.BlogPost;
 import com.sun.briareus.codegen.types.BlogPostInput;
@@ -74,10 +75,13 @@ class BlogGraphQLServiceTest {
   @Test
   void listBlogPosts_shouldReturnMappedBlogPosts() {
     List<PostEntity> postEntities = Arrays.asList(postEntity1, postEntity2);
-    when(briareusService.listPosts()).thenReturn(postEntities);
+
+    when(briareusService.listPostsPaged(any(Pageable.class))).thenReturn(postEntities);
     when(blogPostMapper.map(postEntity1)).thenReturn(blogPost1);
     when(blogPostMapper.map(postEntity2)).thenReturn(blogPost2);
+
     List<BlogPost> result = blogGraphQLService.listBlogPosts();
+
     assertThat(result).hasSize(2);
     assertThat(result.get(0).getTitle()).isEqualTo("Test Blog Post 1");
     assertThat(result.get(0).getContent()).isEqualTo("This is the content of the first blog post.");
@@ -89,7 +93,8 @@ class BlogGraphQLServiceTest {
 
   @Test
   void listBlogPosts_shouldReturnEmptyListWhenNoPosts() {
-    when(briareusService.listPosts()).thenReturn(Arrays.asList());
+    when(briareusService.listPostsPaged(any(Pageable.class))).thenReturn(Arrays.asList());
+
     List<BlogPost> result = blogGraphQLService.listBlogPosts();
     assertThat(result).isEmpty();
   }

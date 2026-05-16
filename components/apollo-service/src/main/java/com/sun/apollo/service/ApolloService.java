@@ -4,6 +4,9 @@ import com.sun.apollo.model.SongEntity;
 import com.sun.apollo.repository.SongRepository;
 import com.sun.base.service.BaseService;
 import org.springframework.stereotype.Service;
+
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +27,16 @@ public class ApolloService extends BaseService<SongEntity> {
    */
   public List<SongEntity> listSongs() {
     return findAll();
+  }
+
+  /**
+   * Retrieves all songs with a Pageable input.
+   * 
+   * @param pageable Pageable.
+   * @return a list of Paged GalleryItemEntity objects.
+   */
+  public Page<SongEntity> listSongsPaged(Pageable pageable) {
+    return findAllPaged(pageable);
   }
 
   /**

@@ -1,5 +1,5 @@
-const DAY_RGB = toRgb("#FFF6ED");
-const NIGHT_RGB = toRgb("#FEEBEF");
+const DAY_RGB = toRgb("#fffaf4");
+const NIGHT_RGB = toRgb("#fdeff2");
 
 /**
  * Get the current second of the day. E.g. 12:00 returns 43,200
