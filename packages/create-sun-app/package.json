@@ -1,6 +1,6 @@
 {
   "name": "@sun/create-app",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Scaffold a Vite app like Sun",
   "bin": {
     "create-sun-app": "./bin/index.js"

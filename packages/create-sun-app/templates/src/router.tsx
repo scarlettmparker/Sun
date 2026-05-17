@@ -1,18 +1,23 @@
-import { Routes, Route } from "react-router-dom";
+import { RouteObject, useRoutes } from "react-router-dom";
+import { lazy } from "react";
 
-export const routes = [
+const Index = lazy(() => import("~/routes/index"));
+const NotFound = lazy(() => import("~/routes/not-found"));
+
+/**
+ * List of routes.
+ */
+export const routes: RouteObject[] = [
+  {
+    path: "/",
+    element: <Index />,
+  },
   {
     path: "*",
-    element: <div>Home / 404 - extend routes here</div>,
+    element: <NotFound />,
   },
 ];
 
-export function Router() {
-  return (
-    <Routes>
-      {routes.map((route, index) => (
-        <Route key={index} path={route.path} element={route.element} />
-      ))}
-    </Routes>
-  );
-}
+export const Router = () => {
+  return useRoutes(routes);
+};
