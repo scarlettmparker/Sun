@@ -12,8 +12,12 @@ import org.springframework.http.ResponseEntity;
 import com.sun.dionysus.codegen.types.Bucket;
 import com.sun.dionysus.codegen.types.CompletedPart;
 import com.sun.dionysus.codegen.types.File;
+import com.sun.dionysus.codegen.types.KeyEntry;
+import com.sun.dionysus.graphql.mappers.FileMapper;
+import com.sun.dionysus.graphql.mappers.KeyEntryMapper;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,6 +32,12 @@ public class FilestoreGraphQLService {
 
   @Autowired
   private S3Client s3Client;
+
+  @Autowired
+  private FileMapper fileMapper;
+
+  @Autowired
+  private KeyEntryMapper keyEntryMapper;
 
   /**
    * Checks the health of the external filestore service.
@@ -69,15 +79,36 @@ public class FilestoreGraphQLService {
         .bucket(bucket)
         .build());
     return resp.contents().stream()
-        .map(obj -> {
-          File f = new File();
-          f.setKey(obj.key());
-          f.setSize(obj.size() != null ? obj.size().intValue() : 0);
-          if (obj.lastModified() != null)
-            f.setLastModified(obj.lastModified().toString());
-          return f;
-        })
+        .map(fileMapper::mapObject)
         .collect(Collectors.toList());
+  }
+
+  /**
+   * Lists keys in the given bucket using a prefix and delimiter for
+   * directory-style navigation.
+   */
+  public List<KeyEntry> listKeys(String bucket, String prefix) {
+    ListObjectsV2Request.Builder requestBuilder = ListObjectsV2Request.builder()
+        .bucket(bucket)
+        .delimiter("/");
+
+    if (prefix != null && !prefix.isEmpty()) {
+      requestBuilder.prefix(prefix);
+    }
+
+    ListObjectsV2Response resp = s3Client.listObjectsV2(requestBuilder.build());
+    List<KeyEntry> entries = new ArrayList<>();
+
+    resp.commonPrefixes().stream()
+        .map(keyEntryMapper::mapDirectory)
+        .forEach(entries::add);
+
+    resp.contents().stream()
+        .filter(obj -> prefix == null || !obj.key().equals(prefix))
+        .map(keyEntryMapper::mapFile)
+        .forEach(entries::add);
+
+    return entries;
   }
 
   /**

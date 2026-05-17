@@ -7,6 +7,7 @@ import com.sun.dionysus.codegen.types.FilestoreQueries;
 import com.sun.dionysus.codegen.types.FilestoreMutations;
 import com.sun.dionysus.codegen.types.Bucket;
 import com.sun.dionysus.codegen.types.File;
+import com.sun.dionysus.codegen.types.KeyEntry;
 import com.sun.dionysus.codegen.types.CompletedPart;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,11 @@ public class FilestoreDataFetcher {
   @DgsData(parentType = "FilestoreQueries", field = "listFiles")
   public List<File> listFiles(String bucket) {
     return filestoreGraphQLService.listFiles(bucket);
+  }
+
+  @DgsData(parentType = "FilestoreQueries", field = "listKeys")
+  public List<KeyEntry> listKeys(String bucket, String prefix) {
+    return filestoreGraphQLService.listKeys(bucket, prefix);
   }
 
   @DgsData(parentType = "Mutation", field = "filestoreMutations")

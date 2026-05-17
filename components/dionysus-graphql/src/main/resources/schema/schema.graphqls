@@ -19,6 +19,16 @@ type FilestoreQueries {
   listBuckets: [Bucket!]
   # List files in the specified bucket.
   listFiles(bucket: String!): [File!]
+  # List keys under a prefix, returning objects and directory entries.
+  listKeys(bucket: String!, prefix: String): [KeyEntry!]
+}
+
+# Directory-like entry for a bucket key.
+type KeyEntry {
+  key: String!
+  isDirectory: Boolean!
+  size: Int
+  lastModified: String
 }
 
 # Part metadata for multipart uploads.
