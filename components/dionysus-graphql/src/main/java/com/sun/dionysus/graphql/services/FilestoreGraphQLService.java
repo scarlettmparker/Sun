@@ -7,9 +7,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 @Service
-public class DionysusGraphQLService {
+public class FilestoreGraphQLService {
 
-    private static final Logger logger = LoggerFactory.getLogger(DionysusGraphQLService.class);
+    private static final Logger logger = LoggerFactory.getLogger(FilestoreGraphQLService.class);
 
     @Autowired
     private RestTemplate restTemplate;

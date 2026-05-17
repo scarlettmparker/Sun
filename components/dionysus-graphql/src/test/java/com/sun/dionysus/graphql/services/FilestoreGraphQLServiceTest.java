@@ -11,13 +11,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class DionysusGraphQLServiceTest {
+class FilestoreGraphQLServiceTest {
 
     @Mock
     private RestTemplate restTemplate;
 
     @InjectMocks
-    private DionysusGraphQLService dionysusGraphQLService;
+    private FilestoreGraphQLService filestoreGraphQLService;
 
     @Test
     void health_returnsResponseFromRestApi() {
@@ -25,7 +25,7 @@ class DionysusGraphQLServiceTest {
         when(restTemplate.getForObject("https://filestore.scarlettparker.co.uk/api/health", String.class))
             .thenReturn(expected);
 
-        String result = dionysusGraphQLService.health();
+        String result = filestoreGraphQLService.health();
 
         assertThat(result).isEqualTo(expected);
     }

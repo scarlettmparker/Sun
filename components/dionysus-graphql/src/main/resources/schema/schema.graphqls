@@ -1,7 +1,7 @@
-type DionysusQueries {
+type FilestoreQueries {
   health: String
 }
 
 extend type Query {
-  dionysusQueries: DionysusQueries!
+  filestoreQueries: FilestoreQueries!
 }
