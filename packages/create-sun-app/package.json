@@ -1,0 +1,25 @@
+{
+  "name": "@sun/create-app",
+  "version": "0.1.4",
+  "description": "Scaffold a Vite app like Sun",
+  "bin": {
+    "create-sun-app": "./bin/index.js"
+  },
+  "main": "./bin/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc"
+  },
+  "publishConfig": {
+    "registry": "https://registry.scarlettparker.co.uk"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "fs-extra": "^11.2.0"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^25.8.0",
+    "typescript": "^5.7.2"
+  }
+}

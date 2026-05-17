@@ -1,0 +1,17 @@
+node_modules/
+dist/
+public/
+.env
+
+# Generated
+generated/
+coverage/
+
+# Java stuff
+.gradle/
+build/
+/gradlew text eol=lf
+*.bat text eol=crlf
+*.jar binary
+.idea
+stats.html

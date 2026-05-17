@@ -1,0 +1,11 @@
+{
+  "watch": [
+    "server.js",
+    "routes/**/*",
+    "config.js",
+    "src/utils/register-loaders.ts"
+  ],
+  "ext": "js,json,jsx,tsx,ts,css",
+  "ignore": ["dist/*", "node_modules/*"],
+  "exec": "tsx --loader ./css-loader.mjs server.js"
+}
