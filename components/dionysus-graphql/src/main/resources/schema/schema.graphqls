@@ -36,9 +36,20 @@ type FilestoreMutations {
   # Initiate multipart upload; returns uploadId.
   startMultipartUpload(bucket: String!, key: String!): String
   # Upload a single part; returns ETag.
-  uploadPart(bucket: String!, key: String!, uploadId: String!, partNumber: Int!, content: String!): String
+  uploadPart(
+    bucket: String!
+    key: String!
+    uploadId: String!
+    partNumber: Int!
+    content: String!
+  ): String
   # Complete multipart upload.
-  completeMultipartUpload(bucket: String!, key: String!, uploadId: String!, parts: [CompletedPart!]!): Boolean
+  completeMultipartUpload(
+    bucket: String!
+    key: String!
+    uploadId: String!
+    parts: [CompletedPart!]!
+  ): Boolean
 }
 
 extend type Query {
