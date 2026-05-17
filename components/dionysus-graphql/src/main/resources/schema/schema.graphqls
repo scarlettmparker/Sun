@@ -1,5 +1,13 @@
+type Bucket {
+  id: String!
+  created: String
+  globalAliases: [String!]
+  localAliases: [String!]
+}
+
 type FilestoreQueries {
   health: String
+  listBuckets: [Bucket!]
 }
 
 extend type Query {
