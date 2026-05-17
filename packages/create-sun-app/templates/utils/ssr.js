@@ -59,10 +59,7 @@ export async function renderApp(
     if (!isProduction) {
       render = (await vite.ssrLoadModule("/src/entry-server.tsx")).render;
       clientJs = "/src/entry-client-wrapper.js";
-      clientCss = [
-        "/src/styles/globals.css",
-        "/src/styles/markdown.css",
-      ];
+      clientCss = [];
     } else {
       const productionManifest = await loadManifest();
       render = (await import("../dist/server/entry-server.js")).render;

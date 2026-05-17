@@ -244,7 +244,7 @@ describe("CreateBlogForm", () => {
     render(<CreateBlogForm />);
 
     const form = screen.getByTestId("create-blog-form");
-    expect(form).toHaveClass("create_blog_form");
+    expect(form).toHaveClass("form");
   });
 
   it("uses correct default values", () => {
