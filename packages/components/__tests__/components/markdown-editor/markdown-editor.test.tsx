@@ -3,9 +3,28 @@
  * Tests the MarkdownEditor component's rendering, editing, highlighting, and form integration.
  */
 
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MarkdownEditor } from "@sun/components";
+import {
+  restoreConsoleError,
+  suppressConsoleErrorsFromTests,
+} from "~/../testing/jest/mock";
+
+beforeAll(() => {
+  // Due to some issue with re-rendering that we don't care about in test env
+  suppressConsoleErrorsFromTests();
+});
+
+afterAll(() => {
+  restoreConsoleError();
+});
 
 jest.mock(
   "~/components/textarea/textarea.module.css",
@@ -384,8 +403,12 @@ describe("MarkdownEditor", () => {
     const editor = screen.getByTestId("editor");
     await user.type(editor, "Hello");
 
-    await user.keyboard("{Control>}z{/Control}");
-    await user.keyboard("{Control>}{Shift>}z{/Shift}{/Control}");
+    await act(async () => {
+      await user.keyboard("{Control>}z{/Control}");
+    });
+    await act(async () => {
+      await user.keyboard("{Control>}{Shift>}z{/Shift}{/Control}");
+    });
 
     await waitFor(() => {
       expect(editor.textContent).toBe("Hello");
