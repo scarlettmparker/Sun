@@ -22,14 +22,21 @@ export async function inlineCss(
   try {
     // Read all CSS files in src/styles
     const stylesDir = path.resolve("src/styles");
-    const styleFiles = await fs.readdir(stylesDir);
-    const cssFiles = styleFiles.filter((file) => file.endsWith(".css"));
-    const stylePromises = cssFiles.map(async (file) => {
-      const filePath = path.join(stylesDir, file);
-      return await fs.readFile(filePath, "utf-8");
-    });
-    const styleContents = await Promise.all(stylePromises);
-    cssContent += styleContents.join("\n") + "\n";
+    try {
+      await fs.access(stylesDir);
+      const styleFiles = await fs.readdir(stylesDir);
+      const cssFiles = styleFiles.filter((file) => file.endsWith(".css"));
+      const stylePromises = cssFiles.map(async (file) => {
+        const filePath = path.join(stylesDir, file);
+        return await fs.readFile(filePath, "utf-8");
+      });
+      const styleContents = await Promise.all(stylePromises);
+      cssContent += styleContents.join("\n") + "\n";
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+        throw error;
+      }
+    }
 
     // Then read manifest CSS
     if (clientCss && clientCss.length > 0) {
