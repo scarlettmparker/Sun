@@ -24,6 +24,8 @@ public class SunGraphQLApplication {
         System.setProperty("CERB_SPRING_DATASOURCE_URL", dotenv.get("CERB_SPRING_DATASOURCE_URL"));
         System.setProperty("CERB_SPRING_DATASOURCE_USERNAME", dotenv.get("CERB_SPRING_DATASOURCE_USERNAME"));
         System.setProperty("CERB_SPRING_DATASOURCE_PASSWORD", dotenv.get("CERB_SPRING_DATASOURCE_PASSWORD"));
+        // Dionysus keys
+        System.setProperty("GARAGE_SECRET_KEY", dotenv.get("GARAGE_SECRET_KEY"));
         SpringApplication.run(SunGraphQLApplication.class, args);
     }
 
