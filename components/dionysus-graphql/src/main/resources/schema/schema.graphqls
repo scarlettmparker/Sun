@@ -1,3 +1,4 @@
+# Represents a storage bucket.
 type Bucket {
   id: String!
   created: String
@@ -5,11 +6,45 @@ type Bucket {
   localAliases: [String!]
 }
 
+# Represents a file object in a bucket.
+type File {
+  key: String!
+  size: Int
+  lastModified: String
+}
+
+# Queries for filestore operations.
 type FilestoreQueries {
   health: String
   listBuckets: [Bucket!]
+  # List files in the specified bucket.
+  listFiles(bucket: String!): [File!]
+}
+
+# Part metadata for multipart uploads.
+input CompletedPart {
+  partNumber: Int!
+  etag: String!
+}
+
+# Mutations for filestore operations including multipart upload support.
+type FilestoreMutations {
+  # Upload or overwrite a file.
+  putFile(bucket: String!, key: String!, content: String!): Boolean
+  # Delete a file.
+  deleteFile(bucket: String!, key: String!): Boolean
+  # Initiate multipart upload; returns uploadId.
+  startMultipartUpload(bucket: String!, key: String!): String
+  # Upload a single part; returns ETag.
+  uploadPart(bucket: String!, key: String!, uploadId: String!, partNumber: Int!, content: String!): String
+  # Complete multipart upload.
+  completeMultipartUpload(bucket: String!, key: String!, uploadId: String!, parts: [CompletedPart!]!): Boolean
 }
 
 extend type Query {
   filestoreQueries: FilestoreQueries!
+}
+
+extend type Mutation {
+  filestoreMutations: FilestoreMutations!
 }

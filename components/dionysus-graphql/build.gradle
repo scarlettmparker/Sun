@@ -24,12 +24,14 @@ ext {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'com.netflix.graphql.dgs:graphql-dgs-spring-graphql-starter'
-    implementation 'io.github.cdimascio:dotenv-java:3.0.0'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'com.netflix.graphql.dgs:graphql-dgs-spring-graphql-starter-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+  implementation 'org.springframework.boot:spring-boot-starter-web'
+  implementation 'com.netflix.graphql.dgs:graphql-dgs-spring-graphql-starter'
+  implementation 'io.github.cdimascio:dotenv-java:3.0.0'
+  implementation platform('software.amazon.awssdk:bom:2.31.0')
+  implementation 'software.amazon.awssdk:s3'
+  testImplementation 'org.springframework.boot:spring-boot-starter-test'
+  testImplementation 'com.netflix.graphql.dgs:graphql-dgs-spring-graphql-starter-test'
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 dependencyManagement {
