@@ -184,7 +184,7 @@ export async function render({
               <meta charset="UTF-8" />
               <meta name="viewport" content="width=device-width, initial-scale=1.0" />
               ${cssTag}
-              <title>Scarlett Sun</title>
+              <title>Scarlet Sun</title>
             </head>
             <script type="module">
               import RefreshRuntime from '${process.env.VITE_SERVER_BASE}/@react-refresh'
