@@ -25,13 +25,13 @@ public class S3Config {
   @Bean
   public S3Client s3Client() {
     return S3Client.builder()
-      .endpointOverride(URI.create(endpoint))
-      .credentialsProvider(StaticCredentialsProvider.create(
-        AwsBasicCredentials.create(accessKey, secretKey)))
-      .region(Region.US_EAST_1)
-      .serviceConfiguration(S3Configuration.builder()
-        .pathStyleAccessEnabled(true)
-        .build())
-      .build();
+        .endpointOverride(URI.create(endpoint))
+        .credentialsProvider(StaticCredentialsProvider.create(
+            AwsBasicCredentials.create(accessKey, secretKey)))
+        .region(Region.of("garage"))
+        .serviceConfiguration(S3Configuration.builder()
+            .pathStyleAccessEnabled(true)
+            .build())
+        .build();
   }
 }
