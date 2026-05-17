@@ -88,7 +88,7 @@ describe("API utilities", () => {
 
     it("should return error for unknown operation", async () => {
       const result: ApiResponse<unknown> = await fetchGraphQLData(
-        "unknown" as string
+        "unknown" as string,
       );
 
       expect(result.success).toBe(false);
@@ -98,7 +98,7 @@ describe("API utilities", () => {
 
     it("should return error for invalid namespaced operation", async () => {
       const result: ApiResponse<unknown> = await fetchGraphQLData(
-        "songQueries.unknown" as string
+        "songQueries.unknown" as string,
       );
 
       expect(result.success).toBe(false);
@@ -108,7 +108,7 @@ describe("API utilities", () => {
 
     it("should return error for non-existent namespace", async () => {
       const result: ApiResponse<unknown> = await fetchGraphQLData(
-        "nonExistent.list" as string
+        "nonExistent.list" as string,
       );
 
       expect(result.success).toBe(false);
@@ -128,7 +128,7 @@ describe("API utilities", () => {
 
       const result: ApiResponse<unknown> = await fetchGraphQLData(
         "songQueries.locate",
-        { id: "1" }
+        { id: "1" },
       );
 
       expect(result.success).toBe(true);
@@ -151,12 +151,12 @@ describe("API utilities", () => {
       const result = await fetchListSongs();
 
       expect(mockFetch).toHaveBeenCalledWith(
-        "http://localhost:8080/graphql",
+        "http://localhost:8083/graphql",
         expect.objectContaining({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: expect.stringContaining("query"),
-        })
+        }),
       );
       expect(result?.success).toBe(true);
     });

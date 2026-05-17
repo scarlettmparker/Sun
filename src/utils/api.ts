@@ -100,7 +100,7 @@ function getOperation(path: string): DocumentNode | undefined {
  */
 export function registerGraphQLOperation(
   operationName: string,
-  queryDocument: DocumentNode
+  queryDocument: DocumentNode,
 ): void {
   (operationRegistry as Record<string, unknown>)[operationName] = queryDocument;
 }
@@ -110,7 +110,7 @@ export function registerGraphQLOperation(
  */
 const retryWithBackoff = async <T>(
   fn: () => Promise<T>,
-  delays: number[]
+  delays: number[],
 ): Promise<T> => {
   let lastError: unknown;
   for (let i = 0; i <= delays.length; i++) {
@@ -135,10 +135,10 @@ const retryWithBackoff = async <T>(
  */
 export async function fetchGraphQLData<T>(
   operationName: string,
-  variables?: Record<string, unknown>
+  variables?: Record<string, unknown>,
 ): Promise<ApiResponse<T>> {
   const endpoint =
-    process.env.GRAPHQL_ENDPOINT || "http://localhost:8080/graphql";
+    process.env.GRAPHQL_ENDPOINT || "http://localhost:8083/graphql";
 
   const query = getOperation(operationName);
   if (!query) {
@@ -259,10 +259,10 @@ export async function fetchListGalleryItemsByForeignObjects(ids: string[]) {
  */
 export async function mutateCreateBlogPost(
   title: string,
-  input: BlogPostInput
+  input: BlogPostInput,
 ) {
   return fetchGraphQLData<CreateBlogPostMutation>(
     "blogMutations.createBlogPost",
-    { title, input }
+    { title, input },
   );
 }

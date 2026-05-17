@@ -23,10 +23,18 @@ config({
 export const port = parseInt(process.env.SERVER_PORT || "5173", 10);
 
 /**
+ * The host on which the server will start. Defaults to localhost.
+ * @type {number}
+ */
+
+export const host = process.env.SERVER_HOST || "0.0.0.0";
+
+/**
  * The base URL path for the server. Defaults to "/".
  * @type {string}
+ * @example http://int.scarlettparker.co.uk
  */
-export const base = process.env.SERVER_BASE || "/";
+export const base = process.env.VITE_SERVER_BASE || "/";
 
 /**
  * The host of the backend API. Defaults to "0.0.0.0".

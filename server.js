@@ -8,6 +8,7 @@ import path from "path";
 import cookieParser from "cookie-parser";
 import {
   port,
+  host,
   base,
   isProduction,
   backendHost,
@@ -66,14 +67,14 @@ if (!isProduction) {
 
         return compression.filter(req, res);
       },
-    })
+    }),
   );
 
   app.use(
     sirv(path.resolve("dist/client"), {
       extensions: ["html", "js", "css"],
       dev: false,
-    })
+    }),
   );
   app.use("/messages", express.static(path.resolve("./messages")));
 
@@ -84,7 +85,7 @@ if (!isProduction) {
       changeOrigin: true,
       pathRewrite: { "^/api": "" },
       secure: false,
-    })
+    }),
   );
 }
 
@@ -114,7 +115,7 @@ app.post("*", async (req, res) => {
 
       if (error.cacheInvalidateKey) {
         cookieHeaders.push(
-          `invalidate_cache=${error.cacheInvalidateKey}; Path=/; Max-Age=31536000; SameSite=Lax;`
+          `invalidate_cache=${error.cacheInvalidateKey}; Path=/; Max-Age=31536000; SameSite=Lax;`,
         );
       }
 
@@ -133,6 +134,6 @@ app.post("*", async (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`Server started at http://localhost:${port}`);
+app.listen(port, host, () => {
+  console.log(`Server started at http://${host}:${port}`);
 });

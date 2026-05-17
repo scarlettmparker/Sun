@@ -187,7 +187,7 @@ export async function render({
               <title>Scarlett Sun</title>
             </head>
             <script type="module">
-              import RefreshRuntime from 'http://${process.env.SERVER_BASE || "localhost"}:${process.env.SERVER_PORT || "5173"}/@react-refresh'
+              import RefreshRuntime from '${process.env.VITE_SERVER_BASE}/@react-refresh'
               RefreshRuntime.injectIntoGlobalHook(window)
               window.$RefreshReg$ = () => {}
               window.$RefreshSig$ = () => (type) => type
