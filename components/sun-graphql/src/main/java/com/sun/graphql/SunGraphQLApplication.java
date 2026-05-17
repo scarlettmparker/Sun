@@ -25,6 +25,7 @@ public class SunGraphQLApplication {
         setSystemProperty(dotenv, "CERB_SPRING_DATASOURCE_USERNAME", "CERB_SPRING_DATASOURCE_USERNAME");
         setSystemProperty(dotenv, "CERB_SPRING_DATASOURCE_PASSWORD", "CERB_SPRING_DATASOURCE_PASSWORD");
         // Filestore / Garage S3
+        setSystemProperty(dotenv, "GARAGE_SECRET_KEY", "GARAGE_SECRET_KEY");
         setSystemProperty(dotenv, "AWS_ACCESS_KEY_ID", "AWS_ACCESS_KEY_ID");
         setSystemProperty(dotenv, "AWS_SECRET_ACCESS_KEY", "AWS_SECRET_ACCESS_KEY");
         System.setProperty("FILESTORE_ENDPOINT", dotenv.get("FILESTORE_ENDPOINT", "http://127.0.0.1:3900"));
