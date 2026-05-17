@@ -1,6 +1,6 @@
 Apollo - Stem Player
 Briareus - Blogsite
-Cerberus
+Cerberus - Gallery
 Dionysus
 Echo
 Fates

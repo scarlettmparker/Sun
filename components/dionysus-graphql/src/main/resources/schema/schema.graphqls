@@ -1,0 +1,7 @@
+type DionysusQueries {
+  health: String
+}
+
+extend type Query {
+  dionysusQueries: DionysusQueries!
+}
