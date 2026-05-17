@@ -11,5 +11,5 @@
 
 .blog_body {
   height: calc(100vh - (var(--lg) * 14));
-  overflow-y: scroll;
+  overflow-y: auto;
 }
