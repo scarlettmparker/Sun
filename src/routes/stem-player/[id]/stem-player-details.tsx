@@ -1,6 +1,6 @@
 import { fetchLocateSong } from "~/utils/api";
 import {
-  ListGalleryItemsByForeignObjectsQuery,
+  // ListGalleryItemsByForeignObjectsQuery,
   LocateSongQuery,
   Song,
 } from "~/generated/graphql";
@@ -21,9 +21,9 @@ const StemPlayerDetailsPage = () => {
   const { data: song } = getPageData<
     LocateSongQuery["stemPlayerQueries"]["locate"]
   >("song", PAGE, { id });
-  const { data: galleryItems } = getPageData<
-    ListGalleryItemsByForeignObjectsQuery["galleryQueries"]["listByForeignObjects"]
-  >("galleryItems", PAGE, { ids: [id] });
+  // const { data: galleryItems } = getPageData<
+  //   ListGalleryItemsByForeignObjectsQuery["galleryQueries"]["listByForeignObjects"]
+  // >("galleryItems", PAGE, { ids: [id] });
 
   if (!song) {
     return <div>Loading...</div>;

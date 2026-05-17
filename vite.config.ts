@@ -8,7 +8,6 @@ export default defineConfig(() => {
     process.env.ALLOWED_HOSTS?.split(",")
       .map((h) => h.trim())
       .filter(Boolean) ?? [];
-  const mainHost = allowedHosts[0];
 
   return {
     plugins: [react()],

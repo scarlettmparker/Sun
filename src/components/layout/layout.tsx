@@ -20,8 +20,7 @@ const Layout = (props: LayoutProps) => {
     const interval = setInterval(() => updateBackgroundColour(), 5000); // 5 second
     // css transitions handle the step though it's so little of a change who cares?
     return () => clearInterval(interval);
-  }),
-    [];
+  }, []);
 
   return (
     <main style={{ backgroundColor: backgroundColour }} className={styles.main}>

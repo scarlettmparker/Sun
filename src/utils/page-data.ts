@@ -251,20 +251,25 @@ export function getPageData<T>(
   pattern: string,
   params?: Record<string, unknown>,
 ): { data: T } {
-  // Use the same cache key format as readPageData to ensure consistency
   const cacheKey = makeCacheKey(`${pattern}:${key}`, params);
 
-  const record = suspenseCache.get(cacheKey);
+  let record = suspenseCache.get(cacheKey);
 
-  // If cache is invalidated or doesn't exist, force a refetch
+  // Fallback check to support key structures that were populated via hydratePageData
+  if (!record) {
+    const legacyHydrationKey = makeCacheKey(pattern, params);
+    record = suspenseCache.get(legacyHydrationKey);
+  }
+
+  // If cache is invalidated or doesn't exist, execute/trigger fetch strategy
   if (typeof window === "undefined" || !record) {
     return readPageData(key, pattern, params);
   }
 
-  if (record!.status === "pending") throw record!.promise;
-  if (record!.status === "rejected") throw record!.error;
+  if (record.status === "pending") throw record.promise;
+  if (record.status === "rejected") throw record.error;
 
-  return { data: (record!.result as Record<string, unknown>)![key] as T };
+  return { data: (record.result as Record<string, unknown>)?.[key] as T };
 }
 
 /**
