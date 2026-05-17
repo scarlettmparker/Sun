@@ -9,7 +9,7 @@
     "build:server": "vite build --ssr src/entry-server.tsx --outDir dist/server",
     "graphql:generate": "graphql-codegen --config codegen.ts",
     "lint": "npx eslint",
-    "preview": "cross-env NODE_ENV=production tsx server.js"
+    "preview": "cross-env NODE_ENV=production tsx --loader ./css-loader.mjs server.js"
   },
   "devDependencies": {
     "@eslint/js": "^9.37.0",

@@ -1,7 +1,7 @@
 import { cn } from "~/utils/cn";
 import "./textarea.module.css";
 
-type TextAreaProps = React.TextAreaHTMLAttributes<HTMLTextAreaElement>;
+type TextAreaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement>;
 
 /**
  * Scarlet UI TextArea.
