@@ -6,12 +6,12 @@ import {
   FormLabel,
   FormItem,
   FormFooter,
-} from "~/components/form";
-import Input from "~/components/input";
+} from "@sun/components";
+import { Input } from "@sun/components";
 import { createBlogPost } from "~/server/actions/blog-post";
-import Button from "~/components/button";
+import { Button } from "@sun/components";
 import styles from "./create-blog-form.module.css";
-import MarkdownEditor from "~/components/markdown-editor";
+import { MarkdownEditor } from "@sun/components";
 
 /**
  * Form for creating a new blog post.

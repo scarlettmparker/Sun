@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import styles from "./blog.module.css";
 import { groupPostsByMonthYear } from "./group-posts-by-month-year";
 import React from "react";
-import Card, { CardBody } from "~/components/card";
+import { Card, CardBody } from "@sun/components";
 
 const BlogPage = () => {
   const { t } = useTranslation("blog");

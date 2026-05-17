@@ -1,11 +1,11 @@
-import MarkdownViewer from "~/components/markdown-viewer";
+import { MarkdownViewer } from "@sun/components";
 import { LocateBlogPostQuery } from "~/generated/graphql";
 import { fetchLocateBlogPost } from "~/utils/api";
 import { useParams } from "react-router-dom";
 
 import { pageDataRegistry, getPageData } from "~/utils/page-data";
 import styles from "./blog-post.module.css";
-import Card, { CardBody } from "~/components/card";
+import { Card, CardBody } from "@sun/components";
 
 const BlogPostPage = () => {
   const { id } = useParams<{ id: string }>();

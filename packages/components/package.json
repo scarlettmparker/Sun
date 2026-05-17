@@ -1,0 +1,26 @@
+{
+  "name": "@sun/components",
+  "version": "0.1.8",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./style.css": "./dist/index.css"
+  },
+  "scripts": {
+    "build": "tsup"
+  },
+  "devDependencies": {
+    "esbuild-plugin-css-modules": "^0.3.0",
+    "esbuild-plugin-postcss": "^0.1.4",
+    "postcss-modules": "^6.0.1",
+    "tsup": "^8.3.5"
+  },
+  "publishConfig": {
+    "registry": "https://registry.scarlettparker.co.uk"
+  }
+}

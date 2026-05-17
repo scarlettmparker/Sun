@@ -2,8 +2,8 @@ import { fetchListSongs } from "~/utils/api";
 import { pageDataRegistry, getPageData } from "~/utils/page-data";
 import { ListSongsQuery } from "~/generated/graphql";
 import { Outlet } from "react-router-dom";
-import Sidebar from "~/components/sidebar";
-import Button from "~/components/button";
+import { Sidebar } from "@sun/components";
+import { Button } from "@sun/components";
 import styles from "./stem-player.module.css";
 import { Music } from "lucide-react";
 

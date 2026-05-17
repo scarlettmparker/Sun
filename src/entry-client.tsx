@@ -6,10 +6,10 @@ import i18n from "i18next";
 import { Suspense, useEffect } from "react";
 
 import Layout from "./components/layout";
-import "./styles/globals.css";
-import "./styles/markdown.css";
 import { hydratePageData } from "./utils/page-data";
 import { PostHogProvider } from "./utils/hooks/posthog";
+
+import "@sun/components/style.css";
 
 // Define the postlude hydration function on window for SSR
 window.hydratePageDataFromPostlude = hydratePageData;

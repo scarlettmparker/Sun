@@ -1,4 +1,4 @@
-import Button from "~/components/button";
+import { Button } from "@sun/components";
 import menu from "..";
 import styles from "./top-nav-bar.module.css";
 // import { useTranslation } from "react-i18next";

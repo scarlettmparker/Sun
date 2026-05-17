@@ -1,7 +1,7 @@
-import Button from "~/components/button";
+import { Button } from "@sun/components";
 import { useStemPlayer } from "./hooks/use-stem-player";
-import Label from "~/components/label";
-import Input from "~/components/input";
+import { Label } from "@sun/components";
+import { Input } from "@sun/components";
 import { ChangeEvent } from "react";
 import { formatTime } from "./utils/format-time";
 import { formatHoverTime } from "./utils/format-hover-time";

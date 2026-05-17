@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useState, useRef } from "react";
-import Input from "~/components/input";
-import Label from "~/components/label";
+import { Input } from "@sun/components";
+import { Label } from "@sun/components";
 import styles from "./stem-sliders.module.css";
 import { Stem } from "~/generated/graphql";
 

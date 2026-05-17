@@ -1,4 +1,4 @@
-import Skeleton from "~/components/skeleton";
+import { Skeleton } from "@sun/components";
 import styles from "./blog-skeleton.module.css";
 
 const BlogSkeleton = () => {

@@ -1,15 +1,16 @@
-import Card, {
+import {
+  Card,
   CardBody,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "~/components/card";
+} from "@sun/components";
 
 import styles from "./gallery.module.css";
 import { getPageData, pageDataRegistry } from "~/utils/page-data";
 import { ListGalleryItemsQuery } from "~/generated/graphql";
 import { fetchListGalleryItems } from "~/utils/api";
-import MarkdownViewer from "~/components/markdown-viewer";
+import { MarkdownViewer } from "@sun/components";
 
 const Gallery = () => {
   const { data: galleryItems } = getPageData<
