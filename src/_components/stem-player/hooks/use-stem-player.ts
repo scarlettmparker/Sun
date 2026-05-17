@@ -46,7 +46,7 @@ export function useStemPlayer(song: Song) {
             setLoadingProgress((prev) => prev + (1 / stems.length) * 100);
           }
           return decoded;
-        })
+        }),
     );
 
     Promise.all(loadPromises)
@@ -57,7 +57,7 @@ export function useStemPlayer(song: Song) {
           masterGainNode.current = audioCtx.createGain();
           masterGainNode.current.gain.setValueAtTime(
             masterVolume,
-            audioCtx.currentTime
+            audioCtx.currentTime,
           );
           gainNodes.current.forEach((gainNode) => {
             gainNode.connect(masterGainNode.current!);
@@ -197,7 +197,7 @@ export function useStemPlayer(song: Song) {
       if (playing && offset.current < getDuration())
         startPlayback(offset.current);
     },
-    [audioCtx, buffers, playing, getDuration, stop]
+    [audioCtx, buffers, playing, getDuration, stop],
   );
 
   /**
@@ -208,7 +208,7 @@ export function useStemPlayer(song: Song) {
       const newTime = Math.max(0, Math.min(getDuration(), position + seconds));
       seek(newTime);
     },
-    [audioCtx, buffers, position, seek]
+    [audioCtx, buffers, position, seek],
   );
 
   /**
@@ -222,7 +222,7 @@ export function useStemPlayer(song: Song) {
       const node = gainNodes.current[index];
       if (node) node.gain.setValueAtTime(value, audioCtx!.currentTime);
     },
-    [audioCtx]
+    [audioCtx],
   );
 
   /**
@@ -237,7 +237,7 @@ export function useStemPlayer(song: Song) {
         masterGainNode.current.gain.setValueAtTime(value, audioCtx.currentTime);
       }
     },
-    [audioCtx]
+    [audioCtx],
   );
 
   // memoize the return value to prevent unnecessary re-renders
@@ -272,6 +272,6 @@ export function useStemPlayer(song: Song) {
       skip,
       setVolume,
       setMasterVolume,
-    ]
+    ],
   );
 }

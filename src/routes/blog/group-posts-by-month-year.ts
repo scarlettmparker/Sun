@@ -9,7 +9,7 @@ export type GroupedPost = { monthYear: string; posts: BlogPost[] };
  * and an array of posts for that month/year.
  */
 export function groupPostsByMonthYear(
-  posts: (BlogPost | null)[]
+  posts: (BlogPost | null)[],
 ): GroupedPost[] {
   const monthNames = [
     "January",

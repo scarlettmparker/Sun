@@ -115,7 +115,7 @@ const Slider = memo(
       </div>
     );
   },
-  (prev, next) => prev.value === next.value && prev.stem === next.stem
+  (prev, next) => prev.value === next.value && prev.stem === next.stem,
 );
 
 Slider.displayName = "Slider";
@@ -125,7 +125,7 @@ Slider.displayName = "Slider";
  */
 const StemSliders = ({ stems, setVolume }: StemControlsProps) => {
   const [values, setValues] = useState<number[]>(
-    () => stems?.map(() => 1) ?? []
+    () => stems?.map(() => 1) ?? [],
   );
   const isDown = useRef(false);
   const activeIndex = useRef<number | null>(null);
@@ -156,7 +156,7 @@ const StemSliders = ({ stems, setVolume }: StemControlsProps) => {
 
       setVolume(i, value);
     },
-    [setVolume]
+    [setVolume],
   );
 
   /**
@@ -201,7 +201,7 @@ const StemSliders = ({ stems, setVolume }: StemControlsProps) => {
 
       setVolume(activeIndex.current, value);
     },
-    [setVolume]
+    [setVolume],
   );
 
   function onPointerUp(): void {

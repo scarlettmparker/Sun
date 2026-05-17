@@ -25,7 +25,7 @@ describe("Stem Player Data Loader", () => {
     // Clear all registered loaders before each test
     const registeredPages = pageDataRegistry.getRegisteredPageNames();
     registeredPages.forEach((page) =>
-      pageDataRegistry.unregisterPageDataLoader(page)
+      pageDataRegistry.unregisterPageDataLoader(page),
     );
   });
 
@@ -223,7 +223,7 @@ describe("Stem Player Data Loader", () => {
       mockFetchListSongs.mockResolvedValue(
         undefined as unknown as
           | ApiResponse<unknown>
-          | Promise<ApiResponse<unknown>>
+          | Promise<ApiResponse<unknown>>,
       );
 
       const result = await getStemPlayerData();
@@ -234,7 +234,7 @@ describe("Stem Player Data Loader", () => {
 
     it("should handle fetchListSongs returning null", async () => {
       mockFetchListSongs.mockResolvedValue(
-        null as unknown as ApiResponse<unknown> | Promise<ApiResponse<unknown>>
+        null as unknown as ApiResponse<unknown> | Promise<ApiResponse<unknown>>,
       );
 
       const result = await getStemPlayerData();

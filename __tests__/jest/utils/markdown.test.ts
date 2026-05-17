@@ -31,7 +31,7 @@ describe("highlightMarkdown", () => {
     const input = "***bold italic***";
     const output = highlightMarkdown(input);
     expect(output).toContain(
-      '<span class="md-bold-italic">***bold italic***</span>'
+      '<span class="md-bold-italic">***bold italic***</span>',
     );
   });
 
@@ -46,7 +46,7 @@ describe("highlightMarkdown", () => {
     const input = "~~strikethrough~~";
     const output = highlightMarkdown(input);
     expect(output).toContain(
-      '<span class="md-strike">~~strikethrough~~</span>'
+      '<span class="md-strike">~~strikethrough~~</span>',
     );
   });
 
@@ -101,7 +101,7 @@ describe("highlightMarkdown", () => {
     const input = "***bold italic***";
     const output = highlightMarkdown(input);
     expect(output).toContain(
-      '<span class="md-bold-italic">***bold italic***</span>'
+      '<span class="md-bold-italic">***bold italic***</span>',
     );
   });
 
@@ -109,7 +109,7 @@ describe("highlightMarkdown", () => {
     const input = "\\*not italic\\* and \\*\\*not bold\\*\\*";
     const output = highlightMarkdown(input);
     expect(output).toContain(
-      '\\<span class="md-italic">*not italic\\*</span> and \\<span class="md-italic">*\\*</span>not bold\\<span class="md-italic">*\\*</span>'
+      '\\<span class="md-italic">*not italic\\*</span> and \\<span class="md-italic">*\\*</span>not bold\\<span class="md-italic">*\\*</span>',
     );
     // Since it's not properly escaped, it is highlighted
     expect(output).toContain('class="md-italic"');
@@ -125,10 +125,10 @@ describe("highlightMarkdown", () => {
     const input = "# 1. Header with number\n## Header-with-dashes";
     const output = highlightMarkdown(input);
     expect(output).toContain(
-      '<span class="md-h1"># 1. Header with number</span>'
+      '<span class="md-h1"># 1. Header with number</span>',
     );
     expect(output).toContain(
-      '<span class="md-h2">## Header-with-dashes</span>'
+      '<span class="md-h2">## Header-with-dashes</span>',
     );
   });
 
@@ -142,7 +142,7 @@ describe("highlightMarkdown", () => {
     const input = "[link](http://example.com/path?query=value&other=123)";
     const output = highlightMarkdown(input);
     expect(output).toContain(
-      '<span class="md-link">[link](http://example.com/path?query=value&amp;other=123)</span>'
+      '<span class="md-link">[link](http://example.com/path?query=value&amp;other=123)</span>',
     );
   });
 
@@ -220,7 +220,7 @@ describe("stripMarkdown", () => {
     const highlighted = highlightMarkdown("[text](url)");
     const stripped = stripMarkdown(highlighted);
     expect(stripped).toContain(
-      '<a href="url" target="_blank" class="md-link">text</a>'
+      '<a href="url" target="_blank" class="md-link">text</a>',
     );
   });
 
@@ -238,7 +238,7 @@ describe("stripMarkdown", () => {
 
   it("should handle complex markdown", () => {
     const highlighted = highlightMarkdown(
-      "# Title\n\n**Bold** and *italic* text.\n\n- List item\n\n`code` [link](url)"
+      "# Title\n\n**Bold** and *italic* text.\n\n- List item\n\n`code` [link](url)",
     );
     const stripped = stripMarkdown(highlighted);
     expect(stripped).toContain('<span class="md-h1">Title</span>');
@@ -247,7 +247,7 @@ describe("stripMarkdown", () => {
     expect(stripped).toContain('<span class="md-list">•</span> List item');
     expect(stripped).toContain('<span class="md-code">code</span>');
     expect(stripped).toContain(
-      '<a href="url" target="_blank" class="md-link">link</a>'
+      '<a href="url" target="_blank" class="md-link">link</a>',
     );
   });
 

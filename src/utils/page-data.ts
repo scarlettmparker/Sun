@@ -4,7 +4,7 @@
  */
 
 type PageDataLoader = (
-  params?: Record<string, unknown>
+  params?: Record<string, unknown>,
 ) => Promise<Record<string, unknown> | null>;
 
 // Event emitter for cache hydration
@@ -43,7 +43,7 @@ export const suspenseCache = new Map<
  * @param initialData - An object containing initial page data keyed by cache keys, where each value is the data for that key.
  */
 export function hydratePageData(
-  initialData: Record<string, Record<string, unknown>>
+  initialData: Record<string, Record<string, unknown>>,
 ) {
   if (!initialData) {
     return;
@@ -155,7 +155,7 @@ function getRegisteredPageNames(): string[] {
  */
 export function makeCacheKey(
   pattern: string,
-  params?: Record<string, unknown>
+  params?: Record<string, unknown>,
 ) {
   const normalized = pattern.startsWith("/") ? pattern : "/" + pattern;
   return `${normalized}:${JSON.stringify(params || {})}`;
@@ -173,7 +173,7 @@ export function makeCacheKey(
 function readPageData<T>(
   key: string,
   pattern: string,
-  params?: Record<string, unknown>
+  params?: Record<string, unknown>,
 ): { data: T } {
   const cacheKey = makeCacheKey(`${pattern}:${key}`, params);
   let record = suspenseCache.get(cacheKey);
@@ -249,7 +249,7 @@ function readPageData<T>(
 export function getPageData<T>(
   key: string,
   pattern: string,
-  params?: Record<string, unknown>
+  params?: Record<string, unknown>,
 ): { data: T } {
   // Use the same cache key format as readPageData to ensure consistency
   const cacheKey = makeCacheKey(`${pattern}:${key}`, params);

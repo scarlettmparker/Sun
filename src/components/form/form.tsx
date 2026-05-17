@@ -79,7 +79,7 @@ const FormItem = (props: FormItemProps) => {
     children.type !== Select
   ) {
     throw new Error(
-      "FormItem only accepts Input, TextArea, MarkdownEditor, or Select as children"
+      "FormItem only accepts Input, TextArea, MarkdownEditor, or Select as children",
     );
   }
 

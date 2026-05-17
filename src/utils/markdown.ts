@@ -25,70 +25,70 @@ export const stripMarkdown = (html: string): string => {
 
   result = result.replace(
     /<span class="md-h1">#\s+(.*?)<\/span>/g,
-    '<span class="md-h1">$1</span>'
+    '<span class="md-h1">$1</span>',
   );
   result = result.replace(
     /<span class="md-h2">##\s+(.*?)<\/span>/g,
-    '<span class="md-h2">$1</span>'
+    '<span class="md-h2">$1</span>',
   );
   result = result.replace(
     /<span class="md-h3">###\s+(.*?)<\/span>/g,
-    '<span class="md-h3">$1</span>'
+    '<span class="md-h3">$1</span>',
   );
   result = result.replace(
     /<span class="md-h4">####\s+(.*?)<\/span>/g,
-    '<span class="md-h4">$1</span>'
+    '<span class="md-h4">$1</span>',
   );
   result = result.replace(
     /<span class="md-h5">#####\s+(.*?)<\/span>/g,
-    '<span class="md-h5">$1</span>'
+    '<span class="md-h5">$1</span>',
   );
   result = result.replace(
     /<span class="md-h6">######\s+(.*?)<\/span>/g,
-    '<span class="md-h6">$1</span>'
+    '<span class="md-h6">$1</span>',
   );
 
   result = result.replace(
     /<span class="md-list">([-*+])\s*<\/span>\s*/g,
-    '<span class="md-list">•</span> '
+    '<span class="md-list">•</span> ',
   );
 
   result = result.replace(
     /<span class="md-quote">&gt;\s+(.*?)<\/span>/g,
-    '<span class="md-quote">$1</span>'
+    '<span class="md-quote">$1</span>',
   );
 
   result = result.replace(
     /<span class="md-code">`([^`]+)`<\/span>/g,
-    '<span class="md-code">$1</span>'
+    '<span class="md-code">$1</span>',
   );
   result = result.replace(
     /<span class="md-bold-italic">\*\*\*([^*]+)\*\*\*<\/span>/g,
-    '<span class="md-bold-italic">$1</span>'
+    '<span class="md-bold-italic">$1</span>',
   );
   result = result.replace(
     /<span class="md-bold">\*\*([^*]+)\*\*<\/span>/g,
-    '<span class="md-bold">$1</span>'
+    '<span class="md-bold">$1</span>',
   );
   result = result.replace(
     /<span class="md-underline">__([^_]+)__<\/span>/g,
-    '<span class="md-underline">$1</span>'
+    '<span class="md-underline">$1</span>',
   );
   result = result.replace(
     /<span class="md-strike">~~([^~]+)~~<\/span>/g,
-    '<span class="md-strike">$1</span>'
+    '<span class="md-strike">$1</span>',
   );
   result = result.replace(
     /<span class="md-italic">\*([^*]+)\*<\/span>/g,
-    '<span class="md-italic">$1</span>'
+    '<span class="md-italic">$1</span>',
   );
   result = result.replace(
     /<span class="md-italic">_([^_]+)_<\/span>/g,
-    '<span class="md-italic">$1</span>'
+    '<span class="md-italic">$1</span>',
   );
   result = result.replace(
     /<span class="md-link">\[([^\]]+)\]\(([^)]+)\)<\/span>/g,
-    '<a href="$2" target="_blank" class="md-link">$1</a>'
+    '<a href="$2" target="_blank" class="md-link">$1</a>',
   );
 
   result = result.replace(/\n/g, "<br>\n");

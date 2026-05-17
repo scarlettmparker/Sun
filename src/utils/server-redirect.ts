@@ -10,7 +10,7 @@ export class ServerRedirectError extends Error {
     redirectTo: string,
     cacheInvalidateKey?: string,
     clientPayload?: MutationResult,
-    statusCode: number = 302
+    statusCode: number = 302,
   ) {
     super(`Redirecting to ${redirectTo}`);
     this.name = "ServerRedirectError";

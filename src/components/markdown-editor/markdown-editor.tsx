@@ -23,7 +23,7 @@ type HighlightFunction = (
    * Callback function that restores the cursor
    * position after the inner HTML has been updated
    */
-  restoreCursor: (el: HTMLElement) => void
+  restoreCursor: (el: HTMLElement) => void,
 ) => void;
 
 /**

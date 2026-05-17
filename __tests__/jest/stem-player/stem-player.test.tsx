@@ -60,7 +60,7 @@ describe("StemPlayer", () => {
       arrayBuffer: jest.fn().mockResolvedValue(new ArrayBuffer(8)),
     });
     (mockAudioContext.decodeAudioData as jest.Mock).mockResolvedValue(
-      mockAudioBuffer
+      mockAudioBuffer,
     );
     mockUseStemPlayer.mockReturnValue(defaultMockReturnValue);
   });
@@ -71,7 +71,7 @@ describe("StemPlayer", () => {
     // Check that translation keys are used
     expect(screen.getByText("controls.master")).toBeInTheDocument();
     expect(
-      screen.getByLabelText("controls.aria.master-volume")
+      screen.getByLabelText("controls.aria.master-volume"),
     ).toBeInTheDocument();
     expect(screen.getByLabelText("controls.aria.seek")).toBeInTheDocument();
     expect(screen.getByLabelText("playback")).toBeInTheDocument();
@@ -97,10 +97,10 @@ describe("StemPlayer", () => {
     render(<StemPlayer song={mockSong} />);
 
     expect(
-      screen.getByLabelText("controls.aria.seek-back")
+      screen.getByLabelText("controls.aria.seek-back"),
     ).toBeInTheDocument();
     expect(
-      screen.getByLabelText("controls.aria.seek-forward")
+      screen.getByLabelText("controls.aria.seek-forward"),
     ).toBeInTheDocument();
   });
 
@@ -212,7 +212,7 @@ describe("StemPlayer", () => {
     render(<StemPlayer song={mockSong} />);
 
     const seekForwardButton = screen.getByLabelText(
-      "controls.aria.seek-forward"
+      "controls.aria.seek-forward",
     );
     fireEvent.click(seekForwardButton);
     expect(mockSkip).toHaveBeenCalledWith(10);
@@ -261,7 +261,7 @@ describe("StemPlayer", () => {
     const seekForward = screen.getByLabelText("controls.aria.seek-forward");
     expect(seekForward).toHaveAttribute(
       "aria-label",
-      "controls.aria.seek-forward"
+      "controls.aria.seek-forward",
     );
     expect(seekForward).toHaveAttribute("title", "controls.title.seek-forward");
   });
@@ -440,7 +440,7 @@ describe("StemPlayer", () => {
     expect(sliders).toHaveLength(2);
     const masterSlider = sliders.find(
       (slider) =>
-        slider.getAttribute("aria-label") === "controls.aria.master-volume"
+        slider.getAttribute("aria-label") === "controls.aria.master-volume",
     );
     expect(masterSlider).toBeInTheDocument();
   });
@@ -573,7 +573,7 @@ describe("StemPlayer", () => {
     const stemSliders = sliders.filter(
       (slider) =>
         slider.getAttribute("aria-label") !== "controls.aria.master-volume" &&
-        slider.getAttribute("aria-label") !== "controls.aria.seek"
+        slider.getAttribute("aria-label") !== "controls.aria.seek",
     );
     expect(stemSliders.length).toBe(2);
   });

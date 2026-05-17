@@ -25,7 +25,7 @@ describe("Button", () => {
     render(
       <Button type="submit" disabled aria-label="Submit button">
         Submit
-      </Button>
+      </Button>,
     );
     const button = screen.getByRole("button", { name: /submit button/i });
     expect(button).toHaveAttribute("type", "submit");
@@ -51,7 +51,7 @@ describe("Button", () => {
     render(
       <Button>
         <span>Child element</span>
-      </Button>
+      </Button>,
     );
     expect(screen.getByText("Child element")).toBeInTheDocument();
   });

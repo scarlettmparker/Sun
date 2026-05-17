@@ -26,7 +26,7 @@ const Select = (props: SelectProps) => {
   } = props;
   const [isOpen, setIsOpen] = useState(false);
   const [selectedValue, setSelectedValue] = useState(
-    value || defaultValue || ""
+    value || defaultValue || "",
   );
   const selectRef = useRef<HTMLDivElement>(null);
 
@@ -119,7 +119,7 @@ const Select = (props: SelectProps) => {
    * Handles change events from the hidden select element.
    */
   const handleHiddenSelectChange = (
-    e: React.ChangeEvent<HTMLSelectElement>
+    e: React.ChangeEvent<HTMLSelectElement>,
   ) => {
     setSelectedValue(e.target.value);
     onChange?.(e);
@@ -169,7 +169,7 @@ const Select = (props: SelectProps) => {
               key={option.value}
               className={cn(
                 styles.option,
-                option.value === selectedValue && styles.selected
+                option.value === selectedValue && styles.selected,
               )}
               onClick={() => handleOptionClick(option.value)}
               role="option"

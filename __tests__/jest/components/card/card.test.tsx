@@ -24,7 +24,7 @@ describe("Card", () => {
     render(
       <Card data-testid="test-card" aria-label="Test card">
         Content
-      </Card>
+      </Card>,
     );
     const card = screen.getByTestId("test-card");
     expect(card).toHaveAttribute("data-testid", "test-card");
@@ -41,7 +41,7 @@ describe("Card", () => {
     render(
       <Card>
         <span>Child element</span>
-      </Card>
+      </Card>,
     );
     expect(screen.getByText("Child element")).toBeInTheDocument();
   });
@@ -99,7 +99,7 @@ describe("CardDescription", () => {
 
   it("passes through attributes correctly", () => {
     render(
-      <CardDescription data-testid="test-description">Content</CardDescription>
+      <CardDescription data-testid="test-description">Content</CardDescription>,
     );
     const description = screen.getByTestId("test-description");
     expect(description).toHaveAttribute("data-testid", "test-description");

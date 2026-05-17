@@ -38,7 +38,7 @@ const StemPlayerDetailsPage = () => {
  * @returns Promise resolving to page data or null if no data.
  */
 export async function getStemPlayerDetailsData(
-  id: string
+  id: string,
 ): Promise<Record<string, unknown> | null> {
   try {
     const result = await fetchLocateSong(id);

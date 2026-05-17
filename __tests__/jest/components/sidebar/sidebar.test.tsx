@@ -12,7 +12,7 @@ describe("Sidebar", () => {
       <Sidebar>
         <div>Menu Item 1</div>
         <div>Menu Item 2</div>
-      </Sidebar>
+      </Sidebar>,
     );
     const sidebar = screen.getByText("Menu Item 1").parentElement;
     expect(sidebar).toHaveClass("sidebar");
@@ -24,7 +24,7 @@ describe("Sidebar", () => {
     render(
       <Sidebar id="sidebar-id" aria-label="Navigation sidebar">
         <div>Content</div>
-      </Sidebar>
+      </Sidebar>,
     );
     const sidebar = screen.getByLabelText("Navigation sidebar");
     expect(sidebar).toHaveAttribute("id", "sidebar-id");
@@ -35,7 +35,7 @@ describe("Sidebar", () => {
     render(
       <Sidebar className="custom-class">
         <div>Content</div>
-      </Sidebar>
+      </Sidebar>,
     );
     const sidebar = screen.getByText("Content").parentElement;
     expect(sidebar).toHaveClass("sidebar", "custom-class");
@@ -46,13 +46,13 @@ describe("Sidebar", () => {
       <Sidebar>
         <button>Button Item</button>
         <a href="#">Link Item</a>
-      </Sidebar>
+      </Sidebar>,
     );
     expect(
-      screen.getByRole("button", { name: /button item/i })
+      screen.getByRole("button", { name: /button item/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /link item/i })
+      screen.getByRole("link", { name: /link item/i }),
     ).toBeInTheDocument();
   });
 
@@ -65,7 +65,7 @@ describe("Sidebar", () => {
     render(
       <Sidebar {...props}>
         <div>Test</div>
-      </Sidebar>
+      </Sidebar>,
     );
     const sidebar = screen.getByTestId("test-sidebar");
     expect(sidebar).toHaveClass("sidebar", "extra-class");

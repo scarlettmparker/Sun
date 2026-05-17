@@ -18,7 +18,7 @@ describe("Label", () => {
     render(
       <Label htmlFor="input-id" aria-label="Test label" data-testid="label">
         Test
-      </Label>
+      </Label>,
     );
     const label = screen.getByTestId("label");
     expect(label).toHaveAttribute("for", "input-id");
@@ -29,7 +29,7 @@ describe("Label", () => {
     render(
       <Label>
         <span>Child element</span>
-      </Label>
+      </Label>,
     );
     expect(screen.getByText("Child element")).toBeInTheDocument();
   });

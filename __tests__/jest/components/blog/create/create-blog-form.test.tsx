@@ -21,7 +21,7 @@ import { registerBlogCreateMutation } from "~/routes/blog/create/create-blog-pos
 
 jest.mock(
   "~/components/textarea/textarea.module.css",
-  async () => await import("~/../testing/jest/mock/css-module-mock")
+  async () => await import("~/../testing/jest/mock/css-module-mock"),
 );
 
 beforeAll(() => {
@@ -48,19 +48,19 @@ describe("CreateBlogForm", () => {
 
     expect(screen.getByLabelText("form.title.label")).toBeInTheDocument();
     expect(
-      screen.getByPlaceholderText("form.title.placeholder")
+      screen.getByPlaceholderText("form.title.placeholder"),
     ).toBeInTheDocument();
 
     expect(screen.getByTestId("markdown-editor-textarea")).toBeInTheDocument();
     expect(
-      screen.getByPlaceholderText("form.content.placeholder")
+      screen.getByPlaceholderText("form.content.placeholder"),
     ).toBeInTheDocument();
 
     expect(
-      screen.getByRole("button", { name: "form.cancel.label" })
+      screen.getByRole("button", { name: "form.cancel.label" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "form.create.label" })
+      screen.getByRole("button", { name: "form.create.label" }),
     ).toBeInTheDocument();
   });
 
@@ -99,7 +99,7 @@ describe("CreateBlogForm", () => {
     await waitFor(() => {
       expect(mockCreateBlogPost).toHaveBeenCalledWith(
         "Test Title",
-        "Test Content"
+        "Test Content",
       );
     });
   });
@@ -189,7 +189,7 @@ describe("CreateBlogForm", () => {
     const mockResult = { __typename: "QuerySuccess" as const };
 
     mockCreateBlogPost.mockImplementation(
-      () => new Promise((resolve) => setTimeout(() => resolve(mockResult), 0))
+      () => new Promise((resolve) => setTimeout(() => resolve(mockResult), 0)),
     );
 
     render(<CreateBlogForm />);
@@ -227,7 +227,7 @@ describe("CreateBlogForm", () => {
 
     const titleInput = screen.getByLabelText("form.title.label");
     const contentTextarea = document.querySelector(
-      'textarea[name="content"]'
+      'textarea[name="content"]',
     ) as HTMLTextAreaElement;
 
     expect(titleInput).toHaveAttribute("name", "title");
@@ -251,7 +251,7 @@ describe("CreateBlogForm", () => {
     render(<CreateBlogForm />);
 
     const contentTextarea = document.querySelector(
-      'textarea[name="content"]'
+      'textarea[name="content"]',
     ) as HTMLTextAreaElement;
     expect(contentTextarea).toHaveAttribute("rows", "10");
   });
@@ -259,7 +259,8 @@ describe("CreateBlogForm", () => {
   it("disables submit button during loading and changes label", async () => {
     const mockResult = { __typename: "QuerySuccess" as const };
     mockCreateBlogPost.mockImplementation(
-      () => new Promise((resolve) => setTimeout(() => resolve(mockResult), 100))
+      () =>
+        new Promise((resolve) => setTimeout(() => resolve(mockResult), 100)),
     );
 
     render(<CreateBlogForm />);

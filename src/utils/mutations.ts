@@ -7,7 +7,7 @@ import { MutationResult } from "~/server/actions/utils";
 import { ServerRedirectError } from "./server-redirect";
 
 type MutationHandler = (
-  body: Record<string, unknown>
+  body: Record<string, unknown>,
 ) => Promise<MutationResult>;
 
 const mutationHandlers: Record<string, MutationHandler> = {};
@@ -29,7 +29,7 @@ function registerMutationHandler(path: string, handler: MutationHandler): void {
  */
 export async function executeMutation(
   path: string,
-  body: Record<string, unknown>
+  body: Record<string, unknown>,
 ): Promise<MutationResult> {
   const handler = mutationHandlers[path];
   if (!handler) {
@@ -54,7 +54,7 @@ interface MutationRegistry {
   registerMutationHandler: (path: string, handler: MutationHandler) => void;
   executeMutation: (
     path: string,
-    body: Record<string, unknown>
+    body: Record<string, unknown>,
   ) => Promise<MutationResult>;
 }
 

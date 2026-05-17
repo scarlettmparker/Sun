@@ -17,7 +17,7 @@ export type MutationResult =
  */
 export async function executeMutation(
   mutationName: string,
-  body: Record<string, unknown>
+  body: Record<string, unknown>,
 ): Promise<MutationResult> {
   try {
     const response = await fetch(`/${mutationName}`, {

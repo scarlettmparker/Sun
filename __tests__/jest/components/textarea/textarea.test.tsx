@@ -22,7 +22,7 @@ describe("TextArea", () => {
         required
         aria-label="Description textarea"
         data-testid="textarea"
-      />
+      />,
     );
     const textarea = screen.getByTestId("textarea");
     expect(textarea).toHaveAttribute("rows", "5");

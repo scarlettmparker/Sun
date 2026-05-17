@@ -22,7 +22,9 @@ const BlogPostPage = () => {
     <div className={styles.blog_post}>
       <Card>
         <CardBody>
-          <MarkdownViewer>{data.content}</MarkdownViewer>
+          <MarkdownViewer className={styles.blog_body}>
+            {data.content}
+          </MarkdownViewer>
         </CardBody>
       </Card>
     </div>
@@ -35,7 +37,7 @@ const BlogPostPage = () => {
  * @returns Promise resolving to page data or null if no data.
  */
 export async function getBlogPostDetails(
-  id: string
+  id: string,
 ): Promise<Record<string, unknown> | null> {
   try {
     const result = await fetchLocateBlogPost(id);

@@ -47,7 +47,7 @@ describe("cn", () => {
 
   it("should preserve spaces in class names", () => {
     expect(cn("class with spaces", "another")).toBe(
-      "class with spaces another"
+      "class with spaces another",
     );
   });
 });

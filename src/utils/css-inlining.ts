@@ -11,7 +11,7 @@ import path from "path";
  */
 export async function inlineCss(
   isProduction: boolean,
-  clientCss: string[]
+  clientCss: string[],
 ): Promise<string> {
   if (!isProduction) {
     return "";
@@ -58,7 +58,7 @@ export async function inlineCss(
 export function generateCssTag(
   isProduction: boolean,
   cssContent: string,
-  clientCss: string[]
+  clientCss: string[],
 ): string {
   if (isProduction && cssContent) {
     return `<style>${cssContent}</style>`;

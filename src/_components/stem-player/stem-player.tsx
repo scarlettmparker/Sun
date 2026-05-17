@@ -66,7 +66,7 @@ const StemPlayer = (props: StemPlayerProps) => {
     const percentage = x / rect.width;
     const hoverTime = Math.max(
       0,
-      Math.min(duration + SEEK_BUFFER, percentage * (duration + SEEK_BUFFER))
+      Math.min(duration + SEEK_BUFFER, percentage * (duration + SEEK_BUFFER)),
     );
     e.currentTarget.title = t("controls.title.seek", {
       position: formatHoverTime(hoverTime),
@@ -79,7 +79,7 @@ const StemPlayer = (props: StemPlayerProps) => {
    * @param e Mouse event.
    */
   const handleMasterVolumeMouseMove = (
-    e: React.MouseEvent<HTMLInputElement>
+    e: React.MouseEvent<HTMLInputElement>,
   ) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
@@ -113,7 +113,7 @@ const StemPlayer = (props: StemPlayerProps) => {
           value={masterVolume}
           onChange={(e) =>
             setMasterVolume(
-              Math.max(0, Math.min(2, parseFloat(e.target.value)))
+              Math.max(0, Math.min(2, parseFloat(e.target.value))),
             )
           }
           onMouseMove={handleMasterVolumeMouseMove}

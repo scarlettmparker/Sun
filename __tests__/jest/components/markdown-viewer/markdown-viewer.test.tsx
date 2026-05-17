@@ -18,7 +18,7 @@ describe("MarkdownViewer", () => {
     expect(viewer).toHaveClass("markdown_viewer");
     expect(viewer.innerHTML).toContain('<span class="md-h1">Header</span>');
     expect(viewer.innerHTML).toContain(
-      '<span class="md-bold">Bold text</span>'
+      '<span class="md-bold">Bold text</span>',
     );
     expect(viewer.innerHTML).toContain('<span class="md-italic">italic</span>');
   });
@@ -60,12 +60,12 @@ Some text with **bold**, *italic*, and \`code\`.
     expect(viewer.innerHTML).toContain('<span class="md-italic">italic</span>');
     expect(viewer.innerHTML).toContain('<span class="md-code">code</span>');
     expect(viewer.innerHTML).toContain(
-      '<span class="md-quote">Blockquote</span>'
+      '<span class="md-quote">Blockquote</span>',
     );
     expect(viewer.innerHTML).toContain("List item 1");
     expect(viewer.innerHTML).toContain("List item 2");
     expect(viewer.innerHTML).toContain(
-      '<a href="http://example.com" target="_blank" class="md-link">Link</a>'
+      '<a href="http://example.com" target="_blank" class="md-link">Link</a>',
     );
   });
 
@@ -73,7 +73,7 @@ Some text with **bold**, *italic*, and \`code\`.
     render(
       <MarkdownViewer className="custom-class" data-testid="viewer">
         Test
-      </MarkdownViewer>
+      </MarkdownViewer>,
     );
     const viewer = screen.getByTestId("viewer");
     expect(viewer).toHaveClass("markdown_viewer", "custom-class");
@@ -87,7 +87,7 @@ Some text with **bold**, *italic*, and \`code\`.
         aria-label="Markdown content"
       >
         Test content
-      </MarkdownViewer>
+      </MarkdownViewer>,
     );
     const viewer = screen.getByTestId("viewer");
     expect(viewer).toHaveAttribute("id", "markdown-viewer");
@@ -118,7 +118,7 @@ Some text with **bold**, *italic*, and \`code\`.
     const viewer = screen.getByTestId("viewer");
 
     expect(viewer.innerHTML).toContain(
-      'Item with <span class="md-bold">bold</span> and <span class="md-italic">italic</span>'
+      'Item with <span class="md-bold">bold</span> and <span class="md-italic">italic</span>',
     );
   });
 
@@ -128,7 +128,7 @@ Some text with **bold**, *italic*, and \`code\`.
     const viewer = screen.getByTestId("viewer");
 
     expect(viewer.innerHTML).toContain(
-      "&lt;script&gt;alert('xss')&lt;/script&gt;"
+      "&lt;script&gt;alert('xss')&lt;/script&gt;",
     );
     expect(viewer.innerHTML).not.toContain("<script>");
   });
@@ -140,7 +140,7 @@ Some text with **bold**, *italic*, and \`code\`.
 
     expect(viewer.innerHTML).toContain('<span class="md-h1">1. Header</span>');
     expect(viewer.innerHTML).toContain(
-      '<span class="md-h2">Header-with-dashes</span>'
+      '<span class="md-h2">Header-with-dashes</span>',
     );
   });
 

@@ -18,7 +18,7 @@ let manifest;
 async function loadManifest() {
   if (!manifest) {
     manifest = JSON.parse(
-      await fs.readFile(path.resolve(manifestPath), "utf-8")
+      await fs.readFile(path.resolve(manifestPath), "utf-8"),
     );
   }
   return manifest;
@@ -50,7 +50,7 @@ export async function renderApp(
     mutationPayload,
     invalidateCacheCookie,
   },
-  res
+  res,
 ) {
   try {
     let render;

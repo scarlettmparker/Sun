@@ -8,3 +8,8 @@
   margin: calc(var(--lg) * 8) 0;
   padding-bottom: calc(var(--lg) * 2);
 }
+
+.blog_body {
+  height: calc(100vh - (var(--lg) * 14));
+  overflow-y: scroll;
+}

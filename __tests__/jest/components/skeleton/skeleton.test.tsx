@@ -32,7 +32,7 @@ describe("Skeleton", () => {
         style={{ width: "100px", height: "20px" }}
         data-testid="skeleton"
         aria-label="Loading skeleton"
-      />
+      />,
     );
     const skeleton = screen.getByTestId("skeleton");
     expect(skeleton).toHaveAttribute("id", "test-id");

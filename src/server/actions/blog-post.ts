@@ -8,7 +8,7 @@ import { MutationResult, executeMutation } from "./utils";
  */
 export async function createBlogPost(
   title: string,
-  content: string
+  content: string,
 ): Promise<MutationResult> {
   if (
     typeof title !== "string" ||

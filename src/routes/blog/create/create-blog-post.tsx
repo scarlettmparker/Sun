@@ -14,7 +14,7 @@ const CreateBlogPostPage = () => {
  * Handler for creating a blog post.
  */
 async function handleCreateBlogPost(
-  body: Record<string, unknown>
+  body: Record<string, unknown>,
 ): Promise<MutationResult> {
   const { title, input } = body;
   const content = (input as BlogPostInput)?.content;

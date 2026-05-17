@@ -37,11 +37,11 @@ describe("inlineCss", () => {
     expect(mockedFs.readdir).toHaveBeenCalledWith("src/styles");
     expect(mockedFs.readFile).toHaveBeenCalledWith(
       "src/styles/globals.css",
-      "utf-8"
+      "utf-8",
     );
     expect(mockedFs.readFile).toHaveBeenCalledWith(
       "src/styles/markdown.css",
-      "utf-8"
+      "utf-8",
     );
     expect(result).toBe("globals content\nmarkdown content\n");
   });
@@ -57,11 +57,11 @@ describe("inlineCss", () => {
 
     expect(mockedPath.resolve).toHaveBeenCalledWith(
       "dist/client",
-      "assets/index.css"
+      "assets/index.css",
     );
     expect(mockedFs.readFile).toHaveBeenCalledWith(
       "dist/client/assets/index.css",
-      "utf-8"
+      "utf-8",
     );
     expect(result).toBe("\nmanifest css content");
   });
@@ -75,7 +75,7 @@ describe("inlineCss", () => {
 
     expect(consoleWarnSpy).toHaveBeenCalledWith(
       "Failed to read CSS files for inlining:",
-      expect.any(Error)
+      expect.any(Error),
     );
     expect(result).toBe("");
 
@@ -94,7 +94,7 @@ describe("inlineCss", () => {
         "/assets/main.css",
       ]);
       expect(result).toBe(
-        '<link rel="stylesheet" href="/assets/style.css" /><link rel="stylesheet" href="/assets/main.css" />'
+        '<link rel="stylesheet" href="/assets/style.css" /><link rel="stylesheet" href="/assets/main.css" />',
       );
     });
 

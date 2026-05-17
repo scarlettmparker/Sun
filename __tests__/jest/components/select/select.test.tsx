@@ -16,7 +16,7 @@ describe("Select", () => {
       <Select data-testid="select">
         <SelectOption value="option1">Option 1</SelectOption>
         <SelectOption value="option2">Option 2</SelectOption>
-      </Select>
+      </Select>,
     );
     const select = screen.getByTestId("hidden-select");
     expect(select.tagName).toBe("SELECT");
@@ -28,7 +28,7 @@ describe("Select", () => {
         <SelectOption value="option1">Option 1</SelectOption>
         <SelectOption value="option2">Option 2</SelectOption>
         <SelectOption value="option3">Option 3</SelectOption>
-      </Select>
+      </Select>,
     );
 
     const select = screen.getByTestId("hidden-select");
@@ -54,7 +54,7 @@ describe("Select", () => {
         className="custom-select"
       >
         <SelectOption value="test">Test</SelectOption>
-      </Select>
+      </Select>,
     );
 
     const select = screen.getByTestId("hidden-select");
@@ -73,7 +73,7 @@ describe("Select", () => {
       <Select data-testid="select" onChange={handleChange}>
         <SelectOption value="option1">Option 1</SelectOption>
         <SelectOption value="option2">Option 2</SelectOption>
-      </Select>
+      </Select>,
     );
 
     const select = screen.getByTestId("hidden-select");
@@ -87,7 +87,7 @@ describe("Select", () => {
       <Select data-testid="select" defaultValue="option2">
         <SelectOption value="option1">Option 1</SelectOption>
         <SelectOption value="option2">Option 2</SelectOption>
-      </Select>
+      </Select>,
     );
 
     const select = screen.getByTestId("hidden-select");
@@ -106,7 +106,7 @@ describe("Select", () => {
     render(
       <Select data-testid="select" className="additional-class">
         <SelectOption value="test">Test</SelectOption>
-      </Select>
+      </Select>,
     );
 
     const container = screen.getByTestId("select");
@@ -119,7 +119,7 @@ describe("Select", () => {
         <Select data-testid="select">
           <SelectOption value="option1">Option 1</SelectOption>
           <SelectOption value="option2">Option 2</SelectOption>
-        </Select>
+        </Select>,
       );
 
       const button = screen.getByRole("button", { name: /select option/i });
@@ -134,7 +134,7 @@ describe("Select", () => {
         <Select data-testid="select">
           <SelectOption value="option1">Option 1</SelectOption>
           <SelectOption value="option2">Option 2</SelectOption>
-        </Select>
+        </Select>,
       );
 
       const button = screen.getByRole("button", { name: /select option/i });
@@ -151,7 +151,7 @@ describe("Select", () => {
         <Select data-testid="select" onChange={handleChange}>
           <SelectOption value="option1">Option 1</SelectOption>
           <SelectOption value="option2">Option 2</SelectOption>
-        </Select>
+        </Select>,
       );
 
       const button = screen.getByRole("button", { name: /select option/i });
@@ -164,7 +164,7 @@ describe("Select", () => {
       expect(handleChange).toHaveBeenCalledWith(
         expect.objectContaining({
           target: { value: "option2" },
-        })
+        }),
       );
       expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
       expect(button).toHaveTextContent("Option 2");
@@ -175,7 +175,7 @@ describe("Select", () => {
         <Select data-testid="select">
           <SelectOption value="option1">Option 1</SelectOption>
           <SelectOption value="option2">Option 2</SelectOption>
-        </Select>
+        </Select>,
       );
 
       const button = screen.getByRole("button", { name: /select option/i });
@@ -195,7 +195,7 @@ describe("Select", () => {
       render(
         <Select data-testid="select">
           <SelectOption value="option1">Option 1</SelectOption>
-        </Select>
+        </Select>,
       );
 
       const button = screen.getByRole("button", { name: /select option/i });
@@ -208,7 +208,7 @@ describe("Select", () => {
       render(
         <Select data-testid="select">
           <SelectOption value="option1">Option 1</SelectOption>
-        </Select>
+        </Select>,
       );
 
       const button = screen.getByRole("button", { name: /select option/i });
@@ -221,7 +221,7 @@ describe("Select", () => {
       render(
         <Select data-testid="select">
           <SelectOption value="option1">Option 1</SelectOption>
-        </Select>
+        </Select>,
       );
 
       const button = screen.getByRole("button", { name: /select option/i });
@@ -236,7 +236,7 @@ describe("Select", () => {
       render(
         <Select data-testid="select">
           <SelectOption value="option1">Option 1</SelectOption>
-        </Select>
+        </Select>,
       );
 
       const button = screen.getByRole("button", { name: /select option/i });
@@ -251,7 +251,7 @@ describe("Select", () => {
         <Select data-testid="select" onChange={handleChange}>
           <SelectOption value="option1">Option 1</SelectOption>
           <SelectOption value="option2">Option 2</SelectOption>
-        </Select>
+        </Select>,
       );
 
       const button = screen.getByRole("button", { name: /select option/i });
@@ -264,7 +264,7 @@ describe("Select", () => {
       expect(handleChange).toHaveBeenCalledWith(
         expect.objectContaining({
           target: { value: "option2" },
-        })
+        }),
       );
       expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
     });
@@ -275,7 +275,7 @@ describe("Select", () => {
       render(
         <Select data-testid="select">
           <SelectOption value="option1">Option 1</SelectOption>
-        </Select>
+        </Select>,
       );
 
       const button = screen.getByRole("button", { name: /select option/i });
@@ -292,7 +292,7 @@ describe("Select", () => {
       render(
         <Select data-testid="select">
           <SelectOption value="option1">Option 1</SelectOption>
-        </Select>
+        </Select>,
       );
 
       const button = screen.getByRole("button", { name: /select option/i });
@@ -305,7 +305,7 @@ describe("Select", () => {
       render(
         <Select data-testid="select">
           <SelectOption value="option1">Option 1</SelectOption>
-        </Select>
+        </Select>,
       );
 
       const button = screen.getByRole("button", { name: /select option/i });
@@ -320,7 +320,7 @@ describe("Select", () => {
         <Select data-testid="select" value="option1">
           <SelectOption value="option1">Option 1</SelectOption>
           <SelectOption value="option2">Option 2</SelectOption>
-        </Select>
+        </Select>,
       );
 
       const button = screen.getByRole("button", { name: /select option/i });
@@ -341,7 +341,7 @@ describe("Select", () => {
       render(
         <Select data-testid="select">
           <SelectOption value="option1">Option 1</SelectOption>
-        </Select>
+        </Select>,
       );
 
       const button = screen.getByRole("button", { name: /select option/i });
@@ -357,7 +357,7 @@ describe("Select", () => {
       render(
         <Select data-testid="select">
           <SelectOption value="option1">Option 1</SelectOption>
-        </Select>
+        </Select>,
       );
 
       const button = screen.getByRole("button", { name: /select option/i });
@@ -369,7 +369,7 @@ describe("Select", () => {
         <Select data-testid="select" value="option1">
           <SelectOption value="option1">Option 1</SelectOption>
           <SelectOption value="option2">Option 2</SelectOption>
-        </Select>
+        </Select>,
       );
 
       const button = screen.getByRole("button", { name: /select option/i });
@@ -379,7 +379,7 @@ describe("Select", () => {
         <Select data-testid="select" value="option2">
           <SelectOption value="option1">Option 1</SelectOption>
           <SelectOption value="option2">Option 2</SelectOption>
-        </Select>
+        </Select>,
       );
 
       expect(button).toHaveTextContent("Option 2");
@@ -405,7 +405,7 @@ describe("Select", () => {
           <SelectOption value="option1">
             <span>Option</span> 1
           </SelectOption>
-        </Select>
+        </Select>,
       );
 
       const button = screen.getByRole("button", { name: /select option/i });
@@ -422,7 +422,7 @@ describe("Select", () => {
       render(
         <Select data-testid="select" disabled>
           <SelectOption value="option1">Option 1</SelectOption>
-        </Select>
+        </Select>,
       );
 
       const hiddenSelect = screen.getByTestId("hidden-select");

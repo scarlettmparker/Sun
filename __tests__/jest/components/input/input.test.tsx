@@ -42,7 +42,7 @@ describe("Input", () => {
         required
         aria-label="Email input"
         data-testid="email-input"
-      />
+      />,
     );
     const input = screen.getByTestId("email-input");
     expect(input).toHaveAttribute("type", "email");

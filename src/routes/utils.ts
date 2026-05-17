@@ -9,7 +9,7 @@ import { fetchListGalleryItemsByForeignObjects } from "~/utils/api";
  * @returns Promise resolving to page data or null if no data.
  */
 export async function getGalleryItemsByForeignObjects(
-  ids: string[]
+  ids: string[],
 ): Promise<Record<string, unknown> | null> {
   try {
     const result = await fetchListGalleryItemsByForeignObjects(ids);

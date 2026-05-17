@@ -43,7 +43,7 @@ describe("useStemPlayer", () => {
       arrayBuffer: jest.fn().mockResolvedValue(new ArrayBuffer(8)),
     });
     (mockAudioContext.decodeAudioData as jest.Mock).mockResolvedValue(
-      mockAudioBuffer
+      mockAudioBuffer,
     );
     // Mock window for client-side checks - only if not already defined
     if (!global.window) {
@@ -330,7 +330,7 @@ describe("useStemPlayer", () => {
       });
 
       expect(mockAudioContext.createBufferSource).toHaveBeenCalledTimes(
-        sourcesCreated
+        sourcesCreated,
       ); // No additional sources
     });
 

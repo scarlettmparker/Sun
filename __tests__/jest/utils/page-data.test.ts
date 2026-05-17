@@ -25,7 +25,7 @@ describe("page-data utilities", () => {
     jest.clearAllMocks();
     const registeredPages = pageDataRegistry.getRegisteredPageNames();
     registeredPages.forEach((page) =>
-      pageDataRegistry.unregisterPageDataLoader(page)
+      pageDataRegistry.unregisterPageDataLoader(page),
     );
     suspenseCache.clear();
   });
@@ -96,7 +96,7 @@ describe("page-data utilities", () => {
 
       it("should return false if loader is not registered", () => {
         expect(pageDataRegistry.hasPageDataLoader("non-existent-page")).toBe(
-          false
+          false,
         );
       });
 

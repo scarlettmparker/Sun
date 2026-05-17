@@ -9,13 +9,13 @@ import MarkdownEditor from "~/components/markdown-editor/markdown-editor";
 
 jest.mock(
   "~/components/textarea/textarea.module.css",
-  async () => await import("~/../testing/jest/mock/css-module-mock")
+  async () => await import("~/../testing/jest/mock/css-module-mock"),
 );
 
 describe("MarkdownEditor", () => {
   it("renders contentEditable div with correct attributes", () => {
     render(
-      <MarkdownEditor placeholder="Enter markdown" data-testid="editor" />
+      <MarkdownEditor placeholder="Enter markdown" data-testid="editor" />,
     );
     const editor = screen.getByTestId("editor");
     expect(editor.tagName).toBe("DIV");
@@ -40,7 +40,7 @@ describe("MarkdownEditor", () => {
         required
         aria-label="Markdown editor"
         data-testid="editor"
-      />
+      />,
     );
     const textarea = screen.getByDisplayValue("");
     expect(textarea).toHaveAttribute("name", "description");
@@ -55,7 +55,7 @@ describe("MarkdownEditor", () => {
         value={initialValue}
         name="content"
         data-testid="editor"
-      />
+      />,
     );
 
     const textarea = screen.getByTestId("markdown-editor-textarea");
@@ -78,7 +78,7 @@ describe("MarkdownEditor", () => {
         onChange={onChange}
         name="content"
         data-testid="editor"
-      />
+      />,
     );
 
     const editor = screen.getByTestId("editor");
@@ -159,14 +159,14 @@ describe("MarkdownEditor", () => {
 
   it("syncs external value changes", () => {
     const { rerender } = render(
-      <MarkdownEditor value="Old value" name="content" data-testid="editor" />
+      <MarkdownEditor value="Old value" name="content" data-testid="editor" />,
     );
     const editor = screen.getByTestId("editor");
 
     expect(editor.textContent).toBe("Old value");
 
     rerender(
-      <MarkdownEditor value="New value" name="content" data-testid="editor" />
+      <MarkdownEditor value="New value" name="content" data-testid="editor" />,
     );
     expect(editor.textContent).toBe("New value");
 
@@ -176,7 +176,7 @@ describe("MarkdownEditor", () => {
 
   it("handles placeholder display", () => {
     render(
-      <MarkdownEditor placeholder="Start typing..." data-testid="editor" />
+      <MarkdownEditor placeholder="Start typing..." data-testid="editor" />,
     );
     const editor = screen.getByTestId("editor");
     expect(editor).toHaveAttribute("data-placeholder", "Start typing...");
@@ -196,7 +196,7 @@ describe("MarkdownEditor", () => {
   it("maintains cursor position during highlighting", async () => {
     const user = userEvent.setup();
     render(
-      <MarkdownEditor value="Some text" name="content" data-testid="editor" />
+      <MarkdownEditor value="Some text" name="content" data-testid="editor" />,
     );
 
     const editor = screen.getByTestId("editor");
@@ -219,7 +219,11 @@ describe("MarkdownEditor", () => {
     const user = userEvent.setup();
     const onChange = jest.fn();
     render(
-      <MarkdownEditor onChange={onChange} name="content" data-testid="editor" />
+      <MarkdownEditor
+        onChange={onChange}
+        name="content"
+        data-testid="editor"
+      />,
     );
 
     const editor = screen.getByTestId("editor");
@@ -251,7 +255,11 @@ describe("MarkdownEditor", () => {
   it("handles paste events", async () => {
     const onChange = jest.fn();
     render(
-      <MarkdownEditor onChange={onChange} name="content" data-testid="editor" />
+      <MarkdownEditor
+        onChange={onChange}
+        name="content"
+        data-testid="editor"
+      />,
     );
 
     const editor = screen.getByTestId("editor");
@@ -281,7 +289,7 @@ describe("MarkdownEditor", () => {
         onChange={onChange}
         name="content"
         data-testid="editor"
-      />
+      />,
     );
 
     const editor = screen.getByTestId("editor");
@@ -305,7 +313,7 @@ describe("MarkdownEditor", () => {
       expect(onChange).toHaveBeenCalledWith(
         expect.objectContaining({
           target: expect.objectContaining({ value: "Hello world" }),
-        })
+        }),
       );
     });
 
@@ -317,7 +325,11 @@ describe("MarkdownEditor", () => {
     const user = userEvent.setup();
     const onChange = jest.fn();
     render(
-      <MarkdownEditor onChange={onChange} name="content" data-testid="editor" />
+      <MarkdownEditor
+        onChange={onChange}
+        name="content"
+        data-testid="editor"
+      />,
     );
 
     const editor = screen.getByTestId("editor");
@@ -337,7 +349,11 @@ describe("MarkdownEditor", () => {
     const user = userEvent.setup();
     const onChange = jest.fn();
     render(
-      <MarkdownEditor onChange={onChange} name="content" data-testid="editor" />
+      <MarkdownEditor
+        onChange={onChange}
+        name="content"
+        data-testid="editor"
+      />,
     );
 
     const editor = screen.getByTestId("editor");
@@ -358,7 +374,11 @@ describe("MarkdownEditor", () => {
     const user = userEvent.setup();
     const onChange = jest.fn();
     render(
-      <MarkdownEditor onChange={onChange} name="content" data-testid="editor" />
+      <MarkdownEditor
+        onChange={onChange}
+        name="content"
+        data-testid="editor"
+      />,
     );
 
     const editor = screen.getByTestId("editor");
@@ -378,7 +398,11 @@ describe("MarkdownEditor", () => {
   it("handles paste without selection", async () => {
     const onChange = jest.fn();
     render(
-      <MarkdownEditor onChange={onChange} name="content" data-testid="editor" />
+      <MarkdownEditor
+        onChange={onChange}
+        name="content"
+        data-testid="editor"
+      />,
     );
 
     const editor = screen.getByTestId("editor");

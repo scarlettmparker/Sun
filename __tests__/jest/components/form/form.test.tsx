@@ -33,7 +33,7 @@ describe("Form", () => {
         action="/submit"
         className="custom-form"
         data-testid="form"
-      />
+      />,
     );
     const form = screen.getByTestId("form");
     expect(form).toHaveAttribute("method", "post");
@@ -45,7 +45,7 @@ describe("Form", () => {
     render(
       <Form>
         <div data-testid="child">Child content</div>
-      </Form>
+      </Form>,
     );
     expect(screen.getByTestId("child")).toBeInTheDocument();
   });
@@ -56,7 +56,7 @@ describe("FormField", () => {
     render(
       <FormField data-testid="form-field">
         <div />
-      </FormField>
+      </FormField>,
     );
     const field = screen.getByTestId("form-field");
     expect(field.tagName).toBe("DIV");
@@ -66,7 +66,7 @@ describe("FormField", () => {
     render(
       <FormField className="custom-field" role="group" data-testid="form-field">
         <div />
-      </FormField>
+      </FormField>,
     );
     const field = screen.getByTestId("form-field");
     expect(field).toHaveClass("custom-field");
@@ -77,7 +77,7 @@ describe("FormField", () => {
     render(
       <FormField>
         <span data-testid="child">Child content</span>
-      </FormField>
+      </FormField>,
     );
     expect(screen.getByTestId("child")).toBeInTheDocument();
   });
@@ -89,7 +89,7 @@ describe("FormField", () => {
         <FormItem>
           <Input data-testid="input" />
         </FormItem>
-      </FormField>
+      </FormField>,
     );
     const label = screen.getByTestId("label");
     const input = screen.getByTestId("input");
@@ -104,7 +104,7 @@ describe("FormField", () => {
         <FormItem>
           <Input data-testid="input" />
         </FormItem>
-      </FormField>
+      </FormField>,
     );
     const label = screen.getByTestId("label");
     const input = screen.getByTestId("input");
@@ -129,7 +129,7 @@ describe("FormLabel", () => {
         data-testid="label"
       >
         Label
-      </FormLabel>
+      </FormLabel>,
     );
     const label = screen.getByTestId("label");
     expect(label).toHaveClass("custom-label");
@@ -140,7 +140,7 @@ describe("FormLabel", () => {
     render(
       <FormField name="field-name">
         <FormLabel data-testid="label">Label</FormLabel>
-      </FormField>
+      </FormField>,
     );
     const label = screen.getByTestId("label");
     expect(label).toHaveAttribute("for", "field-name");
@@ -150,7 +150,7 @@ describe("FormLabel", () => {
     render(
       <FormField>
         <FormLabel data-testid="label">Label</FormLabel>
-      </FormField>
+      </FormField>,
     );
     const label = screen.getByTestId("label");
     expect(label).not.toHaveAttribute("for");
@@ -162,7 +162,7 @@ describe("FormLabel", () => {
         <FormLabel htmlFor="prop-name" data-testid="label">
           Label
         </FormLabel>
-      </FormField>
+      </FormField>,
     );
     const label = screen.getByTestId("label");
     expect(label).toHaveAttribute("for", "context-name");
@@ -182,7 +182,7 @@ describe("FormFooter", () => {
         className="custom-footer"
         role="contentinfo"
         data-testid="footer"
-      />
+      />,
     );
     const footer = screen.getByTestId("footer");
     expect(footer).toHaveClass("custom-footer");
@@ -193,7 +193,7 @@ describe("FormFooter", () => {
     render(
       <FormFooter>
         <button data-testid="child">Submit</button>
-      </FormFooter>
+      </FormFooter>,
     );
     expect(screen.getByTestId("child")).toBeInTheDocument();
   });
@@ -204,7 +204,7 @@ describe("FormItem", () => {
     render(
       <FormItem>
         <Input data-testid="input" />
-      </FormItem>
+      </FormItem>,
     );
     const input = screen.getByTestId("input");
     expect(input.tagName).toBe("INPUT");
@@ -221,7 +221,7 @@ describe("FormItem", () => {
           className="custom-input"
           data-testid="input"
         />
-      </FormItem>
+      </FormItem>,
     );
     const input = screen.getByTestId("input");
     expect(input).toHaveAttribute("type", "email");
@@ -236,7 +236,7 @@ describe("FormItem", () => {
         <FormItem>
           <Input data-testid="input" />
         </FormItem>
-      </FormField>
+      </FormField>,
     );
     const input = screen.getByTestId("input");
     expect(input).toHaveAttribute("name", "field-name");
@@ -248,7 +248,7 @@ describe("FormItem", () => {
         <FormItem>
           <Input data-testid="input" />
         </FormItem>
-      </FormField>
+      </FormField>,
     );
     const input = screen.getByTestId("input");
     expect(input).not.toHaveAttribute("name");
@@ -260,7 +260,7 @@ describe("FormItem", () => {
         <FormItem>
           <Input name="prop-name" data-testid="input" />
         </FormItem>
-      </FormField>
+      </FormField>,
     );
     const input = screen.getByTestId("input");
     expect(input).toHaveAttribute("name", "context-name");
@@ -272,7 +272,7 @@ describe("FormItem", () => {
         <FormItem>
           <Input type="password" data-testid="input" />
         </FormItem>
-      </FormField>
+      </FormField>,
     );
     const input = screen.getByTestId("input");
     expect(input).toHaveAttribute("type", "password");
@@ -296,7 +296,7 @@ describe("Form components integration", () => {
             <Input type="email" data-testid="email-input" />
           </FormItem>
         </FormField>
-      </Form>
+      </Form>,
     );
 
     const usernameLabel = screen.getByText("Username");
@@ -319,7 +319,7 @@ describe("Form components integration", () => {
             <Input data-testid="nested-input" />
           </FormItem>
         </div>
-      </FormField>
+      </FormField>,
     );
 
     const label = screen.getByTestId("nested-label");
@@ -336,7 +336,7 @@ describe("Form components integration", () => {
           <FormItem>
             <Input data-testid="input" />
           </FormItem>
-        </FormField>
+        </FormField>,
       );
     }).not.toThrow();
 
@@ -346,7 +346,7 @@ describe("Form components integration", () => {
           <FormItem>
             <TextArea data-testid="textarea" />
           </FormItem>
-        </FormField>
+        </FormField>,
       );
     }).not.toThrow();
 
@@ -362,7 +362,7 @@ describe("Form components integration", () => {
               ]}
             />
           </FormItem>
-        </FormField>
+        </FormField>,
       );
     }).not.toThrow();
 
@@ -372,10 +372,10 @@ describe("Form components integration", () => {
           <FormItem>
             <div data-testid="invalid">Invalid</div>
           </FormItem>
-        </FormField>
+        </FormField>,
       );
     }).toThrow(
-      "FormItem only accepts Input, TextArea, MarkdownEditor, or Select as children"
+      "FormItem only accepts Input, TextArea, MarkdownEditor, or Select as children",
     );
   });
 });
