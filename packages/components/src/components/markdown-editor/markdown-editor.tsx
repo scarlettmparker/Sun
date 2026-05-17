@@ -4,7 +4,7 @@ import { highlightMarkdown } from "~/utils/markdown";
 import "./markdown-editor.module.css";
 import "~/components/textarea/textarea.module.css";
 
-type MarkdownEditorProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
+type MarkdownEditorProps = React.TextAreaHTMLAttributes<HTMLTextAreaElement> & {
   "data-testid"?: string;
 };
 

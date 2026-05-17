@@ -5,9 +5,19 @@
 
 import { render, screen } from "@testing-library/react";
 import { MarkdownViewer } from "@sun/components";
-import cssModuleMock from "~/../testing/jest/mock/css-module-mock";
+import {
+  restoreConsoleError,
+  suppressConsoleErrorsFromTests,
+} from "~/../testing/jest/mock";
 
-jest.mock("~/components/textarea/textarea.module.css", () => cssModuleMock);
+beforeAll(() => {
+  // Due to some issue with re-rendering that we don't care about in test env
+  suppressConsoleErrorsFromTests();
+});
+
+afterAll(() => {
+  restoreConsoleError();
+});
 
 describe("MarkdownViewer", () => {
   it("renders markdown content with highlighting", () => {

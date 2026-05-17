@@ -7,8 +7,8 @@ import { render, screen, fireEvent, within } from "@testing-library/react";
 import {
   restoreConsoleError,
   suppressConsoleErrorsFromTests,
-} from "testing/jest/mock";
-import { Select, SelectOption } from "@sun/components/";
+} from "~/../testing/jest/mock";
+import { Select, SelectOption } from "@sun/components";
 
 describe("Select", () => {
   it("renders select element with correct attributes", () => {

@@ -3,7 +3,7 @@ import "./styles/markdown.css";
 
 export { default as Button } from "./components/button";
 export { default as Input } from "./components/input";
-export { default as Textarea } from "./components/textarea";
+export { default as TextArea } from "./components/textarea";
 export { default as Select, SelectOption } from "./components/select";
 export { default as Label } from "./components/label";
 export {

@@ -4,7 +4,7 @@
  */
 
 import { render, screen } from "@testing-library/react";
-import { TextArea } from "@sun/components/";
+import { TextArea } from "@sun/components";
 
 describe("TextArea", () => {
   it("renders textarea element with correct attributes", () => {

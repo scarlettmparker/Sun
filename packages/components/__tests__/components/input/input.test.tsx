@@ -4,7 +4,7 @@
  */
 
 import { render, screen } from "@testing-library/react";
-import { Input } from "@sun/components/";
+import { Input } from "@sun/components";
 
 describe("Input", () => {
   it("renders default text input with correct attributes", () => {

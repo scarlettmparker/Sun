@@ -20,7 +20,7 @@ import {
 import { registerBlogCreateMutation } from "~/routes/blog/create/create-blog-post";
 
 jest.mock(
-  "~/components/textarea/textarea.module.css",
+  "@/sun/components/src/components/textarea/textarea.module.css",
   async () => await import("~/../testing/jest/mock/css-module-mock"),
 );
 
@@ -218,20 +218,20 @@ describe("CreateBlogForm", () => {
     fireEvent.input(contentEditor);
 
     expect(titleInput).toHaveValue("Test Title");
-    const contentTextarea = screen.getByDisplayValue("Test Content");
-    expect(contentTextarea).toHaveValue("Test Content");
+    const contentTextArea = screen.getByDisplayValue("Test Content");
+    expect(contentTextArea).toHaveValue("Test Content");
   });
 
   it("renders with correct accessibility attributes", () => {
     render(<CreateBlogForm />);
 
     const titleInput = screen.getByLabelText("form.title.label");
-    const contentTextarea = document.querySelector(
+    const contentTextArea = document.querySelector(
       'textarea[name="content"]',
     ) as HTMLTextAreaElement;
 
     expect(titleInput).toHaveAttribute("name", "title");
-    expect(contentTextarea).toHaveAttribute("name", "content");
+    expect(contentTextArea).toHaveAttribute("name", "content");
 
     const titleLabel = screen.getByText("form.title.label");
     const contentLabel = screen.getByText("form.content.label");
@@ -250,10 +250,10 @@ describe("CreateBlogForm", () => {
   it("uses correct default values", () => {
     render(<CreateBlogForm />);
 
-    const contentTextarea = document.querySelector(
+    const contentTextArea = document.querySelector(
       'textarea[name="content"]',
     ) as HTMLTextAreaElement;
-    expect(contentTextarea).toHaveAttribute("rows", "10");
+    expect(contentTextArea).toHaveAttribute("rows", "10");
   });
 
   it("disables submit button during loading and changes label", async () => {

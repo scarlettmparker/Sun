@@ -4,7 +4,7 @@
  */
 
 import { render, screen } from "@testing-library/react";
-import { Skeleton } from "@sun/components/";
+import { Skeleton } from "@sun/components";
 
 jest.mock("~/components/skeleton/skeleton.module.css", () => ({
   skeleton: "skeleton",

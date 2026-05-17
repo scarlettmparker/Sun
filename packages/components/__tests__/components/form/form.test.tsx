@@ -16,7 +16,7 @@ import {
   FormFooter,
 } from "@sun/components";
 import { Input } from "@sun/components";
-import { Textarea } from "@sun/components";
+import { TextArea } from "@sun/components";
 import { Select } from "@sun/components";
 
 describe("Form", () => {
@@ -329,7 +329,7 @@ describe("Form components integration", () => {
     expect(input).toHaveAttribute("name", "nested-field");
   });
 
-  it("only accepts Input, Textarea, MarkdownEditor, or Select as children", () => {
+  it("only accepts Input, TextArea, MarkdownEditor, or Select as children", () => {
     expect(() => {
       render(
         <FormField name="test">
@@ -344,7 +344,7 @@ describe("Form components integration", () => {
       render(
         <FormField name="test">
           <FormItem>
-            <Textarea data-testid="textarea" />
+            <TextArea data-testid="textarea" />
           </FormItem>
         </FormField>,
       );
@@ -375,7 +375,7 @@ describe("Form components integration", () => {
         </FormField>,
       );
     }).toThrow(
-      "FormItem only accepts Input, Textarea, MarkdownEditor, or Select as children",
+      "FormItem only accepts Input, TextArea, MarkdownEditor, or Select as children",
     );
   });
 });
