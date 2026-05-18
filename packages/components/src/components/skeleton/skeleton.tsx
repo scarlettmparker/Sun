@@ -10,11 +10,7 @@ const Skeleton = (props: SkeletonProps) => {
   const { className, ...rest } = props;
 
   return (
-    <div
-      data-slot="skeleton"
-      className={cn(className, "skeleton")}
-      {...rest}
-    />
+    <div data-slot="skeleton" className={cn(className, "skeleton")} {...rest} />
   );
 };
 

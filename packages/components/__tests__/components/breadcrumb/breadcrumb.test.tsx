@@ -23,12 +23,16 @@ describe("Breadcrumb", () => {
   it("supports dynamic add via context", () => {
     const Controller = () => {
       const { addBreadcrumb } = useContext(BreadcrumbContext);
-      return <button onClick={() => addBreadcrumb({ label: "Home", href: "/" })}>Add</button>;
+      return (
+        <button onClick={() => addBreadcrumb({ label: "Home", href: "/" })}>
+          Add
+        </button>
+      );
     };
     render(
       <Breadcrumb>
         <Controller />
-      </Breadcrumb>
+      </Breadcrumb>,
     );
     act(() => {
       screen.getByText("Add").click();
@@ -41,14 +45,28 @@ describe("Breadcrumb", () => {
       const ctx = useContext(BreadcrumbContext);
       return (
         <>
-          <button onClick={() => ctx.setBreadcrumbs([{ label: "A" }, { label: "B" }, { label: "C" }])}>Set</button>
+          <button
+            onClick={() =>
+              ctx.setBreadcrumbs([
+                { label: "A" },
+                { label: "B" },
+                { label: "C" },
+              ])
+            }
+          >
+            Set
+          </button>
           <button onClick={() => ctx.popBreadcrumb()}>Pop</button>
           <button onClick={() => ctx.deleteBreadcrumb(0)}>Del0</button>
           <button onClick={() => ctx.deleteAllBreadcrumbs()}>Clear</button>
         </>
       );
     };
-    render(<Breadcrumb><Controller /></Breadcrumb>);
+    render(
+      <Breadcrumb>
+        <Controller />
+      </Breadcrumb>,
+    );
     act(() => screen.getByText("Set").click());
     expect(screen.getAllByRole("listitem")).toHaveLength(3);
     act(() => screen.getByText("Pop").click());
@@ -64,11 +82,22 @@ describe("Breadcrumb", () => {
       const { setBreadcrumbs, setCurrent } = useContext(BreadcrumbContext);
       return (
         <>
-          <button onClick={() => { setBreadcrumbs([{ label: "X", href: "/x" }]); setCurrent("/x"); }}>Activate</button>
+          <button
+            onClick={() => {
+              setBreadcrumbs([{ label: "X", href: "/x" }]);
+              setCurrent("/x");
+            }}
+          >
+            Activate
+          </button>
         </>
       );
     };
-    render(<Breadcrumb><Controller /></Breadcrumb>);
+    render(
+      <Breadcrumb>
+        <Controller />
+      </Breadcrumb>,
+    );
     act(() => screen.getByText("Activate").click());
     const li = screen.getByText("X").closest("li");
     expect(li).toHaveAttribute("aria-current", "page");

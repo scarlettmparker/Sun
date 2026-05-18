@@ -64,11 +64,7 @@ const Input = (props: InputProps) => {
     case "text": {
       const { className, ...textProps } = rest;
       return (
-        <input
-          {...textProps}
-          type="text"
-          className={cn(className, "text")}
-        />
+        <input {...textProps} type="text" className={cn(className, "text")} />
       );
     }
     default: {

@@ -16,10 +16,7 @@ const Button = (props: ButtonProps) => {
   const variant = variant_ ?? "default";
 
   return (
-    <button
-      {...rest}
-      className={cn("button", variant, rest.className)}
-    >
+    <button {...rest} className={cn("button", variant, rest.className)}>
       {rest.children}
     </button>
   );
