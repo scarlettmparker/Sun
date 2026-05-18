@@ -8,6 +8,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 import { ChevronRight } from "lucide-react";
 import { cn } from "~/utils/cn";
 import Button from "../button";
@@ -71,7 +72,6 @@ const ContextMenu = (props: React.HTMLAttributes<HTMLDivElement>) => {
 
   // Cache the viewport metrics at the exact moment the menu is triggered open
   const lastWindowSize = useRef({ w: 0, h: 0 });
-
   const idBase = useId();
   const triggerId = `context-menu-trigger-${idBase}`;
   const contentId = `context-menu-content-${idBase}`;
@@ -91,42 +91,34 @@ const ContextMenu = (props: React.HTMLAttributes<HTMLDivElement>) => {
     if (!open) {
       return;
     }
-
     const handleOutside = (event: MouseEvent) => {
       if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
         setOpenState(false);
       }
     };
-
     const handleKeyboard = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setOpenState(false);
       }
     };
-
     const handleResize = () => {
       const currentW = window.innerWidth;
       const currentH = window.innerHeight;
-
       // Determine exactly how many pixels the boundaries translated
       const deltaX = currentW - lastWindowSize.current.w;
       const deltaY = currentH - lastWindowSize.current.h;
-
       if (deltaX !== 0 || deltaY !== 0) {
         setPosition((prev) => ({
           x: prev.x + deltaX,
           y: prev.y + deltaY,
         }));
-
         // Document the new dimension baseline for sequential resize events
         lastWindowSize.current = { w: currentW, h: currentH };
       }
     };
-
     document.addEventListener("mousedown", handleOutside);
     document.addEventListener("keydown", handleKeyboard);
     window.addEventListener("resize", handleResize);
-
     return () => {
       document.removeEventListener("mousedown", handleOutside);
       document.removeEventListener("keydown", handleKeyboard);
@@ -168,7 +160,6 @@ const useContextMenu = () => {
   if (!ctx) {
     throw new Error("ContextMenu components must be used inside a ContextMenu");
   }
-
   return ctx;
 };
 
@@ -220,13 +211,11 @@ const ContextMenuTrigger = (props: ContextMenuTriggerProps) => {
   if (asChild && React.isValidElement(children)) {
     const child = children as ReactElement<React.HTMLAttributes<HTMLElement>>;
     const childProps = child.props as { className?: string };
-
     return cloneElement(child, {
       ...sharedProps,
       className: cn(sharedProps.className, childProps.className),
     });
   }
-
   return <div {...sharedProps}>{children}</div>;
 };
 
@@ -255,15 +244,12 @@ const ContextMenuContent = (props: ContextMenuContentProps) => {
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (!contentRef.current) return;
-
     const items = Array.from(
       contentRef.current.querySelectorAll(
         '[role="menuitem"]:not([aria-disabled="true"])',
       ),
     ) as HTMLElement[];
-
     const currentIndex = items.indexOf(document.activeElement as HTMLElement);
-
     if (event.key === "ArrowDown") {
       event.preventDefault();
       const nextIndex = (currentIndex + 1) % items.length;
@@ -273,7 +259,6 @@ const ContextMenuContent = (props: ContextMenuContentProps) => {
       const prevIndex = (currentIndex - 1 + items.length) % items.length;
       items[prevIndex]?.focus();
     }
-
     onKeyDown?.(event);
   };
 
@@ -281,7 +266,7 @@ const ContextMenuContent = (props: ContextMenuContentProps) => {
     return null;
   }
 
-  return (
+  const content = (
     <div
       {...rest}
       ref={contentRef}
@@ -304,6 +289,8 @@ const ContextMenuContent = (props: ContextMenuContentProps) => {
       {children}
     </div>
   );
+
+  return createPortal(content, document.body);
 };
 
 /**
@@ -342,7 +329,6 @@ const ContextMenuItem = (props: ContextMenuItemProps) => {
     if (disabled) {
       return;
     }
-
     onClick?.(event);
     onSelect?.();
     close();
@@ -352,20 +338,17 @@ const ContextMenuItem = (props: ContextMenuItemProps) => {
     if (disabled) {
       return;
     }
-
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
       onSelect?.();
       close();
     }
-
     onKeyDown?.(event);
   };
 
   if (asChild && React.isValidElement(children)) {
     const child = children as ReactElement;
     const childProps = child.props as Record<string, unknown>;
-
     return cloneElement(child, {
       ...rest,
       type: (childProps.type as string) ?? "button",
@@ -381,7 +364,6 @@ const ContextMenuItem = (props: ContextMenuItemProps) => {
         if (disabled) {
           return;
         }
-
         (childProps.onClick as (event: React.MouseEvent<any>) => void)?.(event);
         onClick?.(event);
         onSelect?.();
@@ -391,7 +373,6 @@ const ContextMenuItem = (props: ContextMenuItemProps) => {
         if (disabled) {
           return;
         }
-
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
           (childProps.onKeyDown as (event: React.KeyboardEvent<any>) => void)?.(
@@ -401,7 +382,6 @@ const ContextMenuItem = (props: ContextMenuItemProps) => {
           close();
           return;
         }
-
         (childProps.onKeyDown as (event: React.KeyboardEvent<any>) => void)?.(
           event,
         );
@@ -433,7 +413,6 @@ const ContextMenuItem = (props: ContextMenuItemProps) => {
  */
 const ContextMenuGroup = (props: React.HTMLAttributes<HTMLDivElement>) => {
   const { className, children, ...rest } = props;
-
   return (
     <div className={cn("context_menu_group", className)} role="group" {...rest}>
       {children}
@@ -500,7 +479,6 @@ const useContextMenuSub = () => {
       "ContextMenuSub components must be used inside a ContextMenuSub",
     );
   }
-
   return ctx;
 };
 
@@ -552,22 +530,70 @@ type ContextMenuSubContentProps = React.HTMLAttributes<HTMLDivElement>;
  * ContextMenuSubContent handles rendering nested secondary flyout card modules
  * adjacent to active sub-triggers.
  */
+/**
+ * ContextMenuSubContent handles rendering nested secondary flyout card modules
+ * adjacent to active sub-triggers.
+ */
 const ContextMenuSubContent = (props: ContextMenuSubContentProps) => {
   const { className, children, onMouseLeave, ...rest } = props;
   const { open, setOpen } = useContextMenuSub();
+  const subRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
 
-  if (!open) {
-    return null;
-  }
+  // Find the parent sub trigger
+  useEffect(() => {
+    if (open) {
+      triggerRef.current = document.activeElement as HTMLButtonElement;
+    }
+  }, [open]);
+
+  // Positioning for submenu
+  useEffect(() => {
+    if (!open || !subRef.current || !triggerRef.current) return;
+
+    const triggerRect = triggerRef.current.getBoundingClientRect();
+    const submenuRect = subRef.current.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const shouldOpenLeft = triggerRect.left > viewportWidth / 2;
+
+    let left: number;
+    const gap = 4;
+
+    if (shouldOpenLeft) {
+      left = triggerRect.left - submenuRect.width - gap;
+    } else {
+      left = triggerRect.right + gap;
+    }
+
+    // Vertical positioning with smart flip
+    let top = triggerRect.top;
+
+    // If it would overflow bottom, try to flip upwards
+    if (top + submenuRect.height > viewportHeight) {
+      top = triggerRect.bottom - submenuRect.height;
+    }
+
+    // Apply final position
+    subRef.current.style.position = "fixed";
+    subRef.current.style.top = `${Math.max(8, top)}px`;
+    subRef.current.style.left = `${left}px`;
+    subRef.current.style.zIndex = "9999";
+  }, [open]);
 
   const handleMouseLeave = (event: React.MouseEvent<HTMLDivElement>) => {
     setOpen(false);
     onMouseLeave?.(event);
   };
 
-  return (
+  if (!open) {
+    return null;
+  }
+
+  const content = (
     <div
       {...rest}
+      ref={subRef}
       role="menu"
       aria-orientation="vertical"
       aria-hidden={!open}
@@ -578,6 +604,8 @@ const ContextMenuSubContent = (props: ContextMenuSubContentProps) => {
       {children}
     </div>
   );
+
+  return createPortal(content, document.body);
 };
 
 export default ContextMenu;
