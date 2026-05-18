@@ -38,7 +38,7 @@ export { default as MarkdownViewer } from "./components/markdown-viewer";
 export { default as MarkdownEditor } from "./components/markdown-editor";
 export {
   default as Breadcrumb,
+  useBreadcrumbContext,
   BreadcrumbItem,
-  BreadcrumbContext,
 } from "./components/breadcrumb";
 export { cn } from "./utils/cn";

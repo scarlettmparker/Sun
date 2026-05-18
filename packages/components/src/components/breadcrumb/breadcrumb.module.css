@@ -1,35 +1,49 @@
 .breadcrumb {
   display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  overflow-x: auto;
   list-style: none;
   padding: 0;
   margin: 0;
-  gap: var(--sm);
+  gap: var(--xs);
   font-size: var(--text-md);
-  color: var(--text);
+  text-wrap: nowrap;
 }
 
-.breadcrumb-item {
+.breadcrumb_item {
   display: inline-flex;
   align-items: center;
+  white-space: nowrap;
 }
 
-.breadcrumb-item a {
-  color: inherit;
+.breadcrumb_item {
+  color: var(--primary);
+  text-decoration: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: color var(--fast) ease; 
+}
+
+.breadcrumb_item:hover {
+  color: var(--tertiary);
   text-decoration: none;
 }
 
-.breadcrumb-item a:hover {
-  text-decoration: underline;
-  color: var(--primary);
+.breadcrumb_item:active {
+  color: var(--primary-active);
 }
 
-.breadcrumb-item.active {
-  font-weight: var(--bold);
+.breadcrumb_item.active {
   color: var(--text);
+  cursor: default;
+  user-select: none;
 }
 
-.separator {
+.breadcrumb_separator {
   margin: 0 var(--sm);
   color: var(--muted);
   user-select: none;
+  display: inline-block;
 }

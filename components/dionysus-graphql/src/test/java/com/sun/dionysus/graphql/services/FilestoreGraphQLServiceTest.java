@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 
 @ExtendWith(MockitoExtension.class)
@@ -100,14 +101,13 @@ class FilestoreGraphQLServiceTest {
 
     @Test
     void putKey_returnsTrue() {
-        when(s3Client.putObject(any(PutObjectRequest.class), any(software.amazon.awssdk.core.sync.RequestBody.class)))
-                .thenReturn(PutObjectResponse.builder().build());
+        when(restTemplate.exchange(anyString(), eq(HttpMethod.POST), any(), eq(Void.class)))
+                .thenReturn(new ResponseEntity<>(HttpStatus.OK));
 
         boolean result = filestoreGraphQLService.putKey("default-bucket", "folder");
 
         assertThat(result).isTrue();
-        verify(s3Client).putObject(any(PutObjectRequest.class),
-                any(software.amazon.awssdk.core.sync.RequestBody.class));
+        verify(restTemplate).exchange(anyString(), eq(HttpMethod.POST), any(), eq(Void.class));
     }
 
     @Test

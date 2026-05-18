@@ -72,7 +72,7 @@
   color: var(--primary);
 }
 
-.md-link, a:not(:has(button)) {
+.md-link, a:not(:has(button)):not(:has(.breadcrumb_item)) {
   color: var(--tertiary);
   text-decoration: underline;
   cursor: pointer;
@@ -81,7 +81,7 @@
   display: block;
 }
 
-.md-link:hover, a:not(:has(button)):hover {
+.md-link:hover, a:not(:has(button)):not(:has(.breadcrumb_item)):hover {
   color: var(--tertiary-hover)
 }
 

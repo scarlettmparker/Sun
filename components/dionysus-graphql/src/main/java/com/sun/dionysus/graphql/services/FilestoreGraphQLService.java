@@ -17,10 +17,14 @@ import com.sun.dionysus.graphql.mappers.FileMapper;
 import com.sun.dionysus.graphql.mappers.KeyEntryMapper;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
+import software.amazon.awssdk.services.s3.S3Configuration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.stream.Collectors;
+import org.springframework.http.MediaType;
 
 @Service
 public class FilestoreGraphQLService {
@@ -64,23 +68,29 @@ public class FilestoreGraphQLService {
   }
 
   private <T> ResponseEntity<T> authenticatedGet(String url, Class<T> responseType) {
+    logger.info("Executing authenticated GET request to URL: {}", url);
     String token = System.getProperty("GARAGE_SECRET_KEY");
     HttpHeaders headers = new HttpHeaders();
     headers.setBearerAuth(token);
     HttpEntity<Void> entity = new HttpEntity<>(headers);
-    return restTemplate.exchange(url, HttpMethod.GET, entity, responseType);
+    ResponseEntity<T> response = restTemplate.exchange(url, HttpMethod.GET, entity, responseType);
+    logger.info("Authenticated GET request completed with status: {}", response.getStatusCode());
+    return response;
   }
 
   /**
    * Lists objects (files) in the given S3-compatible bucket.
    */
   public List<File> listFiles(String bucket) {
+    logger.info("Listing objects in bucket: {}", bucket);
     ListObjectsV2Response resp = s3Client.listObjectsV2(ListObjectsV2Request.builder()
         .bucket(bucket)
         .build());
-    return resp.contents().stream()
+    List<File> files = resp.contents().stream()
         .map(fileMapper::mapObject)
         .collect(Collectors.toList());
+    logger.info("Successfully found and mapped {} files in bucket: {}", files.size(), bucket);
+    return files;
   }
 
   /**
@@ -88,6 +98,7 @@ public class FilestoreGraphQLService {
    * directory-style navigation.
    */
   public List<KeyEntry> listKeys(String bucket, String prefix) {
+    logger.info("Listing keys for bucket: {} with prefix: {}", bucket, prefix);
     ListObjectsV2Request.Builder requestBuilder = ListObjectsV2Request.builder()
         .bucket(bucket)
         .delimiter("/");
@@ -108,42 +119,52 @@ public class FilestoreGraphQLService {
         .map(keyEntryMapper::mapFile)
         .forEach(entries::add);
 
+    logger.info("Found {} directory/file entries for bucket: {} with prefix: {}", entries.size(), bucket, prefix);
     return entries;
   }
 
   /**
-    * Uploads or overwrites a file in the bucket.
-    */
-   public boolean putFile(String bucket, String key, String content) {
-     s3Client.putObject(PutObjectRequest.builder()
-         .bucket(bucket)
-         .key(key)
-         .build(),
-         software.amazon.awssdk.core.sync.RequestBody.fromString(content));
-     return true;
-   }
+   * Uploads or overwrites a file in the bucket.
+   */
+  public boolean putFile(String bucket, String key, String content) {
+    logger.info("Uploading file to bucket: {} with key: {}", bucket, key);
+    s3Client.putObject(PutObjectRequest.builder()
+        .bucket(bucket)
+        .key(key)
+        .build(),
+        software.amazon.awssdk.core.sync.RequestBody.fromString(content));
+    logger.info("Successfully uploaded file with key: {} to bucket: {}", key, bucket);
+    return true;
+  }
 
-   /**
-    * Creates a directory key (folder) by uploading a zero-byte object with trailing slash.
-    */
-   public boolean putKey(String bucket, String key) {
-     String dirKey = key.endsWith("/") ? key : key + "/";
-     s3Client.putObject(PutObjectRequest.builder()
-         .bucket(bucket)
-         .key(dirKey)
-         .build(),
-         software.amazon.awssdk.core.sync.RequestBody.empty());
-     return true;
-   }
+  /**
+   * Creates a directory key (folder) via Garage admin REST API.
+   */
+  public boolean putKey(String bucket, String key) {
+    String dirKey = key.endsWith("/") ? key : key + "/";
+    logger.info("Creating explicit directory placeholder in bucket: {} with key: {}", bucket, dirKey);
+
+    s3Client.putObject(
+        PutObjectRequest.builder()
+            .bucket(bucket)
+            .key(dirKey)
+            .build(),
+        software.amazon.awssdk.core.sync.RequestBody.empty());
+
+    logger.info("Successfully created directory key: {} in bucket: {}", dirKey, bucket);
+    return true;
+  }
 
   /**
    * Deletes a file from the bucket.
    */
   public boolean deleteFile(String bucket, String key) {
+    logger.info("Deleting object from bucket: {} with key: {}", bucket, key);
     s3Client.deleteObject(DeleteObjectRequest.builder()
         .bucket(bucket)
         .key(key)
         .build());
+    logger.info("Successfully deleted object: {} from bucket: {}", key, bucket);
     return true;
   }
 
@@ -151,11 +172,13 @@ public class FilestoreGraphQLService {
    * Starts a multipart upload and returns the upload ID.
    */
   public String startMultipartUpload(String bucket, String key) {
+    logger.info("Initiating multipart upload for bucket: {} with key: {}", bucket, key);
     CreateMultipartUploadResponse resp = s3Client.createMultipartUpload(
         CreateMultipartUploadRequest.builder()
             .bucket(bucket)
             .key(key)
             .build());
+    logger.info("Multipart upload initiated. Generated Upload ID: {}", resp.uploadId());
     return resp.uploadId();
   }
 
@@ -163,6 +186,7 @@ public class FilestoreGraphQLService {
    * Uploads a single part and returns its ETag.
    */
   public String uploadPart(String bucket, String key, String uploadId, int partNumber, String content) {
+    logger.info("Uploading part #{} for uploadId: {} in bucket: {} with key: {}", partNumber, uploadId, bucket, key);
     UploadPartResponse resp = s3Client.uploadPart(
         UploadPartRequest.builder()
             .bucket(bucket)
@@ -171,6 +195,7 @@ public class FilestoreGraphQLService {
             .partNumber(partNumber)
             .build(),
         software.amazon.awssdk.core.sync.RequestBody.fromString(content));
+    logger.info("Part #{} upload completed. ETag: {}", partNumber, resp.eTag());
     return resp.eTag();
   }
 
@@ -178,6 +203,8 @@ public class FilestoreGraphQLService {
    * Completes a multipart upload using the provided parts.
    */
   public boolean completeMultipartUpload(String bucket, String key, String uploadId, List<CompletedPart> parts) {
+    logger.info("Completing multipart upload for uploadId: {} with {} total parts in bucket: {}", uploadId,
+        parts.size(), bucket);
     List<software.amazon.awssdk.services.s3.model.CompletedPart> completedParts = parts.stream()
         .map(p -> software.amazon.awssdk.services.s3.model.CompletedPart.builder()
             .partNumber(p.getPartNumber())
@@ -194,6 +221,7 @@ public class FilestoreGraphQLService {
                 .parts(completedParts)
                 .build())
             .build());
+    logger.info("Multipart upload successfully finalized for uploadId: {}", uploadId);
     return true;
   }
 }
