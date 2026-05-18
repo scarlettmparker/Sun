@@ -60,29 +60,15 @@ const ContextMenuContext = createContext<ContextMenuContextValue | null>(null);
  */
 const ContextMenu = (props: React.HTMLAttributes<HTMLDivElement>) => {
   const { className, children, ...rest } = props;
-  const [open, setOpen] = useState(false);
+  const [open, setOpenState] = useState(false);
   const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
   const rootRef = useRef<HTMLDivElement>(null);
-
-  // Cache the viewport metrics at the exact moment the menu is triggered open
-  const lastWindowSize = useRef({ w: 0, h: 0 });
-
   const idBase = useId();
   const triggerId = `context-menu-trigger-${idBase}`;
   const contentId = `context-menu-content-${idBase}`;
 
-  const close = () => setOpen(false);
-
-  // Intercept and save window size milestones on activation
-  const handleSetOpen = (value: boolean) => {
-    if (value) {
-      lastWindowSize.current = {
-        w: window.innerWidth,
-        h: window.innerHeight,
-      };
-    }
-    setOpen(value);
-  };
+  const setOpen = (value: boolean) => setOpenState(value);
+  const close = () => setOpenState(false);
 
   useEffect(() => {
     if (!open) {
@@ -101,29 +87,12 @@ const ContextMenu = (props: React.HTMLAttributes<HTMLDivElement>) => {
       }
     };
 
-    const handleResize = () => {
-      const currentW = window.innerWidth;
-      const currentH = window.innerHeight;
-      const deltaX = currentW - lastWindowSize.current.w;
-      const deltaY = currentH - lastWindowSize.current.h;
-
-      if (deltaX !== 0 || deltaY !== 0) {
-        setPosition((prev) => ({
-          x: prev.x + deltaX,
-          y: prev.y + deltaY,
-        }));
-        lastWindowSize.current = { w: currentW, h: currentH };
-      }
-    };
-
     document.addEventListener("mousedown", handleOutside);
     document.addEventListener("keydown", handleKeyboard);
-    window.addEventListener("resize", handleResize);
 
     return () => {
       document.removeEventListener("mousedown", handleOutside);
       document.removeEventListener("keydown", handleKeyboard);
-      window.removeEventListener("resize", handleResize);
     };
   }, [open]);
 
@@ -131,7 +100,7 @@ const ContextMenu = (props: React.HTMLAttributes<HTMLDivElement>) => {
     <ContextMenuContext.Provider
       value={{
         open,
-        setOpen: handleSetOpen,
+        setOpen,
         position,
         setPosition,
         triggerId,

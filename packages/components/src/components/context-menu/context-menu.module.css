@@ -60,6 +60,11 @@
   background-color: inherit;
 }
 
+.context_menu_item:focus-visible,
+.context_menu_subtrigger:focus-visible {
+  outline: none;
+}
+
 .context_menu_sub {
   position: relative;
 }
