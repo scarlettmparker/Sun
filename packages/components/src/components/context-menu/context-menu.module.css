@@ -60,12 +60,6 @@
   background-color: inherit;
 }
 
-.context_menu_item:focus-visible,
-.context_menu_subtrigger:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: -2px;
-}
-
 .context_menu_sub {
   position: relative;
 }
