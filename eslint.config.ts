@@ -6,7 +6,15 @@ import { defineConfig } from "eslint/config";
 
 export default defineConfig([
   {
-    ignores: ["dist/**", "node_modules/**", "config.js", "coverage/**"],
+    ignores: [
+      "dist/**",
+      "**/*/dist/**",
+      "node_modules/**",
+      "config.js",
+      "coverage/**",
+      // Don't really care for templates.
+      "packages/create-sun-app/**/*",
+    ],
   },
   {
     files: ["**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],

@@ -6,6 +6,13 @@ import { renderApp } from "../utils/ssr.js";
 import { base, isProduction } from "../config.js";
 import { Buffer } from "buffer";
 
+/**
+ * Reads a named cookie value from a raw Cookie header.
+ *
+ * @param {string|undefined} cookieHeader - The full Cookie header string.
+ * @param {string} name - Cookie name to read.
+ * @returns {string|undefined} Decoded cookie value or undefined if not found.
+ */
 function getCookieValue(cookieHeader, name) {
   if (!cookieHeader) return undefined;
   for (const part of cookieHeader.split(/;\s*/)) {
