@@ -41,5 +41,4 @@ export {
   BreadcrumbItem,
   BreadcrumbContext,
 } from "./components/breadcrumb";
-export type { Crumb, BreadcrumbContextValue } from "./components/breadcrumb";
 export { cn } from "./utils/cn";

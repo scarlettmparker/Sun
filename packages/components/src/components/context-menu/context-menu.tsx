@@ -249,7 +249,7 @@ const ContextMenuItem = (props: ContextMenuItemProps) => {
           return;
         }
 
-        (childOnClick as ((event: React.MouseEvent<any>) => void))?.(event);
+        (childOnClick as (event: React.MouseEvent<any>) => void)?.(event);
         onClick?.(event);
         onSelect?.();
         close();
@@ -261,13 +261,15 @@ const ContextMenuItem = (props: ContextMenuItemProps) => {
 
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
-          (childOnKeyDown as ((event: React.KeyboardEvent<any>) => void))?.(event);
+          (childOnKeyDown as (event: React.KeyboardEvent<any>) => void)?.(
+            event,
+          );
           onSelect?.();
           close();
           return;
         }
 
-        (childOnKeyDown as ((event: React.KeyboardEvent<any>) => void))?.(event);
+        (childOnKeyDown as (event: React.KeyboardEvent<any>) => void)?.(event);
         onKeyDown?.(event);
       },
     } as any);
@@ -317,7 +319,9 @@ type ContextMenuSubContextValue = {
   close: () => void;
 };
 
-const ContextMenuSubContext = createContext<ContextMenuSubContextValue | null>(null);
+const ContextMenuSubContext = createContext<ContextMenuSubContextValue | null>(
+  null,
+);
 
 /**
  * ContextMenuSub provides nested sub-menu state.
@@ -341,7 +345,9 @@ const ContextMenuSub = (props: React.HTMLAttributes<HTMLDivElement>) => {
 const useContextMenuSub = () => {
   const ctx = useContext(ContextMenuSubContext);
   if (!ctx) {
-    throw new Error("ContextMenuSub components must be used inside a ContextMenuSub");
+    throw new Error(
+      "ContextMenuSub components must be used inside a ContextMenuSub",
+    );
   }
 
   return ctx;

@@ -1,7 +1,9 @@
 import type { Config } from "jest";
 
 const config: Config = {
-  preset: "ts-jest/presets/default-esm",
+  transform: {
+    "^.+\\.(t|j)sx?$": "@swc/jest",
+  },
   testEnvironment: "jsdom",
   setupFilesAfterEnv: ["<rootDir>/testing/jest/setup.ts"],
   moduleNameMapper: {

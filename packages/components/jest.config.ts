@@ -1,7 +1,9 @@
 import type { Config } from "jest";
 
 const config: Config = {
-  preset: "ts-jest/presets/default-esm",
+  transform: {
+    "^.+\\.(t|j)sx?$": "@swc/jest",
+  },
   testEnvironment: "jsdom",
   setupFilesAfterEnv: ["<rootDir>/testing/jest/setup.ts"],
   rootDir: ".",
@@ -17,15 +19,6 @@ const config: Config = {
   testMatch: ["<rootDir>/__tests__/**/*.(ts|tsx)"],
   testPathIgnorePatterns: ["/node_modules/", "\\.d\\.ts$"],
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
-  transform: {
-    "^.+\\.(ts|tsx)$": [
-      "ts-jest",
-      {
-        useESM: true,
-        tsconfig: "<rootDir>/tsconfig.json",
-      },
-    ],
-  },
 };
 
 export default config;

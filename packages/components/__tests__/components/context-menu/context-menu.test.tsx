@@ -112,7 +112,9 @@ describe("ContextMenu", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: /open/i }));
-    const nestedButton = screen.getByRole("menuitem", { name: /nested action/i });
+    const nestedButton = screen.getByRole("menuitem", {
+      name: /nested action/i,
+    });
     expect(nestedButton).toHaveAttribute("role", "menuitem");
   });
 
@@ -129,7 +131,9 @@ describe("ContextMenu", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: /open/i }));
-    expect(screen.getByRole("menuitem", { name: /grouped/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("menuitem", { name: /grouped/i }),
+    ).toBeInTheDocument();
   });
 
   it("opens and closes sub-menu", () => {
@@ -150,8 +154,12 @@ describe("ContextMenu", () => {
     fireEvent.click(screen.getByRole("button", { name: /open/i }));
     const subTrigger = screen.getByRole("button", { name: /sub/i });
     fireEvent.click(subTrigger);
-    expect(screen.getByRole("menuitem", { name: /subitem/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("menuitem", { name: /subitem/i }),
+    ).toBeInTheDocument();
     fireEvent.click(subTrigger);
-    expect(screen.queryByRole("menuitem", { name: /subitem/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("menuitem", { name: /subitem/i }),
+    ).not.toBeInTheDocument();
   });
 });
