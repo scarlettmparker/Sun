@@ -21,6 +21,17 @@ export {
   CardBody,
   CardFooter,
 } from "./components/card";
+export {
+  default as ContextMenu,
+  ContextMenuTrigger,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuGroup,
+  ContextMenuSub,
+  ContextMenuSubTrigger,
+  ContextMenuSubContent,
+} from "./components/context-menu";
+export { default as Separator } from "./components/separator";
 export { default as Skeleton } from "./components/skeleton";
 export { default as Sidebar } from "./components/sidebar";
 export { default as MarkdownViewer } from "./components/markdown-viewer";
