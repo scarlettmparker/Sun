@@ -11,7 +11,6 @@
   border-radius: var(--lg);
   box-shadow: var(--shadow-medium);
   background-color: rgb(from var(--secondary) r g b / var(--visible));
-  overflow: hidden;
   backdrop-filter: blur(var(--sm));
   padding: var(--xs) 0;
   z-index: 201;
@@ -35,8 +34,7 @@
   border: none;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--sm);
+  gap: var(--lg);
   color: var(--foreground);
   text-align: left;
   cursor: pointer;

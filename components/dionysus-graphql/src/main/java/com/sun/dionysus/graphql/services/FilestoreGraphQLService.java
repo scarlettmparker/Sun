@@ -112,16 +112,29 @@ public class FilestoreGraphQLService {
   }
 
   /**
-   * Uploads or overwrites a file in the bucket.
-   */
-  public boolean putFile(String bucket, String key, String content) {
-    s3Client.putObject(PutObjectRequest.builder()
-        .bucket(bucket)
-        .key(key)
-        .build(),
-        software.amazon.awssdk.core.sync.RequestBody.fromString(content));
-    return true;
-  }
+    * Uploads or overwrites a file in the bucket.
+    */
+   public boolean putFile(String bucket, String key, String content) {
+     s3Client.putObject(PutObjectRequest.builder()
+         .bucket(bucket)
+         .key(key)
+         .build(),
+         software.amazon.awssdk.core.sync.RequestBody.fromString(content));
+     return true;
+   }
+
+   /**
+    * Creates a directory key (folder) by uploading a zero-byte object with trailing slash.
+    */
+   public boolean putKey(String bucket, String key) {
+     String dirKey = key.endsWith("/") ? key : key + "/";
+     s3Client.putObject(PutObjectRequest.builder()
+         .bucket(bucket)
+         .key(dirKey)
+         .build(),
+         software.amazon.awssdk.core.sync.RequestBody.empty());
+     return true;
+   }
 
   /**
    * Deletes a file from the bucket.

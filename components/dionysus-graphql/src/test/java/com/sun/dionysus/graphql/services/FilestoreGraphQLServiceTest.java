@@ -99,6 +99,18 @@ class FilestoreGraphQLServiceTest {
     }
 
     @Test
+    void putKey_returnsTrue() {
+        when(s3Client.putObject(any(PutObjectRequest.class), any(software.amazon.awssdk.core.sync.RequestBody.class)))
+                .thenReturn(PutObjectResponse.builder().build());
+
+        boolean result = filestoreGraphQLService.putKey("default-bucket", "folder");
+
+        assertThat(result).isTrue();
+        verify(s3Client).putObject(any(PutObjectRequest.class),
+                any(software.amazon.awssdk.core.sync.RequestBody.class));
+    }
+
+    @Test
     void deleteFile_returnsTrue() {
         when(s3Client.deleteObject(any(DeleteObjectRequest.class)))
                 .thenReturn(DeleteObjectResponse.builder().build());

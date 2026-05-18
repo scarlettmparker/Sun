@@ -51,6 +51,10 @@ type ContextMenuContextValue = {
    * Close the menu.
    */
   close: () => void;
+  /**
+   * Counter tracking raw activation events used to wipe stale sub-menu traces.
+   */
+  resetNonce: number;
 };
 
 const ContextMenuContext = createContext<ContextMenuContextValue | null>(null);
@@ -62,12 +66,25 @@ const ContextMenu = (props: React.HTMLAttributes<HTMLDivElement>) => {
   const { className, children, ...rest } = props;
   const [open, setOpenState] = useState(false);
   const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
+  const [resetNonce, setResetNonce] = useState(0);
   const rootRef = useRef<HTMLDivElement>(null);
+
+  // Cache the viewport metrics at the exact moment the menu is triggered open
+  const lastWindowSize = useRef({ w: 0, h: 0 });
+
   const idBase = useId();
   const triggerId = `context-menu-trigger-${idBase}`;
   const contentId = `context-menu-content-${idBase}`;
 
-  const setOpen = (value: boolean) => setOpenState(value);
+  const setOpen = (value: boolean) => {
+    if (value) {
+      lastWindowSize.current = { w: window.innerWidth, h: window.innerHeight };
+      // Force nested submenus to drop open states when a fresh menu anchor triggers
+      setResetNonce((prev) => prev + 1);
+    }
+    setOpenState(value);
+  };
+
   const close = () => setOpenState(false);
 
   useEffect(() => {
@@ -77,22 +94,43 @@ const ContextMenu = (props: React.HTMLAttributes<HTMLDivElement>) => {
 
     const handleOutside = (event: MouseEvent) => {
       if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
-        setOpen(false);
+        setOpenState(false);
       }
     };
 
     const handleKeyboard = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setOpen(false);
+        setOpenState(false);
+      }
+    };
+
+    const handleResize = () => {
+      const currentW = window.innerWidth;
+      const currentH = window.innerHeight;
+
+      // Determine exactly how many pixels the boundaries translated
+      const deltaX = currentW - lastWindowSize.current.w;
+      const deltaY = currentH - lastWindowSize.current.h;
+
+      if (deltaX !== 0 || deltaY !== 0) {
+        setPosition((prev) => ({
+          x: prev.x + deltaX,
+          y: prev.y + deltaY,
+        }));
+
+        // Document the new dimension baseline for sequential resize events
+        lastWindowSize.current = { w: currentW, h: currentH };
       }
     };
 
     document.addEventListener("mousedown", handleOutside);
     document.addEventListener("keydown", handleKeyboard);
+    window.addEventListener("resize", handleResize);
 
     return () => {
       document.removeEventListener("mousedown", handleOutside);
       document.removeEventListener("keydown", handleKeyboard);
+      window.removeEventListener("resize", handleResize);
     };
   }, [open]);
 
@@ -106,6 +144,7 @@ const ContextMenu = (props: React.HTMLAttributes<HTMLDivElement>) => {
         triggerId,
         contentId,
         close,
+        resetNonce,
       }}
     >
       <div
@@ -154,14 +193,12 @@ const ContextMenuTrigger = (props: ContextMenuTriggerProps) => {
 
   const handleContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
     event.preventDefault();
-    // Always move the position and ensure it opens/reopens where the cursor clicked
     setPosition({ x: event.clientX, y: event.clientY });
     setOpen(true);
     onContextMenu?.(event);
   };
 
   const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    // If a standard left click hits the trigger while it's open, dismiss the menu
     if (open) {
       setOpen(false);
     }
@@ -207,7 +244,6 @@ const ContextMenuContent = (props: ContextMenuContentProps) => {
   const { open, contentId, triggerId, position } = useContextMenu();
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // Focus the first actionable menu item when the popover opens
   useEffect(() => {
     if (open && contentRef.current) {
       const firstItem = contentRef.current.querySelector(
@@ -217,7 +253,6 @@ const ContextMenuContent = (props: ContextMenuContentProps) => {
     }
   }, [open]);
 
-  // Handle accessible keyboard arrow navigation loops
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (!contentRef.current) return;
 
@@ -418,10 +453,6 @@ type ContextMenuSubContextValue = {
    * Set the nested sub-menu open state flag.
    */
   setOpen: (open: boolean) => void;
-  /**
-   * Close the nested sub-menu.
-   */
-  close: () => void;
 };
 
 /**
@@ -437,12 +468,16 @@ const ContextMenuSubContext = createContext<ContextMenuSubContextValue | null>(
  */
 const ContextMenuSub = (props: React.HTMLAttributes<HTMLDivElement>) => {
   const { className, children, ...rest } = props;
-  const [open, setOpenState] = useState(false);
-  const close = () => setOpenState(false);
-  const setOpen = (value: boolean) => setOpenState(value);
+  const { resetNonce } = useContextMenu();
+  const [open, setOpen] = useState(false);
+
+  // Auto-close open submenu if user right-clicks another item to re-anchor the main context menu
+  useEffect(() => {
+    setOpen(false);
+  }, [resetNonce]);
 
   return (
-    <ContextMenuSubContext.Provider value={{ open, setOpen, close }}>
+    <ContextMenuSubContext.Provider value={{ open, setOpen }}>
       <div
         className={cn("context_menu_sub", className)}
         data-state={open ? "open" : "closed"}
@@ -479,13 +514,13 @@ type ContextMenuSubTriggerProps = React.ComponentProps<typeof Button>;
  * adjacent child sub-content popovers upon interaction.
  */
 const ContextMenuSubTrigger = (props: ContextMenuSubTriggerProps) => {
-  const { children, className, onClick, disabled, ...rest } = props;
+  const { children, className, onMouseEnter, disabled, ...rest } = props;
   const { open, setOpen } = useContextMenuSub();
 
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleMouseEnter = (event: React.MouseEvent<HTMLButtonElement>) => {
     if (disabled) return;
-    setOpen(!open);
-    onClick?.(event);
+    setOpen(true);
+    onMouseEnter?.(event);
   };
 
   return (
@@ -500,7 +535,7 @@ const ContextMenuSubTrigger = (props: ContextMenuSubTriggerProps) => {
       disabled={disabled}
       aria-disabled={disabled}
       className={cn("context_menu_subtrigger", className)}
-      onClick={handleClick}
+      onMouseEnter={handleMouseEnter}
     >
       {children}
       <ChevronRight size={16} className="context_menu_subarrow" />
@@ -518,12 +553,17 @@ type ContextMenuSubContentProps = React.HTMLAttributes<HTMLDivElement>;
  * adjacent to active sub-triggers.
  */
 const ContextMenuSubContent = (props: ContextMenuSubContentProps) => {
-  const { className, children, ...rest } = props;
-  const { open } = useContextMenuSub();
+  const { className, children, onMouseLeave, ...rest } = props;
+  const { open, setOpen } = useContextMenuSub();
 
   if (!open) {
     return null;
   }
+
+  const handleMouseLeave = (event: React.MouseEvent<HTMLDivElement>) => {
+    setOpen(false);
+    onMouseLeave?.(event);
+  };
 
   return (
     <div
@@ -533,6 +573,7 @@ const ContextMenuSubContent = (props: ContextMenuSubContentProps) => {
       aria-hidden={!open}
       data-state={open ? "open" : "closed"}
       className={cn("context_menu_subcontent", className)}
+      onMouseLeave={handleMouseLeave}
     >
       {children}
     </div>

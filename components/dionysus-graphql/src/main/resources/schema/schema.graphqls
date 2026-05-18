@@ -41,6 +41,8 @@ input CompletedPart {
 type FilestoreMutations {
   # Upload or overwrite a file.
   putFile(bucket: String!, key: String!, content: String!): Boolean
+  # Create a directory key (folder).
+  putKey(bucket: String!, key: String!): Boolean
   # Delete a file.
   deleteFile(bucket: String!, key: String!): Boolean
   # Initiate multipart upload; returns uploadId.
