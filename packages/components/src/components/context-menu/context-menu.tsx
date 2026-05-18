@@ -4,6 +4,7 @@ import React, {
   ReactElement,
   useContext,
   useEffect,
+  useLayoutEffect,
   useId,
   useRef,
   useState,
@@ -60,6 +61,10 @@ type ContextMenuContextValue = {
 
 const ContextMenuContext = createContext<ContextMenuContextValue | null>(null);
 
+// Isomorphic layout effect to avoid SSR warnings
+const useIsomorphicLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
+
 /**
  * Scarlet Ui Context Menu.
  */
@@ -91,16 +96,24 @@ const ContextMenu = (props: React.HTMLAttributes<HTMLDivElement>) => {
     if (!open) {
       return;
     }
-    const handleOutside = (event: MouseEvent) => {
-      if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
-        setOpenState(false);
+    const handleOutside = (event: PointerEvent) => {
+      const target = event.target as HTMLElement;
+      if (rootRef.current && rootRef.current.contains(target)) {
+        return;
       }
+      // Ignore clicks inside any rendered context menu content/portals
+      if (target.closest?.('[data-context-menu-content="true"]')) {
+        return;
+      }
+      setOpenState(false);
     };
+
     const handleKeyboard = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setOpenState(false);
       }
     };
+
     const handleResize = () => {
       const currentW = window.innerWidth;
       const currentH = window.innerHeight;
@@ -116,11 +129,12 @@ const ContextMenu = (props: React.HTMLAttributes<HTMLDivElement>) => {
         lastWindowSize.current = { w: currentW, h: currentH };
       }
     };
-    document.addEventListener("mousedown", handleOutside);
+
+    document.addEventListener("pointerdown", handleOutside);
     document.addEventListener("keydown", handleKeyboard);
     window.addEventListener("resize", handleResize);
     return () => {
-      document.removeEventListener("mousedown", handleOutside);
+      document.removeEventListener("pointerdown", handleOutside);
       document.removeEventListener("keydown", handleKeyboard);
       window.removeEventListener("resize", handleResize);
     };
@@ -277,8 +291,17 @@ const ContextMenuContent = (props: ContextMenuContentProps) => {
       aria-labelledby={triggerId}
       aria-hidden={!open}
       data-state={open ? "open" : "closed"}
+      data-context-menu-content="true"
       className={cn("context_menu_content", className)}
       onKeyDown={handleKeyDown}
+      onPointerDown={(e) => {
+        e.stopPropagation();
+        rest.onPointerDown?.(e);
+      }}
+      onClick={(e) => {
+        e.stopPropagation();
+        rest.onClick?.(e);
+      }}
       style={{
         position: "fixed",
         top: `${position.y}px`,
@@ -432,6 +455,10 @@ type ContextMenuSubContextValue = {
    * Set the nested sub-menu open state flag.
    */
   setOpen: (open: boolean) => void;
+  /**
+   * Mutable ref passing the trigger element for stable contextual alignment.
+   */
+  triggerRef: React.MutableRefObject<HTMLButtonElement | null>;
 };
 
 /**
@@ -449,6 +476,7 @@ const ContextMenuSub = (props: React.HTMLAttributes<HTMLDivElement>) => {
   const { className, children, ...rest } = props;
   const { resetNonce } = useContextMenu();
   const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
 
   // Auto-close open submenu if user right-clicks another item to re-anchor the main context menu
   useEffect(() => {
@@ -456,7 +484,7 @@ const ContextMenuSub = (props: React.HTMLAttributes<HTMLDivElement>) => {
   }, [resetNonce]);
 
   return (
-    <ContextMenuSubContext.Provider value={{ open, setOpen }}>
+    <ContextMenuSubContext.Provider value={{ open, setOpen, triggerRef }}>
       <div
         className={cn("context_menu_sub", className)}
         data-state={open ? "open" : "closed"}
@@ -492,13 +520,27 @@ type ContextMenuSubTriggerProps = React.ComponentProps<typeof Button>;
  * adjacent child sub-content popovers upon interaction.
  */
 const ContextMenuSubTrigger = (props: ContextMenuSubTriggerProps) => {
-  const { children, className, onMouseEnter, disabled, ...rest } = props;
-  const { open, setOpen } = useContextMenuSub();
+  const {
+    children,
+    className,
+    onPointerEnter,
+    onPointerLeave,
+    disabled,
+    ...rest
+  } = props;
+  const { open, setOpen, triggerRef } = useContextMenuSub();
 
-  const handleMouseEnter = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handlePointerEnter = (event: React.PointerEvent<HTMLButtonElement>) => {
     if (disabled) return;
+    triggerRef.current = event.currentTarget;
     setOpen(true);
-    onMouseEnter?.(event);
+    onPointerEnter?.(event);
+  };
+
+  const handlePointerLeave = (event: React.PointerEvent<HTMLButtonElement>) => {
+    if (disabled) return;
+    setOpen(false);
+    onPointerLeave?.(event);
   };
 
   return (
@@ -513,7 +555,8 @@ const ContextMenuSubTrigger = (props: ContextMenuSubTriggerProps) => {
       disabled={disabled}
       aria-disabled={disabled}
       className={cn("context_menu_subtrigger", className)}
-      onMouseEnter={handleMouseEnter}
+      onPointerEnter={handlePointerEnter}
+      onPointerLeave={handlePointerLeave}
     >
       {children}
       <ChevronRight size={16} className="context_menu_subarrow" />
@@ -530,60 +573,56 @@ type ContextMenuSubContentProps = React.HTMLAttributes<HTMLDivElement>;
  * ContextMenuSubContent handles rendering nested secondary flyout card modules
  * adjacent to active sub-triggers.
  */
-/**
- * ContextMenuSubContent handles rendering nested secondary flyout card modules
- * adjacent to active sub-triggers.
- */
 const ContextMenuSubContent = (props: ContextMenuSubContentProps) => {
-  const { className, children, onMouseLeave, ...rest } = props;
-  const { open, setOpen } = useContextMenuSub();
+  const { className, children, onPointerEnter, onPointerLeave, ...rest } =
+    props;
+  const { open, setOpen, triggerRef } = useContextMenuSub();
   const subRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement | null>(null);
 
-  // Find the parent sub trigger
-  useEffect(() => {
-    if (open) {
-      triggerRef.current = document.activeElement as HTMLButtonElement;
-    }
-  }, [open]);
-
-  // Positioning for submenu
-  useEffect(() => {
+  // Positioning for submenu leveraging Layout effect to prevent 0-dimension blips
+  useIsomorphicLayoutEffect(() => {
     if (!open || !subRef.current || !triggerRef.current) return;
 
-    const triggerRect = triggerRef.current.getBoundingClientRect();
-    const submenuRect = subRef.current.getBoundingClientRect();
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    const shouldOpenLeft = triggerRect.left > viewportWidth / 2;
+    const updatePosition = () => {
+      const triggerRect = triggerRef.current!.getBoundingClientRect();
+      const submenuRect = subRef.current!.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
 
-    let left: number;
-    const gap = 4;
+      const gap = -4;
+      let left = triggerRect.right + gap;
+      let top = triggerRect.top;
 
-    if (shouldOpenLeft) {
-      left = triggerRect.left - submenuRect.width - gap;
-    } else {
-      left = triggerRect.right + gap;
-    }
+      // Horizontal flip if running out of screen width
+      if (left + submenuRect.width > viewportWidth) {
+        left = triggerRect.left - submenuRect.width - gap;
+      }
 
-    // Vertical positioning with smart flip
-    let top = triggerRect.top;
+      // Vertical flip if running off the bottom edge
+      if (top + submenuRect.height > viewportHeight) {
+        top = triggerRect.bottom - submenuRect.height;
+      }
 
-    // If it would overflow bottom, try to flip upwards
-    if (top + submenuRect.height > viewportHeight) {
-      top = triggerRect.bottom - submenuRect.height;
-    }
+      // Apply final bounds enforcing margin
+      subRef.current!.style.position = "fixed";
+      subRef.current!.style.top = `${Math.max(gap * 2, top)}px`;
+      subRef.current!.style.left = `${Math.max(gap * 2, left)}px`;
+      subRef.current!.style.zIndex = "9999";
+    };
 
-    // Apply final position
-    subRef.current.style.position = "fixed";
-    subRef.current.style.top = `${Math.max(8, top)}px`;
-    subRef.current.style.left = `${left}px`;
-    subRef.current.style.zIndex = "9999";
+    updatePosition();
+    const raf = requestAnimationFrame(updatePosition);
+    return () => cancelAnimationFrame(raf);
   }, [open]);
 
-  const handleMouseLeave = (event: React.MouseEvent<HTMLDivElement>) => {
+  const handlePointerEnter = (event: React.PointerEvent<HTMLDivElement>) => {
+    setOpen(true);
+    onPointerEnter?.(event);
+  };
+
+  const handlePointerLeave = (event: React.PointerEvent<HTMLDivElement>) => {
     setOpen(false);
-    onMouseLeave?.(event);
+    onPointerLeave?.(event);
   };
 
   if (!open) {
@@ -598,8 +637,18 @@ const ContextMenuSubContent = (props: ContextMenuSubContentProps) => {
       aria-orientation="vertical"
       aria-hidden={!open}
       data-state={open ? "open" : "closed"}
+      data-context-menu-content="true"
       className={cn("context_menu_subcontent", className)}
-      onMouseLeave={handleMouseLeave}
+      onPointerEnter={handlePointerEnter}
+      onPointerLeave={handlePointerLeave}
+      onPointerDown={(e) => {
+        e.stopPropagation();
+        rest.onPointerDown?.(e);
+      }}
+      onClick={(e) => {
+        e.stopPropagation();
+        rest.onClick?.(e);
+      }}
     >
       {children}
     </div>
