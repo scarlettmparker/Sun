@@ -4,14 +4,24 @@
  */
 import { renderApp } from "../utils/ssr.js";
 import { base, isProduction } from "../config.js";
-import { matchRoutes } from "react-router-dom";
-import { routes } from "../src/router.tsx";
 import { Buffer } from "buffer";
 
+function getCookieValue(cookieHeader, name) {
+  if (!cookieHeader) return undefined;
+  for (const part of cookieHeader.split(/;\s*/)) {
+    const index = part.indexOf("=");
+    if (index < 0) continue;
+    const key = part.slice(0, index).trim();
+    if (key === name) {
+      return decodeURIComponent(part.slice(index + 1));
+    }
+  }
+}
+
 /**
- * Sets up all routes for the Express application.
+ * Sets up all routes for the Fastify application.
  *
- * @param {express.Application} app - The Express application instance.
+ * @param {import("fastify").FastifyInstance} app - The Fastify application instance.
  * @param {object} vite - The Vite dev server instance (optional, only in development).
  */
 export function setupRoutes(app, vite) {
@@ -21,13 +31,18 @@ export function setupRoutes(app, vite) {
    * It fetches user data, loads translations, and renders the React application.
    * It also includes a basic check for file extensions to bypass SSR for static assets.
    *
-   * @param {import("express").Request} req - Express request object.
-   * @param {import("express").Response} res - Express response object.
-   * @param {import("express").NextFunction} next - Express next middleware function.
+   * @param {import("fastify").FastifyRequest} request - Fastify request object.
+   * @param {import("fastify").FastifyReply} reply - Fastify reply object.
    */
-  app.get("*", async (req, res, next) => {
-    const mutationPayloadCookie = req.cookies["mutation_payload"];
-    const invalidateCacheCookie = req.cookies["invalidate_cache"];
+  app.setNotFoundHandler({ method: ["GET"] }, async (request, reply) => {
+    const mutationPayloadCookie = getCookieValue(
+      request.headers.cookie,
+      "mutation_payload",
+    );
+    const invalidateCacheCookie = getCookieValue(
+      request.headers.cookie,
+      "invalidate_cache",
+    );
     let mutationPayload = null;
     if (mutationPayloadCookie) {
       try {
@@ -39,26 +54,18 @@ export function setupRoutes(app, vite) {
       }
     }
 
-    // Skip SSR for requests with file extensions (e.g., .js, .css, .png)
-    if (/\.[^/]+$/.test(req.path)) {
-      return next();
+    const requestUrl = new URL(request.raw.url, "http://localhost");
+    const pathname = requestUrl.pathname;
+    if (/\.[^/]+$/.test(pathname)) {
+      return reply.callNotFound();
     }
 
-    let url = req.originalUrl.replace(base, "");
+    let url = pathname.replace(base, "");
     if (!url.startsWith("/")) url = "/" + url;
+    if (requestUrl.search) url += requestUrl.search;
 
-    // Localization (Locale derivation is fine)
-    const langHeader = req.headers["accept-language"] || "en";
+    const langHeader = request.headers["accept-language"] || "en";
     const locale = langHeader.split(",")[0] || "en";
-
-    // Extract route params using React Router's matchRoutes
-    const matches = matchRoutes(routes, url);
-    const params = {};
-    if (matches) {
-      matches.forEach((match) => {
-        Object.assign(params, match.params);
-      });
-    }
 
     try {
       await renderApp(
@@ -70,11 +77,11 @@ export function setupRoutes(app, vite) {
           mutationPayload,
           invalidateCacheCookie,
         },
-        res,
+        reply.raw,
       );
     } catch (e) {
       console.error("Error during route handling:", e);
-      res.status(500).end("Internal Server Error: " + e.message);
+      reply.status(500).send("Internal Server Error: " + e.message);
     }
   });
 }

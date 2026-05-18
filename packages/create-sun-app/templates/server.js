@@ -1,11 +1,12 @@
 /**
- * @fileoverview Main entry point for the Express server application.
+ * @fileoverview Main entry point for the Fastify server application.
  * Sets up middleware, Vite integration (for development), and routes, then starts the server.
  */
 
-import express from "express";
+import Fastify from "fastify";
+import fastifyStatic from "@fastify/static";
+import fastifyCompress from "@fastify/compress";
 import path from "path";
-import cookieParser from "cookie-parser";
 import {
   port,
   host,
@@ -22,22 +23,19 @@ import { Buffer } from "buffer";
 import "./src/utils/register-loaders.ts";
 import "./src/utils/register-mutations.ts";
 
-const app = express();
-
-// Serve static files from the 'public' directory
-app.use(express.static(path.resolve("./public")));
-
-// Parse cookies from the request headers
-app.use(cookieParser());
-
-// Parse JSON bodies
-app.use(express.json());
+const app = Fastify({ logger: false });
+await app.register(fastifyStatic, {
+  root: path.resolve("./public"),
+  prefix: "/",
+  decorateReply: false,
+});
 
 let vite;
 
-// Conditional setup for Vite development server or production static serving
 if (!isProduction) {
-  // In development, create and use the Vite dev server middleware
+  const fastifyMiddie = (await import("@fastify/middie")).default;
+  await app.register(fastifyMiddie);
+
   const { createServer } = await import("vite");
   vite = await createServer({
     server: { middlewareMode: true },
@@ -46,94 +44,82 @@ if (!isProduction) {
   });
   app.use(vite.middlewares);
 } else {
-  // In production, use compression and serve static files from the build output
-  const compression = (await import("compression")).default;
-  const sirv = (await import("sirv")).default;
-  const { createProxyMiddleware } = await import("http-proxy-middleware");
+  await app.register(fastifyCompress, {
+    brotli: true,
+    encodings: ["gzip", "br"],
+    threshold: 1024,
+  });
 
-  app.use(
-    compression({
-      brotli: {
-        enabled: true,
-      },
-      filter: (req, res) => {
-        if (
-          req.accepts("html") &&
-          req.method === "GET" &&
-          !/\.[^/]+$/.test(req.path)
-        ) {
-          return false;
-        }
+  await app.register(fastifyStatic, {
+    root: path.resolve("dist/client"),
+    prefix: "/",
+    decorateReply: false,
+  });
+  await app.register(fastifyStatic, {
+    root: path.resolve("./messages"),
+    prefix: "/messages/",
+    decorateReply: false,
+  });
 
-        return compression.filter(req, res);
-      },
-    }),
-  );
-
-  app.use(
-    sirv(path.resolve("dist/client"), {
-      extensions: ["html", "js", "css"],
-      dev: false,
-    }),
-  );
-  app.use("/messages", express.static(path.resolve("./messages")));
-
-  app.use(
-    "/api",
-    createProxyMiddleware({
-      target: `http://${backendHost}:${backendPort}`,
-      changeOrigin: true,
-      pathRewrite: { "^/api": "" },
-      secure: false,
-    }),
-  );
+  const fastifyHttpProxy = (await import("@fastify/http-proxy")).default;
+  await app.register(fastifyHttpProxy, {
+    upstream: `http://${backendHost}:${backendPort}`,
+    prefix: "/api",
+    rewritePrefix: "/",
+  });
 }
 
-// Set up all defined application routes
 setupRoutes(app, vite);
 
-// Generic POST route for mutations
-app.post("*", async (req, res) => {
-  const path = req.path.slice(1);
-  try {
-    const result = await executeMutation(path, req.body);
+app.route({
+  method: "POST",
+  url: "/*",
+  handler: async (request, reply) => {
+    const mutationPath = (request.url || "").split("?")[0].slice(1);
 
-    if (result.__typename === "QuerySuccess") {
-      res.json(result);
-    } else if (result.__typename === "StandardError") {
-      res.status(400).json(result);
-    }
-  } catch (error) {
-    if (error instanceof ServerRedirectError) {
-      const payloadString = JSON.stringify(error.clientPayload || {});
-      const encodedPayload = Buffer.from(payloadString).toString("base64");
+    try {
+      const result = await executeMutation(mutationPath, request.body);
 
-      const cookieHeaders = [
-        `mutation_payload=${encodedPayload}; Path=/; Max-Age=5; SameSite=Lax;`,
-        `redirect_to=${error.redirectTo}; Path=/; Max-Age=5; SameSite=Lax;`,
-      ];
-
-      if (error.cacheInvalidateKey) {
-        cookieHeaders.push(
-          `invalidate_cache=${error.cacheInvalidateKey}; Path=/; Max-Age=31536000; SameSite=Lax;`,
-        );
+      if (result.__typename === "QuerySuccess") {
+        return reply.send(result);
       }
 
-      res.setHeader("Set-Cookie", cookieHeaders);
+      if (result.__typename === "StandardError") {
+        return reply.status(400).send(result);
+      }
 
-      return res.json({
-        __typename: "Redirect",
-        redirectTo: error.redirectTo,
+      return reply.send(result);
+    } catch (error) {
+      if (error instanceof ServerRedirectError) {
+        const payloadString = JSON.stringify(error.clientPayload || {});
+        const encodedPayload = Buffer.from(payloadString).toString("base64");
+
+        const cookieHeaders = [
+          `mutation_payload=${encodedPayload}; Path=/; Max-Age=5; SameSite=Lax;`,
+          `redirect_to=${error.redirectTo}; Path=/; Max-Age=5; SameSite=Lax;`,
+        ];
+
+        if (error.cacheInvalidateKey) {
+          cookieHeaders.push(
+            `invalidate_cache=${error.cacheInvalidateKey}; Path=/; Max-Age=31536000; SameSite=Lax;`,
+          );
+        }
+
+        reply.header("Set-Cookie", cookieHeaders);
+        return reply.send({
+          __typename: "Redirect",
+          redirectTo: error.redirectTo,
+        });
+      }
+
+      console.error("Error executing mutation:", error);
+      return reply.status(500).send({
+        __typename: "StandardError",
+        message: "Internal server error",
       });
     }
-
-    console.error("Error executing mutation:", error);
-    res
-      .status(500)
-      .json({ __typename: "StandardError", message: "Internal server error" });
-  }
+  },
 });
 
-app.listen(port, host, () => {
-  console.log(`Server started at http://${host}:${port}`);
-});
+const address = await app.listen({ port, host });
+console.log(`Server started at ${address}`);

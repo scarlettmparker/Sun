@@ -36,7 +36,7 @@ async function loadManifest() {
  * @param {object|null} params.user - Authenticated user object, or null if not authenticated.
  * @param {object} params.mutationPayload - Payload for displaying toasts, etc. on client after redirect.
  * @param {string} params.invalidateCacheCookie - Cookie to invalidate the entry-server suspense cache.
- * @param {import("express").Response} res - Express response object to which the HTML will be streamed.
+ * @param {import("http").ServerResponse} res - Node response object to which the HTML will be streamed.
  * @returns {Promise<void>} A promise that resolves when the rendering and streaming are complete.
  */
 export async function renderApp(
