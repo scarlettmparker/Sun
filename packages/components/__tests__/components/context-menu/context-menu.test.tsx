@@ -27,10 +27,10 @@ describe("ContextMenu", () => {
       </ContextMenu>,
     );
 
-    const trigger = screen.getByRole("button", { name: /open/i });
+    const trigger = screen.getByText(/open/i);
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
 
-    fireEvent.click(trigger);
+    fireEvent.contextMenu(trigger);
     expect(screen.getByRole("menu")).toBeInTheDocument();
     expect(
       screen.getByRole("menuitem", { name: /action/i }),
@@ -52,7 +52,7 @@ describe("ContextMenu", () => {
       </ContextMenu>,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /open/i }));
+    fireEvent.contextMenu(screen.getByText(/open/i));
     fireEvent.click(screen.getByRole("menuitem", { name: /action/i }));
 
     expect(onSelect).toHaveBeenCalledTimes(1);
@@ -72,7 +72,7 @@ describe("ContextMenu", () => {
       </div>,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /open/i }));
+    fireEvent.contextMenu(screen.getByText(/open/i));
     expect(screen.getByRole("menu")).toBeInTheDocument();
 
     fireEvent.mouseDown(screen.getByRole("button", { name: /outside/i }));
@@ -91,7 +91,7 @@ describe("ContextMenu", () => {
       </ContextMenu>,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /open/i }));
+    fireEvent.contextMenu(screen.getByText(/open/i));
     const menuItem = screen.getByRole("menuitem", { name: /action/i });
     fireEvent.keyDown(menuItem, { key: "Enter", code: "Enter" });
 
@@ -111,7 +111,7 @@ describe("ContextMenu", () => {
       </ContextMenu>,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /open/i }));
+    fireEvent.contextMenu(screen.getByText(/open/i));
     const nestedButton = screen.getByRole("menuitem", {
       name: /nested action/i,
     });
@@ -130,7 +130,7 @@ describe("ContextMenu", () => {
       </ContextMenu>,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /open/i }));
+    fireEvent.contextMenu(screen.getByText(/open/i));
     expect(
       screen.getByRole("menuitem", { name: /grouped/i }),
     ).toBeInTheDocument();
@@ -151,8 +151,8 @@ describe("ContextMenu", () => {
       </ContextMenu>,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /open/i }));
-    const subTrigger = screen.getByRole("button", { name: /sub/i });
+    fireEvent.contextMenu(screen.getByText(/open/i));
+    const subTrigger = screen.getByText(/sub/i);
     fireEvent.click(subTrigger);
     expect(
       screen.getByRole("menuitem", { name: /subitem/i }),
@@ -161,5 +161,72 @@ describe("ContextMenu", () => {
     expect(
       screen.queryByRole("menuitem", { name: /subitem/i }),
     ).not.toBeInTheDocument();
+  });
+
+  it("opens menu on right-click (contextmenu)", () => {
+    render(
+      <ContextMenu>
+        <ContextMenuTrigger>Open</ContextMenuTrigger>
+        <ContextMenuContent>
+          <ContextMenuItem>Action</ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>,
+    );
+
+    const trigger = screen.getByText(/open/i);
+    fireEvent.contextMenu(trigger);
+    expect(screen.getByRole("menu")).toBeInTheDocument();
+  });
+
+  it("closes on Escape key", () => {
+    render(
+      <ContextMenu>
+        <ContextMenuTrigger>Open</ContextMenuTrigger>
+        <ContextMenuContent>
+          <ContextMenuItem>Action</ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>,
+    );
+
+    fireEvent.contextMenu(screen.getByText(/open/i));
+    expect(screen.getByRole("menu")).toBeInTheDocument();
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+  });
+
+  it("supports asChild on ContextMenuTrigger", () => {
+    render(
+      <ContextMenu>
+        <ContextMenuTrigger asChild>
+          <Button>Open</Button>
+        </ContextMenuTrigger>
+        <ContextMenuContent>
+          <ContextMenuItem>Action</ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>,
+    );
+
+    const trigger = screen.getByRole("button", { name: /open/i });
+    fireEvent.contextMenu(trigger);
+    expect(screen.getByRole("menu")).toBeInTheDocument();
+  });
+
+  it("does not select disabled menu item", () => {
+    const onSelect = jest.fn();
+    render(
+      <ContextMenu>
+        <ContextMenuTrigger>Open</ContextMenuTrigger>
+        <ContextMenuContent>
+          <ContextMenuItem disabled onSelect={onSelect}>
+            Disabled
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>,
+    );
+
+    fireEvent.contextMenu(screen.getByText(/open/i));
+    const item = screen.getByRole("menuitem", { name: /disabled/i });
+    fireEvent.click(item);
+    expect(onSelect).not.toHaveBeenCalled();
   });
 });

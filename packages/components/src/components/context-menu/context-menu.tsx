@@ -154,16 +154,14 @@ const ContextMenuTrigger = (props: ContextMenuTriggerProps) => {
 
   const handleContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
     event.preventDefault();
-    if (open) {
-      setOpen(false);
-    } else {
-      setPosition({ x: event.clientX, y: event.clientY });
-      setOpen(true);
-    }
+    // Always move the position and ensure it opens/reopens where the cursor clicked
+    setPosition({ x: event.clientX, y: event.clientY });
+    setOpen(true);
     onContextMenu?.(event);
   };
 
   const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    // If a standard left click hits the trigger while it's open, dismiss the menu
     if (open) {
       setOpen(false);
     }
@@ -183,11 +181,12 @@ const ContextMenuTrigger = (props: ContextMenuTriggerProps) => {
   };
 
   if (asChild && React.isValidElement(children)) {
-    const child = children as ReactElement<{ className?: string }>;
+    const child = children as ReactElement<React.HTMLAttributes<HTMLElement>>;
+    const childProps = child.props as { className?: string };
 
     return cloneElement(child, {
       ...sharedProps,
-      className: cn(sharedProps.className, child.props.className),
+      className: cn(sharedProps.className, childProps.className),
     });
   }
 
@@ -330,28 +329,25 @@ const ContextMenuItem = (props: ContextMenuItemProps) => {
 
   if (asChild && React.isValidElement(children)) {
     const child = children as ReactElement;
-    const {
-      type: childType,
-      role: childRole,
-      disabled: childDisabled,
-      className: childClassName,
-      onClick: childOnClick,
-      onKeyDown: childOnKeyDown,
-    } = child.props as Record<string, unknown>;
+    const childProps = child.props as Record<string, unknown>;
 
     return cloneElement(child, {
       ...rest,
-      type: (childType as string) ?? "button",
-      role: (childRole as string) ?? "menuitem",
+      type: (childProps.type as string) ?? "button",
+      role: (childProps.role as string) ?? "menuitem",
       tabIndex: -1,
-      "aria-disabled": (childDisabled as boolean) ?? disabled,
-      className: cn("context_menu_item", className, childClassName as string),
+      "aria-disabled": (childProps.disabled as boolean) ?? disabled,
+      className: cn(
+        "context_menu_item",
+        className,
+        childProps.className as string,
+      ),
       onClick: (event: React.MouseEvent<any>) => {
         if (disabled) {
           return;
         }
 
-        (childOnClick as (event: React.MouseEvent<any>) => void)?.(event);
+        (childProps.onClick as (event: React.MouseEvent<any>) => void)?.(event);
         onClick?.(event);
         onSelect?.();
         close();
@@ -363,7 +359,7 @@ const ContextMenuItem = (props: ContextMenuItemProps) => {
 
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
-          (childOnKeyDown as (event: React.KeyboardEvent<any>) => void)?.(
+          (childProps.onKeyDown as (event: React.KeyboardEvent<any>) => void)?.(
             event,
           );
           onSelect?.();
@@ -371,7 +367,9 @@ const ContextMenuItem = (props: ContextMenuItemProps) => {
           return;
         }
 
-        (childOnKeyDown as (event: React.KeyboardEvent<any>) => void)?.(event);
+        (childProps.onKeyDown as (event: React.KeyboardEvent<any>) => void)?.(
+          event,
+        );
         onKeyDown?.(event);
       },
     } as any);

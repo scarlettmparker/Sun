@@ -9,10 +9,10 @@
 .context_menu_content {
   min-width: 14rem;
   border-radius: var(--lg);
-  background-color: rgb(from var(--secondary) r g b / var(--visible));
-  backdrop-filter: blur(var(--sm));
-  border: 1px solid rgb(from var(--border) r g b / 0.08);
   box-shadow: var(--shadow-medium);
+  background-color: rgb(from var(--secondary) r g b / var(--visible));
+  overflow: hidden;
+  backdrop-filter: blur(var(--sm));
   padding: var(--xs) 0;
   z-index: 201;
 }
@@ -21,12 +21,17 @@
   padding: var(--xs) 0;
 }
 
-/* Items styled clean like layout action buttons */
 .context_menu_item,
 .context_menu_subtrigger {
   width: 100%;
   padding: var(--md) var(--lg);
-  background: transparent;
+  border-radius: var(--sm);
+  background-color: rgb(from var(--secondary) r g b / var(--visible));
+  backdrop-filter: blur(var(--sm));
+  transition: 
+    background-color var(--fast) ease, 
+    color var(--fast) ease, 
+    box-shadow var(--fast) ease;
   border: none;
   display: flex;
   align-items: center;
@@ -37,24 +42,28 @@
   cursor: pointer;
   font: inherit;
   box-shadow: none;
-  transition: background-color var(--fast) ease, color var(--fast) ease;
 }
 
 .context_menu_item:hover,
 .context_menu_subtrigger:hover {
-  background-color: rgb(from var(--primary) r g b / 0.08);
-  color: var(--primary);
+  background-color: rgb(from var(--secondary-hover) r g b / var(--visible));
+  color: var(--tertiary);
+}
+
+.context_menu_item:disabled,
+.context_menu_subtrigger:disabled,
+.context_menu_item[aria-disabled="true"],
+.context_menu_subtrigger[aria-disabled="true"] {
+  color: var(--muted);
+  opacity: 0.55;
+  cursor: not-allowed;
+  background-color: inherit;
 }
 
 .context_menu_item:focus-visible,
 .context_menu_subtrigger:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: -2px;
-}
-
-.context_menu_item[disabled] {
-  opacity: 0.55;
-  cursor: not-allowed;
 }
 
 .context_menu_sub {
@@ -68,10 +77,10 @@
   min-width: 14rem;
   margin-left: var(--xs);
   border-radius: var(--lg);
-  background-color: rgb(from var(--secondary) r g b / var(--visible));
-  backdrop-filter: blur(var(--sm));
-  border: 1px solid rgb(from var(--border) r g b / 0.08);
   box-shadow: var(--shadow-medium);
+  background-color: rgb(from var(--secondary) r g b / var(--visible));
+  overflow: hidden;
+  backdrop-filter: blur(var(--sm));
   padding: var(--xs) 0;
   z-index: 501;
 }
