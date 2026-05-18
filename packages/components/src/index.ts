@@ -25,4 +25,10 @@ export { default as Skeleton } from "./components/skeleton";
 export { default as Sidebar } from "./components/sidebar";
 export { default as MarkdownViewer } from "./components/markdown-viewer";
 export { default as MarkdownEditor } from "./components/markdown-editor";
+export {
+  default as Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbContext,
+} from "./components/breadcrumb";
+export type { Crumb, BreadcrumbContextValue } from "./components/breadcrumb";
 export { cn } from "./utils/cn";
