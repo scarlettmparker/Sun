@@ -62,6 +62,12 @@ type FilestoreMutations {
     uploadId: String!
     parts: [CompletedPart!]!
   ): Boolean
+  # Returns a presigned PUT URL for direct browser-to-storage upload.
+  getPresignedUploadUrl(
+    bucket: String!
+    key: String!
+    contentType: String
+  ): String
 }
 
 extend type Query {

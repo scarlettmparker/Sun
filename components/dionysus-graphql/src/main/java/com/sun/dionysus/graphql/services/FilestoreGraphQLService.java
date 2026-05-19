@@ -17,6 +17,10 @@ import com.sun.dionysus.graphql.mappers.FileMapper;
 import com.sun.dionysus.graphql.mappers.KeyEntryMapper;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
+import java.time.Duration;
 import software.amazon.awssdk.services.s3.S3Configuration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,6 +40,9 @@ public class FilestoreGraphQLService {
 
   @Autowired
   private S3Client s3Client;
+
+  @Autowired
+  private S3Presigner s3Presigner;
 
   @Autowired
   private FileMapper fileMapper;
@@ -190,6 +197,7 @@ public class FilestoreGraphQLService {
    */
   public String uploadPart(String bucket, String key, String uploadId, int partNumber, String content) {
     logger.info("Uploading part #{} for uploadId: {} in bucket: {} with key: {}", partNumber, uploadId, bucket, key);
+    byte[] bytes = java.util.Base64.getDecoder().decode(content);
     UploadPartResponse resp = s3Client.uploadPart(
         UploadPartRequest.builder()
             .bucket(bucket)
@@ -197,7 +205,7 @@ public class FilestoreGraphQLService {
             .uploadId(uploadId)
             .partNumber(partNumber)
             .build(),
-        software.amazon.awssdk.core.sync.RequestBody.fromString(content));
+        software.amazon.awssdk.core.sync.RequestBody.fromBytes(bytes));
     logger.info("Part #{} upload completed. ETag: {}", partNumber, resp.eTag());
     return resp.eTag();
   }
@@ -226,5 +234,25 @@ public class FilestoreGraphQLService {
             .build());
     logger.info("Multipart upload successfully finalized for uploadId: {}", uploadId);
     return true;
+  }
+
+  /**
+   * Returns a presigned PUT URL for direct browser upload (avoids base64 + GraphQL overhead).
+   */
+  public String getPresignedUploadUrl(String bucket, String key, String contentType) {
+    logger.info("Generating presigned upload URL for {} / {}", bucket, key);
+
+    PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
+        .signatureDuration(Duration.ofMinutes(15))
+        .putObjectRequest(b -> b
+            .bucket(bucket)
+            .key(key)
+            .contentType(contentType != null ? contentType : "application/octet-stream"))
+        .build();
+
+    PresignedPutObjectRequest presigned = s3Presigner.presignPutObject(presignRequest);
+    String url = presigned.url().toString();
+    logger.info("Presigned URL generated (expires in 15 min)");
+    return url;
   }
 }
