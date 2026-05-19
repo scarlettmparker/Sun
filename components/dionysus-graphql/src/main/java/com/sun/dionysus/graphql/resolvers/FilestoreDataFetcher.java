@@ -49,8 +49,8 @@ public class FilestoreDataFetcher {
   }
 
   @DgsData(parentType = "FilestoreMutations", field = "putFile")
-   public boolean putFile(String bucket, String key, String content) {
-     return filestoreGraphQLService.putFile(bucket, key, content);
+   public boolean putFile(String bucket, String key, String content, String contentType) {
+     return filestoreGraphQLService.putFile(bucket, key, content, contentType);
    }
 
    @DgsData(parentType = "FilestoreMutations", field = "putKey")

@@ -102,9 +102,15 @@ public class KeyDownloadController {
     String filename = extractFilename(key);
     String contentDisposition = buildContentDisposition(filename);
 
+    MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
+    if (headResponse.contentType() != null) {
+      try {
+        mediaType = MediaType.parseMediaType(headResponse.contentType());
+      } catch (Exception ignored) {}
+    }
     return ResponseEntity.ok()
         .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition)
-        .contentType(MediaType.APPLICATION_OCTET_STREAM)
+        .contentType(mediaType)
         .contentLength(headResponse.contentLength() != null ? headResponse.contentLength() : -1)
         .body(resource);
   }

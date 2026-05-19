@@ -92,7 +92,7 @@ class FilestoreGraphQLServiceTest {
         when(s3Client.putObject(any(PutObjectRequest.class), any(software.amazon.awssdk.core.sync.RequestBody.class)))
                 .thenReturn(PutObjectResponse.builder().build());
 
-        boolean result = filestoreGraphQLService.putFile("default-bucket", "test.txt", "Hello");
+        boolean result = filestoreGraphQLService.putFile("default-bucket", "test.txt", "Hello", null);
 
         assertThat(result).isTrue();
         verify(s3Client).putObject(any(PutObjectRequest.class),

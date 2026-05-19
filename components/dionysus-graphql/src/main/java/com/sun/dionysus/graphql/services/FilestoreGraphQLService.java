@@ -126,13 +126,16 @@ public class FilestoreGraphQLService {
   /**
    * Uploads or overwrites a file in the bucket.
    */
-  public boolean putFile(String bucket, String key, String content) {
+  public boolean putFile(String bucket, String key, String content, String contentType) {
     logger.info("Uploading file to bucket: {} with key: {}", bucket, key);
-    s3Client.putObject(PutObjectRequest.builder()
+    byte[] bytes = java.util.Base64.getDecoder().decode(content);
+    PutObjectRequest.Builder req = PutObjectRequest.builder()
         .bucket(bucket)
-        .key(key)
-        .build(),
-        software.amazon.awssdk.core.sync.RequestBody.fromString(content));
+        .key(key);
+    if (contentType != null && !contentType.isEmpty()) {
+      req.contentType(contentType);
+    }
+    s3Client.putObject(req.build(), software.amazon.awssdk.core.sync.RequestBody.fromBytes(bytes));
     logger.info("Successfully uploaded file with key: {} to bucket: {}", key, bucket);
     return true;
   }
