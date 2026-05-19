@@ -20,6 +20,8 @@ import software.amazon.awssdk.services.s3.model.*;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 import java.time.Duration;
 import software.amazon.awssdk.services.s3.S3Configuration;
 import java.util.ArrayList;
@@ -253,6 +255,23 @@ public class FilestoreGraphQLService {
     PresignedPutObjectRequest presigned = s3Presigner.presignPutObject(presignRequest);
     String url = presigned.url().toString();
     logger.info("Presigned URL generated (expires in 15 min)");
+    return url;
+  }
+
+  /**
+   * Returns a presigned GET URL for direct browser download.
+   */
+  public String getPresignedDownloadUrl(String bucket, String key) {
+    logger.info("Generating presigned download URL for {} / {}", bucket, key);
+
+    GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+        .signatureDuration(Duration.ofMinutes(15))
+        .getObjectRequest(b -> b.bucket(bucket).key(key))
+        .build();
+
+    PresignedGetObjectRequest presigned = s3Presigner.presignGetObject(presignRequest);
+    String url = presigned.url().toString();
+    logger.info("Presigned download URL generated");
     return url;
   }
 }

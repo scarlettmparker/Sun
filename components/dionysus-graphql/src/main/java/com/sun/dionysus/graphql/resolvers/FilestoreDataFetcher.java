@@ -82,4 +82,9 @@ public class FilestoreDataFetcher {
   public String getPresignedUploadUrl(String bucket, String key, String contentType) {
     return filestoreGraphQLService.getPresignedUploadUrl(bucket, key, contentType);
   }
+
+  @DgsData(parentType = "FilestoreMutations", field = "getPresignedDownloadUrl")
+  public String getPresignedDownloadUrl(String bucket, String key) {
+    return filestoreGraphQLService.getPresignedDownloadUrl(bucket, key);
+  }
 }

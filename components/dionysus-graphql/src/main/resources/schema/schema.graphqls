@@ -68,6 +68,9 @@ type FilestoreMutations {
     key: String!
     contentType: String
   ): String
+
+  # Returns a presigned GET URL for direct browser download.
+  getPresignedDownloadUrl(bucket: String!, key: String!): String
 }
 
 extend type Query {
