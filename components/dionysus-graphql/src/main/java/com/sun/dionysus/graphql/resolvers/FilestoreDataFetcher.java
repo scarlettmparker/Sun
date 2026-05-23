@@ -63,6 +63,11 @@ public class FilestoreDataFetcher {
     return filestoreGraphQLService.deleteFile(bucket, key);
   }
 
+  @DgsData(parentType = "FilestoreMutations", field = "deleteKey")
+  public boolean deleteKey(String bucket, String key) {
+    return filestoreGraphQLService.deleteKey(bucket, key);
+  }
+
   @DgsData(parentType = "FilestoreMutations", field = "startMultipartUpload")
   public String startMultipartUpload(String bucket, String key) {
     return filestoreGraphQLService.startMultipartUpload(bucket, key);

@@ -45,6 +45,8 @@ type FilestoreMutations {
   putKey(bucket: String!, key: String!): Boolean
   # Delete a file.
   deleteFile(bucket: String!, key: String!): Boolean
+  # Delete a key and propagate: recursively delete the key, all sub-keys and files under it.
+  deleteKey(bucket: String!, key: String!): Boolean
   # Initiate multipart upload; returns uploadId.
   startMultipartUpload(bucket: String!, key: String!): String
   # Upload a single part; returns ETag.

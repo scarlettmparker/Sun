@@ -21,6 +21,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.times;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -101,13 +102,14 @@ class FilestoreGraphQLServiceTest {
 
     @Test
     void putKey_returnsTrue() {
-        when(restTemplate.exchange(anyString(), eq(HttpMethod.POST), any(), eq(Void.class)))
-                .thenReturn(new ResponseEntity<>(HttpStatus.OK));
+        when(s3Client.putObject(any(PutObjectRequest.class), any(software.amazon.awssdk.core.sync.RequestBody.class)))
+                .thenReturn(PutObjectResponse.builder().build());
 
         boolean result = filestoreGraphQLService.putKey("default-bucket", "folder");
 
         assertThat(result).isTrue();
-        verify(restTemplate).exchange(anyString(), eq(HttpMethod.POST), any(), eq(Void.class));
+        verify(s3Client).putObject(any(PutObjectRequest.class),
+                any(software.amazon.awssdk.core.sync.RequestBody.class));
     }
 
     @Test
@@ -200,5 +202,65 @@ class FilestoreGraphQLServiceTest {
         assertThat(result.get(1).getKey()).isEqualTo("dir/file.txt");
         assertThat(result.get(1).getIsDirectory()).isFalse();
         assertThat(result.get(1).getSize()).isEqualTo(42);
+    }
+
+    @Test
+    void deleteKey_returnsTrue() {
+        ListObjectsV2Response empty = ListObjectsV2Response.builder().build();
+        when(s3Client.listObjectsV2(any(ListObjectsV2Request.class))).thenReturn(empty);
+        when(s3Client.deleteObjects(any(DeleteObjectsRequest.class)))
+                .thenReturn(DeleteObjectsResponse.builder().build());
+
+        boolean result = filestoreGraphQLService.deleteKey("default-bucket", "folder/");
+
+        assertThat(result).isTrue();
+        verify(s3Client).deleteObjects(any(DeleteObjectsRequest.class));
+    }
+
+    @Test
+    void deleteKey_deletesExactAndSubKeys() {
+        S3Object marker = S3Object.builder().key("dir/").build();
+        S3Object child = S3Object.builder().key("dir/child.txt").build();
+        ListObjectsV2Response resp = ListObjectsV2Response.builder().contents(marker, child).build();
+        when(s3Client.listObjectsV2(any(ListObjectsV2Request.class))).thenReturn(resp);
+        when(s3Client.deleteObjects(any(DeleteObjectsRequest.class)))
+                .thenReturn(DeleteObjectsResponse.builder().build());
+
+        boolean result = filestoreGraphQLService.deleteKey("bucket", "dir");
+
+        assertThat(result).isTrue();
+        verify(s3Client).deleteObjects(any(DeleteObjectsRequest.class));
+    }
+
+    @Test
+    void deleteKey_handlesPaginationAndBatch() {
+        S3Object p1 = S3Object.builder().key("big/a").build();
+        ListObjectsV2Response r1 = ListObjectsV2Response.builder()
+                .contents(p1)
+                .isTruncated(true)
+                .nextContinuationToken("t1")
+                .build();
+        S3Object p2 = S3Object.builder().key("big/b").build();
+        ListObjectsV2Response r2 = ListObjectsV2Response.builder().contents(p2).build();
+        when(s3Client.listObjectsV2(any(ListObjectsV2Request.class))).thenReturn(r1, r2);
+        when(s3Client.deleteObjects(any(DeleteObjectsRequest.class)))
+                .thenReturn(DeleteObjectsResponse.builder().build());
+
+        boolean result = filestoreGraphQLService.deleteKey("bkt", "big");
+
+        assertThat(result).isTrue();
+        verify(s3Client, times(2)).listObjectsV2(any(ListObjectsV2Request.class));
+        verify(s3Client).deleteObjects(any(DeleteObjectsRequest.class));
+    }
+
+    @Test
+    void deleteKey_withNoObjects_doesNotCallDeleteObjects() {
+        ListObjectsV2Response empty = ListObjectsV2Response.builder().build();
+        when(s3Client.listObjectsV2(any(ListObjectsV2Request.class))).thenReturn(empty);
+
+        boolean result = filestoreGraphQLService.deleteKey("bucket", "emptykey");
+
+        assertThat(result).isTrue();
+        verify(s3Client, times(0)).deleteObjects(any(DeleteObjectsRequest.class));
     }
 }

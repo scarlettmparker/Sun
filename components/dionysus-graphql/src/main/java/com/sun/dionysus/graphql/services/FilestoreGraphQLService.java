@@ -181,6 +181,87 @@ public class FilestoreGraphQLService {
   }
 
   /**
+   * Deletes a key and all sub-keys recursively using S3 prefix listing and batch delete.
+   *
+   * @param bucket Target S3 bucket name.
+   * @param key    Target key or folder prefix to delete.
+   * @return true if successful, false if a hard exception occurred.
+   */
+  public boolean deleteKey(String bucket, String key) {
+    if (key == null || key.isEmpty()) {
+      logger.warn("Key is null or empty, aborting delete operation.");
+      return false;
+    }
+
+    logger.info("Deleting key recursively from bucket: {} with key: {}", bucket, key);
+
+    try {
+      List<ObjectIdentifier> currentBatch = new ArrayList<>();
+      int totalDeleted = 0;
+      currentBatch.add(ObjectIdentifier.builder().key(key).build());
+
+      // Add the prefix explicitly to catch standard nested folder structures
+      String prefix = key.endsWith("/") ? key : key + "/";
+      if (!prefix.equals(key)) {
+        currentBatch.add(ObjectIdentifier.builder().key(prefix).build());
+      }
+      ListObjectsV2Request listReq = ListObjectsV2Request.builder()
+          .bucket(bucket)
+          .prefix(prefix)
+          .build();
+
+      // .contents() flattens the paginated pages into a continuous stream of S3Objects
+      for (S3Object s3Object : s3Client.listObjectsV2Paginator(listReq).contents()) {
+        currentBatch.add(ObjectIdentifier.builder().key(s3Object.key()).build());
+
+        // S3 allows a max of 1000 objects per DeleteObjects request.
+        // Flush the batch once we hit this limit to keep memory usage flat.
+        if (currentBatch.size() >= 1000) {
+          totalDeleted += flushDeleteBatch(bucket, currentBatch);
+        }
+      }
+
+      // Flush any leftover objects in the final, partial batch
+      if (!currentBatch.isEmpty()) {
+        totalDeleted += flushDeleteBatch(bucket, currentBatch);
+      }
+
+      logger.info("Successfully deleted {} key(s) under '{}' in bucket: {}", totalDeleted, key, bucket);
+      return true;
+
+    } catch (Exception e) {
+      logger.error("Failed to recursively delete key: {} from bucket: {}", key, bucket, e);
+      return false;
+    }
+  }
+
+  /**
+   * Execute the S3 batch delete and handle potential partial failures.
+   * 
+   * @return The number of objects successfully deleted in this batch.
+   */
+  private int flushDeleteBatch(String bucket, List<ObjectIdentifier> batch) {
+    DeleteObjectsRequest deleteReq = DeleteObjectsRequest.builder()
+        .bucket(bucket)
+        .delete(Delete.builder().objects(batch).build())
+        .build();
+
+    DeleteObjectsResponse response = s3Client.deleteObjects(deleteReq);
+
+    // S3 Batch Delete returns HTTP 200 even if some objects fail (e.g., due to permissions).
+    // We must manually check for errors in the response payload.
+    if (response.hasErrors() && !response.errors().isEmpty()) {
+      logger.warn("Partial failure during batch delete. {} object(s) failed to delete. First error: {}",
+          response.errors().size(), response.errors().get(0).message());
+    }
+
+    int deletedCount = response.deleted().size();
+    batch.clear(); 
+    
+    return deletedCount;
+  }
+
+  /**
    * Starts a multipart upload and returns the upload ID.
    */
   public String startMultipartUpload(String bucket, String key) {
