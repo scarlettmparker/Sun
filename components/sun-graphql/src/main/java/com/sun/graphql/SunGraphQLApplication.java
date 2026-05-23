@@ -28,7 +28,7 @@ public class SunGraphQLApplication {
         setSystemProperty(dotenv, "GARAGE_SECRET_KEY", "GARAGE_SECRET_KEY");
         setSystemProperty(dotenv, "AWS_ACCESS_KEY_ID", "AWS_ACCESS_KEY_ID");
         setSystemProperty(dotenv, "AWS_SECRET_ACCESS_KEY", "AWS_SECRET_ACCESS_KEY");
-        setSystemProperty(dotenv, "FILESTORE_ENDPOINT", "FILESTORE_ENDPOINT");
+        setSystemProperty(dotenv, "S3_ENDPOINT", "S3_ENDPOINT");
         SpringApplication.run(SunGraphQLApplication.class, args);
     }
 

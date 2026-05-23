@@ -57,7 +57,7 @@ public class FilestoreGraphQLService {
    */
   public String health() {
     logger.info("Calling external health REST API");
-    String url = "https://filestore.scarlettparker.co.uk/api/health";
+    String url = "https://filestore.int.scarlettparker.co.uk/api/health";
     String response = restTemplate.getForObject(url, String.class);
     logger.info("Health response: {}", response);
     return response;
@@ -68,7 +68,7 @@ public class FilestoreGraphQLService {
    */
   public List<Bucket> listBuckets() {
     logger.info("Calling ListBuckets REST API");
-    String url = "https://filestore.scarlettparker.co.uk/api/v2/ListBuckets";
+    String url = "https://filestore.int.scarlettparker.co.uk/api/v2/ListBuckets";
     ResponseEntity<Bucket[]> resp = authenticatedGet(url, Bucket[].class);
     Bucket[] buckets = resp.getBody();
     List<Bucket> result = buckets != null ? Arrays.asList(buckets) : List.of();

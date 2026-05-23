@@ -16,7 +16,7 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 @Configuration
 public class S3Config {
 
-  @Value("${FILESTORE_ENDPOINT:https://s3.scarlettparker.co.uk}")
+  @Value("${S3_ENDPOINT:https://s3.int.scarlettparker.co.uk}")
   private String endpoint;
 
   @Value("${AWS_ACCESS_KEY_ID:}")

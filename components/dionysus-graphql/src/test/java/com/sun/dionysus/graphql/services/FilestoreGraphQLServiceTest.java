@@ -46,7 +46,7 @@ class FilestoreGraphQLServiceTest {
     @Test
     void health_returnsResponseFromRestApi() {
         String expected = "{\"status\":\"ok\"}";
-        when(restTemplate.getForObject("https://filestore.scarlettparker.co.uk/api/health", String.class))
+        when(restTemplate.getForObject("https://filestore.int.scarlettparker.co.uk/api/health", String.class))
                 .thenReturn(expected);
 
         String result = filestoreGraphQLService.health();
@@ -59,7 +59,7 @@ class FilestoreGraphQLServiceTest {
         Bucket b = new Bucket();
         b.setId("b1");
         Bucket[] arr = { b };
-        when(restTemplate.exchange("https://filestore.scarlettparker.co.uk/api/v2/ListBuckets", HttpMethod.GET, any(),
+        when(restTemplate.exchange("https://filestore.int.scarlettparker.co.uk/api/v2/ListBuckets", HttpMethod.GET, any(),
                 eq(Bucket[].class)))
                 .thenReturn(new ResponseEntity<>(arr, HttpStatus.OK));
 
