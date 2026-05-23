@@ -328,7 +328,6 @@ const MenuSubContent = (props: MenuSubContentProps) => {
 
 /**
  * Hook to handle viewport-aware positioning + flipping for the main dropdown content.
- * Extracted here so the large positioning block is not repeated in dropdown-menu.tsx.
  */
 const useDropdownPositioning = (
   contentRef: React.RefObject<HTMLDivElement | null>,
@@ -377,7 +376,6 @@ const useDropdownPositioning = (
 
 /**
  * Shared keyboard navigation hook for arrow up/down focusing of menu items.
- * Used internally to avoid duplication in ContextMenuContent / DropdownMenuContent.
  */
 const useMenuKeyboardNav = (
   contentRef: React.RefObject<HTMLDivElement | null>,
@@ -451,7 +449,7 @@ const MenuContent = (
     id: string;
     triggerId: string;
     ariaLabel: string;
-    contentDataAttr: string; // e.g. "context-menu-content" → data-context-menu-content="true"
+    contentDataAttr: string;
     style?: React.CSSProperties;
   },
 ) => {
