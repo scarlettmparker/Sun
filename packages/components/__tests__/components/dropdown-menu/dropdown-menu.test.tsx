@@ -75,7 +75,7 @@ describe("DropdownMenu", () => {
     fireEvent.click(screen.getByText(/open/i));
     expect(screen.getByRole("menu")).toBeInTheDocument();
 
-    fireEvent.mouseDown(screen.getByRole("button", { name: /outside/i }));
+    fireEvent.pointerDown(screen.getByRole("button", { name: /outside/i }));
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
   });
 

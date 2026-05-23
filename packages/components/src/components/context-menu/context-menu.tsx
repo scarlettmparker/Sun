@@ -255,6 +255,10 @@ type ContextMenuItemProps = React.ComponentProps<typeof Button> & {
   onSelect?: () => void;
 };
 
+/**
+ * ContextMenuItem renders a selectable entry that closes the context menu
+ * after invoking any onSelect handler.
+ */
 const ContextMenuItem = (props: ContextMenuItemProps) => {
   const { close } = useContextMenu();
   return <MenuItem {...props} className={cn("context_menu_item", props.className)} closeMenu={close} />;
@@ -275,6 +279,10 @@ const ContextMenuGroup = (props: React.HTMLAttributes<HTMLDivElement>) => {
 
 type ContextMenuSubProps = React.HTMLAttributes<HTMLDivElement>;
 
+/**
+ * ContextMenuSub provides an isolated container for nested submenu items,
+ * resetting open state when the parent context menu re-triggers.
+ */
 const ContextMenuSub = (props: ContextMenuSubProps) => {
   const { resetNonce } = useContextMenu();
   return <MenuSub {...props} className={cn("context_menu_sub", props.className)} resetNonce={resetNonce} />;
@@ -297,6 +305,10 @@ const ContextMenuSubTrigger = (props: ContextMenuSubTriggerProps) => (
 
 type ContextMenuSubContentProps = React.HTMLAttributes<HTMLDivElement>;
 
+/**
+ * ContextMenuSubContent renders the portal-positioned content panel for a
+ * nested context submenu when its trigger is active.
+ */
 const ContextMenuSubContent = (props: ContextMenuSubContentProps) => (
   <MenuSubContent {...props} className={cn("context_menu_subcontent", props.className)} />
 );

@@ -75,7 +75,7 @@ describe("ContextMenu", () => {
     fireEvent.contextMenu(screen.getByText(/open/i));
     expect(screen.getByRole("menu")).toBeInTheDocument();
 
-    fireEvent.mouseDown(screen.getByRole("button", { name: /outside/i }));
+    fireEvent.pointerDown(screen.getByRole("button", { name: /outside/i }));
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
   });
 
@@ -153,11 +153,11 @@ describe("ContextMenu", () => {
 
     fireEvent.contextMenu(screen.getByText(/open/i));
     const subTrigger = screen.getByText(/sub/i);
-    fireEvent.click(subTrigger);
+    fireEvent.pointerEnter(subTrigger);
     expect(
       screen.getByRole("menuitem", { name: /subitem/i }),
     ).toBeInTheDocument();
-    fireEvent.click(subTrigger);
+    fireEvent.pointerLeave(subTrigger);
     expect(
       screen.queryByRole("menuitem", { name: /subitem/i }),
     ).not.toBeInTheDocument();

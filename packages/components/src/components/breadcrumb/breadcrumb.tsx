@@ -33,9 +33,25 @@ type BreadcrumbContextValue = {
    * Set active href.
    */
   setCurrent: (href?: string) => void;
+  /**
+   * Append a new breadcrumb to the list.
+   */
+  addBreadcrumb: (crumb: Crumb) => void;
+  /**
+   * Remove the last breadcrumb.
+   */
+  popBreadcrumb: () => void;
+  /**
+   * Delete a breadcrumb at the given index.
+   */
+  deleteBreadcrumb: (index: number) => void;
+  /**
+   * Remove all breadcrumbs.
+   */
+  deleteAllBreadcrumbs: () => void;
 };
 
-const BreadcrumbContext = createContext<BreadcrumbContextValue | null>(null);
+export const BreadcrumbContext = createContext<BreadcrumbContextValue | null>(null);
 
 type BreadcrumbProps = React.HTMLAttributes<HTMLElement> & {
   /**
@@ -61,11 +77,31 @@ const Breadcrumb = (props: BreadcrumbProps) => {
     setCurrentState(href);
   }, []);
 
+  const addBreadcrumb = useCallback((crumb: Crumb) => {
+    setCrumbs((prev) => [...prev, crumb]);
+  }, []);
+
+  const popBreadcrumb = useCallback(() => {
+    setCrumbs((prev) => prev.slice(0, -1));
+  }, []);
+
+  const deleteBreadcrumb = useCallback((index: number) => {
+    setCrumbs((prev) => prev.filter((_, i) => i !== index));
+  }, []);
+
+  const deleteAllBreadcrumbs = useCallback(() => {
+    setCrumbs([]);
+  }, []);
+
   const contextValue: BreadcrumbContextValue = {
     crumbs,
     current,
     setBreadcrumbs,
     setCurrent,
+    addBreadcrumb,
+    popBreadcrumb,
+    deleteBreadcrumb,
+    deleteAllBreadcrumbs,
   };
 
   return (
@@ -122,13 +158,13 @@ const BreadcrumbItem = (props: BreadcrumbItemProps) => {
       aria-current={active ? "page" : undefined}
       {...rest}
     >
-      {children}
+      {href && !active ? <a href={href}>{children}</a> : children}
     </li>
   );
 
   return (
     <>
-      {href && !active ? <a href={href}>{renderContent()}</a> : renderContent()}
+      {renderContent()}
       {!active && <span className="breadcrumb_separator">{separator}</span>}
     </>
   );

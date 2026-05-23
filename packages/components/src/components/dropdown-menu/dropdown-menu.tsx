@@ -242,6 +242,10 @@ type DropdownMenuItemProps = React.ComponentProps<typeof Button> & {
   onSelect?: () => void;
 };
 
+/**
+ * DropdownMenuItem renders an actionable menu entry that invokes onSelect (if provided)
+ * and closes the parent dropdown menu.
+ */
 const DropdownMenuItem = (props: DropdownMenuItemProps) => {
   const { close } = useDropdownMenu();
   return <MenuItem {...props} className="dropdown_menu_item" closeMenu={close} />;
@@ -249,7 +253,8 @@ const DropdownMenuItem = (props: DropdownMenuItemProps) => {
 
 /**
  * DropdownMenuGroup groups related menu items together visually and semantically.
- */const DropdownMenuGroup = (props: React.HTMLAttributes<HTMLDivElement>) => {
+ */
+const DropdownMenuGroup = (props: React.HTMLAttributes<HTMLDivElement>) => {
   const { className, children, ...rest } = props;
   return (
     <div className={cn("dropdown_menu_group", className)} role="group" {...rest}>
@@ -260,6 +265,10 @@ const DropdownMenuItem = (props: DropdownMenuItemProps) => {
 
 type DropdownMenuSubProps = React.HTMLAttributes<HTMLDivElement>;
 
+/**
+ * DropdownMenuSub wraps a submenu tree, providing isolated open state and
+ * reset behavior driven by the parent dropdown's nonce.
+ */
 const DropdownMenuSub = (props: DropdownMenuSubProps) => {
   const { resetNonce } = useDropdownMenu();
   return <MenuSub {...props} className="dropdown_menu_sub" resetNonce={resetNonce} />;
