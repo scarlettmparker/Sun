@@ -231,7 +231,7 @@ const ContextMenuContent = (props: ContextMenuContentProps) => {
       contentRef={contentRef}
       id={contentId}
       triggerId={triggerId}
-      ariaLabel="Context Menu"
+      aria-label="Context Menu"
       contentDataAttr="context-menu-content"
       className={cn("context_menu_content", props.className)}
       style={{

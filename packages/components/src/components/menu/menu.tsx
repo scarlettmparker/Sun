@@ -44,6 +44,9 @@ const MenuItem = (props: MenuItemProps) => {
     ...rest
   } = props;
 
+  /**
+   * Handles click interactions by invoking onSelect and then closing the parent menu.
+   */
   const handleAction = (event: React.MouseEvent<HTMLButtonElement>) => {
     if (disabled) {
       return;
@@ -53,6 +56,9 @@ const MenuItem = (props: MenuItemProps) => {
     closeMenu();
   };
 
+  /**
+   * Handles keyboard interactions for Enter and Space keys to trigger selection and menu close.
+   */
   const handleKey = (event: React.KeyboardEvent<HTMLButtonElement>) => {
     if (disabled) {
       return;
@@ -65,6 +71,8 @@ const MenuItem = (props: MenuItemProps) => {
     onKeyDown?.(event);
   };
 
+  // If asChild is true and children is a valid React element, clone it with merged props.
+  // This is to disable the internal button behavior and allow custom elements to be used as menu items.
   if (asChild && React.isValidElement(children)) {
     const child = children as ReactElement;
     const childProps = child.props as Record<string, unknown>;
@@ -127,8 +135,17 @@ const MenuItem = (props: MenuItemProps) => {
 };
 
 type MenuSubContextValue = {
+  /**
+   * Open state for sub menu
+   */
   open: boolean;
+  /**
+   * Setter for sub menu open state
+   */
   setOpen: (open: boolean) => void;
+  /**
+   * Ref to the sub menu trigger element for positioning the sub content
+   */
   triggerRef: React.MutableRefObject<HTMLButtonElement | null>;
 };
 
@@ -191,6 +208,7 @@ const MenuSubTrigger = (props: MenuSubTriggerProps) => {
     onPointerLeave,
     disabled,
     arrowClassName,
+    variant,
     ...rest
   } = props;
   const { open, setOpen, triggerRef } = useMenuSub();
@@ -211,7 +229,7 @@ const MenuSubTrigger = (props: MenuSubTriggerProps) => {
   return (
     <Button
       {...rest}
-      variant="secondary"
+      variant={variant ?? "secondary"}
       type="button"
       role="menuitem"
       tabIndex={-1}
@@ -283,11 +301,17 @@ const MenuSubContent = (props: MenuSubContentProps) => {
     return () => cancelAnimationFrame(raf);
   }, [open]);
 
+  /**
+   * Handles pointer enter/leave to control submenu visibility.
+   */
   const handlePointerEnter = (event: React.PointerEvent<HTMLDivElement>) => {
     setOpen(true);
     onPointerEnter?.(event);
   };
 
+  /**
+   * Handles pointer leave to control submenu visibility.
+   */
   const handlePointerLeave = (event: React.PointerEvent<HTMLDivElement>) => {
     setOpen(false);
     onPointerLeave?.(event);
@@ -330,14 +354,29 @@ const MenuSubContent = (props: MenuSubContentProps) => {
  * Hook to handle viewport-aware positioning + flipping for the main dropdown content.
  */
 const useDropdownPositioning = (
+  /**
+   * Ref to the dropdown content element for applying calculated styles
+   */
   contentRef: React.RefObject<HTMLDivElement | null>,
+  /**
+   * Ref to the dropdown trigger element for calculating positioning relative to it
+   */
   triggerRef: React.MutableRefObject<HTMLElement | null>,
+  /**
+   * Open state of the dropdown menu
+   */
   open: boolean,
+  /**
+   * Nonce value that can be incremented to force re-calculation of position
+   */
   positionNonce: number,
 ) => {
   useIsomorphicLayoutEffect(() => {
     if (!open || !contentRef.current || !triggerRef.current) return;
 
+    /**
+     * Calculates and applies position for the dropdown content based on the trigger's position
+     */
     const updatePosition = () => {
       const triggerRect = triggerRef.current!.getBoundingClientRect();
       const contentEl = contentRef.current!;
@@ -378,7 +417,13 @@ const useDropdownPositioning = (
  * Shared keyboard navigation hook for arrow up/down focusing of menu items.
  */
 const useMenuKeyboardNav = (
+  /**
+   * Ref to the menu content element for querying focusable menu items within it
+   */
   contentRef: React.RefObject<HTMLDivElement | null>,
+  /**
+   * Open state of the menu to trigger
+   */
   open: boolean,
   onKeyDown?: (event: React.KeyboardEvent<HTMLDivElement>) => void,
 ) => {
@@ -391,6 +436,9 @@ const useMenuKeyboardNav = (
     }
   }, [open]);
 
+  /**
+   * Handles ArrowDown and ArrowUp keys to navigate focus between menu items within the open menu.
+   */
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (!contentRef.current) return;
     const items = Array.from(
@@ -401,10 +449,12 @@ const useMenuKeyboardNav = (
     const currentIndex = items.indexOf(document.activeElement as HTMLElement);
     if (event.key === "ArrowDown") {
       event.preventDefault();
+      // Cycle to the next item, wrapping to the start if at the end
       const nextIndex = (currentIndex + 1) % items.length;
       items[nextIndex]?.focus();
     } else if (event.key === "ArrowUp") {
       event.preventDefault();
+      // Cycle to the previous item, wrapping to the end if at the start
       const prevIndex = (currentIndex - 1 + items.length) % items.length;
       items[prevIndex]?.focus();
     }
@@ -444,13 +494,26 @@ const MenuTrigger = (
  */
 const MenuContent = (
   props: React.HTMLAttributes<HTMLDivElement> & {
+    /**
+     * Open state of the menu to determine whether to render content
+     */
     open: boolean;
+    /**
+     * Ref to the menu content element for keyboard navigation and positioning
+     */
     contentRef: React.RefObject<HTMLDivElement | null>;
+    /**
+     * ID for the content element to link with trigger ARIA attributes
+     */
     id: string;
+    /**
+     * ID of the trigger element for ARIA attributes to link the content to its trigger
+     */
     triggerId: string;
-    ariaLabel: string;
+    /**
+     * Custom data attribute name to apply to the content element for test querying
+     */
     contentDataAttr: string;
-    style?: React.CSSProperties;
   },
 ) => {
   const {
@@ -458,11 +521,9 @@ const MenuContent = (
     contentRef,
     id,
     triggerId,
-    ariaLabel,
     contentDataAttr,
     className,
     children,
-    style,
     onKeyDown: userOnKeyDown,
     ...rest
   } = props;
@@ -481,7 +542,6 @@ const MenuContent = (
       ref={contentRef}
       id={id}
       role="menu"
-      aria-label={ariaLabel}
       aria-orientation="vertical"
       aria-labelledby={triggerId}
       aria-hidden={!open}
@@ -497,7 +557,6 @@ const MenuContent = (
         e.stopPropagation();
         rest.onClick?.(e);
       }}
-      style={style}
     >
       {children}
     </div>
@@ -521,15 +580,31 @@ const useMenuIds = (prefix: "context-menu" | "dropdown-menu") => {
  * Shared effect for closing the menu on outside clicks.
  */
 const useMenuCloseHandlers = (
+  /**
+   * Open state of the menu to determine when to attach handlers
+   */
   open: boolean,
+  /**
+   * Function to close the menu, typically from context
+   */
   close: () => void,
+  /**
+   * Ref to the root element of the menu
+   */
   rootRef: React.RefObject<HTMLDivElement | null>,
+  /**
+   * Array of selectors to ignore when determining if a click is outside the menu
+   */
   ignoreSelectors: string[],
 ) => {
   useEffect(() => {
     if (!open) {
       return;
     }
+
+    /**
+     * Handles pointer down events to determine if a click occurred outside the menu and any specified ignore selectors, triggering menu close if so.
+     */
     const handleOutside = (event: PointerEvent) => {
       const target = event.target as HTMLElement;
       if (rootRef.current && rootRef.current.contains(target)) {
@@ -543,6 +618,9 @@ const useMenuCloseHandlers = (
       close();
     };
 
+    /**
+     * Handles keydown events to close the menu when Escape key is pressed.
+     */
     const handleKeyboard = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         close();

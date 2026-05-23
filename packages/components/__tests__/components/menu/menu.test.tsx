@@ -190,7 +190,7 @@ describe("Menu primitives", () => {
         contentRef={ref}
         id="c1"
         triggerId="t1"
-        ariaLabel="Test Menu"
+        aria-label="Test Menu"
         contentDataAttr="test-content"
         onKeyDown={onKeyDown}
       >
@@ -206,7 +206,7 @@ describe("Menu primitives", () => {
         contentRef={ref}
         id="c1"
         triggerId="t1"
-        ariaLabel="Test Menu"
+        aria-label="Test Menu"
         contentDataAttr="test-content"
         onKeyDown={onKeyDown}
       >
@@ -304,5 +304,16 @@ describe("Menu primitives", () => {
       </MenuSub>,
     );
     expect(sub).toHaveAttribute("data-state", "closed");
+  });
+
+  it("MenuItem supports destructive variant", () => {
+    const closeMenu = jest.fn();
+    render(
+      <MenuItem closeMenu={closeMenu} variant="destructive">
+        Delete
+      </MenuItem>,
+    );
+    const item = screen.getByRole("menuitem", { name: /delete/i });
+    expect(item).toHaveClass("button", "destructive");
   });
 });

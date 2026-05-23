@@ -5,7 +5,7 @@ type ButtonProps = {
   /**
    * Button variant.
    */
-  variant?: "default" | "secondary";
+  variant?: "default" | "secondary" | "destructive";
 } & React.ButtonHTMLAttributes<HTMLButtonElement>;
 
 /**

@@ -21,6 +21,13 @@ describe("Button", () => {
     expect(button).toHaveTextContent("Secondary");
   });
 
+  it("renders with destructive variant and applies correct classes", () => {
+    render(<Button variant="destructive">Destructive</Button>);
+    const button = screen.getByRole("button", { name: /destructive/i });
+    expect(button).toHaveClass("button", "destructive");
+    expect(button).toHaveTextContent("Destructive");
+  });
+
   it("passes through button attributes correctly", () => {
     render(
       <Button type="submit" disabled aria-label="Submit button">

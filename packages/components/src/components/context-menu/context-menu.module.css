@@ -1,5 +1,5 @@
 .context_menu {
-  display: inline-block;
+  display: flex;
 }
 
 .context_menu_trigger {
@@ -46,6 +46,16 @@
 .context_menu_subtrigger:hover {
   background-color: rgb(from var(--secondary-hover) r g b / var(--visible));
   color: var(--tertiary);
+}
+
+.context_menu_item.destructive,
+.context_menu_subtrigger.destructive {
+  color: var(--destructive);
+}
+
+.context_menu_item.destructive:hover,
+.context_menu_subtrigger.destructive:hover {
+  color: var(--destructive-hover);
 }
 
 .context_menu_item:disabled,

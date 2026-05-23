@@ -19,6 +19,9 @@
   --accent-dark-hover: #FFA333;
   --tertiary: #D03991; /* mulberry */
   --tertiary-hover: #DC6AAD;
+  --destructive: #D90429;
+  --destructive-hover: #FB3758;
+  --destructive-active: #A0031D;
 
   /* font sizes */
   --text-sm: 12px;

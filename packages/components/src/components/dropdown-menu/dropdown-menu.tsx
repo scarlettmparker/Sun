@@ -220,7 +220,7 @@ const DropdownMenuContent = (props: DropdownMenuContentProps) => {
       contentRef={contentRef}
       id={contentId}
       triggerId={triggerId}
-      ariaLabel="Dropdown Menu"
+      aria-label="Dropdown Menu"
       contentDataAttr="dropdown-menu-content"
       className={cn("dropdown_menu_content", props.className)}
       style={props.style}

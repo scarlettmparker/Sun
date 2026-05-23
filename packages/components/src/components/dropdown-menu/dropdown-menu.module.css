@@ -1,5 +1,5 @@
 .dropdown_menu {
-  display: inline-block;
+  display: flex;
 }
 
 .dropdown_menu_trigger {
@@ -46,6 +46,16 @@
 .dropdown_menu_subtrigger:hover {
   background-color: rgb(from var(--secondary-hover) r g b / var(--visible));
   color: var(--tertiary);
+}
+
+.dropdown_menu_item.destructive,
+.dropdown_menu_subtrigger.destructive {
+  color: var(--destructive);
+}
+
+.dropdown_menu_item.destructive:hover,
+.dropdown_menu_subtrigger.destructive:hover {
+  color: var(--destructive-hover);
 }
 
 .dropdown_menu_item:disabled,

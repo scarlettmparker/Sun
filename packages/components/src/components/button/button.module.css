@@ -56,3 +56,21 @@
 .secondary:disabled:hover {
   background-color: inherit;
 }
+
+/* Destructive styles */
+.destructive {
+  background-color: var(--destructive);
+  color: var(--secondary);
+}
+
+.destructive:hover {
+  background-color: var(--destructive-hover);
+}
+
+.destructive:active {
+  background-color: var(--destructive-active);
+}
+
+.destructive:disabled {
+  background-color: color-mix(in srgb, var(--destructive) 50%, var(--secondary) 50%);
+}
