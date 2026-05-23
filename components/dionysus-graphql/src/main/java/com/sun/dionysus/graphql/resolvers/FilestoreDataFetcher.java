@@ -48,11 +48,6 @@ public class FilestoreDataFetcher {
     return FilestoreMutations.newBuilder().build();
   }
 
-  @DgsData(parentType = "FilestoreMutations", field = "putFile")
-  public boolean putFile(String bucket, String key, String content, String contentType) {
-    return filestoreGraphQLService.putFile(bucket, key, content, contentType);
-  }
-
   @DgsData(parentType = "FilestoreMutations", field = "putKey")
   public boolean putKey(String bucket, String key) {
     return filestoreGraphQLService.putKey(bucket, key);
@@ -66,21 +61,6 @@ public class FilestoreDataFetcher {
   @DgsData(parentType = "FilestoreMutations", field = "deleteKey")
   public boolean deleteKey(String bucket, String key) {
     return filestoreGraphQLService.deleteKey(bucket, key);
-  }
-
-  @DgsData(parentType = "FilestoreMutations", field = "startMultipartUpload")
-  public String startMultipartUpload(String bucket, String key) {
-    return filestoreGraphQLService.startMultipartUpload(bucket, key);
-  }
-
-  @DgsData(parentType = "FilestoreMutations", field = "uploadPart")
-  public String uploadPart(String bucket, String key, String uploadId, int partNumber, String content) {
-    return filestoreGraphQLService.uploadPart(bucket, key, uploadId, partNumber, content);
-  }
-
-  @DgsData(parentType = "FilestoreMutations", field = "completeMultipartUpload")
-  public boolean completeMultipartUpload(String bucket, String key, String uploadId, List<CompletedPart> parts) {
-    return filestoreGraphQLService.completeMultipartUpload(bucket, key, uploadId, parts);
   }
 
   @DgsData(parentType = "FilestoreMutations", field = "getPresignedUploadUrl")

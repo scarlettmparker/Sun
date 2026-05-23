@@ -87,19 +87,7 @@ class FilestoreGraphQLServiceTest {
         assertThat(result.get(0).getKey()).isEqualTo("hello.txt");
         assertThat(result.get(0).getSize()).isEqualTo(12);
     }
-
-    @Test
-    void putFile_returnsTrue() {
-        when(s3Client.putObject(any(PutObjectRequest.class), any(software.amazon.awssdk.core.sync.RequestBody.class)))
-                .thenReturn(PutObjectResponse.builder().build());
-
-        boolean result = filestoreGraphQLService.putFile("default-bucket", "test.txt", "Hello", null);
-
-        assertThat(result).isTrue();
-        verify(s3Client).putObject(any(PutObjectRequest.class),
-                any(software.amazon.awssdk.core.sync.RequestBody.class));
-    }
-
+    
     @Test
     void putKey_returnsTrue() {
         when(s3Client.putObject(any(PutObjectRequest.class), any(software.amazon.awssdk.core.sync.RequestBody.class)))
@@ -131,40 +119,6 @@ class FilestoreGraphQLServiceTest {
         List<File> result = filestoreGraphQLService.listFiles("empty");
 
         assertThat(result).isEmpty();
-    }
-
-    @Test
-    void startMultipartUpload_returnsUploadId() {
-        CreateMultipartUploadResponse resp = CreateMultipartUploadResponse.builder().uploadId("upload123").build();
-        when(s3Client.createMultipartUpload(any(CreateMultipartUploadRequest.class))).thenReturn(resp);
-
-        String id = filestoreGraphQLService.startMultipartUpload("bucket", "bigfile.zip");
-
-        assertThat(id).isEqualTo("upload123");
-    }
-
-    @Test
-    void uploadPart_returnsEtag() {
-        UploadPartResponse resp = UploadPartResponse.builder().eTag("\"etag-part1\"").build();
-        when(s3Client.uploadPart(any(UploadPartRequest.class), any(software.amazon.awssdk.core.sync.RequestBody.class)))
-                .thenReturn(resp);
-
-        String etag = filestoreGraphQLService.uploadPart("bucket", "bigfile.zip", "upload123", 1, "chunk1");
-
-        assertThat(etag).isEqualTo("\"etag-part1\"");
-    }
-
-    @Test
-    void completeMultipartUpload_returnsTrue() {
-        CompletedPart cp = new CompletedPart();
-        cp.setPartNumber(1);
-        cp.setEtag("\"etag-part1\"");
-        when(s3Client.completeMultipartUpload(any(CompleteMultipartUploadRequest.class)))
-                .thenReturn(CompleteMultipartUploadResponse.builder().build());
-
-        boolean ok = filestoreGraphQLService.completeMultipartUpload("bucket", "bigfile.zip", "upload123", List.of(cp));
-
-        assertThat(ok).isTrue();
     }
 
     @Test

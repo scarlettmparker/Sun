@@ -3,14 +3,11 @@ package com.sun.dionysus.graphql.services;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import com.sun.dionysus.codegen.types.Bucket;
-import com.sun.dionysus.codegen.types.CompletedPart;
 import com.sun.dionysus.codegen.types.File;
 import com.sun.dionysus.codegen.types.KeyEntry;
 import com.sun.dionysus.graphql.mappers.FileMapper;
@@ -23,22 +20,22 @@ import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignReques
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 import java.time.Duration;
-import software.amazon.awssdk.services.s3.S3Configuration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
 import java.util.stream.Collectors;
-import org.springframework.http.MediaType;
+import jakarta.annotation.PostConstruct;
 
 @Service
 public class FilestoreGraphQLService {
 
   private static final Logger logger = LoggerFactory.getLogger(FilestoreGraphQLService.class);
 
-  @Autowired
-  private RestTemplate restTemplate;
+  @Value("${GARAGE_SECRET_KEY}")
+  private String garageSecretKey;
+
+  @Value("${filestore.api.url:https://filestore.int.scarlettparker.co.uk}")
+  private String filestoreApiUrl;
 
   @Autowired
   private S3Client s3Client;
@@ -52,13 +49,25 @@ public class FilestoreGraphQLService {
   @Autowired
   private KeyEntryMapper keyEntryMapper;
 
+  @Autowired
+  private RestClient.Builder restClientBuilder;
+
+  private RestClient restClient;
+
+  @PostConstruct
+  public void init() {
+    this.restClient = restClientBuilder.build();
+  }
+
   /**
    * Checks the health of the external filestore service.
    */
   public String health() {
     logger.info("Calling external health REST API");
-    String url = "https://filestore.int.scarlettparker.co.uk/api/health";
-    String response = restTemplate.getForObject(url, String.class);
+    String response = restClient.get()
+        .uri(filestoreApiUrl + "/api/health")
+        .retrieve()
+        .body(String.class);
     logger.info("Health response: {}", response);
     return response;
   }
@@ -68,23 +77,15 @@ public class FilestoreGraphQLService {
    */
   public List<Bucket> listBuckets() {
     logger.info("Calling ListBuckets REST API");
-    String url = "https://filestore.int.scarlettparker.co.uk/api/v2/ListBuckets";
-    ResponseEntity<Bucket[]> resp = authenticatedGet(url, Bucket[].class);
-    Bucket[] buckets = resp.getBody();
+    Bucket[] buckets = restClient.get()
+        .uri(filestoreApiUrl + "/api/v2/ListBuckets")
+        .header(HttpHeaders.AUTHORIZATION, "Bearer " + garageSecretKey)
+        .retrieve()
+        .body(Bucket[].class);
+        
     List<Bucket> result = buckets != null ? Arrays.asList(buckets) : List.of();
     logger.info("Retrieved {} buckets", result.size());
     return result;
-  }
-
-  private <T> ResponseEntity<T> authenticatedGet(String url, Class<T> responseType) {
-    logger.info("Executing authenticated GET request to URL: {}", url);
-    String token = System.getProperty("GARAGE_SECRET_KEY");
-    HttpHeaders headers = new HttpHeaders();
-    headers.setBearerAuth(token);
-    HttpEntity<Void> entity = new HttpEntity<>(headers);
-    ResponseEntity<T> response = restTemplate.exchange(url, HttpMethod.GET, entity, responseType);
-    logger.info("Authenticated GET request completed with status: {}", response.getStatusCode());
-    return response;
   }
 
   /**
@@ -92,10 +93,8 @@ public class FilestoreGraphQLService {
    */
   public List<File> listFiles(String bucket) {
     logger.info("Listing objects in bucket: {}", bucket);
-    ListObjectsV2Response resp = s3Client.listObjectsV2(ListObjectsV2Request.builder()
-        .bucket(bucket)
-        .build());
-    List<File> files = resp.contents().stream()
+    List<File> files = s3Client.listObjectsV2Paginator(b -> b.bucket(bucket))
+        .contents().stream()
         .map(fileMapper::mapObject)
         .collect(Collectors.toList());
     logger.info("Successfully found and mapped {} files in bucket: {}", files.size(), bucket);
@@ -116,37 +115,21 @@ public class FilestoreGraphQLService {
       requestBuilder.prefix(prefix);
     }
 
-    ListObjectsV2Response resp = s3Client.listObjectsV2(requestBuilder.build());
     List<KeyEntry> entries = new ArrayList<>();
+    
+    for (ListObjectsV2Response page : s3Client.listObjectsV2Paginator(requestBuilder.build())) {
+      page.commonPrefixes().stream()
+          .map(keyEntryMapper::mapDirectory)
+          .forEach(entries::add);
 
-    resp.commonPrefixes().stream()
-        .map(keyEntryMapper::mapDirectory)
-        .forEach(entries::add);
-
-    resp.contents().stream()
-        .filter(obj -> prefix == null || !obj.key().equals(prefix))
-        .map(keyEntryMapper::mapFile)
-        .forEach(entries::add);
+      page.contents().stream()
+          .filter(obj -> prefix == null || !obj.key().equals(prefix))
+          .map(keyEntryMapper::mapFile)
+          .forEach(entries::add);
+    }
 
     logger.info("Found {} directory/file entries for bucket: {} with prefix: {}", entries.size(), bucket, prefix);
     return entries;
-  }
-
-  /**
-   * Uploads or overwrites a file in the bucket.
-   */
-  public boolean putFile(String bucket, String key, String content, String contentType) {
-    logger.info("Uploading file to bucket: {} with key: {}", bucket, key);
-    byte[] bytes = java.util.Base64.getDecoder().decode(content);
-    PutObjectRequest.Builder req = PutObjectRequest.builder()
-        .bucket(bucket)
-        .key(key);
-    if (contentType != null && !contentType.isEmpty()) {
-      req.contentType(contentType);
-    }
-    s3Client.putObject(req.build(), software.amazon.awssdk.core.sync.RequestBody.fromBytes(bytes));
-    logger.info("Successfully uploaded file with key: {} to bucket: {}", key, bucket);
-    return true;
   }
 
   /**
@@ -205,6 +188,7 @@ public class FilestoreGraphQLService {
       if (!prefix.equals(key)) {
         currentBatch.add(ObjectIdentifier.builder().key(prefix).build());
       }
+      
       ListObjectsV2Request listReq = ListObjectsV2Request.builder()
           .bucket(bucket)
           .prefix(prefix)
@@ -259,64 +243,6 @@ public class FilestoreGraphQLService {
     batch.clear(); 
     
     return deletedCount;
-  }
-
-  /**
-   * Starts a multipart upload and returns the upload ID.
-   */
-  public String startMultipartUpload(String bucket, String key) {
-    logger.info("Initiating multipart upload for bucket: {} with key: {}", bucket, key);
-    CreateMultipartUploadResponse resp = s3Client.createMultipartUpload(
-        CreateMultipartUploadRequest.builder()
-            .bucket(bucket)
-            .key(key)
-            .build());
-    logger.info("Multipart upload initiated. Generated Upload ID: {}", resp.uploadId());
-    return resp.uploadId();
-  }
-
-  /**
-   * Uploads a single part and returns its ETag.
-   */
-  public String uploadPart(String bucket, String key, String uploadId, int partNumber, String content) {
-    logger.info("Uploading part #{} for uploadId: {} in bucket: {} with key: {}", partNumber, uploadId, bucket, key);
-    byte[] bytes = java.util.Base64.getDecoder().decode(content);
-    UploadPartResponse resp = s3Client.uploadPart(
-        UploadPartRequest.builder()
-            .bucket(bucket)
-            .key(key)
-            .uploadId(uploadId)
-            .partNumber(partNumber)
-            .build(),
-        software.amazon.awssdk.core.sync.RequestBody.fromBytes(bytes));
-    logger.info("Part #{} upload completed. ETag: {}", partNumber, resp.eTag());
-    return resp.eTag();
-  }
-
-  /**
-   * Completes a multipart upload using the provided parts.
-   */
-  public boolean completeMultipartUpload(String bucket, String key, String uploadId, List<CompletedPart> parts) {
-    logger.info("Completing multipart upload for uploadId: {} with {} total parts in bucket: {}", uploadId,
-        parts.size(), bucket);
-    List<software.amazon.awssdk.services.s3.model.CompletedPart> completedParts = parts.stream()
-        .map(p -> software.amazon.awssdk.services.s3.model.CompletedPart.builder()
-            .partNumber(p.getPartNumber())
-            .eTag(p.getEtag())
-            .build())
-        .collect(Collectors.toList());
-
-    s3Client.completeMultipartUpload(
-        CompleteMultipartUploadRequest.builder()
-            .bucket(bucket)
-            .key(key)
-            .uploadId(uploadId)
-            .multipartUpload(CompletedMultipartUpload.builder()
-                .parts(completedParts)
-                .build())
-            .build());
-    logger.info("Multipart upload successfully finalized for uploadId: {}", uploadId);
-    return true;
   }
 
   /**
