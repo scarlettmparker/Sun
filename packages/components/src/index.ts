@@ -31,6 +31,16 @@ export {
   ContextMenuSubTrigger,
   ContextMenuSubContent,
 } from "./components/context-menu";
+export {
+  default as DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuGroup,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+} from "./components/dropdown-menu";
 export { default as Separator } from "./components/separator";
 export { default as Skeleton } from "./components/skeleton";
 export { default as Sidebar } from "./components/sidebar";
