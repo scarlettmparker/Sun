@@ -217,4 +217,66 @@ class FilestoreGraphQLServiceTest {
         assertThat(result).isTrue();
         verify(s3Client, times(0)).deleteObjects(any(DeleteObjectsRequest.class));
     }
+
+    @Test
+    void renameKey_noSourceObjects_returnsFalse() {
+        ListObjectsV2Response emptyResponse = ListObjectsV2Response.builder().build();
+        when(s3Client.listObjectsV2Paginator(any(Consumer.class))).thenReturn(new io.awssdk.core.pagination.sync.SdkIterable<ListObjectsV2Response>() {
+            @Override
+            public java.util.Iterator<ListObjectsV2Response> iterator() {
+                return List.of(emptyResponse).iterator();
+            }
+        });
+
+        RenameKeyResult result = filestoreGraphQLService.renameKey("bucket", "old.txt", "new.txt", false);
+
+        assertThat(result.getSuccess()).isFalse();
+        assertThat(result.getHasConflicts()).isFalse();
+        assertThat(result.getConflicts()).isEmpty();
+    }
+
+    @Test
+    void renameKey_withoutMergeAndHasConflicts_returnsConflicts() {
+        S3Object sourceObj = S3Object.builder().key("old.txt").build();
+        ListObjectsV2Response listResponse = ListObjectsV2Response.builder().contents(sourceObj).build();
+        
+        when(s3Client.listObjectsV2Paginator(any(Consumer.class))).thenReturn(new io.awssdk.core.pagination.sync.SdkIterable<ListObjectsV2Response>() {
+            @Override
+            public java.util.Iterator<ListObjectsV2Response> iterator() {
+                return List.of(listResponse).iterator();
+            }
+        });
+        
+        // Mock headObject to throw nothing (indicating the destination file ALREADY exists)
+        when(s3Client.headObject(any(Consumer.class))).thenReturn(HeadObjectResponse.builder().build());
+
+        RenameKeyResult result = filestoreGraphQLService.renameKey("bucket", "old.txt", "new.txt", false);
+
+        assertThat(result.getSuccess()).isFalse();
+        assertThat(result.getHasConflicts()).isTrue();
+        assertThat(result.getConflicts()).containsExactly("new.txt");
+    }
+
+    @Test
+    void renameKey_withMergeTrue_bypassesConflictsAndExecutesMove() {
+        S3Object sourceObj = S3Object.builder().key("old.txt").build();
+        ListObjectsV2Response listResponse = ListObjectsV2Response.builder().contents(sourceObj).build();
+        
+        when(s3Client.listObjectsV2Paginator(any(Consumer.class))).thenReturn(new io.awssdk.core.pagination.sync.SdkIterable<ListObjectsV2Response>() {
+            @Override
+            public java.util.Iterator<ListObjectsV2Response> iterator() {
+                return List.of(listResponse).iterator();
+            }
+        });
+        
+        when(s3Client.copyObject(any(CopyObjectRequest.class))).thenReturn(CopyObjectResponse.builder().build());
+        when(s3Client.deleteObjects(any(DeleteObjectsRequest.class))).thenReturn(DeleteObjectsResponse.builder().build());
+
+        RenameKeyResult result = filestoreGraphQLService.renameKey("bucket", "old.txt", "new.txt", true);
+
+        assertThat(result.getSuccess()).isTrue();
+        assertThat(result.getHasConflicts()).isFalse();
+        verify(s3Client).copyObject(any(CopyObjectRequest.class));
+        verify(s3Client).deleteObjects(any(DeleteObjectsRequest.class));
+    }
 }

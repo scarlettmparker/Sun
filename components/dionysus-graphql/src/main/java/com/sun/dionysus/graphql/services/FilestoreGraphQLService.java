@@ -10,6 +10,7 @@ import org.springframework.http.HttpHeaders;
 import com.sun.dionysus.codegen.types.Bucket;
 import com.sun.dionysus.codegen.types.File;
 import com.sun.dionysus.codegen.types.KeyEntry;
+import com.sun.dionysus.codegen.types.RenameKeyResult;
 import com.sun.dionysus.graphql.mappers.FileMapper;
 import com.sun.dionysus.graphql.mappers.KeyEntryMapper;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -21,8 +22,10 @@ import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignReques
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import jakarta.annotation.PostConstruct;
 
@@ -280,5 +283,105 @@ public class FilestoreGraphQLService {
     String url = presigned.url().toString();
     logger.info("Presigned download URL generated");
     return url;
+  }
+
+  /**
+   * Renames a key or directory prefix by copying objects to a new destination and deleting sources.
+   * If merge is false, it halts and reports conflicts if any destination objects already exist.
+   */
+  public RenameKeyResult renameKey(String bucket, String sourceKey, String targetKey, boolean merge) {
+    RenameKeyResult result = new RenameKeyResult();
+    result.setSuccess(false);
+    result.setHasConflicts(false);
+    result.setConflicts(new ArrayList<>());
+
+    if (sourceKey == null || targetKey == null || sourceKey.equals(targetKey)) {
+      return result;
+    }
+
+    logger.info("Initiating rename in bucket '{}': '{}' -> '{}' (merge={})", bucket, sourceKey, targetKey, merge);
+
+    try {
+      // Get all objects matching the source prefix
+      List<S3Object> sourceObjects = s3Client.listObjectsV2Paginator(b -> b.bucket(bucket).prefix(sourceKey))
+          .contents().stream()
+          .collect(Collectors.toList());
+
+      if (sourceObjects.isEmpty()) {
+        logger.warn("No objects found matching source key/prefix: {}", sourceKey);
+        return result;
+      }
+
+      boolean isSourceDir = sourceKey.endsWith("/");
+      String cleanSourcePrefix = isSourceDir ? sourceKey : sourceKey + "/";
+      String cleanTargetPrefix = targetKey.endsWith("/") ? targetKey : targetKey + "/";
+
+      // Map all target paths and optionally inspect for destination conflicts
+      List<String> conflicts = new ArrayList<>();
+      List<Map.Entry<String, String>> moves = new ArrayList<>();
+
+      for (S3Object obj : sourceObjects) {
+        String srcPath = obj.key();
+        String destPath;
+
+        if (srcPath.equals(sourceKey)) {
+          // Exact match on the key itself
+          destPath = isSourceDir ? cleanTargetPrefix : targetKey;
+        } else if (srcPath.startsWith(cleanSourcePrefix)) {
+          destPath = cleanTargetPrefix + srcPath.substring(cleanSourcePrefix.length());
+        } else {
+          continue;
+        }
+
+        moves.add(new AbstractMap.SimpleEntry<>(srcPath, destPath));
+
+        if (!merge) {
+          try {
+            s3Client.headObject(b -> b.bucket(bucket).key(destPath));
+            // Object exists at destination
+            conflicts.add(destPath);
+          } catch (NoSuchKeyException e) {
+          }
+        }
+      }
+
+      // Halt if unapproved conflicts occur
+      if (!merge && !conflicts.isEmpty()) {
+        logger.warn("Aborting rename operation due to {} conflicts at target destination.", conflicts.size());
+        result.setHasConflicts(true);
+        result.setConflicts(conflicts);
+        return result;
+      }
+
+      List<ObjectIdentifier> sourceIdsToDelete = new ArrayList<>();
+      for (Map.Entry<String, String> move : moves) {
+        String src = move.getKey();
+        String dest = move.getValue();
+        
+        logger.debug("Moving {} -> {}", src, dest);
+        
+        // Copy item to target location
+        s3Client.copyObject(CopyObjectRequest.builder()
+            .copySource(bucket + "/" + src)
+            .destinationBucket(bucket)
+            .destinationKey(dest)
+            .build());
+
+        sourceIdsToDelete.add(ObjectIdentifier.builder().key(src).build());
+      }
+
+      // Batch clear out the old source files
+      if (!sourceIdsToDelete.isEmpty()) {
+        flushDeleteBatch(bucket, sourceIdsToDelete);
+      }
+
+      logger.info("Successfully completed move sequence for {} key variations.", moves.size());
+      result.setSuccess(true);
+      return result;
+
+    } catch (Exception e) {
+      logger.error("Failed to perform rename migration from '{}' to '{}'", sourceKey, targetKey, e);
+      return result;
+    }
   }
 }

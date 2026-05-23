@@ -31,10 +31,11 @@ type KeyEntry {
   lastModified: String
 }
 
-# Part metadata for multipart uploads.
-input CompletedPart {
-  partNumber: Int!
-  etag: String!
+# Response payload for the renameKey mutation
+type RenameKeyResult {
+  success: Boolean!
+  hasConflicts: Boolean!
+  conflicts: [String!]!
 }
 
 # Mutations for filestore operations including multipart upload support.
@@ -45,30 +46,19 @@ type FilestoreMutations {
   deleteFile(bucket: String!, key: String!): Boolean
   # Delete a key and propagate: recursively delete the key, all sub-keys and files under it.
   deleteKey(bucket: String!, key: String!): Boolean
-  # Initiate multipart upload; returns uploadId.
-  startMultipartUpload(bucket: String!, key: String!): String
-  # Upload a single part; returns ETag.
-  uploadPart(
+  # Renames a single file or a directory prefix. Validates conflicts when merge is false.
+  renameKey(
     bucket: String!
-    key: String!
-    uploadId: String!
-    partNumber: Int!
-    content: String!
-  ): String
-  # Complete multipart upload.
-  completeMultipartUpload(
-    bucket: String!
-    key: String!
-    uploadId: String!
-    parts: [CompletedPart!]!
-  ): Boolean
+    sourceKey: String!
+    targetKey: String!
+    merge: Boolean!
+  ): RenameKeyResult!
   # Returns a presigned PUT URL for direct browser-to-storage upload.
   getPresignedUploadUrl(
     bucket: String!
     key: String!
     contentType: String
   ): String
-
   # Returns a presigned GET URL for direct browser download.
   getPresignedDownloadUrl(bucket: String!, key: String!): String
 }
