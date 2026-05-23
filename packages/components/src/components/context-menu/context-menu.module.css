@@ -1,5 +1,5 @@
 .context_menu {
-  display: flex;
+  display: inline-block;
 }
 
 .context_menu_trigger {
@@ -27,9 +27,9 @@
   border-radius: var(--sm);
   background-color: rgb(from var(--secondary) r g b / var(--visible));
   backdrop-filter: blur(var(--sm));
-  transition: 
-    background-color var(--fast) ease, 
-    color var(--fast) ease, 
+  transition:
+    background-color var(--fast) ease,
+    color var(--fast) ease,
     box-shadow var(--fast) ease;
   border: none;
   display: flex;
