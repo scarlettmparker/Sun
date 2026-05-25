@@ -5,6 +5,7 @@ import com.netflix.graphql.dgs.DgsData;
 import com.sun.dionysus.graphql.services.FilestoreGraphQLService;
 import com.sun.dionysus.codegen.types.FilestoreQueries;
 import com.sun.dionysus.codegen.types.FilestoreMutations;
+import com.sun.dionysus.codegen.types.RenameKeyResult;
 import com.sun.dionysus.codegen.types.Bucket;
 import com.sun.dionysus.codegen.types.File;
 import com.sun.dionysus.codegen.types.KeyEntry;
@@ -61,6 +62,11 @@ public class FilestoreDataFetcher {
   @DgsData(parentType = "FilestoreMutations", field = "deleteKey")
   public boolean deleteKey(String bucket, String key) {
     return filestoreGraphQLService.deleteKey(bucket, key);
+  }
+
+  @DgsData(parentType = "FilestoreMutations", field = "renameKey")
+  public RenameKeyResult renameKey(String bucket, String sourceKey, String targetKey, boolean merge) {
+    return filestoreGraphQLService.renameKey(bucket, sourceKey, targetKey, merge);
   }
 
   @DgsData(parentType = "FilestoreMutations", field = "getPresignedUploadUrl")
