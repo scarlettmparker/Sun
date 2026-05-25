@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.HttpMethod;
@@ -89,15 +90,84 @@ class FilestoreGraphQLServiceTest {
     }
     
     @Test
-    void putKey_returnsTrue() {
+    void putKey_withExplicitName_createsDirectoryAsIs() {
         when(s3Client.putObject(any(PutObjectRequest.class), any(software.amazon.awssdk.core.sync.RequestBody.class)))
                 .thenReturn(PutObjectResponse.builder().build());
 
-        boolean result = filestoreGraphQLService.putKey("default-bucket", "folder");
+        boolean result = filestoreGraphQLService.putKey("default-bucket", "explicit-folder");
 
         assertThat(result).isTrue();
-        verify(s3Client).putObject(any(PutObjectRequest.class),
-                any(software.amazon.awssdk.core.sync.RequestBody.class));
+        
+        ArgumentCaptor<PutObjectRequest> captor = ArgumentCaptor.forClass(PutObjectRequest.class);
+        verify(s3Client).putObject(captor.capture(), any(software.amazon.awssdk.core.sync.RequestBody.class));
+        
+        // Assert the key was formatted correctly
+        assertThat(captor.getValue().key()).isEqualTo("explicit-folder/");
+        verify(s3Client, times(0)).listObjectsV2(any(ListObjectsV2Request.class));
+    }
+
+    @Test
+    void putKey_withNullKey_noConflict_createsRootNewKey() {
+        when(s3Client.listObjectsV2(any(ListObjectsV2Request.class)))
+                .thenReturn(ListObjectsV2Response.builder().build());
+                
+        when(s3Client.putObject(any(PutObjectRequest.class), any(software.amazon.awssdk.core.sync.RequestBody.class)))
+                .thenReturn(PutObjectResponse.builder().build());
+
+        boolean result = filestoreGraphQLService.putKey("default-bucket", null);
+
+        assertThat(result).isTrue();
+        
+        ArgumentCaptor<PutObjectRequest> captor = ArgumentCaptor.forClass(PutObjectRequest.class);
+        verify(s3Client).putObject(captor.capture(), any(software.amazon.awssdk.core.sync.RequestBody.class));
+        
+        assertThat(captor.getValue().key()).isEqualTo("new-key/");
+    }
+
+    @Test
+    void putKey_withEmptyString_noConflict_createsRootNewKey() {
+        when(s3Client.listObjectsV2(any(ListObjectsV2Request.class)))
+                .thenReturn(ListObjectsV2Response.builder().build());
+                
+        when(s3Client.putObject(any(PutObjectRequest.class), any(software.amazon.awssdk.core.sync.RequestBody.class)))
+                .thenReturn(PutObjectResponse.builder().build());
+
+        boolean result = filestoreGraphQLService.putKey("default-bucket", "   ");
+
+        assertThat(result).isTrue();
+        
+        ArgumentCaptor<PutObjectRequest> captor = ArgumentCaptor.forClass(PutObjectRequest.class);
+        verify(s3Client).putObject(captor.capture(), any(software.amazon.awssdk.core.sync.RequestBody.class));
+        
+        assertThat(captor.getValue().key()).isEqualTo("new-key/");
+    }
+
+    @Test
+    void putKey_withParentPath_hasConflicts_createsIncrementedNewKey() {
+        ListObjectsV2Response hitResponse0 = ListObjectsV2Response.builder()
+                .contents(S3Object.builder().key("parent/new-key/").build())
+                .build();
+        ListObjectsV2Response hitResponse1 = ListObjectsV2Response.builder()
+                .contents(S3Object.builder().key("parent/new-key 1/").build())
+                .build();
+        ListObjectsV2Response emptyResponse = ListObjectsV2Response.builder().build();
+
+        when(s3Client.listObjectsV2(any(ListObjectsV2Request.class)))
+                .thenReturn(hitResponse0)
+                .thenReturn(hitResponse1)
+                .thenReturn(emptyResponse);
+                
+        when(s3Client.putObject(any(PutObjectRequest.class), any(software.amazon.awssdk.core.sync.RequestBody.class)))
+                .thenReturn(PutObjectResponse.builder().build());
+
+        boolean result = filestoreGraphQLService.putKey("default-bucket", "parent/");
+
+        assertThat(result).isTrue();
+        
+        ArgumentCaptor<PutObjectRequest> captor = ArgumentCaptor.forClass(PutObjectRequest.class);
+        verify(s3Client).putObject(captor.capture(), any(software.amazon.awssdk.core.sync.RequestBody.class));
+        assertThat(captor.getValue().key()).isEqualTo("parent/new-key 2/");
+        verify(s3Client, times(3)).listObjectsV2(any(ListObjectsV2Request.class));
     }
 
     @Test

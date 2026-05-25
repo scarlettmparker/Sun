@@ -139,11 +139,23 @@ public class FilestoreGraphQLService {
    * Creates a directory key (folder) via Garage admin REST API.
    */
   public boolean putKey(String bucket, String key) {
-    String dirKey = key.endsWith("/") ? key : key + "/";
+    String dirKey;
+
+    if (key == null || key.trim().isEmpty()) {
+      // No path provided; create default at the root
+      dirKey = getUniqueDefaultKey(bucket, "", "new-key");
+    } else if (key.endsWith("/")) {
+      // A parent path was provided without a specific child name
+      dirKey = getUniqueDefaultKey(bucket, key, "new-key");
+    } else {
+      // An explicit exact name was provided
+      dirKey = key + "/";
+    }
+
     logger.info("Creating explicit directory placeholder in bucket: {} with key: {}", bucket, dirKey);
 
     s3Client.putObject(
-        PutObjectRequest.builder()
+        software.amazon.awssdk.services.s3.model.PutObjectRequest.builder()
             .bucket(bucket)
             .key(dirKey)
             .build(),
@@ -153,6 +165,44 @@ public class FilestoreGraphQLService {
     return true;
   }
 
+  /**
+   * Finds the next available folder name by checking S3 for existing prefixes.
+   */
+  private String getUniqueDefaultKey(String bucket, String parentPath, String baseName) {
+    String candidateKey = parentPath + baseName + "/";
+    
+    if (!folderExists(bucket, candidateKey)) {
+      return candidateKey;
+    }
+
+    int counter = 1;
+    while (true) {
+      candidateKey = parentPath + baseName + "-" + counter + "/";
+      if (!folderExists(bucket, candidateKey)) {
+        return candidateKey;
+      }
+      counter++;
+    }
+  }
+
+  /**
+   * Safely checks if an S3 "folder" exists. 
+   * A prefix check is necessary because a folder might exist implicitly 
+   * (containing files) without a 0-byte directory marker.
+   */
+  private boolean folderExists(String bucket, String prefix) {
+    software.amazon.awssdk.services.s3.model.ListObjectsV2Response response = 
+        s3Client.listObjectsV2(
+            software.amazon.awssdk.services.s3.model.ListObjectsV2Request.builder()
+                .bucket(bucket)
+                .prefix(prefix)
+                .maxKeys(1)
+                .build()
+        );
+
+    // If contents are returned, the prefix is currently in use
+    return !response.contents().isEmpty();
+  }
   /**
    * Deletes a file from the bucket.
    */

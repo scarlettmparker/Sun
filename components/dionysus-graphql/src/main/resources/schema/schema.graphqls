@@ -41,7 +41,7 @@ type RenameKeyResult {
 # Mutations for filestore operations including multipart upload support.
 type FilestoreMutations {
   # Create a directory key (folder).
-  putKey(bucket: String!, key: String!): Boolean
+  putKey(bucket: String!, key: String): Boolean
   # Delete a file.
   deleteFile(bucket: String!, key: String!): Boolean
   # Delete a key and propagate: recursively delete the key, all sub-keys and files under it.
