@@ -92,6 +92,9 @@
 
 .dialog_footer {
   padding: var(--lg) var(--xl);
+  display: flex;
+  gap: var(--lg);
+  margin-left: auto;
 }
 
 .dialog_close {
