@@ -20,6 +20,20 @@ function notifyCacheHydrated() {
   cacheHydratedListeners.forEach((listener) => listener());
 }
 
+const FILESTORE_CACHE_TTL = 30000; // 30 seconds
+
+/**
+ * Cache TTL configuration in milliseconds.
+ * Maps cache key patterns to their time-to-live values.
+ * Default is 5 minutes (300000ms) if pattern not specified.
+ */
+const CACHE_TTL_MS: Record<string, number> = {
+  "/bucket/:alias": FILESTORE_CACHE_TTL,
+  "/bucket/:alias/:path": FILESTORE_CACHE_TTL,
+};
+
+const DEFAULT_CACHE_TTL_MS = 300000; // 5 minutes default
+
 /**
  * Cache for React Suspense-based data loading.
  * Stores the status of data fetches: 'pending', 'resolved', or 'rejected'.
@@ -32,8 +46,35 @@ export const suspenseCache = new Map<
     result?: Record<string, unknown>;
     promise?: Promise<unknown>;
     error?: unknown;
+    timestamp?: number;
   }
 >();
+
+/**
+ * Gets the TTL for a given cache key pattern.
+ * @param pattern The route pattern
+ * @returns TTL in milliseconds
+ */
+function getCacheTTL(pattern: string): number {
+  const normalized = pattern.startsWith("/") ? pattern : "/" + pattern;
+  return CACHE_TTL_MS[normalized] ?? DEFAULT_CACHE_TTL_MS;
+}
+
+/**
+ * Checks if a cache entry has expired.
+ * @param record The cache record
+ * @param pattern The route pattern
+ * @returns True if expired, false otherwise
+ */
+function isCacheExpired(
+  record: { timestamp?: number },
+  pattern: string,
+): boolean {
+  if (!record.timestamp) return false;
+  const ttl = getCacheTTL(pattern);
+  const age = Date.now() - record.timestamp;
+  return age > ttl;
+}
 /**
  * Hydrates the page data cache with initial data from the server.
  * This populates the suspense cache with resolved data for each key in the initialData object.
@@ -50,8 +91,12 @@ export function hydratePageData(
   }
 
   Object.keys(initialData).forEach((key) => {
-    // Set the data in the suspense cache as resolved
-    suspenseCache.set(key, { status: "resolved", result: initialData[key] });
+    // Set the data in the suspense cache as resolved with current timestamp
+    suspenseCache.set(key, {
+      status: "resolved",
+      result: initialData[key],
+      timestamp: Date.now(),
+    });
 
     // Handle normalized keys: if the key contains a colon, normalize the pattern part
     const colonIndex = key.indexOf(":");
@@ -68,6 +113,7 @@ export function hydratePageData(
         suspenseCache.set(normalizedKey, {
           status: "resolved",
           result: initialData[key],
+          timestamp: Date.now(),
         });
       }
     }
@@ -178,6 +224,16 @@ function readPageData<T>(
   const cacheKey = makeCacheKey(`${pattern}:${key}`, params);
   let record = suspenseCache.get(cacheKey);
 
+  // Check if cached record exists and has expired
+  if (
+    record &&
+    record.status === "resolved" &&
+    isCacheExpired(record, pattern)
+  ) {
+    suspenseCache.delete(cacheKey);
+    record = undefined;
+  }
+
   if (!record) {
     // Find the loaders registered for this pattern
     const loaders = pageDataLoaders[pattern];
@@ -216,6 +272,7 @@ function readPageData<T>(
 
         record!.status = "resolved";
         record!.result = merged;
+        record!.timestamp = Date.now();
         return merged[key];
       })
       .catch((err) => {
@@ -252,13 +309,32 @@ export function getPageData<T>(
   params?: Record<string, unknown>,
 ): { data: T } {
   const cacheKey = makeCacheKey(`${pattern}:${key}`, params);
-
   let record = suspenseCache.get(cacheKey);
+
+  // Check if cached record has expired
+  if (
+    record &&
+    record.status === "resolved" &&
+    isCacheExpired(record, pattern)
+  ) {
+    suspenseCache.delete(cacheKey);
+    record = undefined;
+  }
 
   // Fallback check to support key structures that were populated via hydratePageData
   if (!record) {
     const legacyHydrationKey = makeCacheKey(pattern, params);
     record = suspenseCache.get(legacyHydrationKey);
+
+    // Check expiration on legacy key too
+    if (
+      record &&
+      record.status === "resolved" &&
+      isCacheExpired(record, pattern)
+    ) {
+      suspenseCache.delete(legacyHydrationKey);
+      record = undefined;
+    }
   }
 
   // If cache is invalidated or doesn't exist, execute/trigger fetch strategy
@@ -270,6 +346,127 @@ export function getPageData<T>(
   if (record.status === "rejected") throw record.error;
 
   return { data: (record.result as Record<string, unknown>)?.[key] as T };
+}
+
+/**
+ * Parses a cache invalidation cookie value into an array of patterns.
+ *
+ * @param cookieValue The raw cookie value to parse.
+ * @returns An array of string patterns to invalidate.
+ */
+function parseInvalidationPatterns(cookieValue: string): string[] {
+  try {
+    const decoded = decodeURIComponent(cookieValue);
+    const parsed = JSON.parse(decoded);
+    if (Array.isArray(parsed)) {
+      return parsed;
+    }
+  } catch {
+    // do nothing
+  }
+  return [cookieValue];
+}
+
+/**
+ * Checks if an actual cache parameter matches the expected pattern parameter.
+ *
+ * @param expectedValue The pattern value to match against (can include '*').
+ * @param actualValue The actual value extracted from the cache key.
+ * @returns True if the values match, false otherwise.
+ */
+function matchesParameter(
+  expectedValue: unknown,
+  actualValue: unknown,
+): boolean {
+  if (typeof expectedValue === "string" && expectedValue.endsWith("*")) {
+    const prefix = expectedValue.slice(0, -1);
+    return typeof actualValue === "string" && actualValue.startsWith(prefix);
+  }
+  return actualValue === expectedValue;
+}
+
+/**
+ * Sweeps the suspense cache and removes entries that match the given base pattern
+ * and parameter conditions.
+ *
+ * @param patternBase Base string of the cache key (before the JSON params).
+ * @param patternParams Parsed JSON parameters containing expected values.
+ */
+function sweepCacheByPattern(
+  patternBase: string,
+  patternParams: Record<string, unknown>,
+): void {
+  for (const cacheKey of suspenseCache.keys()) {
+    if (!cacheKey.startsWith(patternBase)) continue;
+
+    const cacheFirstBrace = cacheKey.indexOf("{");
+    if (cacheFirstBrace === -1) continue;
+
+    try {
+      const cacheParams = JSON.parse(cacheKey.slice(cacheFirstBrace));
+      let isMatch = true;
+
+      // Ensure every parameter in the pattern matches the cache key's parameter
+      for (const [key, expectedValue] of Object.entries(patternParams)) {
+        if (!matchesParameter(expectedValue, cacheParams[key])) {
+          isMatch = false;
+          break;
+        }
+      }
+
+      if (isMatch) {
+        suspenseCache.delete(cacheKey);
+      }
+    } catch {
+      // Skip cache keys with malformed JSON
+      continue;
+    }
+  }
+}
+
+/**
+ * Invalidates specific entries in the suspense cache based on a cookie payload.
+ *
+ * @param invalidateCacheCookie Raw cookie value containing invalidation patterns.
+ */
+export function invalidateCache(invalidateCacheCookie: string): boolean {
+  const patterns = parseInvalidationPatterns(invalidateCacheCookie);
+
+  for (const pattern of patterns) {
+    // Handle exact cache key invalidation
+    if (suspenseCache.has(pattern)) {
+      suspenseCache.delete(pattern);
+      continue;
+    }
+
+    const firstBrace = pattern.indexOf("{");
+
+    // Standard base pattern fallback (No JSON parameters present)
+    if (firstBrace === -1) {
+      const baseKey = pattern.replace(/:keys({.*})$/, "$1");
+      if (baseKey !== pattern) {
+        suspenseCache.delete(baseKey);
+      }
+      continue;
+    }
+
+    // Handle parameter-based and wildcard invalidations
+    try {
+      const patternBase = pattern.slice(0, firstBrace);
+      const patternParams = JSON.parse(pattern.slice(firstBrace));
+
+      const hasWildcard = Object.values(patternParams).some(
+        (v) => typeof v === "string" && v.endsWith("*"),
+      );
+
+      // Only execute sweep if a wildcard parameter was explicitly requested
+      if (hasWildcard) {
+        sweepCacheByPattern(patternBase, patternParams);
+      }
+    } catch (e) {}
+  }
+
+  return true;
 }
 
 /**

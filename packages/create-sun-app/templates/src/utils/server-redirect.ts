@@ -3,12 +3,12 @@ import { MutationResult } from "~/server/actions/utils";
 export class ServerRedirectError extends Error {
   public statusCode: number;
   public redirectTo: string;
-  public cacheInvalidateKey?: string;
+  public cacheInvalidateKey?: string | string[];
   public clientPayload?: MutationResult;
 
   constructor(
     redirectTo: string,
-    cacheInvalidateKey?: string,
+    cacheInvalidateKey?: string | string[],
     clientPayload?: MutationResult,
     statusCode: number = 302,
   ) {

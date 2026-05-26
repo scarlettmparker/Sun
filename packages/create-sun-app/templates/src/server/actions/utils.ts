@@ -2,11 +2,12 @@
  * Server actions for blog post operations.
  */
 
-import { QuerySuccess, StandardError } from "~/generated/graphql";
+import { FormError, QuerySuccess, StandardError } from "~/generated/graphql";
 
 export type MutationResult =
   | QuerySuccess
   | StandardError
+  | FormError
   | { __typename: "Redirect"; redirectTo: string };
 
 /**

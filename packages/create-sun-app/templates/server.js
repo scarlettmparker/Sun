@@ -101,8 +101,16 @@ app.route({
         ];
 
         if (error.cacheInvalidateKey) {
+          const encodedCacheKey = encodeURIComponent(
+            JSON.stringify(
+              Array.isArray(error.cacheInvalidateKey)
+                ? error.cacheInvalidateKey
+                : [error.cacheInvalidateKey],
+            ),
+          );
+
           cookieHeaders.push(
-            `invalidate_cache=${error.cacheInvalidateKey}; Path=/; Max-Age=31536000; SameSite=Lax;`,
+            `invalidate_cache=${encodedCacheKey}; Path=/; Max-Age=31536000; SameSite=Lax;`,
           );
         }
 

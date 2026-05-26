@@ -1,3 +1,7 @@
+type FormError {
+  message: String!
+}
+
 type StandardError {
   message: String!
 }
@@ -7,4 +11,4 @@ type QuerySuccess {
   id: ID
 }
 
-union QueryResult = QuerySuccess | StandardError
+union QueryResult = QuerySuccess | StandardError | FormError

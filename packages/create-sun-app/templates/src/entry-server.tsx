@@ -8,8 +8,10 @@ import NotFound from "./routes/not-found";
 import { matchRoutes } from "react-router-dom";
 import { inlineCss, generateCssTag } from "./utils/css-inlining";
 import "./utils/register-loaders";
-import { suspenseCache, makeCacheKey } from "./utils/page-data";
+import { suspenseCache, invalidateCache } from "./utils/page-data";
 import { MutationResult } from "./server/actions/utils";
+import fs from "fs";
+import path from "path";
 
 type i18n = {
   translations: Record<string, string>;
@@ -28,23 +30,6 @@ type RenderProps = {
   mutationPayload: MutationResult;
   invalidateCacheCookie?: string;
 };
-
-function invalidateCache(invalidateCacheCookie: string, url: string): boolean {
-  const matches = matchRoutes(routes, url);
-  if (matches && matches.length > 0) {
-    const matched = matches[0];
-    const pattern = matched.route.path;
-    if (pattern) {
-      const params = matched.params;
-      const currentCacheKey = makeCacheKey(pattern, params);
-      if (invalidateCacheCookie === currentCacheKey) {
-        suspenseCache.delete(invalidateCacheCookie);
-        return true;
-      }
-    }
-  }
-  return false;
-}
 
 export async function render({
   url,
@@ -65,7 +50,7 @@ export async function render({
 
   let shouldDeleteCookie = false;
   if (invalidateCacheCookie) {
-    shouldDeleteCookie = invalidateCache(invalidateCacheCookie, url);
+    shouldDeleteCookie = invalidateCache(invalidateCacheCookie);
   }
 
   for (const [key, record] of suspenseCache.entries()) {
@@ -81,7 +66,21 @@ export async function render({
     resources: {},
     interpolation: { escapeValue: false },
   });
-  const translations = i18n.getResourceBundle(locale, pageName) || {};
+
+  let translations: Record<string, unknown> = {};
+  try {
+    const filePath = path.resolve(
+      process.cwd(),
+      `messages/${pageName}/${locale}.json`,
+    );
+    if (fs.existsSync(filePath)) {
+      const fileContent = fs.readFileSync(filePath, "utf-8");
+      translations = JSON.parse(fileContent);
+      i18n.addResourceBundle(locale, pageName, translations, true, true);
+    }
+  } catch {
+    // fallback to empty
+  }
 
   const matches = matchRoutes(routes, url);
   const didMatch = Boolean(matches);
