@@ -9,8 +9,6 @@ import Layout from "./components/layout";
 import { hydratePageData } from "./utils/page-data";
 import { PostHogProvider } from "./utils/hooks/posthog";
 
-import "@sun/components/style.css";
-
 // Define the postlude hydration function on window for SSR
 window.hydratePageDataFromPostlude = hydratePageData;
 
