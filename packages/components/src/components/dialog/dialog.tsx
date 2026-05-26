@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useRef,
+} from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "~/utils/cn";
@@ -30,7 +36,7 @@ const useDialog = () => {
   return ctx;
 };
 
-type DialogProps = React.HTMLAttributes<HTMLDivElement> & {
+type DialogProps = React.HTMLAttributes<HTMLElement> & {
   /**
    * Toggles the modal mode. If true, renders a 50% black overlay and traps pointer events.
    * @default true
@@ -57,18 +63,54 @@ const Dialog = (props: DialogProps) => {
     modal = true,
     open = true,
     onOpenChange,
+    onKeyDown,
     ...rest
   } = props;
   const [mounted, setMounted] = useState(false);
+  const dialogRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  // Autofocus the submit button when the dialog opens
+  useEffect(() => {
+    if (open && mounted && dialogRef.current) {
+      const timer = setTimeout(() => {
+        const submitBtn = dialogRef.current?.querySelector(
+          'button[type="submit"]',
+        ) as HTMLButtonElement;
+
+        if (submitBtn) {
+          submitBtn.focus();
+        }
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [open, mounted]);
+
   if (!mounted || !open) return null;
 
   const handleClose = () => {
     onOpenChange?.(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
+    onKeyDown?.(e);
+    if (e.defaultPrevented) return;
+
+    if (e.key === "Enter") {
+      if (document.activeElement?.tagName === "TEXTAREA") return;
+
+      const submitBtn = e.currentTarget.querySelector(
+        'button[type="submit"]',
+      ) as HTMLButtonElement;
+
+      if (submitBtn && document.activeElement !== submitBtn) {
+        e.preventDefault();
+        submitBtn.click();
+      }
+    }
   };
 
   const content = (
@@ -84,9 +126,12 @@ const Dialog = (props: DialogProps) => {
           />
         )}
         <article
+          ref={dialogRef}
           className={cn("dialog", className)}
           role="dialog"
           aria-modal={modal}
+          onKeyDown={handleKeyDown}
+          tabIndex={-1}
           {...rest}
         >
           <button
@@ -109,7 +154,7 @@ const Dialog = (props: DialogProps) => {
 type DialogHeaderProps = React.HTMLAttributes<HTMLElement>;
 
 /**
- * Scarlet UI Dialog Header.
+ * Scarlet UI Dialog Header wrapper container.
  */
 const DialogHeader = (props: DialogHeaderProps) => {
   const { className, children, ...rest } = props;
@@ -124,7 +169,7 @@ const DialogHeader = (props: DialogHeaderProps) => {
 type DialogTitleProps = React.HTMLAttributes<HTMLHeadingElement>;
 
 /**
- * Scarlet UI Dialog Title.
+ * Scarlet UI Dialog Title heading element.
  */
 const DialogTitle = (props: DialogTitleProps) => {
   const { className, children, ...rest } = props;
@@ -139,7 +184,7 @@ const DialogTitle = (props: DialogTitleProps) => {
 type DialogDescriptionProps = React.HTMLAttributes<HTMLParagraphElement>;
 
 /**
- * Scarlet UI Dialog Description.
+ * Scarlet UI Dialog Description paragraph element.
  */
 const DialogDescription = (props: DialogDescriptionProps) => {
   const { className, children, ...rest } = props;
@@ -154,7 +199,7 @@ const DialogDescription = (props: DialogDescriptionProps) => {
 type DialogBodyProps = React.HTMLAttributes<HTMLDivElement>;
 
 /**
- * Scarlet UI Dialog Body.
+ * Scarlet UI Dialog Body structural container.
  */
 const DialogBody = (props: DialogBodyProps) => {
   const { className, children, ...rest } = props;
@@ -169,7 +214,7 @@ const DialogBody = (props: DialogBodyProps) => {
 type DialogFooterProps = React.HTMLAttributes<HTMLElement>;
 
 /**
- * Scarlet UI Dialog Footer.
+ * Scarlet UI Dialog Footer actions container.
  */
 const DialogFooter = (props: DialogFooterProps) => {
   const { className, children, ...rest } = props;
