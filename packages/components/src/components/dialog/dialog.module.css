@@ -20,6 +20,7 @@
 }
 
 .dialog {
+  position: relative;
   border-radius: var(--lg);
   box-shadow: var(--shadow-soft);
   background-color: rgb(from var(--secondary) r g b / var(--visible));
@@ -38,8 +39,38 @@
   box-shadow: var(--shadow-medium);
 }
 
+.dialog_close_button {
+  position: absolute;
+  top: var(--lg);
+  right: var(--xl);
+  background: transparent;
+  border: none;
+  padding: var(--xs);
+  cursor: pointer;
+  color: var(--muted);
+  border-radius: var(--sm);
+  transition:
+    color var(--fast) ease,
+    background-color var(--fast) ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.dialog_close_button:hover {
+  color: var(--foreground);
+  background-color: rgb(from var(--secondary-hover) r g b / var(--visible));
+}
+
+.dialog_close_icon {
+  width: var(--text-xl);
+  height: var(--text-xl);
+}
+
 .dialog_header {
   padding: var(--lg) var(--xl);
+  padding-right: calc(var(--xl) * 2 + var(--text-xl));
 }
 
 .dialog_title {
@@ -61,4 +92,8 @@
 
 .dialog_footer {
   padding: var(--lg) var(--xl);
+}
+
+.dialog_close {
+  cursor: pointer;
 }

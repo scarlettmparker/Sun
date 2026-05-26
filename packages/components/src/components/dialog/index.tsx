@@ -5,4 +5,5 @@ export {
   DialogDescription,
   DialogBody,
   DialogFooter,
+  DialogClose,
 } from "./dialog";

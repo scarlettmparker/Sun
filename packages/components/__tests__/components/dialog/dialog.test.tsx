@@ -4,6 +4,7 @@
  */
 
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import {
   Dialog,
   DialogHeader,
@@ -11,6 +12,7 @@ import {
   DialogDescription,
   DialogBody,
   DialogFooter,
+  DialogClose,
 } from "@sun/components";
 
 describe("Dialog", () => {
@@ -60,14 +62,11 @@ describe("Dialog", () => {
     render(<Dialog open={true}>Modal content</Dialog>);
     const dialog = screen.getByRole("dialog");
 
-    // Check aria-modal
     expect(dialog).toHaveAttribute("aria-modal", "true");
 
-    // Check wrapper classes
     const wrapper = dialog.parentElement;
     expect(wrapper).toHaveClass("dialog_wrapper", "dialog_modal_active");
 
-    // Check overlay element exists (it's an older sibling to the dialog inside the wrapper)
     const overlay = wrapper?.querySelector(".dialog_overlay");
     expect(overlay).toBeInTheDocument();
     expect(overlay).toHaveAttribute("aria-hidden", "true");
@@ -81,17 +80,29 @@ describe("Dialog", () => {
     );
     const dialog = screen.getByRole("dialog");
 
-    // Check aria-modal
     expect(dialog).toHaveAttribute("aria-modal", "false");
 
-    // Check wrapper does not have modal active class
     const wrapper = dialog.parentElement;
     expect(wrapper).toHaveClass("dialog_wrapper");
     expect(wrapper).not.toHaveClass("dialog_modal_active");
 
-    // Check overlay element does not exist
     const overlay = wrapper?.querySelector(".dialog_overlay");
     expect(overlay).not.toBeInTheDocument();
+  });
+
+  it("renders the built-in top-right close button and fires onOpenChange when clicked", async () => {
+    const handleOpenChange = jest.fn();
+    render(
+      <Dialog open={true} onOpenChange={handleOpenChange}>
+        Content
+      </Dialog>,
+    );
+
+    const closeBtn = screen.getByRole("button", { name: /close/i });
+    expect(closeBtn).toHaveClass("dialog_close_button");
+
+    await userEvent.click(closeBtn);
+    expect(handleOpenChange).toHaveBeenCalledWith(false);
   });
 });
 
@@ -203,5 +214,41 @@ describe("DialogFooter", () => {
     render(<DialogFooter className="custom-class">Content</DialogFooter>);
     const footer = screen.getByText("Content");
     expect(footer).toHaveClass("dialog_footer", "custom-class");
+  });
+});
+
+describe("DialogClose", () => {
+  it("renders standard button element and triggers change event on click", async () => {
+    const handleOpenChange = jest.fn();
+    render(
+      <Dialog open={true} onOpenChange={handleOpenChange}>
+        <DialogClose>Cancel</DialogClose>
+      </Dialog>,
+    );
+
+    const closeBtn = screen.getByRole("button", { name: "Cancel" });
+    expect(closeBtn).toHaveClass("dialog_close");
+
+    await userEvent.click(closeBtn);
+    expect(handleOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it("supports asChild property to mutate layout elements while executing context state logic", async () => {
+    const handleOpenChange = jest.fn();
+    render(
+      <Dialog open={true} onOpenChange={handleOpenChange}>
+        <DialogClose asChild>
+          <button className="custom-trigger">Alternative Close Button</button>
+        </DialogClose>
+      </Dialog>,
+    );
+
+    const customBtn = screen.getByRole("button", {
+      name: "Alternative Close Button",
+    });
+    expect(customBtn).toHaveClass("dialog_close", "custom-trigger");
+
+    await userEvent.click(customBtn);
+    expect(handleOpenChange).toHaveBeenCalledWith(false);
   });
 });

@@ -38,6 +38,7 @@ export {
   DialogDescription,
   DialogBody,
   DialogFooter,
+  DialogClose,
 } from "./components/dialog";
 export {
   default as DropdownMenu,
