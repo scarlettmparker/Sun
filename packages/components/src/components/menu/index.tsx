@@ -5,7 +5,6 @@ export {
   MenuSubContent,
   MenuTrigger,
   MenuContent,
-  useIsomorphicLayoutEffect,
   useDropdownPositioning,
   useMenuIds,
   useMenuCloseHandlers,

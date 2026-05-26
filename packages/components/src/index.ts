@@ -32,6 +32,14 @@ export {
   ContextMenuSubContent,
 } from "./components/context-menu";
 export {
+  Dialog,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogBody,
+  DialogFooter,
+} from "./components/dialog";
+export {
   default as DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,

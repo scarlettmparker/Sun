@@ -1,0 +1,64 @@
+.dialog_wrapper {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.dialog_modal_active {
+  pointer-events: auto;
+}
+
+.dialog_overlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: -1;
+}
+
+.dialog {
+  border-radius: var(--lg);
+  box-shadow: var(--shadow-soft);
+  background-color: rgb(from var(--secondary) r g b / var(--visible));
+  overflow: hidden;
+  transition: all var(--medium);
+  backdrop-filter: blur(var(--sm));
+  pointer-events: auto;
+  min-width: 20rem;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.dialog:hover {
+  box-shadow: var(--shadow-medium);
+}
+
+.dialog_header {
+  padding: var(--lg) var(--xl);
+}
+
+.dialog_title {
+  font-size: var(--text-xl);
+  color: var(--primary);
+  font-weight: var(--bold);
+  margin-bottom: var(--md);
+}
+
+.dialog_description {
+  color: var(--muted);
+  font-size: var(--text-md);
+}
+
+.dialog_body {
+  padding: var(--lg) var(--xl);
+  overflow-y: auto;
+}
+
+.dialog_footer {
+  padding: var(--lg) var(--xl);
+}
