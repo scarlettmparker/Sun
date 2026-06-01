@@ -13,6 +13,8 @@ import com.sun.dionysus.codegen.types.KeyEntry;
 import com.sun.dionysus.codegen.types.RenameKeyResult;
 import com.sun.dionysus.graphql.mappers.FileMapper;
 import com.sun.dionysus.graphql.mappers.KeyEntryMapper;
+import com.sun.dionysus.graphql.models.KeyDetail;
+import com.sun.dionysus.service.KeyDetailService;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
@@ -55,6 +57,9 @@ public class FilestoreGraphQLService {
   @Autowired
   private RestClient.Builder restClientBuilder;
 
+  @Autowired
+  private KeyDetailService keyDetailService;
+
   private RestClient restClient;
 
   @PostConstruct
@@ -92,19 +97,6 @@ public class FilestoreGraphQLService {
   }
 
   /**
-   * Lists objects (files) in the given S3-compatible bucket.
-   */
-  public List<File> listFiles(String bucket) {
-    logger.info("Listing objects in bucket: {}", bucket);
-    List<File> files = s3Client.listObjectsV2Paginator(b -> b.bucket(bucket))
-        .contents().stream()
-        .map(fileMapper::mapObject)
-        .collect(Collectors.toList());
-    logger.info("Successfully found and mapped {} files in bucket: {}", files.size(), bucket);
-    return files;
-  }
-
-  /**
    * Lists keys in the given bucket using a prefix and delimiter for
    * directory-style navigation.
    */
@@ -119,16 +111,19 @@ public class FilestoreGraphQLService {
     }
 
     List<KeyEntry> entries = new ArrayList<>();
+    List<KeyDetail> details = keyDetailService.listActiveForBucketAndPath(bucket, prefix);
+    Map<String, KeyDetail> detailMap = details.stream()
+        .collect(Collectors.toMap(KeyDetail::getKeyPath, d -> d, (a, b) -> a));
     
     for (ListObjectsV2Response page : s3Client.listObjectsV2Paginator(requestBuilder.build())) {
-      page.commonPrefixes().stream()
-          .map(keyEntryMapper::mapDirectory)
-          .forEach(entries::add);
+      entries.addAll(page.commonPrefixes().stream()
+          .map(prefixObj -> keyEntryMapper.mapDirectory(prefixObj, detailMap.get(prefixObj.prefix())))
+          .toList());
 
-      page.contents().stream()
+      entries.addAll(page.contents().stream()
           .filter(obj -> prefix == null || !obj.key().equals(prefix))
-          .map(keyEntryMapper::mapFile)
-          .forEach(entries::add);
+          .map(obj -> keyEntryMapper.mapFile(obj, detailMap.get(obj.key())))
+          .toList());
     }
 
     logger.info("Found {} directory/file entries for bucket: {} with prefix: {}", entries.size(), bucket, prefix);
@@ -160,6 +155,8 @@ public class FilestoreGraphQLService {
             .key(dirKey)
             .build(),
         software.amazon.awssdk.core.sync.RequestBody.empty());
+
+    keyDetailService.createOrUpdateDetail(bucket, dirKey, dirKey);
 
     logger.info("Successfully created directory key: {} in bucket: {}", dirKey, bucket);
     return true;
@@ -212,6 +209,7 @@ public class FilestoreGraphQLService {
         .bucket(bucket)
         .key(key)
         .build());
+    keyDetailService.archiveDetail(bucket, key);
     logger.info("Successfully deleted object: {} from bucket: {}", key, bucket);
     return true;
   }
@@ -263,6 +261,8 @@ public class FilestoreGraphQLService {
         totalDeleted += flushDeleteBatch(bucket, currentBatch);
       }
 
+      keyDetailService.archiveRecursive(bucket, key);
+
       logger.info("Successfully deleted {} key(s) under '{}' in bucket: {}", totalDeleted, key, bucket);
       return true;
 
@@ -311,6 +311,8 @@ public class FilestoreGraphQLService {
             .key(key)
             .contentType(contentType != null ? contentType : "application/octet-stream"))
         .build();
+
+    keyDetailService.createOrUpdateDetail(bucket, key, key);
 
     PresignedPutObjectRequest presigned = s3Presigner.presignPutObject(presignRequest);
     String url = presigned.url().toString();
@@ -419,6 +421,8 @@ public class FilestoreGraphQLService {
 
         sourceIdsToDelete.add(ObjectIdentifier.builder().key(src).build());
       }
+
+      keyDetailService.updatePath(bucket, sourceKey, targetKey);
 
       // Batch clear out the old source files
       if (!sourceIdsToDelete.isEmpty()) {

@@ -19,6 +19,9 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
+import com.sun.dionysus.graphql.models.KeyDetail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
@@ -42,8 +45,25 @@ class FilestoreGraphQLServiceTest {
     @Mock
     private KeyEntryMapper keyEntryMapper;
 
+    @Mock
+    private com.sun.dionysus.service.KeyDetailService keyDetailService;
+
     @InjectMocks
     private FilestoreGraphQLService filestoreGraphQLService;
+
+    @BeforeEach
+    void setup() {
+        when(keyDetailService.listActiveForBucketAndPath(anyString(), anyString())).thenReturn(List.of());
+        when(keyDetailService.createOrUpdateDetail(anyString(), anyString(), any())).thenAnswer(invocation -> {
+            KeyDetail d = new KeyDetail();
+            d.setBucket(invocation.getArgument(0));
+            d.setKeyPath(invocation.getArgument(1));
+            Object n = invocation.getArgument(2);
+            d.setName(n == null ? null : n.toString());
+            return d;
+        });
+        when(keyDetailService.locateByBucketAndKeyPath(anyString(), anyString())).thenReturn(Optional.empty());
+    }
 
     @Test
     void health_returnsResponseFromRestApi() {
@@ -71,24 +91,6 @@ class FilestoreGraphQLServiceTest {
         assertThat(result.get(0).getId()).isEqualTo("b1");
     }
 
-    @Test
-    void listFiles_returnsFiles() {
-        S3Object obj = S3Object.builder().key("hello.txt").size(12L).build();
-        com.sun.dionysus.codegen.types.File file = new com.sun.dionysus.codegen.types.File();
-        file.setKey("hello.txt");
-        file.setSize(12);
-
-        ListObjectsV2Response resp = ListObjectsV2Response.builder().contents(obj).build();
-        when(s3Client.listObjectsV2(any(ListObjectsV2Request.class))).thenReturn(resp);
-        when(fileMapper.mapObject(any(S3Object.class))).thenReturn(file);
-
-        List<File> result = filestoreGraphQLService.listFiles("default-bucket");
-
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getKey()).isEqualTo("hello.txt");
-        assertThat(result.get(0).getSize()).isEqualTo(12);
-    }
-    
     @Test
     void putKey_withExplicitName_createsDirectoryAsIs() {
         when(s3Client.putObject(any(PutObjectRequest.class), any(software.amazon.awssdk.core.sync.RequestBody.class)))
@@ -182,16 +184,6 @@ class FilestoreGraphQLServiceTest {
     }
 
     @Test
-    void listFiles_emptyBucket_returnsEmpty() {
-        ListObjectsV2Response resp = ListObjectsV2Response.builder().build();
-        when(s3Client.listObjectsV2(any(ListObjectsV2Request.class))).thenReturn(resp);
-
-        List<File> result = filestoreGraphQLService.listFiles("empty");
-
-        assertThat(result).isEmpty();
-    }
-
-    @Test
     void listKeys_returnsDirectoryAndFileEntries() {
         CommonPrefix prefix = CommonPrefix.builder().prefix("dir/").build();
         S3Object file = S3Object.builder()
@@ -207,25 +199,83 @@ class FilestoreGraphQLServiceTest {
         KeyEntry dirEntry = new KeyEntry();
         dirEntry.setKey("dir/");
         dirEntry.setIsDirectory(true);
+        dirEntry.setName("My Directory");
+        dirEntry.setDescription("Directory description");
 
         KeyEntry fileEntry = new KeyEntry();
         fileEntry.setKey("dir/file.txt");
         fileEntry.setIsDirectory(false);
         fileEntry.setSize(42);
         fileEntry.setLastModified("2024-01-01T10:00:00Z");
+        fileEntry.setName("My File");
+        fileEntry.setDescription("File description");
 
+        KeyDetail dirDetail = new KeyDetail();
+        dirDetail.setName("My Directory");
+        dirDetail.setDescription("Directory description");
+
+        KeyDetail fileDetail = new KeyDetail();
+        fileDetail.setName("My File");
+        fileDetail.setDescription("File description");
+
+        when(keyDetailService.listActiveForBucketAndPath("bucket", "dir/"))
+                .thenReturn(List.of(dirDetail, fileDetail));
         when(s3Client.listObjectsV2(any(ListObjectsV2Request.class))).thenReturn(resp);
-        when(keyEntryMapper.mapDirectory(any(CommonPrefix.class))).thenReturn(dirEntry);
-        when(keyEntryMapper.mapFile(any(S3Object.class))).thenReturn(fileEntry);
+        when(keyEntryMapper.mapDirectory(any(CommonPrefix.class), any(KeyDetail.class))).thenReturn(dirEntry);
+        when(keyEntryMapper.mapFile(any(S3Object.class), any(KeyDetail.class))).thenReturn(fileEntry);
 
         List<KeyEntry> result = filestoreGraphQLService.listKeys("bucket", "dir/");
 
         assertThat(result).hasSize(2);
         assertThat(result.get(0).getKey()).isEqualTo("dir/");
         assertThat(result.get(0).getIsDirectory()).isTrue();
+        assertThat(result.get(0).getName()).isEqualTo("My Directory");
+        assertThat(result.get(0).getDescription()).isEqualTo("Directory description");
         assertThat(result.get(1).getKey()).isEqualTo("dir/file.txt");
         assertThat(result.get(1).getIsDirectory()).isFalse();
         assertThat(result.get(1).getSize()).isEqualTo(42);
+        assertThat(result.get(1).getName()).isEqualTo("My File");
+        assertThat(result.get(1).getDescription()).isEqualTo("File description");
+    }
+
+    @Test
+    void listKeys_withoutKeyDetail_returnsEntriesWithoutMetadata() {
+        CommonPrefix prefix = CommonPrefix.builder().prefix("folder/").build();
+        S3Object file = S3Object.builder()
+                .key("folder/file.txt")
+                .size(100L)
+                .build();
+        ListObjectsV2Response resp = ListObjectsV2Response.builder()
+                .commonPrefixes(prefix)
+                .contents(file)
+                .build();
+
+        KeyEntry dirEntry = new KeyEntry();
+        dirEntry.setKey("folder/");
+        dirEntry.setIsDirectory(true);
+        // name and description are null
+
+        KeyEntry fileEntry = new KeyEntry();
+        fileEntry.setKey("folder/file.txt");
+        fileEntry.setIsDirectory(false);
+        fileEntry.setSize(100);
+        // name and description are null
+
+        when(keyDetailService.listActiveForBucketAndPath("bucket", "folder/"))
+                .thenReturn(List.of()); // No KeyDetail records
+        when(s3Client.listObjectsV2(any(ListObjectsV2Request.class))).thenReturn(resp);
+        when(keyEntryMapper.mapDirectory(any(CommonPrefix.class))).thenReturn(dirEntry);
+        when(keyEntryMapper.mapFile(any(S3Object.class))).thenReturn(fileEntry);
+
+        List<KeyEntry> result = filestoreGraphQLService.listKeys("bucket", "folder/");
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getKey()).isEqualTo("folder/");
+        assertThat(result.get(0).getName()).isNull();
+        assertThat(result.get(0).getDescription()).isNull();
+        assertThat(result.get(1).getKey()).isEqualTo("folder/file.txt");
+        assertThat(result.get(1).getName()).isNull();
+        assertThat(result.get(1).getDescription()).isNull();
     }
 
     @Test

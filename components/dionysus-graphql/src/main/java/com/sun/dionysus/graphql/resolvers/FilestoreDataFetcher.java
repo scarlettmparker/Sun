@@ -34,11 +34,6 @@ public class FilestoreDataFetcher {
     return filestoreGraphQLService.listBuckets();
   }
 
-  @DgsData(parentType = "FilestoreQueries", field = "listFiles")
-  public List<File> listFiles(String bucket) {
-    return filestoreGraphQLService.listFiles(bucket);
-  }
-
   @DgsData(parentType = "FilestoreQueries", field = "listKeys")
   public List<KeyEntry> listKeys(String bucket, String prefix) {
     return filestoreGraphQLService.listKeys(bucket, prefix);

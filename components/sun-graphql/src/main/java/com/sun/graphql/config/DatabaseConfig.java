@@ -33,6 +33,11 @@ public class DatabaseConfig {
   public static class CerberusJpaConfig {
   }
 
+  @Configuration
+  @EnableJpaRepositories(basePackages = "com.sun.dionysus.service.repository", entityManagerFactoryRef = "dionysusEntityManagerFactory", transactionManagerRef = "dionysusTransactionManager")
+  public static class DionysusJpaConfig {
+  }
+
   @Bean(name = "apolloDataSource")
   @ConfigurationProperties(prefix = "spring.datasource.apollo")
   public DataSource apolloDataSource() {
@@ -48,6 +53,12 @@ public class DatabaseConfig {
   @Bean(name = "cerberusDataSource")
   @ConfigurationProperties(prefix = "spring.datasource.cerberus")
   public DataSource cerberusDataSource() {
+    return DataSourceBuilder.create().build();
+  }
+
+  @Bean(name = "dionysusDataSource")
+  @ConfigurationProperties(prefix = "spring.datasource.dionysus")
+  public DataSource dionysusDataSource() {
     return DataSourceBuilder.create().build();
   }
 
@@ -111,6 +122,26 @@ public class DatabaseConfig {
     return em;
   }
 
+  @Bean(name = "dionysusEntityManagerFactory")
+  public LocalContainerEntityManagerFactoryBean dionysusEntityManagerFactory(
+      @Qualifier("dionysusDataSource") DataSource dataSource) {
+    LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
+    em.setDataSource(dataSource);
+    em.setPackagesToScan("com.sun.dionysus.graphql.models");
+
+    HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
+    em.setJpaVendorAdapter(vendorAdapter);
+
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("hibernate.hbm2ddl.auto", "update");
+    properties.put("hibernate.show_sql", "true");
+    properties.put("hibernate.format_sql", "true");
+    properties.put("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
+    em.setJpaPropertyMap(properties);
+
+    return em;
+  }
+
   @Bean(name = "apolloTransactionManager")
   public PlatformTransactionManager apolloTransactionManager(
       @Qualifier("apolloEntityManagerFactory") LocalContainerEntityManagerFactoryBean entityManagerFactory) {
@@ -126,6 +157,12 @@ public class DatabaseConfig {
   @Bean(name = "cerberusTransactionManager")
   public PlatformTransactionManager cerberusTransactionManager(
       @Qualifier("cerberusEntityManagerFactory") LocalContainerEntityManagerFactoryBean entityManagerFactory) {
+    return new JpaTransactionManager(entityManagerFactory.getObject());
+  }
+
+  @Bean(name = "dionysusTransactionManager")
+  public PlatformTransactionManager dionysusTransactionManager(
+      @Qualifier("dionysusEntityManagerFactory") LocalContainerEntityManagerFactoryBean entityManagerFactory) {
     return new JpaTransactionManager(entityManagerFactory.getObject());
   }
 }
