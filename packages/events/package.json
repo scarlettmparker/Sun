@@ -13,7 +13,8 @@
   },
   "scripts": {
     "build": "tsup",
-    "test": "jest --maxWorkers=50%"
+    "test": "jest --maxWorkers=50%",
+    "publish": "npm publish --registry https://registry.int.scarlettparker.co.uk"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",

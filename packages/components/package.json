@@ -14,7 +14,8 @@
   "scripts": {
     "build": "tsup",
     "lint": "npx eslint",
-    "test": "jest --maxWorkers=50%"
+    "test": "jest --maxWorkers=50%",
+    "publish": "npm publish --registry https://registry.int.scarlettparker.co.uk"
   },
   "devDependencies": {
     "@eslint/js": "^9.37.0",
