@@ -19,6 +19,8 @@ type FilestoreQueries {
   listBuckets: [Bucket!]
   # List keys under a prefix, returning objects and directory entries.
   listKeys(bucket: String!, prefix: String): [KeyEntry!]
+  # Locate a single key's metadata by bucket and key path.
+  locate(bucket: String!, keyPath: String!): KeyDetail
 }
 
 # Directory-like entry for a bucket key.
@@ -29,6 +31,19 @@ type KeyEntry {
   lastModified: String
   name: String
   description: String
+}
+
+# Detailed metadata for a specific key.
+type KeyDetail {
+  id: String!
+  bucket: String!
+  keyPath: String!
+  name: String
+  description: String
+  status: String!
+  createdAt: String
+  lastUpdatedAt: String
+  archivedAt: String
 }
 
 # Response payload for the renameKey mutation

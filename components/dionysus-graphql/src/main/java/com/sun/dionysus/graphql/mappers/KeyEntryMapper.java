@@ -1,7 +1,7 @@
 package com.sun.dionysus.graphql.mappers;
 
 import com.sun.dionysus.codegen.types.KeyEntry;
-import com.sun.dionysus.graphql.models.KeyDetail;
+import com.sun.dionysus.graphql.models.KeyDetailEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -39,7 +39,7 @@ public class KeyEntryMapper {
    * @param keyDetail optional KeyDetail with metadata
    * @return the mapped KeyEntry with name/description from KeyDetail if available
    */
-  public KeyEntry mapDirectory(CommonPrefix prefix, KeyDetail keyDetail) {
+  public KeyEntry mapDirectory(CommonPrefix prefix, KeyDetailEntity keyDetail) {
     logger.debug("Mapping directory key entry {}", prefix.prefix());
     KeyEntry entry = new KeyEntry();
     entry.setKey(prefix.prefix());
@@ -77,7 +77,7 @@ public class KeyEntryMapper {
    * @param keyDetail optional KeyDetail with metadata
    * @return the mapped KeyEntry with name/description from KeyDetail if available
    */
-  public KeyEntry mapFile(S3Object object, KeyDetail keyDetail) {
+  public KeyEntry mapFile(S3Object object, KeyDetailEntity keyDetail) {
     logger.debug("Mapping file key entry {}", object.key());
     KeyEntry entry = new KeyEntry();
     entry.setKey(object.key());

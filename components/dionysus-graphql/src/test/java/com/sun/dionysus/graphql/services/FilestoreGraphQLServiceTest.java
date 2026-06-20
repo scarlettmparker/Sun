@@ -13,15 +13,19 @@ import org.springframework.http.ResponseEntity;
 import com.sun.dionysus.codegen.types.Bucket;
 import com.sun.dionysus.codegen.types.File;
 import com.sun.dionysus.codegen.types.KeyEntry;
+import com.sun.dionysus.codegen.types.KeyDetail;
+import com.sun.dionysus.codegen.types.RenameKeyResult;
 import com.sun.dionysus.graphql.mappers.FileMapper;
 import com.sun.dionysus.graphql.mappers.KeyEntryMapper;
+import com.sun.dionysus.graphql.mappers.KeyDetailMapper;
+import com.sun.dionysus.graphql.models.KeyDetailEntity;
+import com.sun.dionysus.graphql.models.Status;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
-import com.sun.dionysus.graphql.models.KeyDetail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
@@ -46,6 +50,9 @@ class FilestoreGraphQLServiceTest {
     private KeyEntryMapper keyEntryMapper;
 
     @Mock
+    private KeyDetailMapper keyDetailMapper;
+
+    @Mock
     private com.sun.dionysus.service.KeyDetailService keyDetailService;
 
     @InjectMocks
@@ -55,7 +62,7 @@ class FilestoreGraphQLServiceTest {
     void setup() {
         when(keyDetailService.listActiveForBucketAndPath(anyString(), anyString())).thenReturn(List.of());
         when(keyDetailService.createOrUpdateDetail(anyString(), anyString(), any())).thenAnswer(invocation -> {
-            KeyDetail d = new KeyDetail();
+            KeyDetailEntity d = new KeyDetailEntity();
             d.setBucket(invocation.getArgument(0));
             d.setKeyPath(invocation.getArgument(1));
             Object n = invocation.getArgument(2);
@@ -210,19 +217,19 @@ class FilestoreGraphQLServiceTest {
         fileEntry.setName("My File");
         fileEntry.setDescription("File description");
 
-        KeyDetail dirDetail = new KeyDetail();
+        KeyDetailEntity dirDetail = new KeyDetailEntity();
         dirDetail.setName("My Directory");
         dirDetail.setDescription("Directory description");
 
-        KeyDetail fileDetail = new KeyDetail();
+        KeyDetailEntity fileDetail = new KeyDetailEntity();
         fileDetail.setName("My File");
         fileDetail.setDescription("File description");
 
         when(keyDetailService.listActiveForBucketAndPath("bucket", "dir/"))
                 .thenReturn(List.of(dirDetail, fileDetail));
         when(s3Client.listObjectsV2(any(ListObjectsV2Request.class))).thenReturn(resp);
-        when(keyEntryMapper.mapDirectory(any(CommonPrefix.class), any(KeyDetail.class))).thenReturn(dirEntry);
-        when(keyEntryMapper.mapFile(any(S3Object.class), any(KeyDetail.class))).thenReturn(fileEntry);
+        when(keyEntryMapper.mapDirectory(any(CommonPrefix.class), any(KeyDetailEntity.class))).thenReturn(dirEntry);
+        when(keyEntryMapper.mapFile(any(S3Object.class), any(KeyDetailEntity.class))).thenReturn(fileEntry);
 
         List<KeyEntry> result = filestoreGraphQLService.listKeys("bucket", "dir/");
 
@@ -398,5 +405,45 @@ class FilestoreGraphQLServiceTest {
         assertThat(result.getHasConflicts()).isFalse();
         verify(s3Client).copyObject(any(CopyObjectRequest.class));
         verify(s3Client).deleteObjects(any(DeleteObjectsRequest.class));
+    }
+
+    @Test
+    void locate_returnsMappedKeyDetail() {
+        KeyDetailEntity entity = new KeyDetailEntity();
+        entity.setBucket("my-bucket");
+        entity.setKeyPath("documents/report.pdf");
+        entity.setName("Quarterly Report");
+        entity.setDescription("Q4 financial summary");
+        entity.setStatus(Status.ACTIVE);
+
+        KeyDetail expected = new KeyDetail();
+        expected.setBucket("my-bucket");
+        expected.setKeyPath("documents/report.pdf");
+        expected.setName("Quarterly Report");
+        expected.setDescription("Q4 financial summary");
+        expected.setStatus("ACTIVE");
+
+        when(keyDetailService.locateByBucketAndKeyPath("my-bucket", "documents/report.pdf"))
+                .thenReturn(Optional.of(entity));
+        when(keyDetailMapper.map(entity)).thenReturn(expected);
+
+        KeyDetail result = filestoreGraphQLService.locate("my-bucket", "documents/report.pdf");
+
+        assertThat(result).isNotNull();
+        assertThat(result.getBucket()).isEqualTo("my-bucket");
+        assertThat(result.getKeyPath()).isEqualTo("documents/report.pdf");
+        assertThat(result.getName()).isEqualTo("Quarterly Report");
+        assertThat(result.getDescription()).isEqualTo("Q4 financial summary");
+        assertThat(result.getStatus()).isEqualTo("ACTIVE");
+    }
+
+    @Test
+    void locate_returnsNullWhenNotFound() {
+        when(keyDetailService.locateByBucketAndKeyPath("my-bucket", "missing.txt"))
+                .thenReturn(Optional.empty());
+
+        KeyDetail result = filestoreGraphQLService.locate("my-bucket", "missing.txt");
+
+        assertThat(result).isNull();
     }
 }

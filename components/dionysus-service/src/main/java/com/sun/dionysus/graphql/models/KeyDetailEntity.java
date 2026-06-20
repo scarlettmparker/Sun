@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "key_detail")
-public class KeyDetail extends BaseEntity {
+public class KeyDetailEntity extends BaseEntity {
 
   @Column
   private LocalDateTime archivedAt;

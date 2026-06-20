@@ -10,10 +10,12 @@ import org.springframework.http.HttpHeaders;
 import com.sun.dionysus.codegen.types.Bucket;
 import com.sun.dionysus.codegen.types.File;
 import com.sun.dionysus.codegen.types.KeyEntry;
+import com.sun.dionysus.codegen.types.KeyDetail;
 import com.sun.dionysus.codegen.types.RenameKeyResult;
 import com.sun.dionysus.graphql.mappers.FileMapper;
 import com.sun.dionysus.graphql.mappers.KeyEntryMapper;
-import com.sun.dionysus.graphql.models.KeyDetail;
+import com.sun.dionysus.graphql.mappers.KeyDetailMapper;
+import com.sun.dionysus.graphql.models.KeyDetailEntity;
 import com.sun.dionysus.service.KeyDetailService;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
@@ -53,6 +55,9 @@ public class FilestoreGraphQLService {
 
   @Autowired
   private KeyEntryMapper keyEntryMapper;
+
+  @Autowired
+  private KeyDetailMapper keyDetailMapper;
 
   @Autowired
   private RestClient.Builder restClientBuilder;
@@ -111,9 +116,9 @@ public class FilestoreGraphQLService {
     }
 
     List<KeyEntry> entries = new ArrayList<>();
-    List<KeyDetail> details = keyDetailService.listActiveForBucketAndPath(bucket, prefix);
-    Map<String, KeyDetail> detailMap = details.stream()
-        .collect(Collectors.toMap(KeyDetail::getKeyPath, d -> d, (a, b) -> a));
+    List<KeyDetailEntity> details = keyDetailService.listActiveForBucketAndPath(bucket, prefix);
+    Map<String, KeyDetailEntity> detailMap = details.stream()
+        .collect(Collectors.toMap(KeyDetailEntity::getKeyPath, d -> d, (a, b) -> a));
     
     for (ListObjectsV2Response page : s3Client.listObjectsV2Paginator(requestBuilder.build())) {
       entries.addAll(page.commonPrefixes().stream()
@@ -128,6 +133,16 @@ public class FilestoreGraphQLService {
 
     logger.info("Found {} directory/file entries for bucket: {} with prefix: {}", entries.size(), bucket, prefix);
     return entries;
+  }
+
+  /**
+   * Locates a single key's detailed metadata by bucket and key path.
+   */
+  public KeyDetail locate(String bucket, String keyPath) {
+    logger.info("Locating key detail for bucket: {} at path: {}", bucket, keyPath);
+    java.util.Optional<KeyDetailEntity> entity =
+        keyDetailService.locateByBucketAndKeyPath(bucket, keyPath);
+    return entity.map(keyDetailMapper::map).orElse(null);
   }
 
   /**

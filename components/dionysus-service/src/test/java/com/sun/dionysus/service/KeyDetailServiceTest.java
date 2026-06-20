@@ -1,8 +1,8 @@
 package com.sun.dionysus.service;
 
-import com.sun.dionysus.graphql.models.KeyDetail;
+import com.sun.dionysus.graphql.models.KeyDetailEntity;
 import com.sun.dionysus.graphql.models.Status;
-import com.sun.dionysus.service.repository.KeyDetailRepository;
+import com.sun.dionysus.service.repository.KeyDetailEntityRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -24,7 +24,7 @@ import static org.mockito.ArgumentMatchers.any;
 class KeyDetailServiceTest {
 
   @Mock
-  private KeyDetailRepository repository;
+  private KeyDetailEntityRepository repository;
 
   @InjectMocks
   private KeyDetailService service;
@@ -33,7 +33,7 @@ class KeyDetailServiceTest {
   void createOrUpdateDetail_createsWhenNotExists() {
     when(repository.findByBucketAndKeyPath(anyString(), anyString())).thenReturn(List.of());
 
-    KeyDetail created = service.createOrUpdateDetail("bkt", "path/file.txt", "file.txt");
+    KeyDetailEntity created = service.createOrUpdateDetail("bkt", "path/file.txt", "file.txt");
 
     assertThat(created.getBucket()).isEqualTo("bkt");
     assertThat(created.getKeyPath()).isEqualTo("path/file.txt");
@@ -43,7 +43,7 @@ class KeyDetailServiceTest {
 
   @Test
   void archiveDetail_marksAsArchived() {
-    KeyDetail d = new KeyDetail();
+    KeyDetailEntity d = new KeyDetailEntity();
     d.setBucket("b");
     d.setKeyPath("k");
     when(repository.findByBucketAndKeyPath("b", "k")).thenReturn(List.of(d));
@@ -57,12 +57,12 @@ class KeyDetailServiceTest {
 
   @Test
   void listActiveForBucketAndPath_returnsActiveRecords() {
-    KeyDetail d = new KeyDetail();
+    KeyDetailEntity d = new KeyDetailEntity();
     d.setStatus(Status.ACTIVE);
     when(repository.findByBucketAndKeyPathStartingWithAndStatus("bkt", "dir/", Status.ACTIVE))
         .thenReturn(List.of(d));
 
-    List<KeyDetail> result = service.listActiveForBucketAndPath("bkt", "dir/");
+    List<KeyDetailEntity> result = service.listActiveForBucketAndPath("bkt", "dir/");
 
     assertThat(result).hasSize(1);
     assertThat(result.get(0).getStatus()).isEqualTo(Status.ACTIVE);
@@ -70,7 +70,7 @@ class KeyDetailServiceTest {
 
   @Test
   void updatePath_updatesKeyPaths() {
-    KeyDetail d = new KeyDetail();
+    KeyDetailEntity d = new KeyDetailEntity();
     d.setKeyPath("old/file.txt");
     when(repository.findByBucketAndKeyPathStartingWith("bkt", "old/")).thenReturn(List.of(d));
 
@@ -78,5 +78,33 @@ class KeyDetailServiceTest {
 
     verify(repository).save(d);
     assertThat(d.getKeyPath()).isEqualTo("new/file.txt");
+  }
+
+  @Test
+  void locateByBucketAndKeyPath_returnsActiveRecord() {
+    KeyDetailEntity d = new KeyDetailEntity();
+    d.setBucket("bkt");
+    d.setKeyPath("dir/file.txt");
+    d.setName("file.txt");
+    d.setStatus(Status.ACTIVE);
+    when(repository.findByBucketAndKeyPathAndStatus("bkt", "dir/file.txt", Status.ACTIVE))
+        .thenReturn(Optional.of(d));
+
+    Optional<KeyDetailEntity> result = service.locateByBucketAndKeyPath("bkt", "dir/file.txt");
+
+    assertThat(result).isPresent();
+    assertThat(result.get().getBucket()).isEqualTo("bkt");
+    assertThat(result.get().getKeyPath()).isEqualTo("dir/file.txt");
+    assertThat(result.get().getName()).isEqualTo("file.txt");
+  }
+
+  @Test
+  void locateByBucketAndKeyPath_returnsEmptyWhenNotFound() {
+    when(repository.findByBucketAndKeyPathAndStatus("bkt", "missing.txt", Status.ACTIVE))
+        .thenReturn(Optional.empty());
+
+    Optional<KeyDetailEntity> result = service.locateByBucketAndKeyPath("bkt", "missing.txt");
+
+    assertThat(result).isEmpty();
   }
 }

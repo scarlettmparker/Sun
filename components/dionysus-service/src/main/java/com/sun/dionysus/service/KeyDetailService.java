@@ -1,8 +1,8 @@
 package com.sun.dionysus.service;
 
-import com.sun.dionysus.graphql.models.KeyDetail;
+import com.sun.dionysus.graphql.models.KeyDetailEntity;
 import com.sun.dionysus.graphql.models.Status;
-import com.sun.dionysus.service.repository.KeyDetailRepository;
+import com.sun.dionysus.service.repository.KeyDetailEntityRepository;
 import com.sun.base.service.BaseService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,13 +19,13 @@ import java.util.UUID;
  */
 @Service
 @Transactional("dionysusTransactionManager")
-public class KeyDetailService extends BaseService<KeyDetail> {
+public class KeyDetailService extends BaseService<KeyDetailEntity> {
 
   private static final Logger logger = LoggerFactory.getLogger(KeyDetailService.class);
 
-  private final KeyDetailRepository keyDetailRepository;
+  private final KeyDetailEntityRepository keyDetailRepository;
 
-  public KeyDetailService(KeyDetailRepository repository) {
+  public KeyDetailService(KeyDetailEntityRepository repository) {
     super(repository);
     this.keyDetailRepository = repository;
   }
@@ -37,7 +37,7 @@ public class KeyDetailService extends BaseService<KeyDetail> {
    * @param prefix the key path prefix (can be null for root)
    * @return list of active KeyDetail entities
    */
-  public List<KeyDetail> listActiveForBucketAndPath(String bucket, String prefix) {
+  public List<KeyDetailEntity> listActiveForBucketAndPath(String bucket, String prefix) {
     logger.debug("Listing active key details for bucket: {} with prefix: {}", bucket, prefix);
     if (prefix == null) {
       return keyDetailRepository.findByBucketAndKeyPathStartingWithAndStatus(bucket, "", Status.ACTIVE);
@@ -54,11 +54,11 @@ public class KeyDetailService extends BaseService<KeyDetail> {
    * @param name the display name (typically the file/folder name)
    * @return the saved KeyDetail entity
    */
-  public KeyDetail createOrUpdateDetail(String bucket, String keyPath, String name) {
+  public KeyDetailEntity createOrUpdateDetail(String bucket, String keyPath, String name) {
     logger.debug("Creating or updating key detail for bucket: {} at path: {}", bucket, keyPath);
 
-    List<KeyDetail> existing = keyDetailRepository.findByBucketAndKeyPath(bucket, keyPath);
-    KeyDetail detail;
+    List<KeyDetailEntity> existing = keyDetailRepository.findByBucketAndKeyPath(bucket, keyPath);
+    KeyDetailEntity detail;
 
     if (existing != null && !existing.isEmpty()) {
       detail = existing.get(0);
@@ -68,7 +68,7 @@ public class KeyDetailService extends BaseService<KeyDetail> {
       detail.setStatus(Status.ACTIVE);
       detail.setArchivedAt(null);
     } else {
-      detail = new KeyDetail();
+      detail = new KeyDetailEntity();
       detail.setBucket(bucket);
       detail.setKeyPath(keyPath);
       detail.setName(name);
@@ -86,7 +86,7 @@ public class KeyDetailService extends BaseService<KeyDetail> {
    * @param keyPath the S3 key path
    * @return Optional containing the KeyDetail if found and active
    */
-  public Optional<KeyDetail> locateByBucketAndKeyPath(String bucket, String keyPath) {
+  public Optional<KeyDetailEntity> locateByBucketAndKeyPath(String bucket, String keyPath) {
     logger.debug("Locating key detail for bucket: {} at path: {}", bucket, keyPath);
     return keyDetailRepository.findByBucketAndKeyPathAndStatus(bucket, keyPath, Status.ACTIVE);
   }
@@ -101,8 +101,8 @@ public class KeyDetailService extends BaseService<KeyDetail> {
   public void archiveDetail(String bucket, String keyPath) {
     logger.info("Archiving key detail for bucket: {} at path: {}", bucket, keyPath);
 
-    List<KeyDetail> list = keyDetailRepository.findByBucketAndKeyPath(bucket, keyPath);
-    for (KeyDetail d : list) {
+    List<KeyDetailEntity> list = keyDetailRepository.findByBucketAndKeyPath(bucket, keyPath);
+    for (KeyDetailEntity d : list) {
       d.setStatus(Status.ARCHIVED);
       d.setArchivedAt(LocalDateTime.now());
       keyDetailRepository.save(d);
@@ -119,9 +119,9 @@ public class KeyDetailService extends BaseService<KeyDetail> {
     logger.info("Archiving key details recursively for bucket: {} with prefix: {}", bucket, keyPrefix);
 
     String prefix = keyPrefix.endsWith("/") ? keyPrefix : keyPrefix + "/";
-    List<KeyDetail> list = keyDetailRepository.findByBucketAndKeyPathStartingWith(bucket, prefix);
+    List<KeyDetailEntity> list = keyDetailRepository.findByBucketAndKeyPathStartingWith(bucket, prefix);
 
-    for (KeyDetail d : list) {
+    for (KeyDetailEntity d : list) {
       d.setStatus(Status.ARCHIVED);
       d.setArchivedAt(LocalDateTime.now());
       keyDetailRepository.save(d);
@@ -142,9 +142,9 @@ public class KeyDetailService extends BaseService<KeyDetail> {
     String srcPrefix = sourceKey.endsWith("/") ? sourceKey : sourceKey + "/";
     String tgtPrefix = targetKey.endsWith("/") ? targetKey : targetKey + "/";
 
-    List<KeyDetail> list = keyDetailRepository.findByBucketAndKeyPathStartingWith(bucket, srcPrefix);
+    List<KeyDetailEntity> list = keyDetailRepository.findByBucketAndKeyPathStartingWith(bucket, srcPrefix);
 
-    for (KeyDetail d : list) {
+    for (KeyDetailEntity d : list) {
       String kp = d.getKeyPath();
       if (kp.equals(sourceKey)) {
         d.setKeyPath(targetKey);

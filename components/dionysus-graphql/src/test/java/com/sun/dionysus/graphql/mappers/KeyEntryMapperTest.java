@@ -1,6 +1,6 @@
 package com.sun.dionysus.graphql.mappers;
 
-import com.sun.dionysus.graphql.models.KeyDetail;
+import com.sun.dionysus.graphql.models.KeyDetailEntity;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -31,7 +31,7 @@ class KeyEntryMapperTest {
   @Test
   void mapDirectory_withKeyDetail_enrichesEntry() {
     CommonPrefix prefix = CommonPrefix.builder().prefix("folder/").build();
-    KeyDetail detail = new KeyDetail();
+    KeyDetailEntity detail = new KeyDetailEntity();
     detail.setName("My Folder");
     detail.setDescription("A folder");
 
@@ -65,7 +65,7 @@ class KeyEntryMapperTest {
         .key("folder/file.txt")
         .size(123L)
         .build();
-    KeyDetail detail = new KeyDetail();
+    KeyDetailEntity detail = new KeyDetailEntity();
     detail.setName("Important File");
     detail.setDescription("Document");
 
