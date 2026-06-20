@@ -46,13 +46,23 @@ public class KeyDetailService extends BaseService<KeyDetailEntity> {
   }
 
   /**
+   * Extracts the display name from a key path — the last segment after the final slash.
+   *
+   * @param keyPath the full S3 key path
+   * @return the display name (e.g. "photo.jpg" from "photos/vacation/photo.jpg")
+   */
+  private String extractName(String keyPath) {
+    int lastSlash = keyPath.lastIndexOf("/");
+    return lastSlash >= 0 ? keyPath.substring(lastSlash + 1) : keyPath;
+  }
+
+  /**
    * Creates a new or updates an existing KeyDetail record.
    * Sets status to ACTIVE and description to empty if not provided.
    *
    * @param bucket the S3 bucket name
    * @param keyPath the S3 key path
-   * @param name the display name (typically the file/folder name)
-   * @return the saved KeyDetail entity
+   @return the saved KeyDetail entity
    */
   public KeyDetailEntity createOrUpdateDetail(String bucket, String keyPath, String name) {
     logger.debug("Creating or updating key detail for bucket: {} at path: {}", bucket, keyPath);
@@ -64,14 +74,14 @@ public class KeyDetailService extends BaseService<KeyDetailEntity> {
       detail = existing.get(0);
       detail.setBucket(bucket);
       detail.setKeyPath(keyPath);
-      detail.setName(name != null ? name : detail.getName());
+      detail.setName(extractName(keyPath));
       detail.setStatus(Status.ACTIVE);
       detail.setArchivedAt(null);
     } else {
       detail = new KeyDetailEntity();
       detail.setBucket(bucket);
       detail.setKeyPath(keyPath);
-      detail.setName(name);
+      detail.setName(extractName(keyPath));
       detail.setDescription("");
       detail.setStatus(Status.ACTIVE);
     }
@@ -144,14 +154,28 @@ public class KeyDetailService extends BaseService<KeyDetailEntity> {
 
     List<KeyDetailEntity> list = keyDetailRepository.findByBucketAndKeyPathStartingWith(bucket, srcPrefix);
 
+    if (!sourceKey.endsWith("/")) {
+      List<KeyDetailEntity> exact = keyDetailRepository.findByBucketAndKeyPath(bucket, sourceKey);
+      for (KeyDetailEntity entity : exact) {
+        if (list.stream().noneMatch(e -> e.getKeyPath().equals(entity.getKeyPath()))) {
+          list.add(entity);
+        }
+      }
+    }
+
     for (KeyDetailEntity d : list) {
       String kp = d.getKeyPath();
+      String newKp;
       if (kp.equals(sourceKey)) {
-        d.setKeyPath(targetKey);
+        newKp = targetKey;
       } else if (kp.startsWith(srcPrefix)) {
         String suffix = kp.substring(srcPrefix.length());
-        d.setKeyPath(tgtPrefix + suffix);
+        newKp = tgtPrefix + suffix;
+      } else {
+        continue;
       }
+      d.setKeyPath(newKp);
+      d.setName(extractName(newKp));
       keyDetailRepository.save(d);
     }
   }
