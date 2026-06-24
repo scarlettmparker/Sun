@@ -5,7 +5,6 @@
 import { renderApp } from "../utils/ssr.js";
 import { base, isProduction } from "../config.js";
 import { Buffer } from "buffer";
-import { pageDataRpcHandler } from "@sun/ssr";
 
 /**
  * Reads a named cookie value from a raw Cookie header.
@@ -33,7 +32,6 @@ function getCookieValue(cookieHeader, name) {
  * @param {object} vite - The Vite dev server instance (optional, only in development).
  */
 export function setupRoutes(app, vite) {
-  app.post("/__page-data", pageDataRpcHandler());
   /**
    * Catch-all route for server-side rendering of pages.
    * This route handles all GET requests not otherwise handled by static file serving or specific API routes.

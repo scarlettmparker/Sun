@@ -40,7 +40,7 @@
     "vite": "^6.0.0"
   },
   "dependencies": {
-    "@sun/ssr": "^0.1.0",
+    "@sun/ssr": "^0.2.0",
     "@posthog/react": "^1.9.0",
     "@testing-library/user-event": "^14.6.1",
     "@vitejs/plugin-react-swc": "^3.7.0",
