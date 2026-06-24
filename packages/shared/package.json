@@ -1,6 +1,6 @@
 {
   "name": "@sun/shared",
-  "version": "0.2.0",
+  "version": "0.2.11",
   "description": "Shared constants and types across Sun ecosystem apps",
   "main": "./src/index.ts",
   "module": "./src/index.ts",
