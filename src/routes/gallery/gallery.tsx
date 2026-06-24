@@ -7,7 +7,7 @@ import {
 } from "@sun/components";
 
 import styles from "./gallery.module.css";
-import { getPageData, pageDataRegistry } from "~/utils/page-data";
+import { getPageData, pageDataRegistry } from "@sun/ssr";
 import { ListGalleryItemsQuery } from "~/generated/graphql";
 import { fetchListGalleryItems } from "~/utils/api";
 import { MarkdownViewer } from "@sun/components";

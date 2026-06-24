@@ -1,10 +1,10 @@
-import { mutationRegistry } from "~/utils/mutations";
-import { MutationResult } from "~/server/actions/utils";
+import { mutationRegistry } from "@sun/ssr";
+import { MutationResult } from "@sun/ssr";
 import { mutateCreateBlogPost } from "~/utils/api";
 import { BlogPostInput } from "~/generated/graphql";
-import { makeCacheKey } from "~/utils/page-data";
+import { makeCacheKey } from "@sun/ssr";
 import CreateBlogForm from "~/_components/blog/create/";
-import { ServerRedirectError } from "~/utils/server-redirect";
+import { ServerRedirectError } from "@sun/ssr";
 
 const CreateBlogPostPage = () => {
   return <CreateBlogForm />;

@@ -3,7 +3,7 @@ import { LocateBlogPostQuery } from "~/generated/graphql";
 import { fetchLocateBlogPost } from "~/utils/api";
 import { useParams } from "react-router-dom";
 
-import { pageDataRegistry, getPageData } from "~/utils/page-data";
+import { pageDataRegistry, getPageData } from "@sun/ssr";
 import styles from "./blog-post.module.css";
 import { Card, CardBody } from "@sun/components";
 

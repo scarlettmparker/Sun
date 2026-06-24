@@ -1,4 +1,4 @@
-import { MutationResult } from "~/server/actions/utils";
+import type { MutationResult } from "./client-mutation";
 
 export class ServerRedirectError extends Error {
   public statusCode: number;

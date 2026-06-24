@@ -1,6 +1,6 @@
 /**
- * Generic page data fetching utilities for SSR.
- * Provides a registry for page data loaders and a function to fetch data for any page.
+ * Generic page-data fetching utilities for SSR.
+ * Provides a registry for page-data loaders and a suspense cache for data loading.
  */
 
 type PageDataLoader = (
@@ -20,19 +20,35 @@ function notifyCacheHydrated() {
   cacheHydratedListeners.forEach((listener) => listener());
 }
 
-const FILESTORE_CACHE_TTL = 30000; // 30 seconds
-
 /**
- * Cache TTL configuration in milliseconds.
- * Maps cache key patterns to their time-to-live values.
- * Default is 5 minutes (300000ms) if pattern not specified.
+ * Cache TTL configuration. Apps override via configurePageData() at boot.
  */
-const CACHE_TTL_MS: Record<string, number> = {
-  "/bucket/:alias": FILESTORE_CACHE_TTL,
-  "/bucket/:alias/:path": FILESTORE_CACHE_TTL,
+const cacheTtlConfig: {
+  defaultMs: number;
+  perPattern: Record<string, number>;
+} = {
+  defaultMs: 300000, // 5 minutes default
+  perPattern: {},
 };
 
-const DEFAULT_CACHE_TTL_MS = 300000; // 5 minutes default
+/**
+ * Configures page-data cache TTL. Call once at app boot (e.g. from the app's
+ * register-loaders module) before any loader runs.
+ *
+ * @param opts.defaultTtlMs   Default TTL for patterns without an explicit override.
+ * @param opts.perPatternTtl  Map of normalized route pattern (e.g. "/bucket/:alias") to TTL in ms.
+ */
+export function configurePageData(opts: {
+  defaultTtlMs?: number;
+  perPatternTtl?: Record<string, number>;
+}): void {
+  if (opts.defaultTtlMs !== undefined) {
+    cacheTtlConfig.defaultMs = opts.defaultTtlMs;
+  }
+  if (opts.perPatternTtl) {
+    Object.assign(cacheTtlConfig.perPattern, opts.perPatternTtl);
+  }
+}
 
 /**
  * Cache for React Suspense-based data loading.
@@ -57,14 +73,11 @@ export const suspenseCache = new Map<
  */
 function getCacheTTL(pattern: string): number {
   const normalized = pattern.startsWith("/") ? pattern : "/" + pattern;
-  return CACHE_TTL_MS[normalized] ?? DEFAULT_CACHE_TTL_MS;
+  return cacheTtlConfig.perPattern[normalized] ?? cacheTtlConfig.defaultMs;
 }
 
 /**
  * Checks if a cache entry has expired.
- * @param record The cache record
- * @param pattern The route pattern
- * @returns True if expired, false otherwise
  */
 function isCacheExpired(
   record: { timestamp?: number },
@@ -75,13 +88,9 @@ function isCacheExpired(
   const age = Date.now() - record.timestamp;
   return age > ttl;
 }
+
 /**
  * Hydrates the page data cache with initial data from the server.
- * This populates the suspense cache with resolved data for each key in the initialData object.
- * It also handles normalized keys by adding a leading slash if missing and creates duplicate entries for normalized patterns.
- * After hydration, it notifies all registered listeners that the cache has been hydrated.
- *
- * @param initialData - An object containing initial page data keyed by cache keys, where each value is the data for that key.
  */
 export function hydratePageData(
   initialData: Record<string, Record<string, unknown>>,
@@ -91,7 +100,6 @@ export function hydratePageData(
   }
 
   Object.keys(initialData).forEach((key) => {
-    // Set the data in the suspense cache as resolved with current timestamp
     suspenseCache.set(key, {
       status: "resolved",
       result: initialData[key],
@@ -103,12 +111,10 @@ export function hydratePageData(
     if (colonIndex !== -1) {
       const patternPart = key.slice(0, colonIndex);
       const rest = key.slice(colonIndex);
-      // Ensure the pattern starts with a slash
       const normalizedPattern = patternPart.startsWith("/")
         ? patternPart
         : "/" + patternPart;
       const normalizedKey = `${normalizedPattern}${rest}`;
-      // Avoid overwriting existing normalized keys
       if (!suspenseCache.has(normalizedKey)) {
         suspenseCache.set(normalizedKey, {
           status: "resolved",
@@ -119,15 +125,13 @@ export function hydratePageData(
     }
   });
 
-  // Notify listeners that cache has been hydrated
   notifyCacheHydrated();
 }
 
 /**
  * Registry of page data loaders.
- * Maps page names to their data loading functions.
+ * Maps route patterns to their data-loading functions (multiple allowed).
  */
-// Allow multiple loaders per page name (e.g. layout + outlet)
 export const pageDataLoaders: Record<string, PageDataLoader[]> = {};
 
 type PageDataCache = Record<
@@ -136,25 +140,15 @@ type PageDataCache = Record<
 >;
 
 /**
- * Cache for page data to avoid re-fetching on every request.
- * Only used in production.
+ * Cache for page data to avoid re-fetching on every request (production only).
  */
 const pageDataCache: PageDataCache = {};
 
-/**
- * Registers a data loader for a specific page.
- * @param pattern The route pattern (e.g., 'blog', 'blog/:id').
- * @param loader Function that fetches data for the page.
- */
 function registerPageDataLoader(pattern: string, loader: PageDataLoader): void {
   const list = pageDataLoaders[pattern] || [];
-
-  // avoid duplicate registration of the same function
   if (!list.includes(loader)) {
     list.push(loader);
     pageDataLoaders[pattern] = list;
-
-    // invalidate cache entries for this page
     Object.keys(pageDataCache).forEach((key) => {
       if (key.includes(pattern)) {
         delete pageDataCache[key];
@@ -163,10 +157,6 @@ function registerPageDataLoader(pattern: string, loader: PageDataLoader): void {
   }
 }
 
-/**
- * Unregisters a data loader for a specific page.
- * @param pattern The route pattern to unregister.
- */
 function unregisterPageDataLoader(pattern: string): void {
   delete pageDataLoaders[pattern];
   Object.keys(pageDataCache).forEach((key) => {
@@ -176,28 +166,16 @@ function unregisterPageDataLoader(pattern: string): void {
   });
 }
 
-/**
- * Checks if a data loader is registered for a given page.
- * @param pageName The route pattern.
- * @returns True if a loader is registered, false otherwise.
- */
 function hasPageDataLoader(pattern: string): boolean {
   return !!pageDataLoaders[pattern]?.length;
 }
 
-/**
- * Gets all registered page names.
- * @returns Array of registered page names.
- */
 function getRegisteredPageNames(): string[] {
   return Object.keys(pageDataLoaders);
 }
 
 /**
  * Creates a normalized cache key for the given pattern and params.
- * @param pattern The route pattern.
- * @param params Optional parameters.
- * @returns The cache key string.
  */
 export function makeCacheKey(
   pattern: string,
@@ -208,13 +186,30 @@ export function makeCacheKey(
 }
 
 /**
- * Reads page data from the suspense cache, initiating fetch if not cached.
+ * Client-side RPC: asks the server to run the registered loaders for a pattern
+ * and return the merged data. Keeps all backend fetching server-side.
+ */
+export async function fetchPageDataRpc(
+  pattern: string,
+  params?: Record<string, unknown>,
+): Promise<Record<string, unknown> | null> {
+  try {
+    const res = await fetch("/__page-data", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pattern, params }),
+    });
+    if (!res.ok) return null;
+    const json = (await res.json()) as { data?: Record<string, unknown> };
+    return (json && json.data) || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Reads page data from the suspense cache, initiating a fetch if not cached.
  * Used internally for suspense-based data loading.
- *
- * @param key The data key to retrieve.
- * @param pattern The route pattern.
- * @param params Optional parameters for the data loader.
- * @returns An object with the data, or throws a promise if pending.
  */
 function readPageData<T>(
   key: string,
@@ -224,7 +219,6 @@ function readPageData<T>(
   const cacheKey = makeCacheKey(`${pattern}:${key}`, params);
   let record = suspenseCache.get(cacheKey);
 
-  // Check if cached record exists and has expired
   if (
     record &&
     record.status === "resolved" &&
@@ -235,36 +229,34 @@ function readPageData<T>(
   }
 
   if (!record) {
-    // Find the loaders registered for this pattern
     const loaders = pageDataLoaders[pattern];
+    const relevantLoaders = loaders?.filter(() => true) || [];
 
-    // Find loaders that return the specific key we need
-    const relevantLoaders =
-      loaders?.filter(() => {
-        // We can't easily check what key a loader returns without calling it
-        // So we'll call it and let it handle the logic
-        return true;
-      }) || [];
-
-    if (!relevantLoaders.length) {
+    // On the server, no registered loaders means no data. The client never runs
+    // loaders — it fetches via the /__page-data RPC instead.
+    if (typeof window === "undefined" && !relevantLoaders.length) {
       return { data: null as T };
     }
 
-    // Create record FIRST to ensure consistent reference in promise callbacks
     record = { status: "pending" };
     suspenseCache.set(cacheKey, record);
 
-    // Initiate the data fetch
-    const promise = Promise.all(relevantLoaders.map((l) => l(params)))
-      .then((results) => {
-        const merged: Record<string, unknown> = {};
-        for (const r of results) {
-          if (r && typeof r === "object") {
-            Object.assign(merged, r);
-          }
-        }
+    const loadPromise: Promise<Record<string, unknown> | null> =
+      typeof window === "undefined"
+        ? Promise.all(relevantLoaders.map((l) => l(params))).then((results) => {
+            const merged: Record<string, unknown> = {};
+            for (const r of results) {
+              if (r && typeof r === "object") {
+                Object.assign(merged, r);
+              }
+            }
+            return merged;
+          })
+        : fetchPageDataRpc(pattern, params);
 
-        if (merged[key] == null) {
+    const promise = loadPromise
+      .then((merged) => {
+        if (!merged || merged[key] == null) {
           record!.status = "rejected";
           record!.error = new Error(`No data returned for key: ${key}`);
           return null;
@@ -289,18 +281,17 @@ function readPageData<T>(
     throw record!.promise;
   }
   if (record!.status === "rejected") {
-    throw record!.error; // Error Boundary will catch this
+    throw record!.error;
   }
 
-  // Return the resolved data
   return { data: record!.result![key] as T };
 }
 
 /**
  * Hook to read page data.
  *
- * @param key Data key to read (e.g., 'blogPosts')
- * @param pattern The route pattern (e.g., 'blog')
+ * @param key Data key to read (e.g., 'keys')
+ * @param pattern The route pattern (e.g., 'bucket/:alias/*')
  * @param params API parameters
  */
 export function getPageData<T>(
@@ -311,7 +302,6 @@ export function getPageData<T>(
   const cacheKey = makeCacheKey(`${pattern}:${key}`, params);
   let record = suspenseCache.get(cacheKey);
 
-  // Check if cached record has expired
   if (
     record &&
     record.status === "resolved" &&
@@ -321,12 +311,10 @@ export function getPageData<T>(
     record = undefined;
   }
 
-  // Fallback check to support key structures that were populated via hydratePageData
+  // Fallback check to support key structures populated via hydratePageData
   if (!record) {
     const legacyHydrationKey = makeCacheKey(pattern, params);
     record = suspenseCache.get(legacyHydrationKey);
-
-    // Check expiration on legacy key too
     if (
       record &&
       record.status === "resolved" &&
@@ -337,7 +325,6 @@ export function getPageData<T>(
     }
   }
 
-  // If cache is invalidated or doesn't exist, execute/trigger fetch strategy
   if (typeof window === "undefined" || !record) {
     return readPageData(key, pattern, params);
   }
@@ -348,12 +335,8 @@ export function getPageData<T>(
   return { data: (record.result as Record<string, unknown>)?.[key] as T };
 }
 
-/**
- * Parses a cache invalidation cookie value into an array of patterns.
- *
- * @param cookieValue The raw cookie value to parse.
- * @returns An array of string patterns to invalidate.
- */
+// --- invalidation ----------------------------------------------------------
+
 function parseInvalidationPatterns(cookieValue: string): string[] {
   try {
     const decoded = decodeURIComponent(cookieValue);
@@ -367,13 +350,6 @@ function parseInvalidationPatterns(cookieValue: string): string[] {
   return [cookieValue];
 }
 
-/**
- * Checks if an actual cache parameter matches the expected pattern parameter.
- *
- * @param expectedValue The pattern value to match against (can include '*').
- * @param actualValue The actual value extracted from the cache key.
- * @returns True if the values match, false otherwise.
- */
 function matchesParameter(
   expectedValue: unknown,
   actualValue: unknown,
@@ -385,13 +361,6 @@ function matchesParameter(
   return actualValue === expectedValue;
 }
 
-/**
- * Sweeps the suspense cache and removes entries that match the given base pattern
- * and parameter conditions.
- *
- * @param patternBase Base string of the cache key (before the JSON params).
- * @param patternParams Parsed JSON parameters containing expected values.
- */
 function sweepCacheByPattern(
   patternBase: string,
   patternParams: Record<string, unknown>,
@@ -405,35 +374,27 @@ function sweepCacheByPattern(
     try {
       const cacheParams = JSON.parse(cacheKey.slice(cacheFirstBrace));
       let isMatch = true;
-
-      // Ensure every parameter in the pattern matches the cache key's parameter
       for (const [key, expectedValue] of Object.entries(patternParams)) {
         if (!matchesParameter(expectedValue, cacheParams[key])) {
           isMatch = false;
           break;
         }
       }
-
       if (isMatch) {
         suspenseCache.delete(cacheKey);
       }
     } catch {
-      // Skip cache keys with malformed JSON
       continue;
     }
   }
 }
 
 /**
- * Invalidates specific entries in the suspense cache based on a cookie payload.
- *
- * @param invalidateCacheCookie Raw cookie value containing invalidation patterns.
+ * Removes suspense-cache entries matching the given cache-key patterns.
+ * Handles exact keys, base-pattern fallbacks, and wildcard parameter sweeps.
  */
-export function invalidateCache(invalidateCacheCookie: string): boolean {
-  const patterns = parseInvalidationPatterns(invalidateCacheCookie);
-
+export function invalidateCacheKeys(patterns: string[]): boolean {
   for (const pattern of patterns) {
-    // Handle exact cache key invalidation
     if (suspenseCache.has(pattern)) {
       suspenseCache.delete(pattern);
       continue;
@@ -441,7 +402,6 @@ export function invalidateCache(invalidateCacheCookie: string): boolean {
 
     const firstBrace = pattern.indexOf("{");
 
-    // Standard base pattern fallback (No JSON parameters present)
     if (firstBrace === -1) {
       const baseKey = pattern.replace(/:keys({.*})$/, "$1");
       if (baseKey !== pattern) {
@@ -450,27 +410,109 @@ export function invalidateCache(invalidateCacheCookie: string): boolean {
       continue;
     }
 
-    // Handle parameter-based and wildcard invalidations
     try {
       const patternBase = pattern.slice(0, firstBrace);
       const patternParams = JSON.parse(pattern.slice(firstBrace));
-
       const hasWildcard = Object.values(patternParams).some(
         (v) => typeof v === "string" && v.endsWith("*"),
       );
-
-      // Only execute sweep if a wildcard parameter was explicitly requested
       if (hasWildcard) {
         sweepCacheByPattern(patternBase, patternParams);
       }
-    } catch (e) {}
+    } catch {
+      // skip malformed patterns
+    }
   }
 
   return true;
 }
 
 /**
- * Page Data registry interface.
+ * Invalidates suspense-cache entries from a (legacy) redirect-driven
+ * invalidation cookie payload. Used during SSR.
+ */
+export function invalidateCache(invalidateCacheCookie: string): boolean {
+  return invalidateCacheKeys(parseInvalidationPatterns(invalidateCacheCookie));
+}
+
+// --- client-side reactivity -------------------------------------------------
+// Framework-agnostic pub/sub so the React hook (react.ts) can react to
+// invalidation/revalidation without a circular import. Listeners receive the
+// cache keys that should be refreshed (or undefined for a blanket refresh).
+type InvalidationListener = (cacheKeys?: string[]) => void;
+
+const invalidationSubscribers = new Set<InvalidationListener>();
+
+export function subscribeDataInvalidation(
+  fn: InvalidationListener,
+): () => void {
+  invalidationSubscribers.add(fn);
+  return () => {
+    invalidationSubscribers.delete(fn);
+  };
+}
+
+function emitDataInvalidation(cacheKeys?: string[]): void {
+  invalidationSubscribers.forEach((fn) => fn(cacheKeys));
+}
+
+/**
+ * Hard-clears client cache entries matching `patterns` then notifies. This
+ * forces consumers to re-suspend, so prefer revalidatePageData for mutations.
+ */
+export function invalidatePageData(patterns?: string[]): void {
+  if (patterns && patterns.length) {
+    invalidateCacheKeys(patterns);
+  }
+  emitDataInvalidation();
+}
+
+/**
+ * Notifies usePageData consumers to background-refetch the given cache keys in
+ * place — stale data stays visible until fresh data arrives, so there is no
+ * suspense flash. Use this after mutations.
+ */
+export function revalidatePageData(cacheKeys?: string[]): void {
+  emitDataInvalidation(cacheKeys);
+}
+
+/**
+ * Background-refetch a single cache entry via /__page-data and update it in
+ * place, then call onUpdate so the consumer re-renders with the fresh data.
+ */
+export function refetchEntry(
+  key: string,
+  pattern: string,
+  params: Record<string, unknown> | undefined,
+  onUpdate: () => void,
+): void {
+  fetchPageDataRpc(pattern, params)
+    .then((merged) => {
+      if (!merged) return;
+      const cacheKey = makeCacheKey(`${pattern}:${key}`, params);
+      const record = suspenseCache.get(cacheKey);
+      if (record) {
+        record.status = "resolved";
+        record.result = merged;
+        record.timestamp = Date.now();
+        record.promise = undefined;
+        record.error = undefined;
+      } else {
+        suspenseCache.set(cacheKey, {
+          status: "resolved",
+          result: merged,
+          timestamp: Date.now(),
+        });
+      }
+      onUpdate();
+    })
+    .catch(() => {
+      // keep stale data on refetch failure
+    });
+}
+
+/**
+ * Page-data registry interface.
  */
 interface PageDataRegistry {
   registerPageDataLoader: (pageName: string, loader: PageDataLoader) => void;
@@ -487,3 +529,5 @@ export const pageDataRegistry: PageDataRegistry = {
   getRegisteredPageNames,
   pageDataCache,
 };
+
+export type { PageDataLoader };

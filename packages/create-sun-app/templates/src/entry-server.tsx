@@ -8,8 +8,7 @@ import NotFound from "./routes/not-found";
 import { matchRoutes } from "react-router-dom";
 import { inlineCss, generateCssTag } from "./utils/css-inlining";
 import "./utils/register-loaders";
-import { suspenseCache, invalidateCache } from "./utils/page-data";
-import { MutationResult } from "./server/actions/utils";
+import { suspenseCache, invalidateCache, type MutationResult } from "@sun/ssr";
 import fs from "fs";
 import path from "path";
 

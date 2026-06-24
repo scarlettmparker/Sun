@@ -16,8 +16,7 @@ import {
   backendPort,
 } from "./config.js";
 import { setupRoutes } from "./routes/index.js";
-import { executeMutation } from "./src/utils/mutations.ts";
-import { ServerRedirectError } from "./src/utils/server-redirect";
+import { mutationRegistry, ServerRedirectError } from "@sun/ssr";
 import { Buffer } from "buffer";
 
 import "./src/utils/register-loaders.ts";
@@ -79,7 +78,10 @@ app.route({
     const mutationPath = (request.url || "").split("?")[0].slice(1);
 
     try {
-      const result = await executeMutation(mutationPath, request.body);
+      const result = await mutationRegistry.executeMutation(
+        mutationPath,
+        request.body,
+      );
 
       if (result.__typename === "QuerySuccess") {
         return reply.send(result);

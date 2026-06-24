@@ -3,10 +3,10 @@
  * Provides a registry for mutation handlers and a function to execute mutations.
  */
 
-import { MutationResult } from "~/server/actions/utils";
+import { MutationResult } from "./client-mutation";
 import { ServerRedirectError } from "./server-redirect";
 
-type MutationHandler = (
+export type MutationHandler = (
   body: Record<string, unknown>,
 ) => Promise<MutationResult>;
 
@@ -27,7 +27,7 @@ function registerMutationHandler(path: string, handler: MutationHandler): void {
  * @param body The request body.
  * @returns Promise resolving to the mutation result.
  */
-export async function executeMutation(
+async function executeMutation(
   path: string,
   body: Record<string, unknown>,
 ): Promise<MutationResult> {

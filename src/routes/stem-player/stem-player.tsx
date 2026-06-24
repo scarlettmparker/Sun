@@ -1,5 +1,5 @@
 import { fetchListSongs } from "~/utils/api";
-import { pageDataRegistry, getPageData } from "~/utils/page-data";
+import { pageDataRegistry, getPageData } from "@sun/ssr";
 import { ListSongsQuery } from "~/generated/graphql";
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "@sun/components";

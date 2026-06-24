@@ -1,4 +1,4 @@
-import { MutationResult, executeMutation } from "./utils";
+import { MutationResult, executeMutation } from "@sun/ssr";
 
 /**
  * Creates a new blog post.
@@ -28,6 +28,10 @@ export async function createBlogPost(
       content: content.trim(),
     },
   });
+
+  if (result.__typename === "Redirect") {
+    window.location.assign(result.redirectTo);
+  }
 
   return result;
 }

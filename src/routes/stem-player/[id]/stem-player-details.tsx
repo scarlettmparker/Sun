@@ -5,7 +5,7 @@ import {
   Song,
 } from "~/generated/graphql";
 import StemPlayer from "~/_components/stem-player";
-import { pageDataRegistry, getPageData } from "~/utils/page-data";
+import { pageDataRegistry, getPageData } from "@sun/ssr";
 import { useParams } from "react-router-dom";
 import styles from "./stem-player-details.module.css";
 import { getStemPlayerData } from "../stem-player";

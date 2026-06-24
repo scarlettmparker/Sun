@@ -48,6 +48,7 @@ export default defineConfig(() => {
         "posthog-js",
         "@posthog/react",
         "@sun/components",
+        "@sun/ssr",
       ],
     },
   };

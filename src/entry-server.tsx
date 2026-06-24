@@ -8,8 +8,8 @@ import NotFound from "./routes/not-found";
 import { matchRoutes } from "react-router-dom";
 import { inlineCss, generateCssTag } from "./utils/css-inlining";
 import "./utils/register-loaders";
-import { suspenseCache, makeCacheKey } from "./utils/page-data";
-import { MutationResult } from "./server/actions/utils";
+import { suspenseCache, makeCacheKey } from "@sun/ssr";
+import { MutationResult } from "@sun/ssr";
 
 type i18n = {
   /**

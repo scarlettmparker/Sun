@@ -1,6 +1,6 @@
 import { ListBlogPostsQuery } from "~/generated/graphql";
 import { fetchListBlogPosts } from "~/utils/api";
-import { pageDataRegistry, getPageData } from "~/utils/page-data";
+import { pageDataRegistry, getPageData } from "@sun/ssr";
 import { useTranslation } from "react-i18next";
 import styles from "./blog.module.css";
 import { groupPostsByMonthYear } from "./group-posts-by-month-year";
