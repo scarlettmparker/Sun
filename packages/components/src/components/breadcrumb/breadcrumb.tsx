@@ -51,7 +51,9 @@ type BreadcrumbContextValue = {
   deleteAllBreadcrumbs: () => void;
 };
 
-export const BreadcrumbContext = createContext<BreadcrumbContextValue | null>(null);
+export const BreadcrumbContext = createContext<BreadcrumbContextValue | null>(
+  null,
+);
 
 type BreadcrumbProps = React.HTMLAttributes<HTMLElement> & {
   /**

@@ -261,9 +261,14 @@ type ContextMenuItemProps = React.ComponentProps<typeof Button> & {
  */
 const ContextMenuItem = (props: ContextMenuItemProps) => {
   const { close } = useContextMenu();
-  return <MenuItem {...props} className={cn("context_menu_item", props.className)} closeMenu={close} />;
+  return (
+    <MenuItem
+      {...props}
+      className={cn("context_menu_item", props.className)}
+      closeMenu={close}
+    />
+  );
 };
-
 
 /**
  * ContextMenuGroup groups related menu items together visually and semantically.
@@ -285,11 +290,16 @@ type ContextMenuSubProps = React.HTMLAttributes<HTMLDivElement>;
  */
 const ContextMenuSub = (props: ContextMenuSubProps) => {
   const { resetNonce } = useContextMenu();
-  return <MenuSub {...props} className={cn("context_menu_sub", props.className)} resetNonce={resetNonce} />;
+  return (
+    <MenuSub
+      {...props}
+      className={cn("context_menu_sub", props.className)}
+      resetNonce={resetNonce}
+    />
+  );
 };
 
 type ContextMenuSubTriggerProps = React.ComponentProps<typeof Button>;
-
 
 /**
  * ContextMenuSubTrigger acts as a bridge interactive row element that expands
@@ -310,7 +320,10 @@ type ContextMenuSubContentProps = React.HTMLAttributes<HTMLDivElement>;
  * nested context submenu when its trigger is active.
  */
 const ContextMenuSubContent = (props: ContextMenuSubContentProps) => (
-  <MenuSubContent {...props} className={cn("context_menu_subcontent", props.className)} />
+  <MenuSubContent
+    {...props}
+    className={cn("context_menu_subcontent", props.className)}
+  />
 );
 
 export default ContextMenu;

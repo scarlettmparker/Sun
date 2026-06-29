@@ -62,8 +62,9 @@ type DropdownMenuContextValue = {
 /**
  * React context for sharing dropdown menu state (open, trigger ref, ids, etc.).
  */
-const DropdownMenuContext = createContext<DropdownMenuContextValue | null>(null);
-
+const DropdownMenuContext = createContext<DropdownMenuContextValue | null>(
+  null,
+);
 
 /**
  * Scarlet Ui Dropdown Menu.
@@ -147,7 +148,9 @@ const DropdownMenu = (props: React.HTMLAttributes<HTMLDivElement>) => {
 const useDropdownMenu = () => {
   const ctx = useContext(DropdownMenuContext);
   if (!ctx) {
-    throw new Error("DropdownMenu components must be used inside a DropdownMenu");
+    throw new Error(
+      "DropdownMenu components must be used inside a DropdownMenu",
+    );
   }
   return ctx;
 };
@@ -248,7 +251,9 @@ type DropdownMenuItemProps = React.ComponentProps<typeof Button> & {
  */
 const DropdownMenuItem = (props: DropdownMenuItemProps) => {
   const { close } = useDropdownMenu();
-  return <MenuItem {...props} className="dropdown_menu_item" closeMenu={close} />;
+  return (
+    <MenuItem {...props} className="dropdown_menu_item" closeMenu={close} />
+  );
 };
 
 /**
@@ -257,7 +262,11 @@ const DropdownMenuItem = (props: DropdownMenuItemProps) => {
 const DropdownMenuGroup = (props: React.HTMLAttributes<HTMLDivElement>) => {
   const { className, children, ...rest } = props;
   return (
-    <div className={cn("dropdown_menu_group", className)} role="group" {...rest}>
+    <div
+      className={cn("dropdown_menu_group", className)}
+      role="group"
+      {...rest}
+    >
       {children}
     </div>
   );
@@ -271,7 +280,9 @@ type DropdownMenuSubProps = React.HTMLAttributes<HTMLDivElement>;
  */
 const DropdownMenuSub = (props: DropdownMenuSubProps) => {
   const { resetNonce } = useDropdownMenu();
-  return <MenuSub {...props} className="dropdown_menu_sub" resetNonce={resetNonce} />;
+  return (
+    <MenuSub {...props} className="dropdown_menu_sub" resetNonce={resetNonce} />
+  );
 };
 
 type DropdownMenuSubTriggerProps = React.ComponentProps<typeof Button>;

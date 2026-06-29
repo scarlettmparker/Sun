@@ -55,8 +55,14 @@ describe("Menu primitives", () => {
     };
     render(<TestIds />);
     const el = screen.getByText("ids");
-    expect(el).toHaveAttribute("data-tid", expect.stringContaining("dropdown-menu-trigger-"));
-    expect(el).toHaveAttribute("data-cid", expect.stringContaining("dropdown-menu-content-"));
+    expect(el).toHaveAttribute(
+      "data-tid",
+      expect.stringContaining("dropdown-menu-trigger-"),
+    );
+    expect(el).toHaveAttribute(
+      "data-cid",
+      expect.stringContaining("dropdown-menu-content-"),
+    );
   });
 
   it("MenuItem renders, handles click/Enter/Space, calls onSelect+closeMenu, skips when disabled", () => {
@@ -122,7 +128,9 @@ describe("Menu primitives", () => {
   });
 
   it("throws when MenuSubTrigger used outside MenuSub", () => {
-    const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+    const consoleError = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
     expect(() => {
       render(<MenuSubTrigger arrowClassName="x">bad</MenuSubTrigger>);
     }).toThrow(/MenuSub components must be used inside a MenuSub/);
@@ -242,7 +250,9 @@ describe("Menu primitives", () => {
     const CloseTest = () => {
       const rootRef = useRef<HTMLDivElement>(null);
       const [open, setOpen] = useState(true);
-      useMenuCloseHandlers(open, () => setOpen(false), rootRef, ["[data-ignore]"]);
+      useMenuCloseHandlers(open, () => setOpen(false), rootRef, [
+        "[data-ignore]",
+      ]);
       return (
         <div ref={rootRef} data-testid="close-root" data-open={open}>
           <button data-testid="inside">Inside</button>

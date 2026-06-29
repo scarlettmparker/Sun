@@ -82,15 +82,16 @@ const MenuItem = (props: MenuItemProps) => {
       role: (childProps.role as string) ?? "menuitem",
       tabIndex: -1,
       "aria-disabled": (childProps.disabled as boolean) ?? disabled,
-      className: cn(
-        className,
-        childProps.className as string,
-      ),
+      className: cn(className, childProps.className as string),
       onClick: (event: React.MouseEvent<HTMLButtonElement>) => {
         if (disabled) {
           return;
         }
-        (childProps.onClick as (event: React.MouseEvent<HTMLButtonElement>) => void)?.(event);
+        (
+          childProps.onClick as (
+            event: React.MouseEvent<HTMLButtonElement>,
+          ) => void
+        )?.(event);
         onClick?.(event);
         onSelect?.();
         closeMenu();
@@ -101,16 +102,20 @@ const MenuItem = (props: MenuItemProps) => {
         }
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
-          (childProps.onKeyDown as (event: React.KeyboardEvent<HTMLButtonElement>) => void)?.(
-            event,
-          );
+          (
+            childProps.onKeyDown as (
+              event: React.KeyboardEvent<HTMLButtonElement>,
+            ) => void
+          )?.(event);
           onSelect?.();
           closeMenu();
           return;
         }
-        (childProps.onKeyDown as (event: React.KeyboardEvent<HTMLButtonElement>) => void)?.(
-          event,
-        );
+        (
+          childProps.onKeyDown as (
+            event: React.KeyboardEvent<HTMLButtonElement>,
+          ) => void
+        )?.(event);
         onKeyDown?.(event);
       },
     } as any);
@@ -254,13 +259,8 @@ export type MenuSubContentProps = React.HTMLAttributes<HTMLDivElement>;
  * adjacent to active sub-triggers.
  */
 const MenuSubContent = (props: MenuSubContentProps) => {
-  const {
-    className,
-    children,
-    onPointerEnter,
-    onPointerLeave,
-    ...rest
-  } = props;
+  const { className, children, onPointerEnter, onPointerLeave, ...rest } =
+    props;
   const { open, setOpen, triggerRef } = useMenuSub();
   const subRef = useRef<HTMLDivElement>(null);
 
@@ -635,7 +635,6 @@ const useMenuCloseHandlers = (
     };
   }, [open, close, rootRef, ignoreSelectors]);
 };
-
 
 export default MenuItem;
 export {

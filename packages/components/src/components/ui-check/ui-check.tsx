@@ -1,6 +1,4 @@
-import {
-  detectFrontendMode,
-} from "@sun/shared";
+import { detectFrontendMode } from "@sun/shared";
 import type { FrontendMode } from "@sun/shared";
 
 type UICheckProps = {

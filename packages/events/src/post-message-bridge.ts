@@ -82,10 +82,7 @@ export class PostMessageBridge<T extends EventMap> {
    * Send an event across the iframe boundary.
    * Also emits locally so in-process subscribers receive it too.
    */
-  send<K extends EventKey<T>>(
-    event: K,
-    payload: EventPayload<T, K>,
-  ): void {
+  send<K extends EventKey<T>>(event: K, payload: EventPayload<T, K>): void {
     this.localBus.emit(event, payload);
     this.target.postMessage(
       { __channel: this.channel, type: event, payload },
