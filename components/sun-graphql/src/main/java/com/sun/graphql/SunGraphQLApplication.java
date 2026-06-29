@@ -28,6 +28,10 @@ public class SunGraphQLApplication {
         setSystemProperty(dotenv, "DION_SPRING_DATASOURCE_URL", "DION_SPRING_DATASOURCE_URL");
         setSystemProperty(dotenv, "DION_SPRING_DATASOURCE_USERNAME", "DION_SPRING_DATASOURCE_USERNAME");
         setSystemProperty(dotenv, "DION_SPRING_DATASOURCE_PASSWORD", "DION_SPRING_DATASOURCE_PASSWORD");
+        // Echo datasource
+        setSystemProperty(dotenv, "ECHO_SPRING_DATASOURCE_URL", "ECHO_SPRING_DATASOURCE_URL");
+        setSystemProperty(dotenv, "ECHO_SPRING_DATASOURCE_USERNAME", "ECHO_SPRING_DATASOURCE_USERNAME");
+        setSystemProperty(dotenv, "ECHO_SPRING_DATASOURCE_PASSWORD", "ECHO_SPRING_DATASOURCE_PASSWORD");
         setSystemProperty(dotenv, "GARAGE_SECRET_KEY", "GARAGE_SECRET_KEY");
         setSystemProperty(dotenv, "AWS_ACCESS_KEY_ID", "AWS_ACCESS_KEY_ID");
         setSystemProperty(dotenv, "AWS_SECRET_ACCESS_KEY", "AWS_SECRET_ACCESS_KEY");

@@ -21,6 +21,10 @@ type FilestoreQueries {
   listKeys(bucket: String!, prefix: String): [KeyEntry!]
   # Locate a single key's metadata by bucket and key path.
   locate(bucket: String!, keyPath: String!): KeyDetail
+  # List all active image key details in a bucket.
+  listImages(bucket: String!): [KeyDetail!]
+  # Locate a single active image key detail by bucket and key path.
+  locateImage(bucket: String!, keyPath: String!): KeyDetail
 }
 
 # Directory-like entry for a bucket key.
@@ -41,6 +45,7 @@ type KeyDetail {
   name: String
   description: String
   status: String!
+  contentType: String
   createdAt: String
   lastUpdatedAt: String
   archivedAt: String

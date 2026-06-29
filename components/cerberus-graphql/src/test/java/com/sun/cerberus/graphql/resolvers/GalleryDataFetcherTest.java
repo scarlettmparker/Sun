@@ -38,7 +38,7 @@ class GalleryDataFetcherTest {
         .description("Description 1")
         .content("Content 1")
         .imagePath("/path1.jpg")
-        .foreignObject(Arrays.asList("id1", "id2"))
+        .remoteObject(Arrays.asList("id1", "id2"))
         .build();
 
     GalleryItem galleryItem2 = GalleryItem.newBuilder()
@@ -47,7 +47,7 @@ class GalleryDataFetcherTest {
         .description("Description 2")
         .content("Content 2")
         .imagePath("/path2.jpg")
-        .foreignObject(Arrays.asList("id3", "id4"))
+        .remoteObject(Arrays.asList("id3", "id4"))
         .build();
 
     mockGalleryItems = Arrays.asList(galleryItem1, galleryItem2);
@@ -65,14 +65,14 @@ class GalleryDataFetcherTest {
     assertThat(result.get(0).getDescription()).isEqualTo("Description 1");
     assertThat(result.get(0).getContent()).isEqualTo("Content 1");
     assertThat(result.get(0).getImagePath()).isEqualTo("/path1.jpg");
-    assertThat(result.get(0).getForeignObject()).containsExactly("id1", "id2");
+    assertThat(result.get(0).getRemoteObject()).containsExactly("id1", "id2");
 
     // Second gallery item
     assertThat(result.get(1).getTitle()).isEqualTo("Test Gallery 2");
     assertThat(result.get(1).getDescription()).isEqualTo("Description 2");
     assertThat(result.get(1).getContent()).isEqualTo("Content 2");
     assertThat(result.get(1).getImagePath()).isEqualTo("/path2.jpg");
-    assertThat(result.get(1).getForeignObject()).containsExactly("id3", "id4");
+    assertThat(result.get(1).getRemoteObject()).containsExactly("id3", "id4");
   }
 
   @Test
@@ -83,7 +83,7 @@ class GalleryDataFetcherTest {
         .description("Description 1")
         .content("Content 1")
         .imagePath("/path1.jpg")
-        .foreignObject(Arrays.asList("id1", "id2"))
+        .remoteObject(Arrays.asList("id1", "id2"))
         .build();
 
     when(galleryGraphQLService.locate("1")).thenReturn(mockGallery);
@@ -94,22 +94,22 @@ class GalleryDataFetcherTest {
     assertThat(result.getDescription()).isEqualTo("Description 1");
     assertThat(result.getContent()).isEqualTo("Content 1");
     assertThat(result.getImagePath()).isEqualTo("/path1.jpg");
-    assertThat(result.getForeignObject()).containsExactly("id1", "id2");
+    assertThat(result.getRemoteObject()).containsExactly("id1", "id2");
   }
 
   @Test
-  void listByForeignObjects() {
+  void listByRemoteObjects() {
     List<String> ids = Arrays.asList("id1", "id3");
     List<GalleryItem> expectedItems = Arrays.asList(mockGalleryItems.get(0)); // Only first item has id1
 
-    when(galleryGraphQLService.listByForeignObjects(ids)).thenReturn(expectedItems);
+    when(galleryGraphQLService.listByRemoteObjects(ids)).thenReturn(expectedItems);
 
-    List<GalleryItem> result = galleryDataFetcher.listByForeignObjects(ids);
+    List<GalleryItem> result = galleryDataFetcher.listByRemoteObjects(ids);
 
     assertThat(result).isEqualTo(expectedItems);
     assertThat(result).hasSize(1);
     assertThat(result.get(0).getTitle()).isEqualTo("Test Gallery 1");
-    assertThat(result.get(0).getForeignObject()).contains("id1");
+    assertThat(result.get(0).getRemoteObject()).contains("id1");
   }
 
   @Test
@@ -119,7 +119,7 @@ class GalleryDataFetcherTest {
         .description("New Description")
         .content("New content")
         .imagePath("/newpath.jpg")
-        .foreignObject(Arrays.asList("new", "ids"))
+        .remoteObject(Arrays.asList("new", "ids"))
         .build();
 
     QueryResult mockResult = QuerySuccess.newBuilder().success(true).build();

@@ -1,8 +1,8 @@
 Apollo - Stem Player
 Briareus - Blogsite
 Cerberus - Gallery
-Dionysus
-Echo
+Dionysus - Filestore
+Echo - Checklist
 Fates
 Gaia
 Hades

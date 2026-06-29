@@ -12,7 +12,7 @@ import {
   BlogPostInput,
   CreateBlogPostMutation,
   ListGalleryItemsDocument,
-  ListGalleryItemsByForeignObjectsDocument,
+  ListGalleryItemsByRemoteObjectsDocument,
   LocateGalleryItemDocument,
 } from "../generated/graphql";
 import { print, DocumentNode } from "graphql";
@@ -37,7 +37,7 @@ type OperationRegistry = {
   };
   galleryQueries: {
     listGalleryItems: DocumentNode;
-    listGalleryItemsByForeignObjects: DocumentNode;
+    listGalleryItemsByRemoteObjects: DocumentNode;
     locateGalleryItem: DocumentNode;
   };
   songQueries: {
@@ -59,7 +59,7 @@ const operationRegistry: OperationRegistry = {
   },
   galleryQueries: {
     listGalleryItems: ListGalleryItemsDocument,
-    listGalleryItemsByForeignObjects: ListGalleryItemsByForeignObjectsDocument,
+    listGalleryItemsByRemoteObjects: ListGalleryItemsByRemoteObjectsDocument,
     locateGalleryItem: LocateGalleryItemDocument,
   },
   songQueries: {
@@ -248,8 +248,8 @@ export async function fetchListGalleryItems() {
 /**
  * List gallery items by foreign objects.
  */
-export async function fetchListGalleryItemsByForeignObjects(ids: string[]) {
-  return fetchGraphQLData("galleryQueries.listGalleryItemsByForeignObjects", {
+export async function fetchListGalleryItemsByRemoteObjects(ids: string[]) {
+  return fetchGraphQLData("galleryQueries.listGalleryItemsByRemoteObjects", {
     ids,
   });
 }

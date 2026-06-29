@@ -32,13 +32,15 @@ class KeyDetailServiceTest {
   @Test
   void createOrUpdateDetail_createsWhenNotExists() {
     when(repository.findByBucketAndKeyPath(anyString(), anyString())).thenReturn(List.of());
+    when(repository.save(any())).thenAnswer(i -> i.getArgument(0));
 
-    KeyDetailEntity created = service.createOrUpdateDetail("bkt", "path/file.txt", "file.txt");
+    KeyDetailEntity created = service.createOrUpdateDetail("bkt", "path/file.txt", "file.txt", "text/plain");
 
     assertThat(created.getBucket()).isEqualTo("bkt");
     assertThat(created.getKeyPath()).isEqualTo("path/file.txt");
     assertThat(created.getName()).isEqualTo("file.txt");
     assertThat(created.getStatus()).isEqualTo(Status.ACTIVE);
+    assertThat(created.getContentType()).isEqualTo("text/plain");
   }
 
   @Test

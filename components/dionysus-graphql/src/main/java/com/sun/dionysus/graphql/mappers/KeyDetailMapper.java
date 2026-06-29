@@ -35,6 +35,7 @@ public class KeyDetailMapper {
     keyDetail.setName(keyDetailEntity.getName());
     keyDetail.setDescription(keyDetailEntity.getDescription());
     keyDetail.setStatus(keyDetailEntity.getStatus().name());
+    keyDetail.setContentType(keyDetailEntity.getContentType());
     if (keyDetailEntity.getCreatedAt() != null) {
       keyDetail.setCreatedAt(keyDetailEntity.getCreatedAt().toString());
     }

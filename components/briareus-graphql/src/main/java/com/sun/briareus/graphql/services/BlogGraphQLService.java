@@ -76,6 +76,25 @@ public class BlogGraphQLService {
   }
 
   /**
+   * Retrieves blog posts that reference any of the given remote-object ids.
+   *
+   * @param ids the remote-object ids to match
+   * @return a list of GraphQL BlogPost objects
+   */
+  @Transactional("briareusTransactionManager")
+  public List<BlogPost> listByRemoteObjects(List<String> ids) {
+    logger.info("Retrieving blog posts by remote object ids: {}", ids);
+
+    List<PostEntity> postEntities = briareusService.listByRemoteObjects(ids);
+    List<BlogPost> blogPosts = postEntities.stream()
+        .map(blogPostMapper::map)
+        .collect(Collectors.toList());
+
+    logger.info("Retrieved {} blog posts matching remote object ids", blogPosts.size());
+    return blogPosts;
+  }
+
+  /**
    * Creates a new blog post.
    *
    * @param title the title of the blog post

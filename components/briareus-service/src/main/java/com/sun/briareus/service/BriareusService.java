@@ -17,8 +17,11 @@ import java.util.List;
 @Transactional("briareusTransactionManager")
 public class BriareusService extends BaseService<PostEntity> {
 
+  private final PostRepository postRepository;
+
   public BriareusService(PostRepository repository) {
     super(repository);
+    this.postRepository = repository;
   }
 
   /**
@@ -48,5 +51,15 @@ public class BriareusService extends BaseService<PostEntity> {
    */
   public Optional<PostEntity> locatePost(UUID id) {
     return findById(id);
+  }
+
+  /**
+   * Retrieves posts that reference any of the given remote-object ids.
+   *
+   * @param ids the remote-object ids to match
+   * @return the matching posts
+   */
+  public List<PostEntity> listByRemoteObjects(List<String> ids) {
+    return postRepository.findByRemoteObjectsIn(ids.toArray(new String[0]));
   }
 }

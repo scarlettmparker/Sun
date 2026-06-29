@@ -1,6 +1,6 @@
 import { fetchLocateSong } from "~/utils/api";
 import {
-  // ListGalleryItemsByForeignObjectsQuery,
+  // ListGalleryItemsByRemoteObjectsQuery,
   LocateSongQuery,
   Song,
 } from "~/generated/graphql";
@@ -9,7 +9,7 @@ import { pageDataRegistry, getPageData } from "@sun/ssr";
 import { useParams } from "react-router-dom";
 import styles from "./stem-player-details.module.css";
 import { getStemPlayerData } from "../stem-player";
-import { getGalleryItemsByForeignObjects } from "~/routes/utils";
+import { getGalleryItemsByRemoteObjects } from "~/routes/utils";
 
 const PAGE = "stem-player/:id";
 
@@ -22,7 +22,7 @@ const StemPlayerDetailsPage = () => {
     LocateSongQuery["stemPlayerQueries"]["locate"]
   >("song", PAGE, { id });
   // const { data: galleryItems } = getPageData<
-  //   ListGalleryItemsByForeignObjectsQuery["galleryQueries"]["listByForeignObjects"]
+  //   ListGalleryItemsByRemoteObjectsQuery["galleryQueries"]["listByRemoteObjects"]
   // >("galleryItems", PAGE, { ids: [id] });
 
   if (!song) {
@@ -73,7 +73,7 @@ export function registerStemPlayerDetailsDataLoader(): void {
   pageDataRegistry.registerPageDataLoader(PAGE, async (params) => {
     const ids = params?.ids as string[];
     if (!ids) return null;
-    return getGalleryItemsByForeignObjects(ids);
+    return getGalleryItemsByRemoteObjects(ids);
   });
 }
 

@@ -50,7 +50,7 @@ class GalleryGraphQLServiceTest {
     galleryItemEntity1.setDescription("Description 1");
     galleryItemEntity1.setContent("Content 1");
     galleryItemEntity1.setImagePath("/path1.jpg");
-    galleryItemEntity1.setForeignObject(Arrays.asList("id1", "id2"));
+    galleryItemEntity1.setRemoteObject(Arrays.asList("id1", "id2"));
 
     galleryItemEntity2 = new GalleryItemEntity();
     galleryItemEntity2.setId(UUID.randomUUID());
@@ -58,7 +58,7 @@ class GalleryGraphQLServiceTest {
     galleryItemEntity2.setDescription("Description 2");
     galleryItemEntity2.setContent("Content 2");
     galleryItemEntity2.setImagePath("/path2.jpg");
-    galleryItemEntity2.setForeignObject(Arrays.asList());
+    galleryItemEntity2.setRemoteObject(Arrays.asList());
 
     galleryItem1 = GalleryItem.newBuilder()
         .id(galleryItemEntity1.getId().toString())
@@ -66,7 +66,7 @@ class GalleryGraphQLServiceTest {
         .description("Description 1")
         .content("Content 1")
         .imagePath("/path1.jpg")
-        .foreignObject(Arrays.asList("id1", "id2"))
+        .remoteObject(Arrays.asList("id1", "id2"))
         .build();
 
     galleryItem2 = GalleryItem.newBuilder()
@@ -75,7 +75,7 @@ class GalleryGraphQLServiceTest {
         .description("Description 2")
         .content("Content 2")
         .imagePath("/path2.jpg")
-        .foreignObject(Arrays.asList())
+        .remoteObject(Arrays.asList())
         .build();
   }
 
@@ -91,12 +91,12 @@ class GalleryGraphQLServiceTest {
     assertThat(result.get(0).getDescription()).isEqualTo("Description 1");
     assertThat(result.get(0).getContent()).isEqualTo("Content 1");
     assertThat(result.get(0).getImagePath()).isEqualTo("/path1.jpg");
-    assertThat(result.get(0).getForeignObject()).containsExactly("id1", "id2");
+    assertThat(result.get(0).getRemoteObject()).containsExactly("id1", "id2");
     assertThat(result.get(1).getTitle()).isEqualTo("Test Gallery Item 2");
     assertThat(result.get(1).getDescription()).isEqualTo("Description 2");
     assertThat(result.get(1).getContent()).isEqualTo("Content 2");
     assertThat(result.get(1).getImagePath()).isEqualTo("/path2.jpg");
-    assertThat(result.get(1).getForeignObject()).isEmpty();
+    assertThat(result.get(1).getRemoteObject()).isEmpty();
   }
 
   @Test
@@ -116,7 +116,7 @@ class GalleryGraphQLServiceTest {
     assertThat(result.getDescription()).isEqualTo("Description 1");
     assertThat(result.getContent()).isEqualTo("Content 1");
     assertThat(result.getImagePath()).isEqualTo("/path1.jpg");
-    assertThat(result.getForeignObject()).containsExactly("id1", "id2");
+    assertThat(result.getRemoteObject()).containsExactly("id1", "id2");
   }
 
   @Test
@@ -134,7 +134,7 @@ class GalleryGraphQLServiceTest {
         .description("New Description")
         .content("New Content")
         .imagePath("/newpath.jpg")
-        .foreignObject(Arrays.asList("new", "ids"))
+        .remoteObject(Arrays.asList("new", "ids"))
         .build();
 
     GalleryItemEntity galleryItemEntity = new GalleryItemEntity();
@@ -142,7 +142,7 @@ class GalleryGraphQLServiceTest {
     galleryItemEntity.setDescription("New Description");
     galleryItemEntity.setContent("New Content");
     galleryItemEntity.setImagePath("/newpath.jpg");
-    galleryItemEntity.setForeignObject(Arrays.asList("new", "ids"));
+    galleryItemEntity.setRemoteObject(Arrays.asList("new", "ids"));
 
     GalleryItemEntity savedEntity = new GalleryItemEntity();
     savedEntity.setId(UUID.randomUUID());
@@ -150,7 +150,7 @@ class GalleryGraphQLServiceTest {
     savedEntity.setDescription("New Description");
     savedEntity.setContent("New Content");
     savedEntity.setImagePath("/newpath.jpg");
-    savedEntity.setForeignObject(Arrays.asList("new", "ids"));
+    savedEntity.setRemoteObject(Arrays.asList("new", "ids"));
 
     when(galleryItemMapper.mapInput(input)).thenReturn(galleryItemEntity);
     when(cerberusService.save(galleryItemEntity)).thenReturn(savedEntity);
@@ -163,28 +163,28 @@ class GalleryGraphQLServiceTest {
   }
 
   @Test
-  void listByForeignObjects() {
+  void listByRemoteObjects() {
     List<String> ids = Arrays.asList("id1", "id3");
     List<GalleryItemEntity> galleryItemEntities = Arrays.asList(galleryItemEntity1); // Only first has id1
-    when(cerberusService.listByForeignObjects(ids)).thenReturn(galleryItemEntities);
+    when(cerberusService.listByRemoteObjects(ids)).thenReturn(galleryItemEntities);
     when(galleryItemMapper.map(galleryItemEntity1)).thenReturn(galleryItem1);
 
-    List<GalleryItem> result = galleryGraphQLService.listByForeignObjects(ids);
+    List<GalleryItem> result = galleryGraphQLService.listByRemoteObjects(ids);
 
     assertThat(result).hasSize(1);
     assertThat(result.get(0).getTitle()).isEqualTo("Test Gallery Item 1");
     assertThat(result.get(0).getDescription()).isEqualTo("Description 1");
     assertThat(result.get(0).getContent()).isEqualTo("Content 1");
     assertThat(result.get(0).getImagePath()).isEqualTo("/path1.jpg");
-    assertThat(result.get(0).getForeignObject()).containsExactly("id1", "id2");
+    assertThat(result.get(0).getRemoteObject()).containsExactly("id1", "id2");
   }
 
   @Test
-  void listByForeignObjects_shouldReturnEmptyListWhenNoMatches() {
+  void listByRemoteObjects_shouldReturnEmptyListWhenNoMatches() {
     List<String> ids = Arrays.asList("nonexistent");
-    when(cerberusService.listByForeignObjects(ids)).thenReturn(Arrays.asList());
+    when(cerberusService.listByRemoteObjects(ids)).thenReturn(Arrays.asList());
 
-    List<GalleryItem> result = galleryGraphQLService.listByForeignObjects(ids);
+    List<GalleryItem> result = galleryGraphQLService.listByRemoteObjects(ids);
 
     assertThat(result).isEmpty();
   }
@@ -196,7 +196,7 @@ class GalleryGraphQLServiceTest {
         .description("New Description")
         .content("New Content")
         .imagePath("/newpath.jpg")
-        .foreignObject(Arrays.asList("new", "ids"))
+        .remoteObject(Arrays.asList("new", "ids"))
         .build();
 
     GalleryItemEntity galleryItemEntity = new GalleryItemEntity();
@@ -204,7 +204,7 @@ class GalleryGraphQLServiceTest {
     galleryItemEntity.setDescription("New Description");
     galleryItemEntity.setContent("New Content");
     galleryItemEntity.setImagePath("/newpath.jpg");
-    galleryItemEntity.setForeignObject(Arrays.asList("new", "ids"));
+    galleryItemEntity.setRemoteObject(Arrays.asList("new", "ids"));
 
     when(galleryItemMapper.mapInput(input)).thenReturn(galleryItemEntity);
     doThrow(new RuntimeException("Database error")).when(cerberusService).save(galleryItemEntity);

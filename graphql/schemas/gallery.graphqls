@@ -4,7 +4,7 @@ type GalleryItem {
   description: String
   content: String
   imagePath: String
-  foreignObject: [String!]
+  remoteObject: [String!]
   createdAt: Date
   updatedAt: Date
 }
@@ -14,13 +14,13 @@ input GalleryItemInput {
   description: String
   content: String
   imagePath: String
-  foreignObject: [String!]
+  remoteObject: [String!]
 }
 
 type GalleryQueries {
   list: [GalleryItem]
   locate(id: ID!): GalleryItem
-  listByForeignObjects(ids: [String!]!): [GalleryItem]
+  listByRemoteObjects(ids: [String!]!): [GalleryItem]
 }
 
 type GalleryMutations {

@@ -30,7 +30,7 @@ class GalleryItemMapperTest {
     galleryItemEntity.setDescription("Test Description");
     galleryItemEntity.setContent("Test Content");
     galleryItemEntity.setImagePath("/path/to/image.jpg");
-    galleryItemEntity.setForeignObject(Arrays.asList("id1", "id2"));
+    galleryItemEntity.setRemoteObject(Arrays.asList("id1", "id2"));
     galleryItemEntity.setCreatedAt(createdAt);
     galleryItemEntity.setLastUpdatedAt(updatedAt);
 
@@ -41,7 +41,7 @@ class GalleryItemMapperTest {
     assertThat(result.getDescription()).isEqualTo("Test Description");
     assertThat(result.getContent()).isEqualTo("Test Content");
     assertThat(result.getImagePath()).isEqualTo("/path/to/image.jpg");
-    assertThat(result.getForeignObject()).containsExactly("id1", "id2");
+    assertThat(result.getRemoteObject()).containsExactly("id1", "id2");
     assertThat(result.getCreatedAt()).isEqualTo(createdAt);
     assertThat(result.getUpdatedAt()).isEqualTo(updatedAt);
   }
@@ -53,7 +53,7 @@ class GalleryItemMapperTest {
         .description("Test Description")
         .content("Test Content")
         .imagePath("/path/to/image.jpg")
-        .foreignObject(Arrays.asList("id1", "id2"))
+        .remoteObject(Arrays.asList("id1", "id2"))
         .build();
 
     GalleryItemEntity result = galleryItemMapper.mapInput(input);
@@ -62,6 +62,6 @@ class GalleryItemMapperTest {
     assertThat(result.getDescription()).isEqualTo("Test Description");
     assertThat(result.getContent()).isEqualTo("Test Content");
     assertThat(result.getImagePath()).isEqualTo("/path/to/image.jpg");
-    assertThat(result.getForeignObject()).containsExactly("id1", "id2");
+    assertThat(result.getRemoteObject()).containsExactly("id1", "id2");
   }
 }

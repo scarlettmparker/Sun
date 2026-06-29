@@ -146,6 +146,24 @@ public class FilestoreGraphQLService {
   }
 
   /**
+   * Lists all active image key details in a bucket.
+   */
+  public List<KeyDetail> listImages(String bucket) {
+    logger.info("Listing image key details for bucket: {}", bucket);
+    return keyDetailService.listImages(bucket).stream()
+        .map(keyDetailMapper::map)
+        .collect(Collectors.toList());
+  }
+
+  /**
+   * Locates a single active image key detail by bucket and key path.
+   */
+  public KeyDetail locateImage(String bucket, String keyPath) {
+    logger.info("Locating image key detail for bucket: {} at path: {}", bucket, keyPath);
+    return keyDetailService.locateImage(bucket, keyPath).map(keyDetailMapper::map).orElse(null);
+  }
+
+  /**
    * Creates a directory key (folder) via Garage admin REST API.
    */
   public boolean putKey(String bucket, String key) {
@@ -171,7 +189,7 @@ public class FilestoreGraphQLService {
             .build(),
         software.amazon.awssdk.core.sync.RequestBody.empty());
 
-    keyDetailService.createOrUpdateDetail(bucket, dirKey, dirKey);
+    keyDetailService.createOrUpdateDetail(bucket, dirKey, dirKey, null);
 
     logger.info("Successfully created directory key: {} in bucket: {}", dirKey, bucket);
     return true;
@@ -327,7 +345,7 @@ public class FilestoreGraphQLService {
             .contentType(contentType != null ? contentType : "application/octet-stream"))
         .build();
 
-    keyDetailService.createOrUpdateDetail(bucket, key, key);
+    keyDetailService.createOrUpdateDetail(bucket, key, key, contentType);
 
     PresignedPutObjectRequest presigned = s3Presigner.presignPutObject(presignRequest);
     String url = presigned.url().toString();

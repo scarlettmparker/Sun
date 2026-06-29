@@ -61,7 +61,7 @@ class FilestoreGraphQLServiceTest {
     @BeforeEach
     void setup() {
         when(keyDetailService.listActiveForBucketAndPath(anyString(), anyString())).thenReturn(List.of());
-        when(keyDetailService.createOrUpdateDetail(anyString(), anyString(), any())).thenAnswer(invocation -> {
+        when(keyDetailService.createOrUpdateDetail(anyString(), anyString(), any(), any())).thenAnswer(invocation -> {
             KeyDetailEntity d = new KeyDetailEntity();
             d.setBucket(invocation.getArgument(0));
             d.setKeyPath(invocation.getArgument(1));

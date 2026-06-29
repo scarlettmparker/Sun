@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import com.sun.cerberus.model.GalleryItemEntity;
+import java.util.UUID;
 
 /**
  * Mapper for converting domain GalleryItem entities to GraphQL GalleryItem
@@ -32,7 +33,8 @@ public class GalleryItemMapper {
         .description(galleryItemEntity.getDescription())
         .content(galleryItemEntity.getContent())
         .imagePath(galleryItemEntity.getImagePath())
-        .foreignObject(galleryItemEntity.getForeignObject())
+        .remoteObject(galleryItemEntity.getRemoteObject())
+        .keyDetailId(galleryItemEntity.getKeyDetailId() != null ? galleryItemEntity.getKeyDetailId().toString() : null)
         .createdAt(galleryItemEntity.getCreatedAt())
         .updatedAt(galleryItemEntity.getLastUpdatedAt())
         .build();
@@ -55,7 +57,10 @@ public class GalleryItemMapper {
     galleryItemEntity.setDescription(input.getDescription());
     galleryItemEntity.setContent(input.getContent());
     galleryItemEntity.setImagePath(input.getImagePath());
-    galleryItemEntity.setForeignObject(input.getForeignObject());
+    galleryItemEntity.setRemoteObject(input.getRemoteObject());
+    if (input.getKeyDetailId() != null) {
+      galleryItemEntity.setKeyDetailId(UUID.fromString(input.getKeyDetailId()));
+    }
 
     logger.debug("Mapped input to gallery item entity with title: {}", input.getTitle());
     return galleryItemEntity;

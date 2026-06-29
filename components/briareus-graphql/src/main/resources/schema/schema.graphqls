@@ -3,6 +3,7 @@ type BlogPost {
   title: String!
   content: String
   tags: [String!]
+  remoteObject: [String!]
   createdAt: Date
   updatedAt: Date
 }
@@ -10,11 +11,13 @@ type BlogPost {
 input BlogPostInput {
   content: String
   tags: [String!]
+  remoteObject: [String!]
 }
 
 type BlogQueries {
   listBlogPosts: [BlogPost]
   locateBlogPost(id: ID!): BlogPost
+  listByRemoteObjects(ids: [String!]!): [BlogPost]
 }
 
 type BlogMutations {

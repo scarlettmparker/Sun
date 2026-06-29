@@ -45,6 +45,16 @@ public class FilestoreDataFetcher {
     return filestoreGraphQLService.locate(bucket, keyPath);
   }
 
+  @DgsData(parentType = "FilestoreQueries", field = "listImages")
+  public List<KeyDetail> listImages(String bucket) {
+    return filestoreGraphQLService.listImages(bucket);
+  }
+
+  @DgsData(parentType = "FilestoreQueries", field = "locateImage")
+  public KeyDetail locateImage(String bucket, String keyPath) {
+    return filestoreGraphQLService.locateImage(bucket, keyPath);
+  }
+
   @DgsData(parentType = "Mutation", field = "filestoreMutations")
   public FilestoreMutations getFilestoreMutations() {
     return FilestoreMutations.newBuilder().build();

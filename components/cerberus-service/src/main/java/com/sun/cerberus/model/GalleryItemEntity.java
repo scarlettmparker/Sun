@@ -5,6 +5,7 @@ import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.*;
 import org.hibernate.annotations.Type;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "gallery_items")
@@ -23,8 +24,11 @@ public class GalleryItemEntity extends BaseEntity {
   private String imagePath;
 
   @Type(JsonBinaryType.class)
-  @Column(columnDefinition = "jsonb")
-  private List<String> foreignObject;
+  @Column(name = "remote_object", columnDefinition = "jsonb")
+  private List<String> remoteObject;
+
+  @Column(name = "key_detail_id")
+  private UUID keyDetailId;
 
   // Getters and setters
   public String getTitle() {
@@ -59,11 +63,19 @@ public class GalleryItemEntity extends BaseEntity {
     this.imagePath = imagePath;
   }
 
-  public List<String> getForeignObject() {
-    return foreignObject;
+  public List<String> getRemoteObject() {
+    return remoteObject;
   }
 
-  public void setForeignObject(List<String> foreignObject) {
-    this.foreignObject = foreignObject;
+  public void setRemoteObject(List<String> remoteObject) {
+    this.remoteObject = remoteObject;
+  }
+
+  public UUID getKeyDetailId() {
+    return keyDetailId;
+  }
+
+  public void setKeyDetailId(UUID keyDetailId) {
+    this.keyDetailId = keyDetailId;
   }
 }

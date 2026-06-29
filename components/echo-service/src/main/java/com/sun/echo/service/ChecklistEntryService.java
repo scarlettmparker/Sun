@@ -1,0 +1,99 @@
+package com.sun.echo.service;
+
+import com.sun.base.service.BaseService;
+import com.sun.echo.model.ChecklistEntryEntity;
+import com.sun.echo.model.ChecklistEntryItemEntity;
+import com.sun.echo.model.ChecklistTemplateItemEntity;
+import com.sun.echo.model.enums.ChecklistStatus;
+import com.sun.echo.model.enums.ItemStatus;
+import com.sun.echo.repository.ChecklistEntryItemRepository;
+import com.sun.echo.repository.ChecklistEntryRepository;
+import com.sun.echo.repository.ChecklistTemplateItemRepository;
+import com.sun.echo.repository.ChecklistTemplateRepository;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/** Service for managing checklist entry entities. */
+@Service
+@Transactional("echoTransactionManager")
+public class ChecklistEntryService extends BaseService<ChecklistEntryEntity> {
+
+  private final ChecklistTemplateRepository templateRepository;
+  private final ChecklistTemplateItemRepository templateItemRepository;
+  private final ChecklistEntryItemRepository entryItemRepository;
+
+  public ChecklistEntryService(ChecklistEntryRepository repository,
+      ChecklistTemplateRepository templateRepository,
+      ChecklistTemplateItemRepository templateItemRepository,
+      ChecklistEntryItemRepository entryItemRepository) {
+    super(repository);
+    this.templateRepository = templateRepository;
+    this.templateItemRepository = templateItemRepository;
+    this.entryItemRepository = entryItemRepository;
+  }
+
+  /**
+   * Locates a checklist entry by id.
+   *
+   * @param id the entry id
+   * @return the entry, or empty if not found
+   */
+  public Optional<ChecklistEntryEntity> locate(UUID id) {
+    return findById(id);
+  }
+
+  /**
+   * Marks a checklist entry as complete by stamping its completion timestamp.
+   *
+   * @param id the entry id
+   * @return the updated entry
+   */
+  public ChecklistEntryEntity completeChecklist(UUID id) {
+    ChecklistEntryEntity entry = findById(id)
+        .orElseThrow(() -> new IllegalArgumentException("Checklist entry not found: " + id));
+    entry.setCompletedAt(LocalDateTime.now());
+    return save(entry);
+  }
+
+  /**
+   * Archives a checklist entry. Entry items are preserved so history is kept.
+   *
+   * @param id the entry id
+   * @return the updated entry
+   */
+  public ChecklistEntryEntity archive(UUID id) {
+    ChecklistEntryEntity entry = findById(id)
+        .orElseThrow(() -> new IllegalArgumentException("Checklist entry not found: " + id));
+    entry.setStatus(ChecklistStatus.ARCHIVED);
+    return save(entry);
+  }
+
+  /**
+   * Creates a new checklist entry from a template, copying the template's name
+   * and cloning each template item as an entry item with status NOT_STARTED.
+   *
+   * @param templateId the template id
+   * @return the new entry
+   */
+  public ChecklistEntryEntity createFromTemplate(UUID templateId) {
+    ChecklistEntryEntity entry = new ChecklistEntryEntity();
+    templateRepository.findById(templateId).ifPresent(t -> entry.setName(t.getName()));
+    ChecklistEntryEntity saved = save(entry);
+
+    List<ChecklistTemplateItemEntity> templateItems =
+        templateItemRepository.findByTemplateIdOrderByPositionAsc(templateId);
+    for (ChecklistTemplateItemEntity ti : templateItems) {
+      ChecklistEntryItemEntity ei = new ChecklistEntryItemEntity();
+      ei.setEntryId(saved.getId());
+      ei.setItemId(ti.getItemId());
+      ei.setPosition(ti.getPosition());
+      ei.setStatus(ItemStatus.NOT_STARTED);
+      entryItemRepository.save(ei);
+    }
+    return saved;
+  }
+}

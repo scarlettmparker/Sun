@@ -62,9 +62,11 @@ public class KeyDetailService extends BaseService<KeyDetailEntity> {
    *
    * @param bucket the S3 bucket name
    * @param keyPath the S3 key path
-   @return the saved KeyDetail entity
+   * @param name the display name
+   * @param contentType the MIME content type, or null to leave unchanged
+   * @return the saved KeyDetail entity
    */
-  public KeyDetailEntity createOrUpdateDetail(String bucket, String keyPath, String name) {
+  public KeyDetailEntity createOrUpdateDetail(String bucket, String keyPath, String name, String contentType) {
     logger.debug("Creating or updating key detail for bucket: {} at path: {}", bucket, keyPath);
 
     List<KeyDetailEntity> existing = keyDetailRepository.findByBucketAndKeyPath(bucket, keyPath);
@@ -77,6 +79,9 @@ public class KeyDetailService extends BaseService<KeyDetailEntity> {
       detail.setName(extractName(keyPath));
       detail.setStatus(Status.ACTIVE);
       detail.setArchivedAt(null);
+      if (contentType != null) {
+        detail.setContentType(contentType);
+      }
     } else {
       detail = new KeyDetailEntity();
       detail.setBucket(bucket);
@@ -84,9 +89,33 @@ public class KeyDetailService extends BaseService<KeyDetailEntity> {
       detail.setName(extractName(keyPath));
       detail.setDescription("");
       detail.setStatus(Status.ACTIVE);
+      detail.setContentType(contentType);
     }
 
     return keyDetailRepository.save(detail);
+  }
+
+  /**
+   * Lists all active image key details in a bucket.
+   *
+   * @param bucket the S3 bucket name
+   * @return the active image key details
+   */
+  public List<KeyDetailEntity> listImages(String bucket) {
+    logger.debug("Listing image key details for bucket: {}", bucket);
+    return keyDetailRepository.findByBucketAndContentTypeStartingWithAndStatus(bucket, "image/", Status.ACTIVE);
+  }
+
+  /**
+   * Locates a single active image key detail by bucket and key path.
+   *
+   * @param bucket the S3 bucket name
+   * @param keyPath the S3 key path
+   * @return Optional containing the image key detail if found and active
+   */
+  public Optional<KeyDetailEntity> locateImage(String bucket, String keyPath) {
+    logger.debug("Locating image key detail for bucket: {} at path: {}", bucket, keyPath);
+    return keyDetailRepository.findByBucketAndKeyPathAndContentTypeStartingWithAndStatus(bucket, keyPath, "image/", Status.ACTIVE);
   }
 
   /**

@@ -31,6 +31,9 @@ public class KeyDetailEntity extends BaseEntity {
   @Column(nullable = false)
   private Status status = Status.ACTIVE;
 
+  @Column
+  private String contentType;
+
   public LocalDateTime getArchivedAt() {
     return archivedAt;
   }
@@ -77,5 +80,13 @@ public class KeyDetailEntity extends BaseEntity {
 
   public void setStatus(Status status) {
     this.status = status;
+  }
+
+  public String getContentType() {
+    return contentType;
+  }
+
+  public void setContentType(String contentType) {
+    this.contentType = contentType;
   }
 }

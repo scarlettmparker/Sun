@@ -51,6 +51,17 @@ public class BlogDataFetcher {
   }
 
   /**
+   * Retrieves blog posts that reference any of the given remote-object ids.
+   *
+   * @param ids the remote-object ids to match
+   * @return a list of BlogPost objects
+   */
+  @DgsData(parentType = "BlogQueries", field = "listByRemoteObjects")
+  public List<BlogPost> listByRemoteObjects(List<String> ids) {
+    return blogGraphQLService.listByRemoteObjects(ids);
+  }
+
+  /**
    * Provides the blog mutations object.
    *
    * @return a new BlogMutations instance

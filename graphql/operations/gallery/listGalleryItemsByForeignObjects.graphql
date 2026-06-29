@@ -1,6 +1,6 @@
-query listGalleryItemsByForeignObjects($ids: [String!]!) {
+query listGalleryItemsByRemoteObjects($ids: [String!]!) {
   galleryQueries {
-    listByForeignObjects(ids: $ids) {
+    listByRemoteObjects(ids: $ids) {
       id
       title
       imagePath

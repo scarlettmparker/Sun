@@ -32,6 +32,7 @@ public class BlogPostMapper {
         .title(postEntity.getTitle())
         .content(postEntity.getContent())
         .tags(postEntity.getTags())
+        .remoteObject(postEntity.getRemoteObject())
         .createdAt(postEntity.getCreatedAt())
         .updatedAt(postEntity.getLastUpdatedAt())
         .build();
@@ -54,6 +55,7 @@ public class BlogPostMapper {
     postEntity.setTitle(title);
     postEntity.setContent(input.getContent());
     postEntity.setTags(input.getTags());
+    postEntity.setRemoteObject(input.getRemoteObject());
 
     logger.debug("Mapped input to post entity with title: {}", title);
     return postEntity;

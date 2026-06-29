@@ -20,6 +20,10 @@ public class PostEntity extends BaseEntity {
   @Column(columnDefinition = "jsonb")
   private List<String> tags;
 
+  @Type(JsonBinaryType.class)
+  @Column(name = "remote_object", columnDefinition = "jsonb")
+  private List<String> remoteObject;
+
   // Getters and setters
   public String getTitle() {
     return title;
@@ -43,5 +47,13 @@ public class PostEntity extends BaseEntity {
 
   public void setTags(List<String> tags) {
     this.tags = tags;
+  }
+
+  public List<String> getRemoteObject() {
+    return remoteObject;
+  }
+
+  public void setRemoteObject(List<String> remoteObject) {
+    this.remoteObject = remoteObject;
   }
 }

@@ -17,4 +17,6 @@ public interface KeyDetailEntityRepository extends BaseRepository<KeyDetailEntit
   Optional<KeyDetailEntity> findByBucketAndKeyPathAndStatus(String bucket, String keyPath, Status status);
   List<KeyDetailEntity> findByBucketAndKeyPathStartingWith(String bucket, String keyPath);
   List<KeyDetailEntity> findByBucketAndKeyPath(String bucket, String keyPath);
+  List<KeyDetailEntity> findByBucketAndContentTypeStartingWithAndStatus(String bucket, String contentTypePrefix, Status status);
+  Optional<KeyDetailEntity> findByBucketAndKeyPathAndContentTypeStartingWithAndStatus(String bucket, String keyPath, String contentTypePrefix, Status status);
 }

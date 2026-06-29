@@ -1,0 +1,172 @@
+"""A reusable checklist item definition, optionally grouped into a category."""
+type ChecklistItem {
+  id: String!
+  name: String!
+  description: String
+  categoryId: ID
+  lifecycleStatus: String!
+  createdAt: Date
+  updatedAt: Date
+}
+
+"""A dated checklist instance carrying a set of items with per-item status."""
+type ChecklistEntry {
+  id: String!
+  name: String
+  dueAt: Date
+  completedAt: Date
+  status: String!
+  createdAt: Date
+  updatedAt: Date
+}
+
+"""A reusable set of items that can seed new checklist entries."""
+type ChecklistTemplate {
+  id: String!
+  name: String!
+  description: String
+  status: String!
+  createdAt: Date
+  updatedAt: Date
+}
+
+"""A grouping for checklist items (e.g. chores, work, packing)."""
+type ChecklistCategory {
+  id: String!
+  name: String!
+  description: String
+  createdAt: Date
+  updatedAt: Date
+}
+
+"""An item linked to an entry, carrying its runtime status and ordering."""
+type ChecklistEntryItem {
+  id: ID!
+  entryId: ID!
+  itemId: ID!
+  status: String!
+  position: Int!
+}
+
+"""An item linked to a template, carrying only its ordering position."""
+type ChecklistTemplateItem {
+  id: ID!
+  templateId: ID!
+  itemId: ID!
+  position: Int!
+}
+
+"""A page of checklist items."""
+type ChecklistItemPage {
+  items: [ChecklistItem!]!
+  totalCount: Int!
+  page: Int!
+  size: Int!
+  totalPages: Int!
+}
+
+"""Notes and remote-object links for an entry, template, or item."""
+type ChecklistDetail {
+  ownerId: ID!
+  description: String
+  remoteObject: [String!]
+}
+
+"""The kind of checklist entity that owns a detail."""
+enum RemoteObjectType {
+  ENTRY
+  TEMPLATE
+  ITEM
+}
+
+"""
+A generic reference returned by locateRemoteObjects: which checklist detail
+references a given foreign object.
+"""
+type RemoteObjectReference {
+  id: ID!
+  ownerType: RemoteObjectType!
+  ownerId: ID!
+  description: String
+}
+
+input ChecklistItemInput {
+  id: ID
+  name: String!
+  description: String
+  categoryId: ID
+  lifecycleStatus: String
+}
+
+input ChecklistEntryInput {
+  id: ID
+  name: String
+  dueAt: Date
+  status: String
+}
+
+input ChecklistTemplateInput {
+  id: ID
+  name: String!
+  description: String
+  status: String
+}
+
+input ChecklistCategoryInput {
+  id: ID
+  name: String!
+  description: String
+}
+
+"""Read operations for checklists."""
+type ChecklistQueries {
+  items(page: Int, size: Int, sortBy: String, sortDir: String): ChecklistItemPage
+  item(id: ID!): ChecklistItem
+  entry(id: ID!): ChecklistEntry
+  template(id: ID!): ChecklistTemplate
+  templateDetails(id: ID!): ChecklistDetail
+  entryDetails(id: ID!): ChecklistDetail
+  itemDetails(id: ID!): ChecklistDetail
+  templateItems(templateId: ID!): [ChecklistTemplateItem!]
+  listEntries: [ChecklistEntry!]
+  listTemplates: [ChecklistTemplate!]
+  listCategories: [ChecklistCategory!]
+  locateRemoteObjects(ids: [String!]!): [RemoteObjectReference!]!
+}
+
+"""Write operations for checklists."""
+type ChecklistMutations {
+  createItem(name: String!, description: String, categoryId: ID): QueryResult
+  saveItem(input: ChecklistItemInput!): QueryResult
+  retireItem(id: ID!): QueryResult
+
+  createCategory(name: String!, description: String): QueryResult
+  saveCategory(input: ChecklistCategoryInput!): QueryResult
+
+  createChecklist(name: String): QueryResult
+  createChecklistFromTemplate(templateId: ID!): QueryResult
+  saveChecklist(input: ChecklistEntryInput!): QueryResult
+  completeChecklist(id: ID!): QueryResult
+  archiveChecklist(id: ID!): QueryResult
+
+  createTemplate(name: String!, description: String, itemIds: [ID!]): QueryResult
+  saveTemplate(input: ChecklistTemplateInput!): QueryResult
+  archiveTemplate(id: ID!): QueryResult
+
+  addItem(entryId: ID!, itemId: ID!, position: Int): QueryResult
+  removeItem(entryId: ID!, itemId: ID!): QueryResult
+  setItemStatus(entryId: ID!, itemId: ID!, status: String!): QueryResult
+
+  addTemplateItem(templateId: ID!, itemId: ID!, position: Int): QueryResult
+  removeTemplateItem(templateId: ID!, itemId: ID!): QueryResult
+
+  attachObject(source: ID!, target: ID!, ownerType: RemoteObjectType): QueryResult
+}
+
+extend type Query {
+  checklistQueries: ChecklistQueries!
+}
+
+extend type Mutation {
+  checklistMutations: ChecklistMutations!
+}

@@ -56,9 +56,9 @@ public class GalleryDataFetcher {
    * @param ids the list of foreign object IDs to search for
    * @return a list of GalleryItem objects
    */
-  @DgsData(parentType = "GalleryQueries", field = "listByForeignObjects")
-  public List<GalleryItem> listByForeignObjects(List<String> ids) {
-    return galleryGraphQLService.listByForeignObjects(ids);
+  @DgsData(parentType = "GalleryQueries", field = "listByRemoteObjects")
+  public List<GalleryItem> listByRemoteObjects(List<String> ids) {
+    return galleryGraphQLService.listByRemoteObjects(ids);
   }
 
   /**

@@ -70,7 +70,7 @@ export type GalleryItem = {
   content?: Maybe<Scalars["String"]["output"]>;
   createdAt?: Maybe<Scalars["Date"]["output"]>;
   description?: Maybe<Scalars["String"]["output"]>;
-  foreignObject?: Maybe<Array<Scalars["String"]["output"]>>;
+  remoteObject?: Maybe<Array<Scalars["String"]["output"]>>;
   id: Scalars["String"]["output"];
   imagePath?: Maybe<Scalars["String"]["output"]>;
   title: Scalars["String"]["output"];
@@ -80,7 +80,7 @@ export type GalleryItem = {
 export type GalleryItemInput = {
   content?: InputMaybe<Scalars["String"]["input"]>;
   description?: InputMaybe<Scalars["String"]["input"]>;
-  foreignObject?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  remoteObject?: InputMaybe<Array<Scalars["String"]["input"]>>;
   imagePath?: InputMaybe<Scalars["String"]["input"]>;
   title: Scalars["String"]["input"];
 };
@@ -97,11 +97,11 @@ export type GalleryMutationsCreateArgs = {
 export type GalleryQueries = {
   __typename?: "GalleryQueries";
   list?: Maybe<Array<Maybe<GalleryItem>>>;
-  listByForeignObjects?: Maybe<Array<Maybe<GalleryItem>>>;
+  listByRemoteObjects?: Maybe<Array<Maybe<GalleryItem>>>;
   locate?: Maybe<GalleryItem>;
 };
 
-export type GalleryQueriesListByForeignObjectsArgs = {
+export type GalleryQueriesListByRemoteObjectsArgs = {
   ids: Array<Scalars["String"]["input"]>;
 };
 
@@ -238,29 +238,29 @@ export type ListGalleryItemsQuery = {
       description?: string | null;
       content?: string | null;
       imagePath?: string | null;
-      foreignObject?: Array<string> | null;
+      remoteObject?: Array<string> | null;
       createdAt?: any | null;
       updatedAt?: any | null;
     } | null> | null;
   };
 };
 
-export type ListGalleryItemsByForeignObjectsQueryVariables = Exact<{
+export type ListGalleryItemsByRemoteObjectsQueryVariables = Exact<{
   ids: Array<Scalars["String"]["input"]> | Scalars["String"]["input"];
 }>;
 
-export type ListGalleryItemsByForeignObjectsQuery = {
+export type ListGalleryItemsByRemoteObjectsQuery = {
   __typename?: "Query";
   galleryQueries: {
     __typename?: "GalleryQueries";
-    listByForeignObjects?: Array<{
+    listByRemoteObjects?: Array<{
       __typename?: "GalleryItem";
       id: string;
       title: string;
       description?: string | null;
       content?: string | null;
       imagePath?: string | null;
-      foreignObject?: Array<string> | null;
+      remoteObject?: Array<string> | null;
       createdAt?: any | null;
       updatedAt?: any | null;
     } | null> | null;
@@ -282,7 +282,7 @@ export type LocateGalleryItemQuery = {
       description?: string | null;
       content?: string | null;
       imagePath?: string | null;
-      foreignObject?: Array<string> | null;
+      remoteObject?: Array<string> | null;
       createdAt?: any | null;
       updatedAt?: any | null;
     } | null;
@@ -695,7 +695,7 @@ export const ListGalleryItemsDocument = {
                       },
                       {
                         kind: "Field",
-                        name: { kind: "Name", value: "foreignObject" },
+                        name: { kind: "Name", value: "remoteObject" },
                       },
                       {
                         kind: "Field",
@@ -719,13 +719,13 @@ export const ListGalleryItemsDocument = {
   ListGalleryItemsQuery,
   ListGalleryItemsQueryVariables
 >;
-export const ListGalleryItemsByForeignObjectsDocument = {
+export const ListGalleryItemsByRemoteObjectsDocument = {
   kind: "Document",
   definitions: [
     {
       kind: "OperationDefinition",
       operation: "query",
-      name: { kind: "Name", value: "listGalleryItemsByForeignObjects" },
+      name: { kind: "Name", value: "listGalleryItemsByRemoteObjects" },
       variableDefinitions: [
         {
           kind: "VariableDefinition",
@@ -756,7 +756,7 @@ export const ListGalleryItemsByForeignObjectsDocument = {
               selections: [
                 {
                   kind: "Field",
-                  name: { kind: "Name", value: "listByForeignObjects" },
+                  name: { kind: "Name", value: "listByRemoteObjects" },
                   arguments: [
                     {
                       kind: "Argument",
@@ -786,7 +786,7 @@ export const ListGalleryItemsByForeignObjectsDocument = {
                       },
                       {
                         kind: "Field",
-                        name: { kind: "Name", value: "foreignObject" },
+                        name: { kind: "Name", value: "remoteObject" },
                       },
                       {
                         kind: "Field",
@@ -807,8 +807,8 @@ export const ListGalleryItemsByForeignObjectsDocument = {
     },
   ],
 } as unknown as DocumentNode<
-  ListGalleryItemsByForeignObjectsQuery,
-  ListGalleryItemsByForeignObjectsQueryVariables
+  ListGalleryItemsByRemoteObjectsQuery,
+  ListGalleryItemsByRemoteObjectsQueryVariables
 >;
 export const LocateGalleryItemDocument = {
   kind: "Document",
@@ -868,7 +868,7 @@ export const LocateGalleryItemDocument = {
                       },
                       {
                         kind: "Field",
-                        name: { kind: "Name", value: "foreignObject" },
+                        name: { kind: "Name", value: "remoteObject" },
                       },
                       {
                         kind: "Field",

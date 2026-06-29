@@ -18,9 +18,9 @@ type Documents = {
   "query listBlogPosts {\n  blogQueries {\n    listBlogPosts {\n      id\n      title\n      createdAt\n      tags\n    }\n  }\n}": typeof types.ListBlogPostsDocument;
   "query locateBlogPost($id: ID!) {\n  blogQueries {\n    locateBlogPost(id: $id) {\n      title\n      content\n      tags\n      createdAt\n      updatedAt\n    }\n  }\n}": typeof types.LocateBlogPostDocument;
   "mutation createGalleryItem($input: GalleryItemInput!) {\n  galleryMutations {\n    create(input: $input) {\n      ... on QuerySuccess {\n        message\n        id\n      }\n      ... on StandardError {\n        message\n      }\n    }\n  }\n}": typeof types.CreateGalleryItemDocument;
-  "query listGalleryItems {\n  galleryQueries {\n    list {\n      id\n      title\n      description\n      content\n      imagePath\n      foreignObject\n      createdAt\n      updatedAt\n    }\n  }\n}": typeof types.ListGalleryItemsDocument;
-  "query listGalleryItemsByForeignObjects($ids: [String!]!) {\n  galleryQueries {\n    listByForeignObjects(ids: $ids) {\n      id\n      title\n      description\n      content\n      imagePath\n      foreignObject\n      createdAt\n      updatedAt\n    }\n  }\n}": typeof types.ListGalleryItemsByForeignObjectsDocument;
-  "query locateGalleryItem($id: ID!) {\n  galleryQueries {\n    locate(id: $id) {\n      id\n      title\n      description\n      content\n      imagePath\n      foreignObject\n      createdAt\n      updatedAt\n    }\n  }\n}": typeof types.LocateGalleryItemDocument;
+  "query listGalleryItems {\n  galleryQueries {\n    list {\n      id\n      title\n      description\n      content\n      imagePath\n      remoteObject\n      createdAt\n      updatedAt\n    }\n  }\n}": typeof types.ListGalleryItemsDocument;
+  "query listGalleryItemsByRemoteObjects($ids: [String!]!) {\n  galleryQueries {\n    listByRemoteObjects(ids: $ids) {\n      id\n      title\n      description\n      content\n      imagePath\n      remoteObject\n      createdAt\n      updatedAt\n    }\n  }\n}": typeof types.ListGalleryItemsByRemoteObjectsDocument;
+  "query locateGalleryItem($id: ID!) {\n  galleryQueries {\n    locate(id: $id) {\n      id\n      title\n      description\n      content\n      imagePath\n      remoteObject\n      createdAt\n      updatedAt\n    }\n  }\n}": typeof types.LocateGalleryItemDocument;
   "query listSongs {\n  stemPlayerQueries {\n    list {\n      id\n      name\n    }\n  }\n}": typeof types.ListSongsDocument;
   "query locateSong($id: ID!) {\n  stemPlayerQueries {\n    locate(id: $id) {\n      name\n      path\n      stems {\n        path\n        name\n      }\n    }\n  }\n}": typeof types.LocateSongDocument;
 };
@@ -33,11 +33,11 @@ const documents: Documents = {
     types.LocateBlogPostDocument,
   "mutation createGalleryItem($input: GalleryItemInput!) {\n  galleryMutations {\n    create(input: $input) {\n      ... on QuerySuccess {\n        message\n        id\n      }\n      ... on StandardError {\n        message\n      }\n    }\n  }\n}":
     types.CreateGalleryItemDocument,
-  "query listGalleryItems {\n  galleryQueries {\n    list {\n      id\n      title\n      description\n      content\n      imagePath\n      foreignObject\n      createdAt\n      updatedAt\n    }\n  }\n}":
+  "query listGalleryItems {\n  galleryQueries {\n    list {\n      id\n      title\n      description\n      content\n      imagePath\n      remoteObject\n      createdAt\n      updatedAt\n    }\n  }\n}":
     types.ListGalleryItemsDocument,
-  "query listGalleryItemsByForeignObjects($ids: [String!]!) {\n  galleryQueries {\n    listByForeignObjects(ids: $ids) {\n      id\n      title\n      description\n      content\n      imagePath\n      foreignObject\n      createdAt\n      updatedAt\n    }\n  }\n}":
-    types.ListGalleryItemsByForeignObjectsDocument,
-  "query locateGalleryItem($id: ID!) {\n  galleryQueries {\n    locate(id: $id) {\n      id\n      title\n      description\n      content\n      imagePath\n      foreignObject\n      createdAt\n      updatedAt\n    }\n  }\n}":
+  "query listGalleryItemsByRemoteObjects($ids: [String!]!) {\n  galleryQueries {\n    listByRemoteObjects(ids: $ids) {\n      id\n      title\n      description\n      content\n      imagePath\n      remoteObject\n      createdAt\n      updatedAt\n    }\n  }\n}":
+    types.ListGalleryItemsByRemoteObjectsDocument,
+  "query locateGalleryItem($id: ID!) {\n  galleryQueries {\n    locate(id: $id) {\n      id\n      title\n      description\n      content\n      imagePath\n      remoteObject\n      createdAt\n      updatedAt\n    }\n  }\n}":
     types.LocateGalleryItemDocument,
   "query listSongs {\n  stemPlayerQueries {\n    list {\n      id\n      name\n    }\n  }\n}":
     types.ListSongsDocument,
@@ -87,20 +87,20 @@ export function graphql(
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
-  source: "query listGalleryItems {\n  galleryQueries {\n    list {\n      id\n      title\n      description\n      content\n      imagePath\n      foreignObject\n      createdAt\n      updatedAt\n    }\n  }\n}",
-): (typeof documents)["query listGalleryItems {\n  galleryQueries {\n    list {\n      id\n      title\n      description\n      content\n      imagePath\n      foreignObject\n      createdAt\n      updatedAt\n    }\n  }\n}"];
+  source: "query listGalleryItems {\n  galleryQueries {\n    list {\n      id\n      title\n      description\n      content\n      imagePath\n      remoteObject\n      createdAt\n      updatedAt\n    }\n  }\n}",
+): (typeof documents)["query listGalleryItems {\n  galleryQueries {\n    list {\n      id\n      title\n      description\n      content\n      imagePath\n      remoteObject\n      createdAt\n      updatedAt\n    }\n  }\n}"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
-  source: "query listGalleryItemsByForeignObjects($ids: [String!]!) {\n  galleryQueries {\n    listByForeignObjects(ids: $ids) {\n      id\n      title\n      description\n      content\n      imagePath\n      foreignObject\n      createdAt\n      updatedAt\n    }\n  }\n}",
-): (typeof documents)["query listGalleryItemsByForeignObjects($ids: [String!]!) {\n  galleryQueries {\n    listByForeignObjects(ids: $ids) {\n      id\n      title\n      description\n      content\n      imagePath\n      foreignObject\n      createdAt\n      updatedAt\n    }\n  }\n}"];
+  source: "query listGalleryItemsByRemoteObjects($ids: [String!]!) {\n  galleryQueries {\n    listByRemoteObjects(ids: $ids) {\n      id\n      title\n      description\n      content\n      imagePath\n      remoteObject\n      createdAt\n      updatedAt\n    }\n  }\n}",
+): (typeof documents)["query listGalleryItemsByRemoteObjects($ids: [String!]!) {\n  galleryQueries {\n    listByRemoteObjects(ids: $ids) {\n      id\n      title\n      description\n      content\n      imagePath\n      remoteObject\n      createdAt\n      updatedAt\n    }\n  }\n}"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
-  source: "query locateGalleryItem($id: ID!) {\n  galleryQueries {\n    locate(id: $id) {\n      id\n      title\n      description\n      content\n      imagePath\n      foreignObject\n      createdAt\n      updatedAt\n    }\n  }\n}",
-): (typeof documents)["query locateGalleryItem($id: ID!) {\n  galleryQueries {\n    locate(id: $id) {\n      id\n      title\n      description\n      content\n      imagePath\n      foreignObject\n      createdAt\n      updatedAt\n    }\n  }\n}"];
+  source: "query locateGalleryItem($id: ID!) {\n  galleryQueries {\n    locate(id: $id) {\n      id\n      title\n      description\n      content\n      imagePath\n      remoteObject\n      createdAt\n      updatedAt\n    }\n  }\n}",
+): (typeof documents)["query locateGalleryItem($id: ID!) {\n  galleryQueries {\n    locate(id: $id) {\n      id\n      title\n      description\n      content\n      imagePath\n      remoteObject\n      createdAt\n      updatedAt\n    }\n  }\n}"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
