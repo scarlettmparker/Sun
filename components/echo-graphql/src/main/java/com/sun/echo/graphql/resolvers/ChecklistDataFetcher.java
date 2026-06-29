@@ -189,11 +189,12 @@ public class ChecklistDataFetcher {
    * @param name the item name
    * @param description an optional description
    * @param categoryId an optional category id
+   * @param icon an optional icon name
    * @return a QueryResult
    */
   @DgsData(parentType = "ChecklistMutations", field = "createItem")
-  public QueryResult createItem(String name, String description, String categoryId) {
-    return checklistGraphQLService.createItem(name, description, categoryId);
+  public QueryResult createItem(String name, String description, String categoryId, String icon) {
+    return checklistGraphQLService.createItem(name, description, categoryId, icon);
   }
 
   /**

@@ -256,14 +256,16 @@ public class ChecklistGraphQLService {
    * @param name the item name
    * @param description an optional description
    * @param categoryId an optional category id
+   * @param icon an optional icon name
    * @return a QueryResult
    */
   @Transactional("echoTransactionManager")
-  public QueryResult createItem(String name, String description, String categoryId) {
+  public QueryResult createItem(String name, String description, String categoryId, String icon) {
     return mutate("createItem", () -> {
       ChecklistItemEntity entity = new ChecklistItemEntity();
       entity.setName(name);
       entity.setDescription(description);
+      entity.setIcon(icon);
       if (categoryId != null) {
         entity.setCategoryId(UUID.fromString(categoryId));
       }

@@ -3,6 +3,7 @@ type ChecklistItem {
   id: String!
   name: String!
   description: String
+  icon: String
   categoryId: ID
   lifecycleStatus: String!
   createdAt: Date
@@ -96,6 +97,7 @@ input ChecklistItemInput {
   description: String
   categoryId: ID
   lifecycleStatus: String
+  icon: String
 }
 
 input ChecklistEntryInput {
@@ -136,7 +138,7 @@ type ChecklistQueries {
 
 """Write operations for checklists."""
 type ChecklistMutations {
-  createItem(name: String!, description: String, categoryId: ID): QueryResult
+  createItem(name: String!, description: String, categoryId: ID, icon: String): QueryResult
   saveItem(input: ChecklistItemInput!): QueryResult
   retireItem(id: ID!): QueryResult
 

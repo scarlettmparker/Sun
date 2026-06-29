@@ -24,6 +24,7 @@ public class ChecklistItemMapper {
         .id(entity.getId().toString())
         .name(entity.getName())
         .description(entity.getDescription())
+        .icon(entity.getIcon())
         .categoryId(entity.getCategoryId() != null ? entity.getCategoryId().toString() : null)
         .lifecycleStatus(entity.getLifecycleStatus() != null ? entity.getLifecycleStatus().name() : null)
         .createdAt(entity.getCreatedAt())
@@ -49,6 +50,9 @@ public class ChecklistItemMapper {
     }
     if (input.getLifecycleStatus() != null) {
       entity.setLifecycleStatus(LifecycleStatus.valueOf(input.getLifecycleStatus()));
+    }
+    if (input.getIcon() != null) {
+      entity.setIcon(input.getIcon());
     }
   }
 }

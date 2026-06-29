@@ -12,6 +12,7 @@ import { createBlogPost } from "~/server/actions/blog-post";
 import { Button } from "@sun/components";
 import styles from "./create-blog-form.module.css";
 import { MarkdownEditor } from "@sun/components";
+import { Link } from "react-router-dom";
 
 /**
  * Form for creating a new blog post.
@@ -71,7 +72,7 @@ const CreateBlogForm = () => {
         </FormItem>
       </FormField>
       <FormFooter>
-        <a href="/blog">
+        <Link to="/blog">
           <Button
             type="button"
             variant="secondary"
@@ -79,7 +80,7 @@ const CreateBlogForm = () => {
           >
             {t("form.cancel.label")}
           </Button>
-        </a>
+        </Link>
         <Button
           type="submit"
           title={loading ? t("form.creating.title") : t("form.create.title")}

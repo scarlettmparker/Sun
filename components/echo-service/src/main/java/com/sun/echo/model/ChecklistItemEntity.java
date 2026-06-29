@@ -19,6 +19,9 @@ public class ChecklistItemEntity extends BaseEntity {
   @Column(name = "description", columnDefinition = "text")
   private String description;
 
+  @Column(name = "icon")
+  private String icon;
+
   @Column(name = "category_id")
   private UUID categoryId;
 
@@ -40,6 +43,14 @@ public class ChecklistItemEntity extends BaseEntity {
 
   public void setDescription(String description) {
     this.description = description;
+  }
+
+  public String getIcon() {
+    return icon;
+  }
+
+  public void setIcon(String icon) {
+    this.icon = icon;
   }
 
   public UUID getCategoryId() {

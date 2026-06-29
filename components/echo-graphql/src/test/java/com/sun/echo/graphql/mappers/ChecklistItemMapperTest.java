@@ -28,6 +28,7 @@ class ChecklistItemMapperTest {
     entity.setId(id);
     entity.setName("Buy milk");
     entity.setDescription("2 liters");
+    entity.setIcon("milk");
     entity.setCategoryId(categoryId);
     entity.setLifecycleStatus(LifecycleStatus.ACTIVE);
     entity.setCreatedAt(createdAt);
@@ -38,6 +39,7 @@ class ChecklistItemMapperTest {
     assertThat(result.getId()).isEqualTo(id.toString());
     assertThat(result.getName()).isEqualTo("Buy milk");
     assertThat(result.getDescription()).isEqualTo("2 liters");
+    assertThat(result.getIcon()).isEqualTo("milk");
     assertThat(result.getCategoryId()).isEqualTo(categoryId.toString());
     assertThat(result.getLifecycleStatus()).isEqualTo("ACTIVE");
     assertThat(result.getCreatedAt()).isEqualTo(createdAt);
@@ -49,6 +51,7 @@ class ChecklistItemMapperTest {
     ChecklistItemInput input = ChecklistItemInput.newBuilder()
         .name("Updated")
         .description("desc")
+        .icon("cart")
         .categoryId(UUID.randomUUID().toString())
         .lifecycleStatus("RETIRED")
         .build();
@@ -58,6 +61,7 @@ class ChecklistItemMapperTest {
 
     assertThat(entity.getName()).isEqualTo("Updated");
     assertThat(entity.getDescription()).isEqualTo("desc");
+    assertThat(entity.getIcon()).isEqualTo("cart");
     assertThat(entity.getLifecycleStatus()).isEqualTo(LifecycleStatus.RETIRED);
   }
 }
