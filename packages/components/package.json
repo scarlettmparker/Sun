@@ -1,6 +1,6 @@
 {
   "name": "@sun/components",
-  "version": "0.6.0",
+  "version": "0.6.2",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -15,7 +15,7 @@
     "build": "tsup",
     "lint": "npx eslint",
     "test": "jest --maxWorkers=50%",
-    "publish": "npm publish --registry https://registry.int.scarlettparker.co.uk"
+    "publish": "npm publish --ignore-scripts --registry https://registry.int.scarlettparker.co.uk"
   },
   "devDependencies": {
     "@eslint/js": "^9.37.0",
