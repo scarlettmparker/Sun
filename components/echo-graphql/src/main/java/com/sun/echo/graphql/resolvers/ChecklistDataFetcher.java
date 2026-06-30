@@ -20,6 +20,7 @@ import com.sun.echo.codegen.types.QueryResult;
 import com.sun.echo.codegen.types.RemoteObjectReference;
 import com.sun.echo.codegen.types.RemoteObjectType;
 import com.sun.echo.graphql.services.ChecklistGraphQLService;
+import com.sun.echo.model.enums.ItemStatus;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -378,7 +379,7 @@ public class ChecklistDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "ChecklistMutations", field = "setItemStatus")
-  public QueryResult setItemStatus(String entryId, String itemId, String status) {
+  public QueryResult setItemStatus(String entryId, String itemId, ItemStatus status) {
     return checklistGraphQLService.setItemStatus(entryId, itemId, status);
   }
 

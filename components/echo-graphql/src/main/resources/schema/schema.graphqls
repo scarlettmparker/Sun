@@ -47,7 +47,7 @@ type ChecklistEntryItem {
   itemId: ID!
   name: String
   icon: String
-  status: String!
+  status: ItemStatus!
   position: Int!
 }
 
@@ -82,6 +82,14 @@ enum RemoteObjectType {
   ENTRY
   TEMPLATE
   ITEM
+}
+
+"""Status of an item within a checklist entry."""
+enum ItemStatus {
+  NOT_STARTED
+  COMPLETE
+  FAILED
+  NOT_NEEDED
 }
 
 """
@@ -162,7 +170,7 @@ type ChecklistMutations {
 
   addItem(entryId: ID!, itemId: ID!, position: Int): QueryResult
   removeItem(entryId: ID!, itemId: ID!): QueryResult
-  setItemStatus(entryId: ID!, itemId: ID!, status: String!): QueryResult
+  setItemStatus(entryId: ID!, itemId: ID!, status: ItemStatus!): QueryResult
 
   addTemplateItem(templateId: ID!, itemId: ID!, position: Int): QueryResult
   removeTemplateItem(templateId: ID!, itemId: ID!): QueryResult

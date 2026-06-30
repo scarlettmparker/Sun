@@ -493,9 +493,9 @@ public class ChecklistGraphQLService {
    * @return a QueryResult
    */
   @Transactional("echoTransactionManager")
-  public QueryResult setItemStatus(String entryId, String itemId, String status) {
+  public QueryResult setItemStatus(String entryId, String itemId, ItemStatus status) {
     return mutate("setItemStatus", () -> entryItemService
-        .setStatus(UUID.fromString(entryId), UUID.fromString(itemId), ItemStatus.valueOf(status)).getId());
+        .setStatus(UUID.fromString(entryId), UUID.fromString(itemId), status).getId());
   }
 
   /**
