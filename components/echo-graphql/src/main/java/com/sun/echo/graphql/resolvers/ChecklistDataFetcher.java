@@ -14,6 +14,7 @@ import com.sun.echo.codegen.types.ChecklistMutations;
 import com.sun.echo.codegen.types.ChecklistQueries;
 import com.sun.echo.codegen.types.ChecklistTemplate;
 import com.sun.echo.codegen.types.ChecklistTemplateInput;
+import com.sun.echo.codegen.types.ChecklistEntryItem;
 import com.sun.echo.codegen.types.ChecklistTemplateItem;
 import com.sun.echo.codegen.types.QueryResult;
 import com.sun.echo.codegen.types.RemoteObjectReference;
@@ -130,6 +131,17 @@ public class ChecklistDataFetcher {
   @DgsData(parentType = "ChecklistQueries", field = "templateItems")
   public List<ChecklistTemplateItem> templateItems(String templateId) {
     return checklistGraphQLService.templateItems(templateId);
+  }
+
+  /**
+   * Lists the items belonging to an entry, ordered by position.
+   *
+   * @param entryId the entry id
+   * @return a list of ChecklistEntryItem objects
+   */
+  @DgsData(parentType = "ChecklistQueries", field = "entryItems")
+  public List<ChecklistEntryItem> entryItems(String entryId) {
+    return checklistGraphQLService.entryItems(entryId);
   }
 
   /**

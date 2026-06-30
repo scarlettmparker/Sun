@@ -16,6 +16,7 @@ export {
   CardHeader,
   CardTitle,
 } from "./components/card";
+export { default as Checkbox } from "./components/checkbox";
 export {
   default as ContextMenu,
   ContextMenuContent,

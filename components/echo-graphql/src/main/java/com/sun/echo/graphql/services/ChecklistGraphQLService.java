@@ -202,6 +202,17 @@ public class ChecklistGraphQLService {
   }
 
   /**
+   * Lists the items belonging to an entry, ordered by position.
+   *
+   * @param entryId the entry id
+   * @return the GraphQL ChecklistEntryItems
+   */
+  @Transactional(value = "echoTransactionManager", readOnly = true)
+  public List<ChecklistEntryItem> entryItems(String entryId) {
+    return entryItemMapper.map(entryItemService.listForEntry(UUID.fromString(entryId)));
+  }
+
+  /**
    * Lists every checklist entry.
    *
    * @return the GraphQL ChecklistEntries

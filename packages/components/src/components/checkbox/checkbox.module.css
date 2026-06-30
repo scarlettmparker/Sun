@@ -1,0 +1,27 @@
+.checkbox_wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--md);
+  cursor: pointer;
+}
+
+.checkbox {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.checkbox:hover {
+  accent-color: var(--primary-hover);
+}
+
+.checkbox:focus {
+  outline: none;
+  box-shadow: var(--focus-shadow);
+}
+
+.checkbox_label {
+  color: var(--text);
+  font-size: inherit;
+}

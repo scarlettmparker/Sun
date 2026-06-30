@@ -45,6 +45,8 @@ type ChecklistEntryItem {
   id: ID!
   entryId: ID!
   itemId: ID!
+  name: String
+  icon: String
   status: String!
   position: Int!
 }
@@ -54,6 +56,8 @@ type ChecklistTemplateItem {
   id: ID!
   templateId: ID!
   itemId: ID!
+  name: String
+  icon: String
   position: Int!
 }
 
@@ -130,6 +134,7 @@ type ChecklistQueries {
   entryDetails(id: ID!): ChecklistDetail
   itemDetails(id: ID!): ChecklistDetail
   templateItems(templateId: ID!): [ChecklistTemplateItem!]
+  entryItems(entryId: ID!): [ChecklistEntryItem!]
   listEntries: [ChecklistEntry!]
   listTemplates: [ChecklistTemplate!]
   listCategories: [ChecklistCategory!]
