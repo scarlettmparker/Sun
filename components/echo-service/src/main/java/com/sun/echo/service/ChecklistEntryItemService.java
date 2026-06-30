@@ -5,6 +5,7 @@ import com.sun.echo.model.ChecklistEntryItemEntity;
 import com.sun.echo.model.enums.ItemStatus;
 import com.sun.echo.repository.ChecklistEntryItemRepository;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,6 +42,12 @@ public class ChecklistEntryItemService extends BaseService<ChecklistEntryItemEnt
    * @return the new entry item
    */
   public ChecklistEntryItemEntity addItem(UUID entryId, UUID itemId, Integer position) {
+    Optional<ChecklistEntryItemEntity> existing =
+        entryItemRepository.findByEntryIdAndItemId(entryId, itemId);
+    if (existing.isPresent()) {
+      return existing.get();
+    }
+
     ChecklistEntryItemEntity entity = new ChecklistEntryItemEntity();
     entity.setEntryId(entryId);
     entity.setItemId(itemId);

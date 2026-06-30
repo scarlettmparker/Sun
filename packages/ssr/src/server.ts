@@ -157,6 +157,13 @@ export function mutationPostHandler(): (
         (request.body as Record<string, unknown>) ?? {},
       );
 
+      if (result.invalidated && result.invalidated.length) {
+        reply.header(
+          "Set-Cookie",
+          `invalidate_cache=${encodeURIComponent(JSON.stringify(result.invalidated))}; Path=/; Max-Age=31536000; SameSite=Lax;`,
+        );
+      }
+
       if (result.__typename === "QuerySuccess") {
         reply.send(result);
         return;
