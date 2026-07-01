@@ -55,19 +55,14 @@ export const BreadcrumbContext = createContext<BreadcrumbContextValue | null>(
   null,
 );
 
-type BreadcrumbProps = React.HTMLAttributes<HTMLElement> & {
-  /**
-   * Custom separator between items, defaults to "/".
-   */
-  separator?: React.ReactNode;
-};
+type BreadcrumbProviderProps = React.PropsWithChildren;
 
 /**
- * Scarlet UI Breadcrumb root. Manages dynamic crumbs list via context.
- * Renders accessible nav/ol with BreadcrumbItem children.
+ * Provides breadcrumb state via context without rendering the nav.
+ *
+ * @param children The content to render within the provider.
  */
-const Breadcrumb = (props: BreadcrumbProps) => {
-  const { separator = "/", className, children, ...rest } = props;
+const BreadcrumbProvider = ({ children }: BreadcrumbProviderProps) => {
   const [crumbs, setCrumbs] = useState<Crumb[]>([]);
   const [current, setCurrentState] = useState<string | undefined>();
 
@@ -108,27 +103,57 @@ const Breadcrumb = (props: BreadcrumbProps) => {
 
   return (
     <BreadcrumbContext.Provider value={contextValue}>
-      <nav aria-label="breadcrumb" {...rest}>
-        <ol className={cn("breadcrumb", className)}>
-          {crumbs.map((crumb, index) => {
-            // The item is visually active if it matches `current` or is the final node
-            const isActive =
-              current === crumb.href || index === crumbs.length - 1;
-            return (
-              <BreadcrumbItem
-                key={index}
-                href={crumb.href}
-                active={isActive}
-                separator={separator}
-              >
-                {crumb.label}
-              </BreadcrumbItem>
-            );
-          })}
-        </ol>
-      </nav>
       {children}
     </BreadcrumbContext.Provider>
+  );
+};
+
+type BreadcrumbProps = React.HTMLAttributes<HTMLElement> & {
+  /**
+   * Custom separator between items, defaults to "/".
+   */
+  separator?: React.ReactNode;
+};
+
+/**
+ * Renders the breadcrumb nav from the nearest BreadcrumbContext. Must be used
+ * inside a <BreadcrumbProvider>.
+ *
+ * @param separator Custom separator between items, defaults to "/".
+ */
+const Breadcrumb = (props: BreadcrumbProps) => {
+  const { separator = "/", className, children, ...rest } = props;
+  const context = useContext(BreadcrumbContext);
+
+  if (!context) {
+    throw new Error(
+      "<Breadcrumb /> must be used within a <BreadcrumbProvider>",
+    );
+  }
+
+  const { crumbs, current } = context;
+
+  return (
+    <nav aria-label="breadcrumb" {...rest}>
+      <ol className={cn("breadcrumb", className)}>
+        {crumbs.map((crumb, index) => {
+          // The item is visually active if it matches `current` or is the final node
+          const isActive =
+            current === crumb.href || index === crumbs.length - 1;
+          return (
+            <BreadcrumbItem
+              key={index}
+              href={crumb.href}
+              active={isActive}
+              separator={separator}
+            >
+              {crumb.label}
+            </BreadcrumbItem>
+          );
+        })}
+      </ol>
+      {children}
+    </nav>
   );
 };
 
@@ -179,11 +204,11 @@ const useBreadcrumbContext = () => {
   const context = useContext(BreadcrumbContext);
   if (!context) {
     throw new Error(
-      "useBreadcrumbContext must be used within a <Breadcrumb /> component",
+      "useBreadcrumbContext must be used within a <BreadcrumbProvider>",
     );
   }
   return context;
 };
 
 export default Breadcrumb;
-export { BreadcrumbItem, useBreadcrumbContext };
+export { BreadcrumbItem, BreadcrumbProvider, useBreadcrumbContext };

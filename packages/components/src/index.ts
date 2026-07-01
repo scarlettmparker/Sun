@@ -5,6 +5,7 @@ export {
   default as Breadcrumb,
   BreadcrumbContext,
   BreadcrumbItem,
+  BreadcrumbProvider,
   useBreadcrumbContext,
 } from "./components/breadcrumb";
 export { default as Button } from "./components/button";
