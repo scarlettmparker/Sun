@@ -1,7 +1,9 @@
 package com.sun.base.model;
 
 import jakarta.persistence.*;
+import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
@@ -23,7 +25,14 @@ public abstract class BaseEntity {
     @Column(nullable = false, columnDefinition = "timestamp(6) default current_timestamp")
     private LocalDateTime lastUpdatedAt;
 
-    // Getters and setters
+    @CreatedBy
+    @Column(name = "created_by", updatable = false)
+    private UUID createdBy;
+
+    @LastModifiedBy
+    @Column(name = "last_updated_by")
+    private UUID lastUpdatedBy;
+
     public UUID getId() {
         return id;
     }
@@ -46,5 +55,21 @@ public abstract class BaseEntity {
 
     public void setLastUpdatedAt(LocalDateTime lastUpdatedAt) {
         this.lastUpdatedAt = lastUpdatedAt;
+    }
+
+    public UUID getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(UUID createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public UUID getLastUpdatedBy() {
+        return lastUpdatedBy;
+    }
+
+    public void setLastUpdatedBy(UUID lastUpdatedBy) {
+        this.lastUpdatedBy = lastUpdatedBy;
     }
 }

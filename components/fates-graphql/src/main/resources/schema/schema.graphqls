@@ -1,0 +1,67 @@
+type Person {
+  id: String!
+  firstName: String!
+  lastName: String!
+  displayName: String
+  title: String
+  email: String
+  phone: String
+  place: Place
+  createdAt: Date
+  updatedAt: Date
+}
+
+type Place {
+  id: String!
+  line1: String
+  line2: String
+  city: String
+  region: String
+  postalCode: String
+  country: String
+}
+
+input PersonInput {
+  id: ID
+  firstName: String!
+  lastName: String!
+  displayName: String
+  title: String
+  email: String
+  phone: String
+  placeId: ID
+}
+
+input PlaceInput {
+  id: ID
+  line1: String
+  line2: String
+  city: String
+  region: String
+  postalCode: String
+  country: String
+}
+
+type FatesQueries {
+  person(id: ID!): Person
+  listPeople: [Person!]
+  place(id: ID!): Place
+  listPlaces: [Place!]
+}
+
+type FatesMutations {
+  createPerson(input: PersonInput!): QueryResult
+  savePerson(input: PersonInput!): QueryResult
+  deletePerson(id: ID!): QueryResult
+  createPlace(input: PlaceInput!): QueryResult
+  savePlace(input: PlaceInput!): QueryResult
+  deletePlace(id: ID!): QueryResult
+}
+
+extend type Query {
+  fatesQueries: FatesQueries!
+}
+
+extend type Mutation {
+  fatesMutations: FatesMutations!
+}

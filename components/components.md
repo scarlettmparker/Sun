@@ -3,8 +3,8 @@ Briareus - Blogsite
 Cerberus - Gallery
 Dionysus - Filestore
 Echo - Checklist
-Fates
-Gaia
+Fates - People
+Gaia - Access
 Hades
 Icarus
 Jocasta

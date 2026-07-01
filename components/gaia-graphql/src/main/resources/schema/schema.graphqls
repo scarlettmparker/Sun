@@ -1,0 +1,58 @@
+type Account {
+  id: String!
+  username: String!
+  personId: ID!
+  status: AccountStatus!
+  provider: String
+  createdAt: Date
+  updatedAt: Date
+}
+
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING
+}
+
+type AuthResult {
+  accountId: ID!
+  personId: ID!
+  token: String!
+}
+
+input RegisterInput {
+  username: String!
+  password: String!
+  firstName: String!
+  lastName: String!
+  email: String!
+  displayName: String
+}
+
+input LoginInput {
+  username: String!
+  password: String!
+}
+
+type GaiaQueries {
+  me: Account
+  account(id: ID!): Account
+  listAccounts: [Account!]
+}
+
+type GaiaMutations {
+  register(input: RegisterInput!): AuthResult
+  login(input: LoginInput!): AuthResult
+  logout: QueryResult
+  requestPasswordReset(email: String!): QueryResult
+  resetPassword(token: String!, newPassword: String!): QueryResult
+  changePassword(currentPassword: String!, newPassword: String!): QueryResult
+}
+
+extend type Query {
+  gaiaQueries: GaiaQueries!
+}
+
+extend type Mutation {
+  gaiaMutations: GaiaMutations!
+}

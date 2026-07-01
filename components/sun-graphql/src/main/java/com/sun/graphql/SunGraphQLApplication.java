@@ -32,6 +32,21 @@ public class SunGraphQLApplication {
         setSystemProperty(dotenv, "ECHO_SPRING_DATASOURCE_URL", "ECHO_SPRING_DATASOURCE_URL");
         setSystemProperty(dotenv, "ECHO_SPRING_DATASOURCE_USERNAME", "ECHO_SPRING_DATASOURCE_USERNAME");
         setSystemProperty(dotenv, "ECHO_SPRING_DATASOURCE_PASSWORD", "ECHO_SPRING_DATASOURCE_PASSWORD");
+        // Fates datasource
+        setSystemProperty(dotenv, "FATES_SPRING_DATASOURCE_URL", "FATES_SPRING_DATASOURCE_URL");
+        setSystemProperty(dotenv, "FATES_SPRING_DATASOURCE_USERNAME", "FATES_SPRING_DATASOURCE_USERNAME");
+        setSystemProperty(dotenv, "FATES_SPRING_DATASOURCE_PASSWORD", "FATES_SPRING_DATASOURCE_PASSWORD");
+        // Gaia datasource
+        setSystemProperty(dotenv, "GAIA_SPRING_DATASOURCE_URL", "GAIA_SPRING_DATASOURCE_URL");
+        setSystemProperty(dotenv, "GAIA_SPRING_DATASOURCE_USERNAME", "GAIA_SPRING_DATASOURCE_USERNAME");
+        setSystemProperty(dotenv, "GAIA_SPRING_DATASOURCE_PASSWORD", "GAIA_SPRING_DATASOURCE_PASSWORD");
+        // Auth
+        setSystemProperty(dotenv, "JWT_SECRET", "JWT_SECRET");
+        // Email
+        setSystemProperty(dotenv, "EMAIL_CLIENT_ID", "EMAIL_CLIENT_ID");
+        setSystemProperty(dotenv, "EMAIL_CLIENT_SECRET", "EMAIL_CLIENT_SECRET");
+        setSystemProperty(dotenv, "EMAIL_REFRESH_TOKEN", "EMAIL_REFRESH_TOKEN");
+        setSystemProperty(dotenv, "EMAIL_ADDRESS", "EMAIL_ADDRESS");
         setSystemProperty(dotenv, "GARAGE_SECRET_KEY", "GARAGE_SECRET_KEY");
         setSystemProperty(dotenv, "AWS_ACCESS_KEY_ID", "AWS_ACCESS_KEY_ID");
         setSystemProperty(dotenv, "AWS_SECRET_ACCESS_KEY", "AWS_SECRET_ACCESS_KEY");
