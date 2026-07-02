@@ -12,9 +12,9 @@ import org.springframework.data.domain.Pageable; // Added for Pageable support
 import com.sun.briareus.model.PostEntity;
 import com.sun.briareus.codegen.types.BlogPost;
 import com.sun.briareus.codegen.types.BlogPostInput;
-import com.sun.cerberus.codegen.types.QueryResult;
-import com.sun.cerberus.codegen.types.QuerySuccess;
-import com.sun.cerberus.codegen.types.StandardError;
+import com.sun.briareus.codegen.types.QueryResult;
+import com.sun.briareus.codegen.types.QuerySuccess;
+import com.sun.briareus.codegen.types.StandardError;
 
 import java.util.Arrays;
 import java.util.List;

@@ -62,12 +62,21 @@ type ChecklistTemplateItem {
 }
 
 """A page of checklist items."""
-type ChecklistItemPage {
+type PagedChecklistItems {
   items: [ChecklistItem!]!
-  totalCount: Int!
-  page: Int!
-  size: Int!
-  totalPages: Int!
+  pageInfo: PageInfo!
+}
+
+"""A page of items linked to an entry."""
+type PagedChecklistEntryItems {
+  items: [ChecklistEntryItem!]!
+  pageInfo: PageInfo!
+}
+
+"""A page of items linked to a template."""
+type PagedChecklistTemplateItems {
+  items: [ChecklistTemplateItem!]!
+  pageInfo: PageInfo!
 }
 
 """Notes and remote-object links for an entry, template, or item."""
@@ -134,15 +143,15 @@ input ChecklistCategoryInput {
 
 """Read operations for checklists."""
 type ChecklistQueries {
-  items(page: Int, size: Int, sortBy: String, sortDir: String): ChecklistItemPage
+  items(pagination: PaginationInput): PagedChecklistItems!
   item(id: ID!): ChecklistItem
   entry(id: ID!): ChecklistEntry
   template(id: ID!): ChecklistTemplate
   templateDetails(id: ID!): ChecklistDetail
   entryDetails(id: ID!): ChecklistDetail
   itemDetails(id: ID!): ChecklistDetail
-  templateItems(templateId: ID!): [ChecklistTemplateItem!]
-  entryItems(entryId: ID!): [ChecklistEntryItem!]
+  templateItems(templateId: ID!, pagination: PaginationInput): PagedChecklistTemplateItems!
+  entryItems(entryId: ID!, pagination: PaginationInput): PagedChecklistEntryItems!
   listEntries: [ChecklistEntry!]
   listTemplates: [ChecklistTemplate!]
   listCategories: [ChecklistCategory!]

@@ -2,6 +2,8 @@ package com.sun.echo.repository;
 
 import com.sun.base.repository.BaseRepository;
 import com.sun.echo.model.ChecklistTemplateItemEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 import java.util.Optional;
@@ -10,6 +12,8 @@ import java.util.UUID;
 public interface ChecklistTemplateItemRepository extends BaseRepository<ChecklistTemplateItemEntity> {
 
   List<ChecklistTemplateItemEntity> findByTemplateIdOrderByPositionAsc(UUID templateId);
+
+  Page<ChecklistTemplateItemEntity> findByTemplateId(UUID templateId, Pageable pageable);
 
   Optional<ChecklistTemplateItemEntity> findByTemplateIdAndItemId(UUID templateId, UUID itemId);
 

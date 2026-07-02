@@ -7,6 +7,8 @@ import com.sun.echo.repository.ChecklistEntryItemRepository;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +32,17 @@ public class ChecklistEntryItemService extends BaseService<ChecklistEntryItemEnt
    */
   public List<ChecklistEntryItemEntity> listForEntry(UUID entryId) {
     return entryItemRepository.findByEntryIdOrderByPositionAsc(entryId);
+  }
+
+  /**
+   * Lists the items in an entry as a page.
+   *
+   * @param entryId the entry id
+   * @param pageable the page request
+   * @return the page of entry items
+   */
+  public Page<ChecklistEntryItemEntity> listForEntryPaged(UUID entryId, Pageable pageable) {
+    return entryItemRepository.findByEntryId(entryId, pageable);
   }
 
   /**

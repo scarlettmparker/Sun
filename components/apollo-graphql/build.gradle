@@ -44,7 +44,7 @@ dependencyManagement {
 }
 
 generateJava {
-    schemaPaths = ["${projectDir}/src/main/resources", "${project(':cerberus-graphql').projectDir}/src/main/resources"]
+    schemaPaths = ["${projectDir}/src/main/resources", "${rootProject.projectDir}/sun-graphql/src/main/resources"]
     packageName = 'com.sun.apollo.codegen'
     generateClient = true
 }

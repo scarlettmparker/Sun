@@ -1,5 +1,6 @@
 package com.sun.echo.graphql.services;
 
+import com.sun.base.util.PageRequests;
 import com.sun.echo.codegen.types.ChecklistCategory;
 import com.sun.echo.codegen.types.ChecklistCategoryInput;
 import com.sun.echo.codegen.types.ChecklistDetail;
@@ -8,7 +9,11 @@ import com.sun.echo.codegen.types.ChecklistEntryInput;
 import com.sun.echo.codegen.types.ChecklistEntryItem;
 import com.sun.echo.codegen.types.ChecklistItem;
 import com.sun.echo.codegen.types.ChecklistItemInput;
-import com.sun.echo.codegen.types.ChecklistItemPage;
+import com.sun.echo.codegen.types.PagedChecklistEntryItems;
+import com.sun.echo.codegen.types.PagedChecklistItems;
+import com.sun.echo.codegen.types.PagedChecklistTemplateItems;
+import com.sun.echo.codegen.types.PageInfo;
+import com.sun.echo.codegen.types.PaginationInput;
 import com.sun.echo.codegen.types.ChecklistTemplate;
 import com.sun.echo.codegen.types.ChecklistTemplateInput;
 import com.sun.echo.codegen.types.ChecklistTemplateItem;
@@ -26,8 +31,10 @@ import com.sun.echo.graphql.mappers.ChecklistTemplateItemMapper;
 import com.sun.echo.graphql.mappers.ChecklistTemplateMapper;
 import com.sun.echo.model.ChecklistCategoryEntity;
 import com.sun.echo.model.ChecklistEntryEntity;
+import com.sun.echo.model.ChecklistEntryItemEntity;
 import com.sun.echo.model.ChecklistItemEntity;
 import com.sun.echo.model.ChecklistTemplateEntity;
+import com.sun.echo.model.ChecklistTemplateItemEntity;
 import com.sun.echo.model.enums.ItemStatus;
 import com.sun.echo.service.ChecklistCategoryService;
 import com.sun.echo.service.ChecklistDetailService;
@@ -43,7 +50,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -97,30 +104,18 @@ public class ChecklistGraphQLService {
   }
 
   /**
-   * Lists checklist items.
+   * Lists checklist items as a page, sorted by name by default.
    *
-   * @param page zero-based page (default 0)
-   * @param size page size (default 20)
-   * @param sortBy entity property to sort by (default createdAt)
-   * @param sortDir ASC or DESC (default ASC)
+   * @param pagination the pagination and sort input
    * @return a page of checklist items
    */
   @Transactional(value = "echoTransactionManager", readOnly = true)
-  public ChecklistItemPage items(Integer page, Integer size, String sortBy, String sortDir) {
-    int p = page != null ? page : 0;
-    int s = size != null ? size : 20;
-    Sort.Direction direction = (sortDir != null && sortDir.equalsIgnoreCase("DESC"))
-        ? Sort.Direction.DESC : Sort.Direction.ASC;
-    String property = sortBy != null ? sortBy : "createdAt";
-
-    Page<ChecklistItemEntity> result = itemService.findAllPaged(PageRequest.of(p, s, Sort.by(direction, property)));
+  public PagedChecklistItems items(PaginationInput pagination) {
+    Page<ChecklistItemEntity> result = itemService.findAllPaged(toPageable(pagination, "name", Sort.Direction.ASC));
     List<ChecklistItem> items = result.getContent().stream().map(itemMapper::map).collect(Collectors.toList());
-    return ChecklistItemPage.newBuilder()
+    return PagedChecklistItems.newBuilder()
         .items(items)
-        .totalCount((int) result.getTotalElements())
-        .page(p)
-        .size(s)
-        .totalPages(result.getTotalPages())
+        .pageInfo(pageInfo(result))
         .build();
   }
 
@@ -191,25 +186,39 @@ public class ChecklistGraphQLService {
   }
 
   /**
-   * Lists the items belonging to a template, ordered by position.
+   * Lists the items belonging to a template as a page, sorted by position by default.
    *
    * @param templateId the template id
-   * @return the GraphQL ChecklistTemplateItems
+   * @param pagination the pagination and sort input
+   * @return a page of template items
    */
   @Transactional(value = "echoTransactionManager", readOnly = true)
-  public List<ChecklistTemplateItem> templateItems(String templateId) {
-    return templateItemMapper.map(templateItemService.listForTemplate(UUID.fromString(templateId)));
+  public PagedChecklistTemplateItems templateItems(String templateId, PaginationInput pagination) {
+    Page<ChecklistTemplateItemEntity> result = templateItemService
+        .listForTemplatePaged(UUID.fromString(templateId), toPageable(pagination, "position", Sort.Direction.ASC));
+    List<ChecklistTemplateItem> items = templateItemMapper.map(result.getContent());
+    return PagedChecklistTemplateItems.newBuilder()
+        .items(items)
+        .pageInfo(pageInfo(result))
+        .build();
   }
 
   /**
-   * Lists the items belonging to an entry, ordered by position.
+   * Lists the items belonging to an entry as a page, sorted by position by default.
    *
    * @param entryId the entry id
-   * @return the GraphQL ChecklistEntryItems
+   * @param pagination the pagination and sort input
+   * @return a page of entry items
    */
   @Transactional(value = "echoTransactionManager", readOnly = true)
-  public List<ChecklistEntryItem> entryItems(String entryId) {
-    return entryItemMapper.map(entryItemService.listForEntry(UUID.fromString(entryId)));
+  public PagedChecklistEntryItems entryItems(String entryId, PaginationInput pagination) {
+    Page<ChecklistEntryItemEntity> result = entryItemService
+        .listForEntryPaged(UUID.fromString(entryId), toPageable(pagination, "position", Sort.Direction.ASC));
+    List<ChecklistEntryItem> items = entryItemMapper.map(result.getContent());
+    return PagedChecklistEntryItems.newBuilder()
+        .items(items)
+        .pageInfo(pageInfo(result))
+        .build();
   }
 
   /**
@@ -540,6 +549,40 @@ public class ChecklistGraphQLService {
   public QueryResult attachObject(String source, String target, RemoteObjectType ownerType) {
     return mutate("attachObject", () -> detailService
         .attach(UUID.fromString(source), target, ownerType != null ? ownerType.name() : null));
+  }
+
+  /**
+   * Converts the pagination input into a pageable, applying the given defaults.
+   *
+   * @param pagination the pagination and sort input
+   * @param defaultSortBy the property to sort by when none is given
+   * @param defaultDir the direction when none is given
+   * @return the pageable
+   */
+  private Pageable toPageable(PaginationInput pagination, String defaultSortBy, Sort.Direction defaultDir) {
+    if (pagination == null) {
+      return PageRequests.of(null, null, null, null, defaultSortBy, defaultDir);
+    }
+    return PageRequests.of(pagination.getPage(), pagination.getSize(), pagination.getSortBy(),
+        pagination.getSortDir() != null ? pagination.getSortDir().name() : null,
+        defaultSortBy, defaultDir);
+  }
+
+  /**
+   * Builds page metadata from a Spring data page.
+   *
+   * @param result the data page
+   * @return the GraphQL PageInfo
+   */
+  private PageInfo pageInfo(Page<?> result) {
+    return PageInfo.newBuilder()
+        .page(result.getNumber())
+        .size(result.getSize())
+        .totalPages(result.getTotalPages())
+        .totalCount((int) result.getTotalElements())
+        .hasNextPage(result.hasNext())
+        .hasPreviousPage(result.hasPrevious())
+        .build();
   }
 
   /**

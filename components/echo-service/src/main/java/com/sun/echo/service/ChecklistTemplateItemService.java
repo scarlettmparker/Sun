@@ -5,6 +5,8 @@ import com.sun.echo.model.ChecklistTemplateItemEntity;
 import com.sun.echo.repository.ChecklistTemplateItemRepository;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +30,17 @@ public class ChecklistTemplateItemService extends BaseService<ChecklistTemplateI
    */
   public List<ChecklistTemplateItemEntity> listForTemplate(UUID templateId) {
     return templateItemRepository.findByTemplateIdOrderByPositionAsc(templateId);
+  }
+
+  /**
+   * Lists the items in a template as a page.
+   *
+   * @param templateId the template id
+   * @param pageable the page request
+   * @return the page of template items
+   */
+  public Page<ChecklistTemplateItemEntity> listForTemplatePaged(UUID templateId, Pageable pageable) {
+    return templateItemRepository.findByTemplateId(templateId, pageable);
   }
 
   /**

@@ -7,3 +7,41 @@ type Query {
 type Mutation {
   # Base Mutation type for schema extensions
 }
+
+type StandardError {
+  message: String!
+}
+
+type QuerySuccess {
+  message: String!
+  id: ID
+}
+
+union QueryResult = QuerySuccess | StandardError
+
+"""
+Generic pagination and sort input.
+"""
+input PaginationInput {
+  page: Int
+  size: Int
+  sortBy: String
+  sortDir: SortDirection
+}
+
+enum SortDirection {
+  ASC
+  DESC
+}
+
+"""
+Generic page metadata for a paged list.
+"""
+type PageInfo {
+  page: Int!
+  size: Int!
+  totalPages: Int!
+  totalCount: Int!
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+}

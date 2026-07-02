@@ -16,8 +16,8 @@ import static org.mockito.Mockito.when;
 import com.sun.briareus.graphql.services.BlogGraphQLService;
 import com.sun.briareus.codegen.types.BlogPost;
 import com.sun.briareus.codegen.types.BlogPostInput;
-import com.sun.cerberus.codegen.types.QueryResult;
-import com.sun.cerberus.codegen.types.QuerySuccess;
+import com.sun.briareus.codegen.types.QueryResult;
+import com.sun.briareus.codegen.types.QuerySuccess;
 
 @ExtendWith(MockitoExtension.class)
 class BlogDataFetcherTest {

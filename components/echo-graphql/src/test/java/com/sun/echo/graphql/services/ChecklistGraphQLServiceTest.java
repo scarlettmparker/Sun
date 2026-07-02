@@ -66,7 +66,7 @@ class ChecklistGraphQLServiceTest {
     when(itemService.findAllPaged(any(Pageable.class)))
         .thenReturn(new PageImpl<>(List.of(entity), PageRequest.of(0, 20), 1));
 
-    long count = service.items(0, 20, "createdAt", "ASC").getTotalCount();
+    int count = service.items(null).getPageInfo().getTotalCount();
 
     assertThat(count).isEqualTo(1);
   }

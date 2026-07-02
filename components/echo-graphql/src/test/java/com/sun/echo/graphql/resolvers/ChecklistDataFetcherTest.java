@@ -1,9 +1,10 @@
 package com.sun.echo.graphql.resolvers;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-import com.sun.echo.codegen.types.ChecklistItemPage;
+import com.sun.echo.codegen.types.PagedChecklistItems;
 import com.sun.echo.codegen.types.QueryResult;
 import com.sun.echo.codegen.types.QuerySuccess;
 import com.sun.echo.graphql.services.ChecklistGraphQLService;
@@ -23,11 +24,10 @@ class ChecklistDataFetcherTest {
 
   @Test
   void items_delegatesToService() {
-    ChecklistItemPage page = ChecklistItemPage.newBuilder()
-        .items(List.of()).totalCount(0).page(0).size(20).totalPages(0).build();
-    when(service.items(0, 20, "createdAt", "ASC")).thenReturn(page);
+    PagedChecklistItems page = PagedChecklistItems.newBuilder().items(List.of()).build();
+    when(service.items(any())).thenReturn(page);
 
-    assertThat(fetcher.items(0, 20, "createdAt", "ASC")).isEqualTo(page);
+    assertThat(fetcher.items(null)).isEqualTo(page);
   }
 
   @Test

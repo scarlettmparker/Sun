@@ -9,7 +9,10 @@ import com.sun.echo.codegen.types.ChecklistEntry;
 import com.sun.echo.codegen.types.ChecklistEntryInput;
 import com.sun.echo.codegen.types.ChecklistItem;
 import com.sun.echo.codegen.types.ChecklistItemInput;
-import com.sun.echo.codegen.types.ChecklistItemPage;
+import com.sun.echo.codegen.types.PagedChecklistEntryItems;
+import com.sun.echo.codegen.types.PagedChecklistItems;
+import com.sun.echo.codegen.types.PagedChecklistTemplateItems;
+import com.sun.echo.codegen.types.PaginationInput;
 import com.sun.echo.codegen.types.ChecklistMutations;
 import com.sun.echo.codegen.types.ChecklistQueries;
 import com.sun.echo.codegen.types.ChecklistTemplate;
@@ -44,17 +47,14 @@ public class ChecklistDataFetcher {
   }
 
   /**
-   * Lists checklist items with pagination.
+   * Lists checklist items as a page.
    *
-   * @param page the zero-based page index
-   * @param size the page size
-   * @param sortBy the property to sort by
-   * @param sortDir the sort direction (ASC or DESC)
+   * @param pagination the pagination and sort input
    * @return a page of ChecklistItem objects
    */
   @DgsData(parentType = "ChecklistQueries", field = "items")
-  public ChecklistItemPage items(Integer page, Integer size, String sortBy, String sortDir) {
-    return checklistGraphQLService.items(page, size, sortBy, sortDir);
+  public PagedChecklistItems items(PaginationInput pagination) {
+    return checklistGraphQLService.items(pagination);
   }
 
   /**
@@ -124,25 +124,27 @@ public class ChecklistDataFetcher {
   }
 
   /**
-   * Lists the items belonging to a template.
+   * Lists the items belonging to a template as a page.
    *
    * @param templateId the template id
-   * @return a list of ChecklistTemplateItem objects
+   * @param pagination the pagination and sort input
+   * @return a page of ChecklistTemplateItem objects
    */
   @DgsData(parentType = "ChecklistQueries", field = "templateItems")
-  public List<ChecklistTemplateItem> templateItems(String templateId) {
-    return checklistGraphQLService.templateItems(templateId);
+  public PagedChecklistTemplateItems templateItems(String templateId, PaginationInput pagination) {
+    return checklistGraphQLService.templateItems(templateId, pagination);
   }
 
   /**
-   * Lists the items belonging to an entry, ordered by position.
+   * Lists the items belonging to an entry as a page.
    *
    * @param entryId the entry id
-   * @return a list of ChecklistEntryItem objects
+   * @param pagination the pagination and sort input
+   * @return a page of ChecklistEntryItem objects
    */
   @DgsData(parentType = "ChecklistQueries", field = "entryItems")
-  public List<ChecklistEntryItem> entryItems(String entryId) {
-    return checklistGraphQLService.entryItems(entryId);
+  public PagedChecklistEntryItems entryItems(String entryId, PaginationInput pagination) {
+    return checklistGraphQLService.entryItems(entryId, pagination);
   }
 
   /**

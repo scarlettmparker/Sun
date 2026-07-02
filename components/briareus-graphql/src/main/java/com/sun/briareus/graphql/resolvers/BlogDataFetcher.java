@@ -11,7 +11,7 @@ import com.sun.briareus.codegen.types.BlogPost;
 import com.sun.briareus.codegen.types.BlogQueries;
 import com.sun.briareus.codegen.types.BlogMutations;
 import com.sun.briareus.codegen.types.BlogPostInput;
-import com.sun.cerberus.codegen.types.QueryResult;
+import com.sun.briareus.codegen.types.QueryResult;
 
 @DgsComponent
 public class BlogDataFetcher {
