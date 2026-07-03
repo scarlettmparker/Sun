@@ -16,7 +16,7 @@ public final class PageRequests {
    * Builds a pageable, falling back to the given defaults.
    *
    * @param page the zero-based page, or null for 0
-   * @param size the page size, or null for 10
+   * @param size the page size, or null for unlimited (all results)
    * @param sortBy the sort property, or null for defaultSortBy
    * @param sortDir ASC or DESC, or null for defaultDir
    * @param defaultSortBy the property to sort by when sortBy is null
@@ -26,7 +26,7 @@ public final class PageRequests {
   public static Pageable of(Integer page, Integer size, String sortBy, String sortDir,
       String defaultSortBy, Sort.Direction defaultDir) {
     int p = page != null ? page : 0;
-    int s = size != null ? size : 10;
+    int s = size != null ? size : Integer.MAX_VALUE;
     String property = sortBy != null ? sortBy : defaultSortBy;
     Sort.Direction direction = (sortDir != null && sortDir.equalsIgnoreCase("DESC"))
         ? Sort.Direction.DESC
