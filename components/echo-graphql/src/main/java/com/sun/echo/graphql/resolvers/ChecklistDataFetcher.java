@@ -280,6 +280,17 @@ public class ChecklistDataFetcher {
   }
 
   /**
+   * Creates a checklist entry composed from multiple templates' items.
+   *
+   * @param templateIds the template ids to compose
+   * @return a QueryResult
+   */
+  @DgsData(parentType = "ChecklistMutations", field = "createChecklistFromTemplates")
+  public QueryResult createChecklistFromTemplates(List<String> templateIds) {
+    return checklistGraphQLService.createChecklistFromTemplates(templateIds);
+  }
+
+  /**
    * Creates or updates a checklist entry from input.
    *
    * @param input the entry input

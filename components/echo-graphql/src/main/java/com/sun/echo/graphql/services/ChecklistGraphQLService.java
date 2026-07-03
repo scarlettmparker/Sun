@@ -379,6 +379,19 @@ public class ChecklistGraphQLService {
   }
 
   /**
+   * Creates a checklist entry composed from multiple templates.
+   *
+   * @param templateIds the template ids to compose
+   * @return a QueryResult
+   */
+  @Transactional("echoTransactionManager")
+  public QueryResult createChecklistFromTemplates(List<String> templateIds) {
+    return mutate("createChecklistFromTemplates",
+        () -> entryService.createFromTemplates(
+            templateIds.stream().map(UUID::fromString).collect(Collectors.toList())).getId());
+  }
+
+  /**
    * Creates or updates a checklist entry from input.
    *
    * @param input the entry input

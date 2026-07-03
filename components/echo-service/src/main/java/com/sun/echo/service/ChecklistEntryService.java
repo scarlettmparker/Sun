@@ -11,8 +11,10 @@ import com.sun.echo.repository.ChecklistEntryRepository;
 import com.sun.echo.repository.ChecklistTemplateItemRepository;
 import com.sun.echo.repository.ChecklistTemplateRepository;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,6 +50,7 @@ public class ChecklistEntryService extends BaseService<ChecklistEntryEntity> {
 
   /**
    * Marks a checklist entry as complete by stamping its completion timestamp.
+   * A completed entry cannot go back to incomplete, so re-calling is a no-op.
    *
    * @param id the entry id
    * @return the updated entry
@@ -55,6 +58,9 @@ public class ChecklistEntryService extends BaseService<ChecklistEntryEntity> {
   public ChecklistEntryEntity completeChecklist(UUID id) {
     ChecklistEntryEntity entry = findById(id)
         .orElseThrow(() -> new IllegalArgumentException("Checklist entry not found: " + id));
+    if (entry.getCompletedAt() != null) {
+      return entry;
+    }
     entry.setCompletedAt(LocalDateTime.now());
     return save(entry);
   }
@@ -93,6 +99,35 @@ public class ChecklistEntryService extends BaseService<ChecklistEntryEntity> {
       ei.setPosition(ti.getPosition());
       ei.setStatus(ItemStatus.NOT_STARTED);
       entryItemRepository.save(ei);
+    }
+    return saved;
+  }
+
+  /**
+   * Creates a new checklist entry composed from multiple templates, merging
+   * their items (de-duplicated by item id) in template order.
+   *
+   * @param templateIds the template ids to compose
+   * @return the new entry
+   */
+  public ChecklistEntryEntity createFromTemplates(List<UUID> templateIds) {
+    ChecklistEntryEntity saved = save(new ChecklistEntryEntity());
+
+    Set<UUID> seen = new HashSet<>();
+    int position = 0;
+    for (UUID templateId : templateIds) {
+      for (ChecklistTemplateItemEntity ti
+          : templateItemRepository.findByTemplateIdOrderByPositionAsc(templateId)) {
+        if (!seen.add(ti.getItemId())) {
+          continue;
+        }
+        ChecklistEntryItemEntity ei = new ChecklistEntryItemEntity();
+        ei.setEntryId(saved.getId());
+        ei.setItemId(ti.getItemId());
+        ei.setPosition(position++);
+        ei.setStatus(ItemStatus.NOT_STARTED);
+        entryItemRepository.save(ei);
+      }
     }
     return saved;
   }

@@ -18,6 +18,7 @@ import com.sun.echo.graphql.mappers.ChecklistEntryMapper;
 import com.sun.echo.graphql.mappers.ChecklistItemMapper;
 import com.sun.echo.graphql.mappers.ChecklistTemplateItemMapper;
 import com.sun.echo.graphql.mappers.ChecklistTemplateMapper;
+import com.sun.echo.model.ChecklistEntryEntity;
 import com.sun.echo.model.ChecklistItemEntity;
 import com.sun.echo.service.ChecklistCategoryService;
 import com.sun.echo.service.ChecklistDetailService;
@@ -100,6 +101,33 @@ class ChecklistGraphQLServiceTest {
 
     assertThat(result).isInstanceOf(QuerySuccess.class);
     assertThat(((QuerySuccess) result).getId()).isEqualTo(saved.getId().toString());
+  }
+
+  @Test
+  void completeChecklist_returnsSuccessWithId() {
+    UUID id = UUID.randomUUID();
+    ChecklistEntryEntity entry = new ChecklistEntryEntity();
+    entry.setId(id);
+    when(entryService.completeChecklist(id)).thenReturn(entry);
+
+    QueryResult result = service.completeChecklist(id.toString());
+
+    assertThat(result).isInstanceOf(QuerySuccess.class);
+    assertThat(((QuerySuccess) result).getId()).isEqualTo(id.toString());
+  }
+
+  @Test
+  void createChecklistFromTemplates_returnsSuccessWithId() {
+    UUID id = UUID.randomUUID();
+    ChecklistEntryEntity entry = new ChecklistEntryEntity();
+    entry.setId(id);
+    when(entryService.createFromTemplates(any(List.class))).thenReturn(entry);
+
+    QueryResult result =
+        service.createChecklistFromTemplates(List.of(UUID.randomUUID().toString()));
+
+    assertThat(result).isInstanceOf(QuerySuccess.class);
+    assertThat(((QuerySuccess) result).getId()).isEqualTo(id.toString());
   }
 
   @Test

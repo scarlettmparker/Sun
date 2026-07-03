@@ -39,4 +39,25 @@ class ChecklistDataFetcherTest {
 
     assertThat(result).isSameAs(success);
   }
+
+  @Test
+  void completeChecklist_delegatesToService() {
+    QuerySuccess success = QuerySuccess.newBuilder().message("ok").build();
+    when(service.completeChecklist("id-1")).thenReturn(success);
+
+    QueryResult result = fetcher.completeChecklist("id-1");
+
+    assertThat(result).isSameAs(success);
+  }
+
+  @Test
+  void createChecklistFromTemplates_delegatesToService() {
+    QuerySuccess success = QuerySuccess.newBuilder().message("ok").build();
+    List<String> templateIds = List.of("t-1", "t-2");
+    when(service.createChecklistFromTemplates(templateIds)).thenReturn(success);
+
+    QueryResult result = fetcher.createChecklistFromTemplates(templateIds);
+
+    assertThat(result).isSameAs(success);
+  }
 }

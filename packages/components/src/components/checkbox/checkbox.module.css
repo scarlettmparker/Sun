@@ -21,6 +21,15 @@
   box-shadow: var(--focus-shadow);
 }
 
+.checkbox:disabled {
+  cursor: not-allowed;
+}
+
+.checkbox_wrapper:has(.checkbox:disabled) {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .checkbox_label {
   color: var(--text);
   font-size: inherit;
