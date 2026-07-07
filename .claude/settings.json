@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "additionalDirectories": [
+      "/home/scarlettp/Desktop/GitHub/Viewer/graphql/operations",
+      "/home/scarlettp/Desktop/GitHub/Viewer/src/utils",
+      "/home/scarlettp/Desktop/GitHub/Viewer/routes",
+      "/home/scarlettp/Desktop/GitHub/Viewer/src"
+    ]
+  }
+}

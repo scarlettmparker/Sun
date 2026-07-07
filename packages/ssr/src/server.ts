@@ -196,6 +196,10 @@ export function mutationPostHandler(): (
           );
         }
 
+        if (error.cookies && error.cookies.length) {
+          cookieHeaders.push(...error.cookies);
+        }
+
         reply.header("Set-Cookie", cookieHeaders);
         reply.send({
           __typename: "Redirect",

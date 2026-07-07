@@ -1,0 +1,13 @@
+"""Credentials the browser viewer needs to connect to the desktop."""
+type VncCredentials {
+  iframeSrc: String!
+}
+
+"""Read operations for the viewer."""
+type ViewerQueries {
+  vncCredentials: VncCredentials!
+}
+
+extend type Query {
+  viewerQueries: ViewerQueries!
+}
