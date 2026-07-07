@@ -275,19 +275,20 @@ public class ChecklistDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "ChecklistMutations", field = "createChecklistFromTemplate")
-  public QueryResult createChecklistFromTemplate(String templateId) {
-    return checklistGraphQLService.createChecklistFromTemplate(templateId);
+  public QueryResult createChecklistFromTemplate(String templateId, String name) {
+    return checklistGraphQLService.createChecklistFromTemplate(templateId, name);
   }
 
   /**
    * Creates a checklist entry composed from multiple templates' items.
    *
    * @param templateIds the template ids to compose
+   * @param name an optional name for the new entry
    * @return a QueryResult
    */
   @DgsData(parentType = "ChecklistMutations", field = "createChecklistFromTemplates")
-  public QueryResult createChecklistFromTemplates(List<String> templateIds) {
-    return checklistGraphQLService.createChecklistFromTemplates(templateIds);
+  public QueryResult createChecklistFromTemplates(List<String> templateIds, String name) {
+    return checklistGraphQLService.createChecklistFromTemplates(templateIds, name);
   }
 
   /**
@@ -321,6 +322,17 @@ public class ChecklistDataFetcher {
   @DgsData(parentType = "ChecklistMutations", field = "archiveChecklist")
   public QueryResult archiveChecklist(String id) {
     return checklistGraphQLService.archiveChecklist(id);
+  }
+
+  /**
+   * Permanently deletes a checklist entry and its items.
+   *
+   * @param id the entry id
+   * @return a QueryResult
+   */
+  @DgsData(parentType = "ChecklistMutations", field = "deleteChecklist")
+  public QueryResult deleteChecklist(String id) {
+    return checklistGraphQLService.deleteChecklist(id);
   }
 
   /**

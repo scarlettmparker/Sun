@@ -19,6 +19,8 @@ public interface ChecklistEntryItemRepository extends BaseRepository<ChecklistEn
 
   int deleteByEntryIdAndItemId(UUID entryId, UUID itemId);
 
+  int deleteByEntryId(UUID entryId);
+
   @Query(value = "SELECT COALESCE(MAX(position), -1) FROM checklist_entry_items WHERE entry_id = ?1",
       nativeQuery = true)
   Integer findMaxPositionByEntryId(UUID entryId);

@@ -373,22 +373,23 @@ public class ChecklistGraphQLService {
    * @return a QueryResult
    */
   @Transactional("echoTransactionManager")
-  public QueryResult createChecklistFromTemplate(String templateId) {
+  public QueryResult createChecklistFromTemplate(String templateId, String name) {
     return mutate("createChecklistFromTemplate",
-        () -> entryService.createFromTemplate(UUID.fromString(templateId)).getId());
+        () -> entryService.createFromTemplate(UUID.fromString(templateId), name).getId());
   }
 
   /**
    * Creates a checklist entry composed from multiple templates.
    *
    * @param templateIds the template ids to compose
+   * @param name an optional name for the new entry
    * @return a QueryResult
    */
   @Transactional("echoTransactionManager")
-  public QueryResult createChecklistFromTemplates(List<String> templateIds) {
+  public QueryResult createChecklistFromTemplates(List<String> templateIds, String name) {
     return mutate("createChecklistFromTemplates",
         () -> entryService.createFromTemplates(
-            templateIds.stream().map(UUID::fromString).collect(Collectors.toList())).getId());
+            templateIds.stream().map(UUID::fromString).collect(Collectors.toList()), name).getId());
   }
 
   /**
@@ -426,6 +427,21 @@ public class ChecklistGraphQLService {
   @Transactional("echoTransactionManager")
   public QueryResult archiveChecklist(String id) {
     return mutate("archiveChecklist", () -> entryService.archive(UUID.fromString(id)).getId());
+  }
+
+  /**
+   * Permanently deletes a checklist entry and its items.
+   *
+   * @param id the entry id
+   * @return a QueryResult
+   */
+  @Transactional("echoTransactionManager")
+  public QueryResult deleteChecklist(String id) {
+    UUID entryId = UUID.fromString(id);
+    return mutate("deleteChecklist", () -> {
+      entryService.delete(entryId);
+      return entryId;
+    });
   }
 
   /**

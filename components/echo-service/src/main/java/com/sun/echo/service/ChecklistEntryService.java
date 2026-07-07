@@ -79,15 +79,33 @@ public class ChecklistEntryService extends BaseService<ChecklistEntryEntity> {
   }
 
   /**
-   * Creates a new checklist entry from a template, copying the template's name
-   * and cloning each template item as an entry item with status NOT_STARTED.
+   * Permanently deletes a checklist entry and all of its items.
+   *
+   * @param id the entry id
+   */
+  public void delete(UUID id) {
+    findById(id)
+        .orElseThrow(() -> new IllegalArgumentException("Checklist entry not found: " + id));
+    entryItemRepository.deleteByEntryId(id);
+    deleteById(id);
+  }
+
+  /**
+   * Creates a new checklist entry from a template, cloning each template item
+   * as an entry item with status NOT_STARTED. The entry is named after the
+   * template unless an explicit name is supplied.
    *
    * @param templateId the template id
+   * @param name an optional name overriding the template's name
    * @return the new entry
    */
-  public ChecklistEntryEntity createFromTemplate(UUID templateId) {
+  public ChecklistEntryEntity createFromTemplate(UUID templateId, String name) {
     ChecklistEntryEntity entry = new ChecklistEntryEntity();
-    templateRepository.findById(templateId).ifPresent(t -> entry.setName(t.getName()));
+    if (name != null && !name.isBlank()) {
+      entry.setName(name);
+    } else {
+      templateRepository.findById(templateId).ifPresent(t -> entry.setName(t.getName()));
+    }
     ChecklistEntryEntity saved = save(entry);
 
     List<ChecklistTemplateItemEntity> templateItems =
@@ -108,10 +126,13 @@ public class ChecklistEntryService extends BaseService<ChecklistEntryEntity> {
    * their items (de-duplicated by item id) in template order.
    *
    * @param templateIds the template ids to compose
+   * @param name an optional name for the new entry
    * @return the new entry
    */
-  public ChecklistEntryEntity createFromTemplates(List<UUID> templateIds) {
-    ChecklistEntryEntity saved = save(new ChecklistEntryEntity());
+  public ChecklistEntryEntity createFromTemplates(List<UUID> templateIds, String name) {
+    ChecklistEntryEntity entry = new ChecklistEntryEntity();
+    entry.setName(name);
+    ChecklistEntryEntity saved = save(entry);
 
     Set<UUID> seen = new HashSet<>();
     int position = 0;
