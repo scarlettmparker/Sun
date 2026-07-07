@@ -22,7 +22,7 @@ public class VncCredentialsService {
   @Value("${vnc.token-file:/etc/websockify/tokens}")
   private String tokenFile;
 
-  @Value("${vnc.backend:127.0.0.1:5900}")
+  @Value("${vnc.backend:0.0.0.0:5900}")
   private String backend;
 
   @Value("${vnc.password:password}")
@@ -70,7 +70,7 @@ public class VncCredentialsService {
    */
   private void writeToken(String token) throws IOException {
     Path path = Paths.get(tokenFile);
-    String entry = token + "=" + backend + System.lineSeparator();
+    String entry = token + ": " + backend + System.lineSeparator();
     Files.writeString(path, entry);
   }
 }
