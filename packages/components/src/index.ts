@@ -66,4 +66,5 @@ export { default as Sidebar } from "./components/sidebar";
 export { default as Skeleton } from "./components/skeleton";
 export { default as TextArea } from "./components/textarea";
 export { default as UICheck } from "./components/ui-check";
+export { default as VoteControl, type VoteDirection } from "./components/vote-control";
 export { cn } from "./utils/cn";

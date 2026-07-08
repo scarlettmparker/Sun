@@ -5,8 +5,8 @@ Dionysus - Filestore
 Echo - Checklist
 Fates - People
 Gaia - Access
-Hades
-Icarus
+Hades - Reader
+Icarus - Forums
 Jocasta
 Medusa
 Narcissus

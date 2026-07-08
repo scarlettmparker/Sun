@@ -10,4 +10,6 @@ public interface AccountRepository extends BaseRepository<AccountEntity> {
   Optional<AccountEntity> findByUsername(String username);
 
   Optional<AccountEntity> findByPersonId(UUID personId);
+
+  Optional<AccountEntity> findByProviderAndProviderId(String provider, String providerId);
 }

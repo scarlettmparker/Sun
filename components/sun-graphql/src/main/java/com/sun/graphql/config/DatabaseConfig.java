@@ -63,6 +63,16 @@ public class DatabaseConfig {
   public static class GaiaJpaConfig {
   }
 
+  @Configuration
+  @EnableJpaRepositories(basePackages = "com.sun.hades.repository", entityManagerFactoryRef = "hadesEntityManagerFactory", transactionManagerRef = "hadesTransactionManager")
+  public static class HadesJpaConfig {
+  }
+
+  @Configuration
+  @EnableJpaRepositories(basePackages = "com.sun.icarus.repository", entityManagerFactoryRef = "icarusEntityManagerFactory", transactionManagerRef = "icarusTransactionManager")
+  public static class IcarusJpaConfig {
+  }
+
   @Bean(name = "apolloDataSource")
   @ConfigurationProperties(prefix = "spring.datasource.apollo")
   public DataSource apolloDataSource() {
@@ -102,6 +112,18 @@ public class DatabaseConfig {
   @Bean(name = "gaiaDataSource")
   @ConfigurationProperties(prefix = "spring.datasource.gaia")
   public DataSource gaiaDataSource() {
+    return DataSourceBuilder.create().build();
+  }
+
+  @Bean(name = "hadesDataSource")
+  @ConfigurationProperties(prefix = "spring.datasource.hades")
+  public DataSource hadesDataSource() {
+    return DataSourceBuilder.create().build();
+  }
+
+  @Bean(name = "icarusDataSource")
+  @ConfigurationProperties(prefix = "spring.datasource.icarus")
+  public DataSource icarusDataSource() {
     return DataSourceBuilder.create().build();
   }
 
@@ -245,6 +267,46 @@ public class DatabaseConfig {
     return em;
   }
 
+  @Bean(name = "hadesEntityManagerFactory")
+  public LocalContainerEntityManagerFactoryBean hadesEntityManagerFactory(
+      @Qualifier("hadesDataSource") DataSource dataSource) {
+    LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
+    em.setDataSource(dataSource);
+    em.setPackagesToScan("com.sun.hades.model");
+
+    HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
+    em.setJpaVendorAdapter(vendorAdapter);
+
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("hibernate.hbm2ddl.auto", "update");
+    properties.put("hibernate.show_sql", "true");
+    properties.put("hibernate.format_sql", "true");
+    properties.put("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
+    em.setJpaPropertyMap(properties);
+
+    return em;
+  }
+
+  @Bean(name = "icarusEntityManagerFactory")
+  public LocalContainerEntityManagerFactoryBean icarusEntityManagerFactory(
+      @Qualifier("icarusDataSource") DataSource dataSource) {
+    LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
+    em.setDataSource(dataSource);
+    em.setPackagesToScan("com.sun.icarus.model");
+
+    HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
+    em.setJpaVendorAdapter(vendorAdapter);
+
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("hibernate.hbm2ddl.auto", "update");
+    properties.put("hibernate.show_sql", "true");
+    properties.put("hibernate.format_sql", "true");
+    properties.put("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
+    em.setJpaPropertyMap(properties);
+
+    return em;
+  }
+
   @Bean(name = "fatesTransactionManager")
   public PlatformTransactionManager fatesTransactionManager(
       @Qualifier("fatesEntityManagerFactory") LocalContainerEntityManagerFactoryBean entityManagerFactory) {
@@ -282,6 +344,18 @@ public class DatabaseConfig {
   @Bean(name = "echoTransactionManager")
   public PlatformTransactionManager echoTransactionManager(
       @Qualifier("echoEntityManagerFactory") LocalContainerEntityManagerFactoryBean entityManagerFactory) {
+    return new JpaTransactionManager(entityManagerFactory.getObject());
+  }
+
+  @Bean(name = "hadesTransactionManager")
+  public PlatformTransactionManager hadesTransactionManager(
+      @Qualifier("hadesEntityManagerFactory") LocalContainerEntityManagerFactoryBean entityManagerFactory) {
+    return new JpaTransactionManager(entityManagerFactory.getObject());
+  }
+
+  @Bean(name = "icarusTransactionManager")
+  public PlatformTransactionManager icarusTransactionManager(
+      @Qualifier("icarusEntityManagerFactory") LocalContainerEntityManagerFactoryBean entityManagerFactory) {
     return new JpaTransactionManager(entityManagerFactory.getObject());
   }
 }

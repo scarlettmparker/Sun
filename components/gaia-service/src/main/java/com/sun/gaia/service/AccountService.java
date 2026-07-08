@@ -62,4 +62,27 @@ public class AccountService extends BaseService<AccountEntity> {
     }
     return accountRepository.findByPersonId(person.get().getId());
   }
+
+  /**
+   * Finds or creates an account for an OAuth provider identity.
+   */
+  public AccountEntity upsertProviderAccount(String provider, String providerId, String username) {
+    Optional<AccountEntity> existing =
+        accountRepository.findByProviderAndProviderId(provider, providerId);
+    if (existing.isPresent()) {
+      return existing.get();
+    }
+    PersonEntity person = new PersonEntity();
+    person.setDisplayName(username);
+    person = personService.save(person);
+
+    AccountEntity account = new AccountEntity();
+    account.setUsername(provider + "_" + providerId);
+    account.setPasswordHash(passwordEncoder.encode(UUID.randomUUID().toString()));
+    account.setPersonId(person.getId());
+    account.setStatus(AccountStatus.ACTIVE);
+    account.setProvider(provider);
+    account.setProviderId(providerId);
+    return save(account);
+  }
 }

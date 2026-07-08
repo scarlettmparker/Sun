@@ -1,0 +1,89 @@
+"""A discussion thread attached to a remote object."""
+type ForumThread {
+  id: String!
+  title: String!
+  status: ThreadStatus!
+  remoteObject: [String!]
+  createdAt: Date
+  updatedAt: Date
+}
+
+"""A post in a discussion thread."""
+type ForumPost {
+  id: String!
+  threadId: ID!
+  parentId: ID
+  body: String!
+  status: PostStatus!
+  upvotes: Int!
+  downvotes: Int!
+  netScore: Int!
+  createdAt: Date
+  updatedAt: Date
+}
+
+type PagedForumThreads {
+  items: [ForumThread!]!
+  pageInfo: PageInfo!
+}
+
+type PagedForumPosts {
+  items: [ForumPost!]!
+  pageInfo: PageInfo!
+}
+
+type RemoteObjectReference {
+  id: ID!
+  ownerType: String!
+  ownerId: ID!
+}
+
+enum ThreadStatus { ACTIVE LOCKED ARCHIVED }
+enum PostStatus { ACTIVE HIDDEN DELETED }
+enum VoteValue { UP DOWN }
+
+input CreateThreadInput {
+  title: String!
+  remoteObject: String!
+}
+
+input CreatePostInput {
+  threadId: ID!
+  parentId: ID
+  body: String!
+}
+
+input VoteInput {
+  postId: ID!
+  value: VoteValue!
+}
+
+"""Read operations for forums."""
+type IcarusQueries {
+  thread(id: ID!): ForumThread
+  threadsFor(remoteObject: String!, pagination: PaginationInput): PagedForumThreads!
+  posts(threadId: ID!, includeHidden: Boolean, pagination: PaginationInput): PagedForumPosts!
+  myVote(postId: ID!): VoteValue
+  locateRemoteObjects(ids: [String!]!): [RemoteObjectReference!]!
+}
+
+"""Write operations for forums."""
+type IcarusMutations {
+  createThread(input: CreateThreadInput!): QueryResult
+  lockThread(id: ID!): QueryResult
+  archiveThread(id: ID!): QueryResult
+  createPost(input: CreatePostInput!): QueryResult
+  editPost(id: ID!, body: String!): QueryResult
+  deletePost(id: ID!): QueryResult
+  vote(input: VoteInput!): QueryResult
+  removeVote(postId: ID!): QueryResult
+  attachObject(source: ID!, target: String!): QueryResult
+}
+
+extend type Query {
+  icarusQueries: IcarusQueries!
+}
+
+extend type Mutation {
+  icarusMutations: IcarusMutations!
+}

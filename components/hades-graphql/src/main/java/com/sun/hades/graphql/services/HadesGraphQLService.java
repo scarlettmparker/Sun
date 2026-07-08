@@ -1,0 +1,505 @@
+package com.sun.hades.graphql.services;
+
+import com.sun.base.util.PageRequests;
+import com.sun.gaia.model.AccountEntity;
+import com.sun.gaia.service.AccountService;
+import com.sun.gaia.service.JwtService;
+import com.sun.gaia.service.UserContextHolder;
+import com.sun.hades.codegen.types.CommentInput;
+import com.sun.hades.codegen.types.DiscordLoginResult;
+import com.sun.hades.codegen.types.PageInfo;
+import com.sun.hades.codegen.types.PagedReaderComments;
+import com.sun.hades.codegen.types.PagedReaderTexts;
+import com.sun.hades.codegen.types.PaginationInput;
+import com.sun.hades.codegen.types.QueryResult;
+import com.sun.hades.codegen.types.QuerySuccess;
+import com.sun.hades.codegen.types.ReaderAnnotation;
+import com.sun.hades.codegen.types.ReaderComment;
+import com.sun.hades.codegen.types.ReaderSource;
+import com.sun.hades.codegen.types.ReaderText;
+import com.sun.hades.codegen.types.ReaderTextInput;
+import com.sun.hades.codegen.types.RemoteObjectReference;
+import com.sun.hades.codegen.types.StandardError;
+import com.sun.hades.codegen.types.VoteInput;
+import com.sun.hades.model.enums.CefrLevel;
+import com.sun.hades.model.enums.ReaderTextType;
+import com.sun.hades.model.enums.ReaderVoteTarget;
+import com.sun.hades.model.enums.VoteValue;
+import com.sun.hades.graphql.mappers.ReaderAccountMapper;
+import com.sun.hades.graphql.mappers.ReaderAnnotationMapper;
+import com.sun.hades.graphql.mappers.ReaderCommentMapper;
+import com.sun.hades.graphql.mappers.ReaderSourceMapper;
+import com.sun.hades.graphql.mappers.ReaderTextMapper;
+import com.sun.hades.model.ReaderCommentEntity;
+import com.sun.hades.model.ReaderSourceEntity;
+import com.sun.hades.model.ReaderTextEntity;
+import com.sun.hades.model.enums.ReaderTextStatus;
+import com.sun.hades.model.enums.ReaderTextType;
+import com.sun.hades.service.DiscordOAuthService;
+import com.sun.hades.service.ReaderAccountService;
+import com.sun.hades.service.ReaderAnnotationService;
+import com.sun.hades.service.ReaderCommentService;
+import com.sun.hades.service.ReaderPositionService;
+import com.sun.hades.service.ReaderSourceService;
+import com.sun.hades.service.ReaderTextService;
+import com.sun.hades.service.ReaderVoteService;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * GraphQL business logic for the reader.
+ */
+@Service
+public class HadesGraphQLService {
+
+  private static final Logger logger = LoggerFactory.getLogger(HadesGraphQLService.class);
+
+  private final ReaderTextService textService;
+  private final ReaderSourceService sourceService;
+  private final ReaderAnnotationService annotationService;
+  private final ReaderCommentService commentService;
+  private final ReaderVoteService voteService;
+  private final ReaderAccountService accountService;
+  private final ReaderPositionService positionService;
+  private final DiscordOAuthService discordOAuthService;
+  private final AccountService gaiaAccountService;
+  private final JwtService jwtService;
+
+  private final ReaderTextMapper textMapper;
+  private final ReaderSourceMapper sourceMapper;
+  private final ReaderAnnotationMapper annotationMapper;
+  private final ReaderCommentMapper commentMapper;
+  private final ReaderAccountMapper accountMapper;
+
+  public HadesGraphQLService(ReaderTextService textService, ReaderSourceService sourceService,
+      ReaderAnnotationService annotationService, ReaderCommentService commentService,
+      ReaderVoteService voteService, ReaderAccountService accountService,
+      ReaderPositionService positionService, DiscordOAuthService discordOAuthService,
+      AccountService gaiaAccountService, JwtService jwtService, ReaderTextMapper textMapper,
+      ReaderSourceMapper sourceMapper, ReaderAnnotationMapper annotationMapper,
+      ReaderCommentMapper commentMapper, ReaderAccountMapper accountMapper) {
+    this.textService = textService;
+    this.sourceService = sourceService;
+    this.annotationService = annotationService;
+    this.commentService = commentService;
+    this.voteService = voteService;
+    this.accountService = accountService;
+    this.positionService = positionService;
+    this.discordOAuthService = discordOAuthService;
+    this.gaiaAccountService = gaiaAccountService;
+    this.jwtService = jwtService;
+    this.textMapper = textMapper;
+    this.sourceMapper = sourceMapper;
+    this.annotationMapper = annotationMapper;
+    this.commentMapper = commentMapper;
+    this.accountMapper = accountMapper;
+  }
+
+  /**
+   * Lists texts, optionally filtered by level, source, and type.
+   *
+   * @param level optional CEFR level filter
+   * @param sourceId optional source id filter
+   * @param type optional type filter
+   * @param pagination the pagination and sort input
+   * @return a page of texts
+   */
+  @Transactional(value = "hadesTransactionManager", readOnly = true)
+  public PagedReaderTexts texts(
+      CefrLevel level, String sourceId, ReaderTextType type, PaginationInput pagination) {
+    Pageable pageable = toPageable(pagination, "createdAt", Sort.Direction.DESC);
+    Page<ReaderTextEntity> result = textService.list(
+        level,
+        sourceId != null ? UUID.fromString(sourceId) : null,
+        type,
+        pageable);
+    List<ReaderText> items = result.getContent().stream().map(textMapper::map).toList();
+    return PagedReaderTexts.newBuilder().items(items).pageInfo(pageInfo(result)).build();
+  }
+
+  /**
+   * Locates a text by id.
+   *
+   * @param id the text id
+   * @return the text, or null
+   */
+  @Transactional(value = "hadesTransactionManager", readOnly = true)
+  public ReaderText text(String id) {
+    return textService.findById(UUID.fromString(id)).map(textMapper::map).orElse(null);
+  }
+
+  /**
+   * Locates a source by id.
+   *
+   * @param id the source id
+   * @return the source, or null
+   */
+  @Transactional(value = "hadesTransactionManager", readOnly = true)
+  public ReaderSource source(String id) {
+    return sourceService.findById(UUID.fromString(id)).map(sourceMapper::map).orElse(null);
+  }
+
+  /**
+   * Lists all sources.
+   *
+   * @return the sources
+   */
+  @Transactional(value = "hadesTransactionManager", readOnly = true)
+  public List<ReaderSource> sources() {
+    return sourceService.findAll().stream().map(sourceMapper::map).toList();
+  }
+
+  /**
+   * Lists annotations for a text, each with its resolved position.
+   *
+   * @param textId the text id
+   * @param includeHidden whether to include hidden annotations
+   * @return the annotations
+   */
+  @Transactional(value = "hadesTransactionManager", readOnly = true)
+  public List<ReaderAnnotation> annotations(String textId, Boolean includeHidden) {
+    UUID id = UUID.fromString(textId);
+    Map<UUID, com.sun.hades.codegen.types.ReaderPosition> positions =
+        positionService.listForText(id).stream()
+            .collect(Collectors.toMap(
+                p -> p.getId(),
+                p -> com.sun.hades.codegen.types.ReaderPosition.newBuilder()
+                    .id(p.getId().toString())
+                    .textId(p.getTextId().toString())
+                    .startOffset(p.getStartOffset())
+                    .endOffset(p.getEndOffset())
+                    .build()));
+    return annotationService.listForText(id, Boolean.TRUE.equals(includeHidden)).stream()
+        .map(a -> annotationMapper.map(a, positions.get(a.getPositionId())))
+        .toList();
+  }
+
+  /**
+   * Locates an annotation by id.
+   *
+   * @param id the annotation id
+   * @return the annotation, or null
+   */
+  @Transactional(value = "hadesTransactionManager", readOnly = true)
+  public ReaderAnnotation annotation(String id) {
+    return annotationService.findById(UUID.fromString(id))
+        .map(a -> annotationMapper.map(a, null))
+        .orElse(null);
+  }
+
+  /**
+   * Lists comments for an annotation.
+   *
+   * @param annotationId the annotation id
+   * @param includeHidden whether to include hidden comments
+   * @param pagination the pagination input
+   * @return a page of comments
+   */
+  @Transactional(value = "hadesTransactionManager", readOnly = true)
+  public PagedReaderComments comments(
+      String annotationId, Boolean includeHidden, PaginationInput pagination) {
+    Pageable pageable = toPageable(pagination, "createdAt", Sort.Direction.ASC);
+    Page<ReaderCommentEntity> result =
+        commentService.listForAnnotation(UUID.fromString(annotationId), pageable);
+    List<ReaderComment> items = result.getContent().stream()
+        .filter(c -> Boolean.TRUE.equals(includeHidden) || c.getStatus() == com.sun.hades.model.enums.ReaderStatus.ACTIVE)
+        .map(commentMapper::map)
+        .toList();
+    return PagedReaderComments.newBuilder().items(items).pageInfo(pageInfo(result)).build();
+  }
+
+  /**
+   * Returns the current member's reader account.
+   *
+   * @return the reader account, or null
+   */
+  @Transactional(value = "hadesTransactionManager", readOnly = true)
+  public com.sun.hades.codegen.types.ReaderAccount readerAccount() {
+    UUID userId = UserContextHolder.getUserId();
+    if (userId == null) {
+      return null;
+    }
+    return accountService.findByGaiaAccountId(userId).map(accountMapper::map).orElse(null);
+  }
+
+  /**
+   * Returns the caller's vote on a target.
+   *
+   * @param targetType the target type
+   * @param targetId the target id
+   * @return the vote value, or null
+   */
+  @Transactional(value = "hadesTransactionManager", readOnly = true)
+  public VoteValue myVote(ReaderVoteTarget targetType, String targetId) {
+    return voteService.myVote(targetType, UUID.fromString(targetId)).orElse(null);
+  }
+
+  /**
+   * Finds annotations that reference any of the given remote object ids.
+   *
+   * @param ids the remote object ids
+   * @return the matching references
+   */
+  @Transactional(value = "hadesTransactionManager", readOnly = true)
+  public List<RemoteObjectReference> locateRemoteObjects(List<String> ids) {
+    return annotationService.locateRemoteObjects(ids).stream()
+        .map(r -> RemoteObjectReference.newBuilder()
+            .id(r.id().toString())
+            .ownerType(r.ownerType())
+            .ownerId(r.ownerId().toString())
+            .build())
+        .toList();
+  }
+
+  /**
+   * Creates a source.
+   *
+   * @param name the source name
+   * @param url the source url
+   * @return a QueryResult
+   */
+  @Transactional("hadesTransactionManager")
+  public QueryResult createSource(String name, String url) {
+    return mutate("createSource", () -> {
+      requireUser();
+      ReaderSourceEntity entity = new ReaderSourceEntity();
+      entity.setName(name);
+      entity.setUrl(url);
+      return sourceService.save(entity).getId();
+    });
+  }
+
+  /**
+   * Creates a text.
+   *
+   * @param input the text input
+   * @return a QueryResult
+   */
+  @Transactional("hadesTransactionManager")
+  public QueryResult createText(ReaderTextInput input) {
+    return mutate("createText", () -> {
+      requireUser();
+      ReaderTextEntity entity = new ReaderTextEntity();
+      textMapper.map(input, entity);
+      return textService.save(entity).getId();
+    });
+  }
+
+  /**
+   * Archives a text.
+   *
+   * @param id the text id
+   * @return a QueryResult
+   */
+  @Transactional("hadesTransactionManager")
+  public QueryResult archiveText(String id) {
+    return mutate("archiveText", () -> {
+      requireUser();
+      ReaderTextEntity text = textService.findById(UUID.fromString(id))
+          .orElseThrow(() -> new IllegalArgumentException("Text not found: " + id));
+      text.setStatus(ReaderTextStatus.ARCHIVED);
+      return textService.save(text).getId();
+    });
+  }
+
+  /**
+   * Creates an annotation on a range, enforcing non-overlap.
+   *
+   * @param textId the text id
+   * @param startOffset the range start
+   * @param endOffset the range end
+   * @param body the markdown body
+   * @return a QueryResult
+   */
+  @Transactional("hadesTransactionManager")
+  public QueryResult createAnnotation(String textId, int startOffset, int endOffset, String body) {
+    return mutate("createAnnotation", () -> annotationService.createAnnotation(
+        UUID.fromString(textId), startOffset, endOffset, body));
+  }
+
+  /**
+   * Updates an annotation's body.
+   *
+   * @param id the annotation id
+   * @param body the new body
+   * @return a QueryResult
+   */
+  @Transactional("hadesTransactionManager")
+  public QueryResult editAnnotation(String id, String body) {
+    return mutate("editAnnotation",
+        () -> annotationService.editAnnotation(UUID.fromString(id), body));
+  }
+
+  /**
+   * Deletes an annotation.
+   *
+   * @param id the annotation id
+   * @return a QueryResult
+   */
+  @Transactional("hadesTransactionManager")
+  public QueryResult deleteAnnotation(String id) {
+    return mutate("deleteAnnotation", () -> {
+      annotationService.deleteAnnotation(UUID.fromString(id));
+      return UUID.fromString(id);
+    });
+  }
+
+  /**
+   * Adds a comment to an annotation.
+   *
+   * @param input the comment input
+   * @return a QueryResult
+   */
+  @Transactional("hadesTransactionManager")
+  public QueryResult addComment(CommentInput input) {
+    return mutate("addComment", () -> commentService.addComment(
+        UUID.fromString(input.getAnnotationId()),
+        input.getParentId() != null ? UUID.fromString(input.getParentId()) : null,
+        input.getBody()));
+  }
+
+  /**
+   * Updates a comment's body.
+   *
+   * @param id the comment id
+   * @param body the new body
+   * @return a QueryResult
+   */
+  @Transactional("hadesTransactionManager")
+  public QueryResult editComment(String id, String body) {
+    return mutate("editComment",
+        () -> commentService.editComment(UUID.fromString(id), body));
+  }
+
+  /**
+   * Deletes a comment.
+   *
+   * @param id the comment id
+   * @return a QueryResult
+   */
+  @Transactional("hadesTransactionManager")
+  public QueryResult deleteComment(String id) {
+    return mutate("deleteComment", () -> {
+      commentService.deleteComment(UUID.fromString(id));
+      return UUID.fromString(id);
+    });
+  }
+
+  /**
+   * Casts, toggles, or flips a vote.
+   *
+   * @param input the vote input
+   * @return a QueryResult
+   */
+  @Transactional("hadesTransactionManager")
+  public QueryResult vote(VoteInput input) {
+    return mutate("vote", () -> voteService.vote(
+        input.getTargetType(),
+        UUID.fromString(input.getTargetId()),
+        input.getValue()));
+  }
+
+  /**
+   * Removes the caller's vote.
+   *
+   * @param targetType the target type
+   * @param targetId the target id
+   * @return a QueryResult
+   */
+  @Transactional("hadesTransactionManager")
+  public QueryResult removeVote(ReaderVoteTarget targetType, String targetId) {
+    return mutate("removeVote",
+        () -> voteService.removeVote(targetType, UUID.fromString(targetId)));
+  }
+
+  /**
+   * Attaches a remote object id to an annotation.
+   *
+   * @param source the annotation id
+   * @param target the remote object id
+   * @return a QueryResult
+   */
+  @Transactional("hadesTransactionManager")
+  public QueryResult attachObject(String source, String target) {
+    return mutate("attachObject",
+        () -> annotationService.attach(UUID.fromString(source), target));
+  }
+
+  /**
+   * Exchanges a Discord authorization code for a JWT, upserting the gaia account
+   * and reader profile.
+   *
+   * @param code the authorization code
+   * @param state the OAuth state token
+   * @return the login result with the JWT
+   */
+  @Transactional("hadesTransactionManager")
+  public DiscordLoginResult discordLogin(String code, String state) {
+    DiscordOAuthService.DiscordProfile profile = discordOAuthService.exchange(code);
+    AccountEntity account = gaiaAccountService.upsertProviderAccount(
+        "discord", profile.discordId(), profile.username());
+    String token = jwtService.generateToken(account.getId(), account.getPersonId());
+    UUID readerAccountId = accountService.upsertFromDiscord(
+        account.getId(), profile.discordId(), profile.username(),
+        profile.globalName(), profile.avatar(), profile.cefrLevel());
+    return DiscordLoginResult.newBuilder()
+        .token(token)
+        .accountId(account.getId().toString())
+        .readerAccountId(readerAccountId.toString())
+        .build();
+  }
+
+  private Pageable toPageable(PaginationInput pagination, String defaultSortBy, Sort.Direction defaultDir) {
+    if (pagination == null) {
+      return PageRequests.of(null, null, null, null, defaultSortBy, defaultDir);
+    }
+    return PageRequests.of(pagination.getPage(), pagination.getSize(), pagination.getSortBy(),
+        pagination.getSortDir() != null ? pagination.getSortDir().name() : null,
+        defaultSortBy, defaultDir);
+  }
+
+  private PageInfo pageInfo(Page<?> result) {
+    return PageInfo.newBuilder()
+        .page(result.getNumber())
+        .size(result.getSize())
+        .totalPages(result.getTotalPages())
+        .totalCount((int) result.getTotalElements())
+        .hasNextPage(result.hasNext())
+        .hasPreviousPage(result.hasPrevious())
+        .build();
+  }
+
+  private QueryResult mutate(String op, Supplier<UUID> action) {
+    try {
+      UUID id = action.get();
+      logger.info("{} succeeded for id {}", op, id);
+      return QuerySuccess.newBuilder()
+          .message(op + " succeeded")
+          .id(id != null ? id.toString() : null)
+          .build();
+    } catch (Exception e) {
+      logger.error("{} failed", op, e);
+      return StandardError.newBuilder()
+          .message(op + " failed: " + e.getMessage())
+          .build();
+    }
+  }
+
+  private UUID requireUser() {
+    UUID id = UserContextHolder.getUserId();
+    if (id == null) {
+      throw new IllegalArgumentException("Authentication required");
+    }
+    return id;
+  }
+}

@@ -40,8 +40,22 @@ public class SunGraphQLApplication {
         setSystemProperty(dotenv, "GAIA_SPRING_DATASOURCE_URL", "GAIA_SPRING_DATASOURCE_URL");
         setSystemProperty(dotenv, "GAIA_SPRING_DATASOURCE_USERNAME", "GAIA_SPRING_DATASOURCE_USERNAME");
         setSystemProperty(dotenv, "GAIA_SPRING_DATASOURCE_PASSWORD", "GAIA_SPRING_DATASOURCE_PASSWORD");
+        // Hades datasource
+        setSystemProperty(dotenv, "HADES_SPRING_DATASOURCE_URL", "HADES_SPRING_DATASOURCE_URL");
+        setSystemProperty(dotenv, "HADES_SPRING_DATASOURCE_USERNAME", "HADES_SPRING_DATASOURCE_USERNAME");
+        setSystemProperty(dotenv, "HADES_SPRING_DATASOURCE_PASSWORD", "HADES_SPRING_DATASOURCE_PASSWORD");
+        // Icarus datasource
+        setSystemProperty(dotenv, "ICARUS_SPRING_DATASOURCE_URL", "ICARUS_SPRING_DATASOURCE_URL");
+        setSystemProperty(dotenv, "ICARUS_SPRING_DATASOURCE_USERNAME", "ICARUS_SPRING_DATASOURCE_USERNAME");
+        setSystemProperty(dotenv, "ICARUS_SPRING_DATASOURCE_PASSWORD", "ICARUS_SPRING_DATASOURCE_PASSWORD");
         // Auth
         setSystemProperty(dotenv, "JWT_SECRET", "JWT_SECRET");
+        // Discord OAuth
+        setSystemProperty(dotenv, "DISCORD_CLIENT_ID", "DISCORD_CLIENT_ID");
+        setSystemProperty(dotenv, "DISCORD_CLIENT_SECRET", "DISCORD_CLIENT_SECRET");
+        setSystemProperty(dotenv, "DISCORD_GUILD_ID", "DISCORD_GUILD_ID");
+        setSystemProperty(dotenv, "DISCORD_REDIRECT_URI", "DISCORD_REDIRECT_URI");
+        setSystemProperty(dotenv, "DISCORD_BOT_TOKEN", "DISCORD_BOT_TOKEN");
         // Email
         setSystemProperty(dotenv, "EMAIL_CLIENT_ID", "EMAIL_CLIENT_ID");
         setSystemProperty(dotenv, "EMAIL_CLIENT_SECRET", "EMAIL_CLIENT_SECRET");

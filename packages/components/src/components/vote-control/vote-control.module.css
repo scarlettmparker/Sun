@@ -1,0 +1,5 @@
+.vote_control {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sm);
+}

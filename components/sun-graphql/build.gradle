@@ -63,6 +63,18 @@ generateJava {
     generateClient = true
 }
 
+generateJava {
+    schemaPaths = ["${projectDir}/src/main/resources", "${project(':hades-graphql').projectDir}/src/main/resources"]
+    packageName = 'com.sun.graphql.codegen'
+    generateClient = true
+}
+
+generateJava {
+    schemaPaths = ["${projectDir}/src/main/resources", "${project(':icarus-graphql').projectDir}/src/main/resources"]
+    packageName = 'com.sun.graphql.codegen'
+    generateClient = true
+}
+
 group = 'com.sun'
 version = '0.0.1-SNAPSHOT'
 description = 'sun-graphql'
@@ -91,6 +103,10 @@ dependencies {
     implementation project(':fates-service')
     implementation project(':gaia-graphql')
     implementation project(':gaia-service')
+    implementation project(':hades-graphql')
+    implementation project(':hades-service')
+    implementation project(':icarus-graphql')
+    implementation project(':icarus-service')
     implementation project(':narcissus-graphql')
     implementation project(':narcissus-service')
     implementation project(':sun-service')
