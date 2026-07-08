@@ -289,8 +289,7 @@ public class HadesGraphQLService {
   public QueryResult createText(ReaderTextInput input) {
     return mutate("createText", () -> {
       requireUser();
-      ReaderTextEntity entity = new ReaderTextEntity();
-      textMapper.map(input, entity);
+      ReaderTextEntity entity = textMapper.mapInput(input);
       return textService.save(entity).getId();
     });
   }
@@ -459,6 +458,14 @@ public class HadesGraphQLService {
         .build();
   }
 
+  /**
+   * Converts the pagination input into a pageable, applying the given defaults.
+   *
+   * @param pagination the pagination and sort input
+   * @param defaultSortBy the property to sort by when none is given
+   * @param defaultDir the direction when none is given
+   * @return the pageable
+   */
   private Pageable toPageable(PaginationInput pagination, String defaultSortBy, Sort.Direction defaultDir) {
     if (pagination == null) {
       return PageRequests.of(null, null, null, null, defaultSortBy, defaultDir);
@@ -468,6 +475,12 @@ public class HadesGraphQLService {
         defaultSortBy, defaultDir);
   }
 
+  /**
+   * Builds page metadata from a Spring data page.
+   *
+   * @param result the data page
+   * @return the GraphQL PageInfo
+   */
   private PageInfo pageInfo(Page<?> result) {
     return PageInfo.newBuilder()
         .page(result.getNumber())
@@ -479,6 +492,14 @@ public class HadesGraphQLService {
         .build();
   }
 
+  /**
+   * Runs a mutation, returning QuerySuccess with the affected id or StandardError
+   * on failure.
+   *
+   * @param op the operation name (for logging and messages)
+   * @param action the mutation, returning the affected entity id
+   * @return a QueryResult
+   */
   private QueryResult mutate(String op, Supplier<UUID> action) {
     try {
       UUID id = action.get();
@@ -495,6 +516,11 @@ public class HadesGraphQLService {
     }
   }
 
+  /**
+   * Returns the authenticated account id, throwing if none is present.
+   *
+   * @return the caller's account id
+   */
   private UUID requireUser() {
     UUID id = UserContextHolder.getUserId();
     if (id == null) {

@@ -2,6 +2,8 @@ package com.sun.hades.graphql.mappers;
 
 import com.sun.hades.codegen.types.ReaderComment;
 import com.sun.hades.model.ReaderCommentEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 /**
@@ -10,6 +12,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class ReaderCommentMapper {
 
+  private static final Logger logger = LoggerFactory.getLogger(ReaderCommentMapper.class);
+
   /**
    * Maps a comment entity to the GraphQL ReaderComment type.
    *
@@ -17,7 +21,8 @@ public class ReaderCommentMapper {
    * @return the GraphQL ReaderComment
    */
   public ReaderComment map(ReaderCommentEntity entity) {
-    return ReaderComment.newBuilder()
+    logger.debug("Mapping reader comment {}", entity.getId());
+    ReaderComment comment = ReaderComment.newBuilder()
         .id(entity.getId().toString())
         .annotationId(entity.getAnnotationId().toString())
         .parentId(entity.getParentId() != null ? entity.getParentId().toString() : null)
@@ -29,5 +34,7 @@ public class ReaderCommentMapper {
         .createdAt(entity.getCreatedAt())
         .updatedAt(entity.getLastUpdatedAt())
         .build();
+    logger.debug("Mapped reader comment with id {}", comment.getId());
+    return comment;
   }
 }

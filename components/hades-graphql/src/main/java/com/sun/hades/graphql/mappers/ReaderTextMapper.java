@@ -3,9 +3,10 @@ package com.sun.hades.graphql.mappers;
 import com.sun.hades.codegen.types.ReaderText;
 import com.sun.hades.codegen.types.ReaderTextInput;
 import com.sun.hades.model.ReaderTextEntity;
-import com.sun.hades.model.enums.CefrLevel;
 import com.sun.hades.model.enums.ReaderTextType;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 /**
@@ -14,6 +15,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class ReaderTextMapper {
 
+  private static final Logger logger = LoggerFactory.getLogger(ReaderTextMapper.class);
+
   /**
    * Maps a text entity to the GraphQL ReaderText type.
    *
@@ -21,7 +24,8 @@ public class ReaderTextMapper {
    * @return the GraphQL ReaderText
    */
   public ReaderText map(ReaderTextEntity entity) {
-    return ReaderText.newBuilder()
+    logger.debug("Mapping reader text {}", entity.getTitle());
+    ReaderText text = ReaderText.newBuilder()
         .id(entity.getId().toString())
         .title(entity.getTitle())
         .content(entity.getContent())
@@ -33,28 +37,27 @@ public class ReaderTextMapper {
         .createdAt(entity.getCreatedAt())
         .updatedAt(entity.getLastUpdatedAt())
         .build();
+    logger.debug("Mapped reader text {} with id {}", entity.getTitle(), text.getId());
+    return text;
   }
 
   /**
-   * Applies input fields to a text entity, for create or update.
+   * Maps a GraphQL ReaderTextInput to a new domain ReaderTextEntity.
    *
    * @param input the text input
-   * @param entity the text entity to update
+   * @return the mapped domain ReaderTextEntity
    */
-  public void map(ReaderTextInput input, ReaderTextEntity entity) {
+  public ReaderTextEntity mapInput(ReaderTextInput input) {
+    logger.debug("Mapping input for reader text {}", input.getTitle());
+    ReaderTextEntity entity = new ReaderTextEntity();
     entity.setTitle(input.getTitle());
     entity.setContent(input.getContent());
     entity.setLanguage(input.getLanguage());
-    if (input.getLevel() != null) {
-      entity.setLevel(input.getLevel());
-    }
-    if (input.getType() != null) {
-      entity.setType(input.getType());
-    } else {
-      entity.setType(ReaderTextType.USER);
-    }
+    entity.setLevel(input.getLevel() != null ? input.getLevel() : com.sun.hades.model.enums.CefrLevel.A1);
+    entity.setType(input.getType() != null ? input.getType() : ReaderTextType.USER);
     if (input.getSourceId() != null) {
       entity.setSourceId(UUID.fromString(input.getSourceId()));
     }
+    return entity;
   }
 }

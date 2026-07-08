@@ -247,6 +247,14 @@ public class IcarusGraphQLService {
         () -> threadService.attach(UUID.fromString(source), target));
   }
 
+  /**
+   * Converts the pagination input into a pageable, applying the given defaults.
+   *
+   * @param pagination the pagination and sort input
+   * @param defaultSortBy the property to sort by when none is given
+   * @param defaultDir the direction when none is given
+   * @return the pageable
+   */
   private Pageable toPageable(PaginationInput pagination, String defaultSortBy, Sort.Direction defaultDir) {
     if (pagination == null) {
       return PageRequests.of(null, null, null, null, defaultSortBy, defaultDir);
@@ -256,6 +264,12 @@ public class IcarusGraphQLService {
         defaultSortBy, defaultDir);
   }
 
+  /**
+   * Builds page metadata from a Spring data page.
+   *
+   * @param result the data page
+   * @return the GraphQL PageInfo
+   */
   private PageInfo pageInfo(Page<?> result) {
     return PageInfo.newBuilder()
         .page(result.getNumber())
@@ -267,6 +281,14 @@ public class IcarusGraphQLService {
         .build();
   }
 
+  /**
+   * Runs a mutation, returning QuerySuccess with the affected id or StandardError
+   * on failure.
+   *
+   * @param op the operation name (for logging and messages)
+   * @param action the mutation, returning the affected entity id
+   * @return a QueryResult
+   */
   private QueryResult mutate(String op, Supplier<UUID> action) {
     try {
       UUID id = action.get();
