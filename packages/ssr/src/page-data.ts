@@ -3,8 +3,6 @@
  * Provides a registry for page-data loaders and a suspense cache for data loading.
  */
 
-import { AsyncLocalStorage } from "node:async_hooks";
-
 type PageDataLoader = (
   params?: Record<string, unknown>,
 ) => Promise<Record<string, unknown> | null>;
@@ -56,7 +54,7 @@ export function configurePageData(opts: {
  * Cache record for React Suspense-based data loading.
  * Status of data fetches: 'pending', 'resolved', or 'rejected'.
  */
-type CacheRecord = {
+export type CacheRecord = {
   status: "pending" | "resolved" | "rejected";
   result?: Record<string, unknown>;
   promise?: Promise<unknown>;
@@ -66,30 +64,33 @@ type CacheRecord = {
 };
 
 /**
- * On the server, page data is cached **per request** via AsyncLocalStorage, so
- * concurrent SSR renders never share/leak state and each postlude contains only
- * the keys the current render resolved (see `enterRequestCache` in server.ts).
- * On the client there is one session-level map (hydrated from the SSR postlude).
+ * On the server, page data is cached **per request** (via AsyncLocalStorage,
+ * wired up in server.ts) so concurrent SSR renders never share/leak state and
+ * each postlude contains only the keys the current render resolved. On the
+ * client there is one session-level map (hydrated from the SSR postlude).
  */
 const clientCache = new Map<string, CacheRecord>();
-const requestCacheAls = new AsyncLocalStorage<Map<string, CacheRecord>>();
+type RequestCacheProvider = () => Map<string, CacheRecord> | null;
+let requestCacheProvider: RequestCacheProvider | null = null;
+
+/** server.ts calls this at boot to plug in the AsyncLocalStorage-backed store. */
+export function setRequestCacheProvider(provider: RequestCacheProvider): void {
+  requestCacheProvider = provider;
+}
 
 function activeCache(): Map<string, CacheRecord> {
   // Server inside a request → that request's map; otherwise the client/session map.
-  return (typeof window === "undefined" && requestCacheAls.getStore()) || clientCache;
-}
-
-/** Enter a fresh per-request cache. Called from the Fastify `onRequest` hook. */
-export function enterRequestCache(): Map<string, CacheRecord> {
-  const cache = new Map<string, CacheRecord>();
-  requestCacheAls.enterWith(cache);
-  return cache;
+  if (typeof window === "undefined" && requestCacheProvider) {
+    const store = requestCacheProvider();
+    if (store) return store;
+  }
+  return clientCache;
 }
 
 /**
  * Capture the current request's cache reference. Call at SSR render() entry
- * (while the AsyncLocalStorage context is live); the returned reference stays
- * valid for the lifetime of the render, even inside React stream callbacks.
+ * (while the request context is live); the returned reference stays valid for
+ * the lifetime of the render, even inside React stream callbacks.
  */
 export function getRequestCache(): Map<string, CacheRecord> {
   return activeCache();
@@ -105,25 +106,20 @@ export function snapshotResolvedPageData(): Record<string, unknown> {
 }
 
 /**
- * Backwards-compat export: a Proxy that forwards every access to the active
- * cache (request-scoped on the server, session-scoped on the client), so
- * consumers that still do `suspenseCache.clear()` / `.entries()` keep working.
+ * Proxy that forwards every access to the active cache.
  */
-export const suspenseCache = new Proxy(
-  {} as Map<string, CacheRecord>,
-  {
-    get(_target, prop) {
-      const cache = activeCache();
-      const value = cache[prop as keyof Map<string, CacheRecord>];
-      return typeof value === "function" ? (value as (...args: unknown[]) => unknown).bind(cache) : value;
-    },
+export const suspenseCache = new Proxy({} as Map<string, CacheRecord>, {
+  get(_target, prop) {
+    const cache = activeCache();
+    const value = cache[prop as keyof Map<string, CacheRecord>];
+    return typeof value === "function"
+      ? (value as (...args: unknown[]) => unknown).bind(cache)
+      : value;
   },
-);
+});
 
 /**
  * How long a rejected suspense-cache entry is allowed to suppress a retry.
- * Picked to be long enough that a tight failure loop won't hammer the
- * server, but short enough that a brief restart/cold-start blip self-heals.
  */
 const REJECTED_RETRY_MS = 5000;
 
@@ -247,7 +243,7 @@ export function makeCacheKey(
 }
 
 /**
- * Client-side RPC: asks the server to run the registered loaders for a pattern
+ * Client-side RPC, asks the server to run the registered loaders for a pattern
  * and return the merged data. Keeps all backend fetching server-side.
  */
 export async function fetchPageDataRpc(

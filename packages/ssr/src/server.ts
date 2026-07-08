@@ -1,12 +1,14 @@
 import path from "path";
 import zlib from "node:zlib";
+import { AsyncLocalStorage } from "node:async_hooks";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import type { ViteDevServer } from "vite";
 import { pageDataRpcHandler } from "./rpc-handler";
 import { mutationRegistry } from "./mutations";
 import { ServerRedirectError } from "./server-redirect";
-import { enterRequestCache } from "./page-data";
+import { setRequestCacheProvider } from "./page-data";
+import type { CacheRecord } from "./page-data";
 
 export { handleQuery } from "./query";
 export type { QueryFetchResult } from "./query";
@@ -16,6 +18,14 @@ export { loadModule } from "./load-module";
 const GZIP_THRESHOLD = 1024;
 /** Content types worth gzipping. Excludes already-compressed binary (images, video, fonts). */
 const COMPRESSIBLE_CONTENT_TYPES = /text\/|\+?json|\+?xml|javascript|csv|svg/i;
+
+/**
+ * Per-request page-data cache. server.ts is the server-only entry (never
+ * bundled for the browser), so `node:async_hooks` stays out of the client
+ * bundle. page-data.ts reads the store via the provider registered here.
+ */
+const requestCacheAls = new AsyncLocalStorage<Map<string, CacheRecord>>();
+setRequestCacheProvider(() => requestCacheAls.getStore() ?? null);
 
 type ServerConfig = {
   port: number;
@@ -124,7 +134,7 @@ export async function createServer(
   // AsyncLocalStorage context is active for the whole request (including the
   // SSR render and its onAllReady callback).
   app.addHook("onRequest", async () => {
-    enterRequestCache();
+    requestCacheAls.enterWith(new Map());
   });
 
   // App-layer gzip for buffered (string/Buffer) JSON/text responses.
