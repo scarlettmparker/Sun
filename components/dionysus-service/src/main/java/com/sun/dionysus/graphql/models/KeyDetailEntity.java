@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
  * Tracks name, description, status (active/archived), and audit timestamps.
  */
 @Entity
-@Table(name = "key_detail")
+@Table(name = "dionysus_key_detail")
 public class KeyDetailEntity extends BaseEntity {
 
   @Column

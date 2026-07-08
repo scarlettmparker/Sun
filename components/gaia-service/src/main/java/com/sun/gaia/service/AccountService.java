@@ -5,6 +5,7 @@ import com.sun.fates.model.PersonEntity;
 import com.sun.fates.service.PersonService;
 import com.sun.gaia.model.AccountEntity;
 import com.sun.gaia.model.enums.AccountStatus;
+import com.sun.gaia.model.enums.AccountType;
 import com.sun.gaia.repository.AccountRepository;
 import java.util.Optional;
 import java.util.UUID;
@@ -13,8 +14,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional("gaiaTransactionManager")
+@Transactional
 public class AccountService extends BaseService<AccountEntity> {
+
+  private static final UUID NIL_PERSON_ID = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
   private final AccountRepository accountRepository;
   private final PersonService personService;
@@ -61,6 +64,26 @@ public class AccountService extends BaseService<AccountEntity> {
       return Optional.empty();
     }
     return accountRepository.findByPersonId(person.get().getId());
+  }
+
+  /**
+   * Finds or creates a non-login ghost account for the given owner key.
+   *
+   * @param key the owner key, used as the username
+   * @return the ghost account
+   */
+  public AccountEntity upsertGhostAccount(String key) {
+    return accountRepository.findByUsernameAndAccountType(key, AccountType.GHOST)
+        .orElseGet(() -> {
+          AccountEntity account = new AccountEntity();
+          account.setUsername(key);
+          account.setPasswordHash("!");
+          account.setPersonId(NIL_PERSON_ID);
+          account.setStatus(AccountStatus.ACTIVE);
+          account.setProvider("ghost");
+          account.setAccountType(AccountType.GHOST);
+          return save(account);
+        });
   }
 
   /**

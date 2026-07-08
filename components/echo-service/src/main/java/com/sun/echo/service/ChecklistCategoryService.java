@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /** Service for managing checklist category entities. */
 @Service
-@Transactional("echoTransactionManager")
+@Transactional
 public class ChecklistCategoryService extends BaseService<ChecklistCategoryEntity> {
 
   public ChecklistCategoryService(ChecklistCategoryRepository repository) {

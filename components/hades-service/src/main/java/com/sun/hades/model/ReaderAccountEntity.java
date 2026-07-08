@@ -13,7 +13,7 @@ import java.util.UUID;
  * Reader-specific profile for a member, synced from Discord on login.
  */
 @Entity
-@Table(name = "reader_accounts")
+@Table(name = "hades_reader_accounts")
 public class ReaderAccountEntity extends BaseEntity {
 
   @Column(name = "gaia_account_id", nullable = false, unique = true)

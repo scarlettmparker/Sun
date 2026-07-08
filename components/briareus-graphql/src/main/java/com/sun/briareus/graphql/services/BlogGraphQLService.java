@@ -41,7 +41,7 @@ public class BlogGraphQLService {
    * 
    * @return a list of GraphQL BlgoPost objects
    */
-  @Transactional("briareusTransactionManager")
+  @Transactional
   public List<BlogPost> listBlogPosts() {
     logger.info("Retrieving blog posts");
 
@@ -62,7 +62,7 @@ public class BlogGraphQLService {
    * @param id the blog post ID as string
    * @return the GraphQL BlogPost object
    */
-  @Transactional("briareusTransactionManager")
+  @Transactional
   public BlogPost locateBlogPost(String id) {
     logger.info("Retrieving blog post by ID: {}", id);
 
@@ -81,7 +81,7 @@ public class BlogGraphQLService {
    * @param ids the remote-object ids to match
    * @return a list of GraphQL BlogPost objects
    */
-  @Transactional("briareusTransactionManager")
+  @Transactional
   public List<BlogPost> listByRemoteObjects(List<String> ids) {
     logger.info("Retrieving blog posts by remote object ids: {}", ids);
 
@@ -101,7 +101,7 @@ public class BlogGraphQLService {
    * @param input the input data for the blog post
    * @return QueryResult indicating success or error
    */
-  @Transactional("briareusTransactionManager")
+  @Transactional
   public QueryResult createBlogPost(String title, BlogPostInput input) {
     logger.info("Creating blog post with title: {}", title);
 

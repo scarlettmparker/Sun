@@ -8,6 +8,6 @@ import jakarta.persistence.Table;
  * entry. Linked to its entry via the inherited ownerId.
  */
 @Entity
-@Table(name = "checklist_entry_details")
+@Table(name = "echo_checklist_entry_details")
 public class ChecklistEntryDetailEntity extends AbstractDetailEntity {
 }

@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
  * Service for forum posts.
  */
 @Service
-@Transactional("icarusTransactionManager")
+@Transactional
 public class ForumPostService extends BaseService<ForumPostEntity> {
 
   private final ForumPostRepository postRepository;

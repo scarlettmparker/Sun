@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
  * Service for reader texts.
  */
 @Service
-@Transactional("hadesTransactionManager")
+@Transactional
 public class ReaderTextService extends BaseService<ReaderTextEntity> {
 
   private final ReaderTextRepository textRepository;

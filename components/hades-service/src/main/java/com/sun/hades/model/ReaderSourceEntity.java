@@ -9,7 +9,7 @@ import jakarta.persistence.Table;
  * The website a reader text originated from.
  */
 @Entity
-@Table(name = "reader_sources")
+@Table(name = "hades_reader_sources")
 public class ReaderSourceEntity extends BaseEntity {
 
   @Column(name = "name", nullable = false)

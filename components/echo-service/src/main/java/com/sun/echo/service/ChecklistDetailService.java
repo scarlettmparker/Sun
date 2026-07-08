@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
  * component remote-object references.
  */
 @Service
-@Transactional("echoTransactionManager")
+@Transactional
 public class ChecklistDetailService {
 
   private final ChecklistEntryDetailRepository entryDetailRepository;

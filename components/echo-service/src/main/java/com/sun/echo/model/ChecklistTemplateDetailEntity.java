@@ -8,6 +8,6 @@ import jakarta.persistence.Table;
  * template. Linked to its template via the inherited ownerId.
  */
 @Entity
-@Table(name = "checklist_template_details")
+@Table(name = "echo_checklist_template_details")
 public class ChecklistTemplateDetailEntity extends AbstractDetailEntity {
 }

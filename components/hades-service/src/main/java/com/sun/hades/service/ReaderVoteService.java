@@ -21,7 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
  * Service for casting, toggling, and removing votes, and applying the hide rule.
  */
 @Service
-@Transactional("hadesTransactionManager")
+@Transactional
 public class ReaderVoteService {
 
   private final ReaderVoteRepository voteRepository;

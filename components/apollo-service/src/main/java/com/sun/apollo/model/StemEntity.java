@@ -4,7 +4,7 @@ import com.sun.base.model.BaseEntity;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "stems")
+@Table(name = "apollo_stems")
 public class StemEntity extends BaseEntity {
 
   @Column(name = "file_path")

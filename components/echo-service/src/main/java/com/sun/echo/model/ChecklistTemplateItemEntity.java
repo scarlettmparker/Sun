@@ -12,7 +12,7 @@ import java.util.UUID;
  * the entry-item relationship once a checklist is created from a template).
  */
 @Entity
-@Table(name = "checklist_template_items")
+@Table(name = "echo_checklist_template_items")
 public class ChecklistTemplateItemEntity extends BaseEntity {
 
   @Column(name = "template_id", nullable = false)

@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
  * Service for discussion threads.
  */
 @Service
-@Transactional("icarusTransactionManager")
+@Transactional
 public class ForumThreadService extends BaseService<ForumThreadEntity> {
 
   private final ForumThreadRepository threadRepository;

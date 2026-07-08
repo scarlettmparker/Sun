@@ -13,7 +13,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
-@Transactional("apolloTransactionManager")
+@Transactional
 public class ApolloService extends BaseService<SongEntity> {
 
   public ApolloService(SongRepository repository) {

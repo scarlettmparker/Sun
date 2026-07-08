@@ -15,7 +15,7 @@ import java.util.UUID;
  * A foreign-language text that users annotate.
  */
 @Entity
-@Table(name = "reader_texts")
+@Table(name = "hades_reader_texts")
 public class ReaderTextEntity extends BaseEntity {
 
   @Column(name = "title", nullable = false)

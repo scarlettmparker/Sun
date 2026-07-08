@@ -11,7 +11,7 @@ public interface ChecklistEntryDetailRepository extends BaseRepository<Checklist
 
   Optional<ChecklistEntryDetailEntity> findByOwnerId(UUID ownerId);
 
-  @Query(value = "SELECT * FROM checklist_entry_details WHERE EXISTS "
+  @Query(value = "SELECT * FROM echo_checklist_entry_details WHERE EXISTS "
       + "(SELECT 1 FROM jsonb_array_elements_text(remote_object) AS elem WHERE elem = ANY(?1))",
       nativeQuery = true)
   List<ChecklistEntryDetailEntity> findByRemoteObjectsIn(String[] ids);

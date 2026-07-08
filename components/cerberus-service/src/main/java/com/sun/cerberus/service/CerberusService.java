@@ -14,7 +14,7 @@ import java.util.Optional;
 import java.util.List;
 
 @Service
-@Transactional("cerberusTransactionManager")
+@Transactional
 public class CerberusService extends BaseService<GalleryItemEntity> {
 
   private final GalleryItemRepository galleryItemRepository;

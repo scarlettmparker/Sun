@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional("fatesTransactionManager")
+@Transactional
 public class PlaceService extends BaseService<PlaceEntity> {
 
   public PlaceService(PlaceRepository repository) {

@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
  * Service for reader-member profiles synced from Discord.
  */
 @Service
-@Transactional("hadesTransactionManager")
+@Transactional
 public class ReaderAccountService extends BaseService<ReaderAccountEntity> {
 
   private final ReaderAccountRepository accountRepository;

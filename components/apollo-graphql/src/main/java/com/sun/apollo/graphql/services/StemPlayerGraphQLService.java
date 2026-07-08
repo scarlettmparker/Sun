@@ -33,7 +33,7 @@ public class StemPlayerGraphQLService {
    *
    * @return a list of GraphQL Song objects without stems
    */
-  @Transactional("apolloTransactionManager")
+  @Transactional
   public List<Song> list() {
     logger.info("Retrieving songs for stem player (without stems)");
 
@@ -52,7 +52,7 @@ public class StemPlayerGraphQLService {
    * @param id the song ID as string
    * @return the GraphQL Song object with stems
    */
-  @Transactional("apolloTransactionManager")
+  @Transactional
   public Song locate(String id) {
     logger.info("Retrieving song by ID: {}", id);
 

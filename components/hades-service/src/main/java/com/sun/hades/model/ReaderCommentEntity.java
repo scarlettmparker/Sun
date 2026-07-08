@@ -13,7 +13,7 @@ import java.util.UUID;
  * A threaded reply on an annotation.
  */
 @Entity
-@Table(name = "reader_comments")
+@Table(name = "hades_reader_comments")
 public class ReaderCommentEntity extends BaseEntity {
 
   @Column(name = "annotation_id", nullable = false)

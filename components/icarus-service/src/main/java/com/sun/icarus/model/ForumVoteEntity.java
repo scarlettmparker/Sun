@@ -15,7 +15,7 @@ import java.util.UUID;
  */
 @Entity
 @Table(
-    name = "forum_votes",
+    name = "icarus_forum_votes",
     uniqueConstraints = @UniqueConstraint(
         name = "forum_vote_unique",
         columnNames = {"account_id", "post_id"}))

@@ -10,7 +10,7 @@ import jakarta.persistence.Table;
 import java.util.UUID;
 
 @Entity
-@Table(name = "checklist_items")
+@Table(name = "echo_checklist_items")
 public class ChecklistItemEntity extends BaseEntity {
 
   @Column(name = "name", nullable = false)

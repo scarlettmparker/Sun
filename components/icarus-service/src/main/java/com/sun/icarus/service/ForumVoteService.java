@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
  * Service for casting, toggling, and removing votes on forum posts.
  */
 @Service
-@Transactional("icarusTransactionManager")
+@Transactional
 public class ForumVoteService {
 
   private final ForumVoteRepository voteRepository;

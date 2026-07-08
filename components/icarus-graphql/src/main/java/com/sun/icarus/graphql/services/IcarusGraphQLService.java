@@ -11,9 +11,9 @@ import com.sun.icarus.codegen.types.PagedForumThreads;
 import com.sun.icarus.codegen.types.PaginationInput;
 import com.sun.icarus.codegen.types.QueryResult;
 import com.sun.icarus.codegen.types.QuerySuccess;
-import com.sun.icarus.codegen.types.RemoteObjectReference;
+import com.sun.icarus.codegen.types.ForumObjectReference;
+import com.sun.icarus.codegen.types.ForumVoteInput;
 import com.sun.icarus.codegen.types.StandardError;
-import com.sun.icarus.codegen.types.VoteInput;
 import com.sun.icarus.graphql.mappers.ForumPostMapper;
 import com.sun.icarus.graphql.mappers.ForumThreadMapper;
 import com.sun.icarus.model.ForumPostEntity;
@@ -63,7 +63,7 @@ public class IcarusGraphQLService {
    * @param id the thread id
    * @return the thread, or null
    */
-  @Transactional(value = "icarusTransactionManager", readOnly = true)
+  @Transactional(readOnly = true)
   public ForumThread thread(String id) {
     return threadService.findById(UUID.fromString(id)).map(threadMapper::map).orElse(null);
   }
@@ -74,7 +74,7 @@ public class IcarusGraphQLService {
    * @param remoteObject the remote object id
    * @return a page of threads
    */
-  @Transactional(value = "icarusTransactionManager", readOnly = true)
+  @Transactional(readOnly = true)
   public PagedForumThreads threadsFor(String remoteObject) {
     List<ForumThread> items =
         threadService.listForRemoteObject(remoteObject).stream().map(threadMapper::map).toList();
@@ -99,7 +99,7 @@ public class IcarusGraphQLService {
    * @param pagination the pagination input
    * @return a page of posts
    */
-  @Transactional(value = "icarusTransactionManager", readOnly = true)
+  @Transactional(readOnly = true)
   public PagedForumPosts posts(String threadId, Boolean includeHidden, PaginationInput pagination) {
     Pageable pageable = toPageable(pagination, "createdAt", Sort.Direction.ASC);
     Page<ForumPostEntity> result = postService.listForThread(UUID.fromString(threadId), pageable);
@@ -116,7 +116,7 @@ public class IcarusGraphQLService {
    * @param postId the post id
    * @return the vote value, or null
    */
-  @Transactional(value = "icarusTransactionManager", readOnly = true)
+  @Transactional(readOnly = true)
   public VoteValue myVote(String postId) {
     return voteService.myVote(UUID.fromString(postId)).orElse(null);
   }
@@ -127,10 +127,10 @@ public class IcarusGraphQLService {
    * @param ids the remote object ids
    * @return the references
    */
-  @Transactional(value = "icarusTransactionManager", readOnly = true)
-  public List<RemoteObjectReference> locateRemoteObjects(List<String> ids) {
+  @Transactional(readOnly = true)
+  public List<ForumObjectReference> locateRemoteObjects(List<String> ids) {
     return threadService.locateRemoteObjects(ids).stream()
-        .map(r -> RemoteObjectReference.newBuilder()
+        .map(r -> ForumObjectReference.newBuilder()
             .id(r.id().toString())
             .ownerType(r.ownerType())
             .ownerId(r.ownerId().toString())
@@ -144,7 +144,7 @@ public class IcarusGraphQLService {
    * @param input the create thread input
    * @return a QueryResult
    */
-  @Transactional("icarusTransactionManager")
+  @Transactional
   public QueryResult createThread(CreateThreadInput input) {
     return mutate("createThread",
         () -> threadService.create(input.getTitle(), input.getRemoteObject()));
@@ -156,7 +156,7 @@ public class IcarusGraphQLService {
    * @param id the thread id
    * @return a QueryResult
    */
-  @Transactional("icarusTransactionManager")
+  @Transactional
   public QueryResult lockThread(String id) {
     return mutate("lockThread",
         () -> threadService.setStatus(UUID.fromString(id), ThreadStatus.LOCKED));
@@ -168,7 +168,7 @@ public class IcarusGraphQLService {
    * @param id the thread id
    * @return a QueryResult
    */
-  @Transactional("icarusTransactionManager")
+  @Transactional
   public QueryResult archiveThread(String id) {
     return mutate("archiveThread",
         () -> threadService.setStatus(UUID.fromString(id), ThreadStatus.ARCHIVED));
@@ -180,7 +180,7 @@ public class IcarusGraphQLService {
    * @param input the create post input
    * @return a QueryResult
    */
-  @Transactional("icarusTransactionManager")
+  @Transactional
   public QueryResult createPost(CreatePostInput input) {
     return mutate("createPost", () -> postService.addPost(
         UUID.fromString(input.getThreadId()),
@@ -195,7 +195,7 @@ public class IcarusGraphQLService {
    * @param body the new body
    * @return a QueryResult
    */
-  @Transactional("icarusTransactionManager")
+  @Transactional
   public QueryResult editPost(String id, String body) {
     return mutate("editPost", () -> postService.editPost(UUID.fromString(id), body));
   }
@@ -206,7 +206,7 @@ public class IcarusGraphQLService {
    * @param id the post id
    * @return a QueryResult
    */
-  @Transactional("icarusTransactionManager")
+  @Transactional
   public QueryResult deletePost(String id) {
     return mutate("deletePost", () -> postService.deletePost(UUID.fromString(id)));
   }
@@ -217,8 +217,8 @@ public class IcarusGraphQLService {
    * @param input the vote input
    * @return a QueryResult
    */
-  @Transactional("icarusTransactionManager")
-  public QueryResult vote(VoteInput input) {
+  @Transactional
+  public QueryResult vote(ForumVoteInput input) {
     return mutate("vote", () -> voteService.vote(
         UUID.fromString(input.getPostId()), input.getValue()));
   }
@@ -229,7 +229,7 @@ public class IcarusGraphQLService {
    * @param postId the post id
    * @return a QueryResult
    */
-  @Transactional("icarusTransactionManager")
+  @Transactional
   public QueryResult removeVote(String postId) {
     return mutate("removeVote", () -> voteService.removeVote(UUID.fromString(postId)));
   }
@@ -241,7 +241,7 @@ public class IcarusGraphQLService {
    * @param target the remote object id
    * @return a QueryResult
    */
-  @Transactional("icarusTransactionManager")
+  @Transactional
   public QueryResult attachObject(String source, String target) {
     return mutate("attachObject",
         () -> threadService.attach(UUID.fromString(source), target));

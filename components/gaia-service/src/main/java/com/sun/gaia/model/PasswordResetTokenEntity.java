@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "password_reset_tokens")
+@Table(name = "gaia_password_reset_tokens")
 public class PasswordResetTokenEntity extends BaseEntity {
 
   @Column(name = "account_id", nullable = false)

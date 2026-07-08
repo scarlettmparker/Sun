@@ -12,7 +12,7 @@ import java.util.UUID;
  */
 @Entity
 @Table(
-    name = "reader_positions",
+    name = "hades_reader_positions",
     uniqueConstraints = @UniqueConstraint(
         name = "reader_position_range_unique",
         columnNames = {"text_id", "start_offset", "end_offset"}))

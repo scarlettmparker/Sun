@@ -14,7 +14,7 @@ import java.util.Optional;
 import java.util.List;
 
 @Service
-@Transactional("briareusTransactionManager")
+@Transactional
 public class BriareusService extends BaseService<PostEntity> {
 
   private final PostRepository postRepository;

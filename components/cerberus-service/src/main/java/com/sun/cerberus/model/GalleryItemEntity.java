@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "gallery_items")
+@Table(name = "cerberus_gallery_items")
 public class GalleryItemEntity extends BaseEntity {
 
   @Column(name = "title")

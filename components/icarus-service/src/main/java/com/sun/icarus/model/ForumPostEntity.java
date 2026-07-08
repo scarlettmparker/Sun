@@ -13,7 +13,7 @@ import java.util.UUID;
  * A post in a discussion thread.
  */
 @Entity
-@Table(name = "forum_posts")
+@Table(name = "icarus_forum_posts")
 public class ForumPostEntity extends BaseEntity {
 
   @Column(name = "thread_id", nullable = false)

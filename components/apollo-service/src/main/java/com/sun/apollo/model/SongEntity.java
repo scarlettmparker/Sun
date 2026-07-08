@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import java.util.List;
 
 @Entity
-@Table(name = "songs")
+@Table(name = "apollo_songs")
 public class SongEntity extends BaseEntity {
 
   @Column(name = "name")

@@ -2,15 +2,19 @@ package com.sun.gaia.model;
 
 import com.sun.base.model.BaseEntity;
 import com.sun.gaia.model.enums.AccountStatus;
+import com.sun.gaia.model.enums.AccountType;
+import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
+import java.util.Map;
 import java.util.UUID;
+import org.hibernate.annotations.Type;
 
 @Entity
-@Table(name = "accounts")
+@Table(name = "gaia_accounts")
 public class AccountEntity extends BaseEntity {
 
   @Column(name = "username", nullable = false, unique = true)
@@ -31,6 +35,14 @@ public class AccountEntity extends BaseEntity {
 
   @Column(name = "provider_id")
   private String providerId;
+
+  @Enumerated(EnumType.STRING)
+  @Column(name = "account_type", nullable = false)
+  private AccountType accountType = AccountType.HUMAN;
+
+  @Type(JsonBinaryType.class)
+  @Column(name = "metadata", columnDefinition = "jsonb")
+  private Map<String, Object> metadata;
 
   public String getUsername() {
     return username;
@@ -78,5 +90,21 @@ public class AccountEntity extends BaseEntity {
 
   public void setProviderId(String providerId) {
     this.providerId = providerId;
+  }
+
+  public AccountType getAccountType() {
+    return accountType;
+  }
+
+  public void setAccountType(AccountType accountType) {
+    this.accountType = accountType;
+  }
+
+  public Map<String, Object> getMetadata() {
+    return metadata;
+  }
+
+  public void setMetadata(Map<String, Object> metadata) {
+    this.metadata = metadata;
   }
 }

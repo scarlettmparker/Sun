@@ -10,7 +10,7 @@ import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "checklist_entries")
+@Table(name = "echo_checklist_entries")
 public class ChecklistEntryEntity extends BaseEntity {
 
   @Column(name = "name")

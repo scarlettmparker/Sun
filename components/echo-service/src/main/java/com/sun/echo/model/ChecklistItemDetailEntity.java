@@ -8,6 +8,6 @@ import jakarta.persistence.Table;
  * for example an attached image. Linked to its item via the inherited ownerId.
  */
 @Entity
-@Table(name = "checklist_item_details")
+@Table(name = "echo_checklist_item_details")
 public class ChecklistItemDetailEntity extends AbstractDetailEntity {
 }

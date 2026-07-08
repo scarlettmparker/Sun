@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
  * Service for annotation comments.
  */
 @Service
-@Transactional("hadesTransactionManager")
+@Transactional
 public class ReaderCommentService extends BaseService<ReaderCommentEntity> {
 
   private final ReaderCommentRepository commentRepository;

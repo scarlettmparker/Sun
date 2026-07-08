@@ -7,7 +7,7 @@ import jakarta.persistence.Table;
 import java.util.UUID;
 
 @Entity
-@Table(name = "people")
+@Table(name = "fates_people")
 public class PersonEntity extends BaseEntity {
 
   @Column(name = "first_name", nullable = false)

@@ -9,7 +9,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "checklist_templates")
+@Table(name = "echo_checklist_templates")
 public class ChecklistTemplateEntity extends BaseEntity {
 
   @Column(name = "name", nullable = false)

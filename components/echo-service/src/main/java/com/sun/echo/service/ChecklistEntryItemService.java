@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /** Service for managing the items linked to checklist entries. */
 @Service
-@Transactional("echoTransactionManager")
+@Transactional
 public class ChecklistEntryItemService extends BaseService<ChecklistEntryItemEntity> {
 
   private final ChecklistEntryItemRepository entryItemRepository;

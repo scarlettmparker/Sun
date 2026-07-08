@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
  * Service for reader text sources.
  */
 @Service
-@Transactional("hadesTransactionManager")
+@Transactional
 public class ReaderSourceService extends BaseService<ReaderSourceEntity> {
 
   public ReaderSourceService(ReaderSourceRepository repository) {

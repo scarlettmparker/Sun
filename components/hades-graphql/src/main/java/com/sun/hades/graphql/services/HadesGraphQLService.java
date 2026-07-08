@@ -18,7 +18,7 @@ import com.sun.hades.codegen.types.ReaderComment;
 import com.sun.hades.codegen.types.ReaderSource;
 import com.sun.hades.codegen.types.ReaderText;
 import com.sun.hades.codegen.types.ReaderTextInput;
-import com.sun.hades.codegen.types.RemoteObjectReference;
+import com.sun.hades.codegen.types.ReaderObjectReference;
 import com.sun.hades.codegen.types.StandardError;
 import com.sun.hades.codegen.types.VoteInput;
 import com.sun.hades.model.enums.CefrLevel;
@@ -114,7 +114,7 @@ public class HadesGraphQLService {
    * @param pagination the pagination and sort input
    * @return a page of texts
    */
-  @Transactional(value = "hadesTransactionManager", readOnly = true)
+  @Transactional(readOnly = true)
   public PagedReaderTexts texts(
       CefrLevel level, String sourceId, ReaderTextType type, PaginationInput pagination) {
     Pageable pageable = toPageable(pagination, "createdAt", Sort.Direction.DESC);
@@ -133,7 +133,7 @@ public class HadesGraphQLService {
    * @param id the text id
    * @return the text, or null
    */
-  @Transactional(value = "hadesTransactionManager", readOnly = true)
+  @Transactional(readOnly = true)
   public ReaderText text(String id) {
     return textService.findById(UUID.fromString(id)).map(textMapper::map).orElse(null);
   }
@@ -144,7 +144,7 @@ public class HadesGraphQLService {
    * @param id the source id
    * @return the source, or null
    */
-  @Transactional(value = "hadesTransactionManager", readOnly = true)
+  @Transactional(readOnly = true)
   public ReaderSource source(String id) {
     return sourceService.findById(UUID.fromString(id)).map(sourceMapper::map).orElse(null);
   }
@@ -154,7 +154,7 @@ public class HadesGraphQLService {
    *
    * @return the sources
    */
-  @Transactional(value = "hadesTransactionManager", readOnly = true)
+  @Transactional(readOnly = true)
   public List<ReaderSource> sources() {
     return sourceService.findAll().stream().map(sourceMapper::map).toList();
   }
@@ -166,7 +166,7 @@ public class HadesGraphQLService {
    * @param includeHidden whether to include hidden annotations
    * @return the annotations
    */
-  @Transactional(value = "hadesTransactionManager", readOnly = true)
+  @Transactional(readOnly = true)
   public List<ReaderAnnotation> annotations(String textId, Boolean includeHidden) {
     UUID id = UUID.fromString(textId);
     Map<UUID, com.sun.hades.codegen.types.ReaderPosition> positions =
@@ -190,7 +190,7 @@ public class HadesGraphQLService {
    * @param id the annotation id
    * @return the annotation, or null
    */
-  @Transactional(value = "hadesTransactionManager", readOnly = true)
+  @Transactional(readOnly = true)
   public ReaderAnnotation annotation(String id) {
     return annotationService.findById(UUID.fromString(id))
         .map(a -> annotationMapper.map(a, null))
@@ -205,7 +205,7 @@ public class HadesGraphQLService {
    * @param pagination the pagination input
    * @return a page of comments
    */
-  @Transactional(value = "hadesTransactionManager", readOnly = true)
+  @Transactional(readOnly = true)
   public PagedReaderComments comments(
       String annotationId, Boolean includeHidden, PaginationInput pagination) {
     Pageable pageable = toPageable(pagination, "createdAt", Sort.Direction.ASC);
@@ -223,7 +223,7 @@ public class HadesGraphQLService {
    *
    * @return the reader account, or null
    */
-  @Transactional(value = "hadesTransactionManager", readOnly = true)
+  @Transactional(readOnly = true)
   public com.sun.hades.codegen.types.ReaderAccount readerAccount() {
     UUID userId = UserContextHolder.getUserId();
     if (userId == null) {
@@ -239,7 +239,7 @@ public class HadesGraphQLService {
    * @param targetId the target id
    * @return the vote value, or null
    */
-  @Transactional(value = "hadesTransactionManager", readOnly = true)
+  @Transactional(readOnly = true)
   public VoteValue myVote(ReaderVoteTarget targetType, String targetId) {
     return voteService.myVote(targetType, UUID.fromString(targetId)).orElse(null);
   }
@@ -250,10 +250,10 @@ public class HadesGraphQLService {
    * @param ids the remote object ids
    * @return the matching references
    */
-  @Transactional(value = "hadesTransactionManager", readOnly = true)
-  public List<RemoteObjectReference> locateRemoteObjects(List<String> ids) {
+  @Transactional(readOnly = true)
+  public List<ReaderObjectReference> locateRemoteObjects(List<String> ids) {
     return annotationService.locateRemoteObjects(ids).stream()
-        .map(r -> RemoteObjectReference.newBuilder()
+        .map(r -> ReaderObjectReference.newBuilder()
             .id(r.id().toString())
             .ownerType(r.ownerType())
             .ownerId(r.ownerId().toString())
@@ -268,7 +268,7 @@ public class HadesGraphQLService {
    * @param url the source url
    * @return a QueryResult
    */
-  @Transactional("hadesTransactionManager")
+  @Transactional
   public QueryResult createSource(String name, String url) {
     return mutate("createSource", () -> {
       requireUser();
@@ -285,7 +285,7 @@ public class HadesGraphQLService {
    * @param input the text input
    * @return a QueryResult
    */
-  @Transactional("hadesTransactionManager")
+  @Transactional
   public QueryResult createText(ReaderTextInput input) {
     return mutate("createText", () -> {
       requireUser();
@@ -300,7 +300,7 @@ public class HadesGraphQLService {
    * @param id the text id
    * @return a QueryResult
    */
-  @Transactional("hadesTransactionManager")
+  @Transactional
   public QueryResult archiveText(String id) {
     return mutate("archiveText", () -> {
       requireUser();
@@ -320,7 +320,7 @@ public class HadesGraphQLService {
    * @param body the markdown body
    * @return a QueryResult
    */
-  @Transactional("hadesTransactionManager")
+  @Transactional
   public QueryResult createAnnotation(String textId, int startOffset, int endOffset, String body) {
     return mutate("createAnnotation", () -> annotationService.createAnnotation(
         UUID.fromString(textId), startOffset, endOffset, body));
@@ -333,7 +333,7 @@ public class HadesGraphQLService {
    * @param body the new body
    * @return a QueryResult
    */
-  @Transactional("hadesTransactionManager")
+  @Transactional
   public QueryResult editAnnotation(String id, String body) {
     return mutate("editAnnotation",
         () -> annotationService.editAnnotation(UUID.fromString(id), body));
@@ -345,7 +345,7 @@ public class HadesGraphQLService {
    * @param id the annotation id
    * @return a QueryResult
    */
-  @Transactional("hadesTransactionManager")
+  @Transactional
   public QueryResult deleteAnnotation(String id) {
     return mutate("deleteAnnotation", () -> {
       annotationService.deleteAnnotation(UUID.fromString(id));
@@ -359,7 +359,7 @@ public class HadesGraphQLService {
    * @param input the comment input
    * @return a QueryResult
    */
-  @Transactional("hadesTransactionManager")
+  @Transactional
   public QueryResult addComment(CommentInput input) {
     return mutate("addComment", () -> commentService.addComment(
         UUID.fromString(input.getAnnotationId()),
@@ -374,7 +374,7 @@ public class HadesGraphQLService {
    * @param body the new body
    * @return a QueryResult
    */
-  @Transactional("hadesTransactionManager")
+  @Transactional
   public QueryResult editComment(String id, String body) {
     return mutate("editComment",
         () -> commentService.editComment(UUID.fromString(id), body));
@@ -386,7 +386,7 @@ public class HadesGraphQLService {
    * @param id the comment id
    * @return a QueryResult
    */
-  @Transactional("hadesTransactionManager")
+  @Transactional
   public QueryResult deleteComment(String id) {
     return mutate("deleteComment", () -> {
       commentService.deleteComment(UUID.fromString(id));
@@ -400,7 +400,7 @@ public class HadesGraphQLService {
    * @param input the vote input
    * @return a QueryResult
    */
-  @Transactional("hadesTransactionManager")
+  @Transactional
   public QueryResult vote(VoteInput input) {
     return mutate("vote", () -> voteService.vote(
         input.getTargetType(),
@@ -415,7 +415,7 @@ public class HadesGraphQLService {
    * @param targetId the target id
    * @return a QueryResult
    */
-  @Transactional("hadesTransactionManager")
+  @Transactional
   public QueryResult removeVote(ReaderVoteTarget targetType, String targetId) {
     return mutate("removeVote",
         () -> voteService.removeVote(targetType, UUID.fromString(targetId)));
@@ -428,7 +428,7 @@ public class HadesGraphQLService {
    * @param target the remote object id
    * @return a QueryResult
    */
-  @Transactional("hadesTransactionManager")
+  @Transactional
   public QueryResult attachObject(String source, String target) {
     return mutate("attachObject",
         () -> annotationService.attach(UUID.fromString(source), target));
@@ -442,7 +442,7 @@ public class HadesGraphQLService {
    * @param state the OAuth state token
    * @return the login result with the JWT
    */
-  @Transactional("hadesTransactionManager")
+  @Transactional
   public DiscordLoginResult discordLogin(String code, String state) {
     DiscordOAuthService.DiscordProfile profile = discordOAuthService.exchange(code);
     AccountEntity account = gaiaAccountService.upsertProviderAccount(

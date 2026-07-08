@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /** Service for managing the items linked to checklist templates. */
 @Service
-@Transactional("echoTransactionManager")
+@Transactional
 public class ChecklistTemplateItemService extends BaseService<ChecklistTemplateItemEntity> {
 
   private final ChecklistTemplateItemRepository templateItemRepository;

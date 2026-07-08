@@ -6,7 +6,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "checklist_categories")
+@Table(name = "echo_checklist_categories")
 public class ChecklistCategoryEntity extends BaseEntity {
 
   @Column(name = "name", nullable = false)

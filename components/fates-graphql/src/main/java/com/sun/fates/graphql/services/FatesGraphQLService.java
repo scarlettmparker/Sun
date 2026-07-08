@@ -49,7 +49,7 @@ public class FatesGraphQLService {
    * @param id the person id
    * @return the GraphQL Person, or null if not found
    */
-  @Transactional(value = "fatesTransactionManager", readOnly = true)
+  @Transactional(readOnly = true)
   public Person person(String id) {
     return personService.locate(UUID.fromString(id))
         .map(personMapper::map)
@@ -61,7 +61,7 @@ public class FatesGraphQLService {
    *
    * @return a list of GraphQL Person objects
    */
-  @Transactional(value = "fatesTransactionManager", readOnly = true)
+  @Transactional(readOnly = true)
   public List<Person> listPeople() {
     return personService.findAll().stream()
         .map(personMapper::map)
@@ -74,7 +74,7 @@ public class FatesGraphQLService {
    * @param id the place id
    * @return the GraphQL Place, or null if not found
    */
-  @Transactional(value = "fatesTransactionManager", readOnly = true)
+  @Transactional(readOnly = true)
   public Place place(String id) {
     return placeService.locate(UUID.fromString(id))
         .map(placeMapper::map)
@@ -86,7 +86,7 @@ public class FatesGraphQLService {
    *
    * @return a list of GraphQL Place objects
    */
-  @Transactional(value = "fatesTransactionManager", readOnly = true)
+  @Transactional(readOnly = true)
   public List<Place> listPlaces() {
     return placeService.findAll().stream()
         .map(placeMapper::map)
@@ -99,7 +99,7 @@ public class FatesGraphQLService {
    * @param input the person input
    * @return the result of the create operation
    */
-  @Transactional("fatesTransactionManager")
+  @Transactional
   public QueryResult createPerson(PersonInput input) {
     return mutate("createPerson", () -> {
       PersonEntity entity = new PersonEntity();
@@ -114,7 +114,7 @@ public class FatesGraphQLService {
    * @param input the person input
    * @return the result of the update operation
    */
-  @Transactional("fatesTransactionManager")
+  @Transactional
   public QueryResult savePerson(PersonInput input) {
     return mutate("savePerson", () -> {
       PersonEntity entity = personService.findById(UUID.fromString(input.getId()))
@@ -130,7 +130,7 @@ public class FatesGraphQLService {
    * @param id the person id
    * @return the result of the delete operation
    */
-  @Transactional("fatesTransactionManager")
+  @Transactional
   public QueryResult deletePerson(String id) {
     return mutate("deletePerson", () -> {
       personService.deleteById(UUID.fromString(id));
@@ -144,7 +144,7 @@ public class FatesGraphQLService {
    * @param input the place input
    * @return the result of the create operation
    */
-  @Transactional("fatesTransactionManager")
+  @Transactional
   public QueryResult createPlace(PlaceInput input) {
     return mutate("createPlace", () -> {
       PlaceEntity entity = new PlaceEntity();
@@ -159,7 +159,7 @@ public class FatesGraphQLService {
    * @param input the place input
    * @return the result of the update operation
    */
-  @Transactional("fatesTransactionManager")
+  @Transactional
   public QueryResult savePlace(PlaceInput input) {
     return mutate("savePlace", () -> {
       PlaceEntity entity = placeService.findById(UUID.fromString(input.getId()))
@@ -175,7 +175,7 @@ public class FatesGraphQLService {
    * @param id the place id
    * @return the result of the delete operation
    */
-  @Transactional("fatesTransactionManager")
+  @Transactional
   public QueryResult deletePlace(String id) {
     return mutate("deletePlace", () -> {
       placeService.deleteById(UUID.fromString(id));

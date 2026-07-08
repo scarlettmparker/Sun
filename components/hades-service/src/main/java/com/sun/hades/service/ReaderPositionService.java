@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
  * Service for character-range positions on a text.
  */
 @Service
-@Transactional("hadesTransactionManager")
+@Transactional
 public class ReaderPositionService extends BaseService<ReaderPositionEntity> {
 
   private final ReaderPositionRepository positionRepository;

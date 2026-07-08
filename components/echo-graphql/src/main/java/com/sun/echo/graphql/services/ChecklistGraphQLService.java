@@ -109,7 +109,7 @@ public class ChecklistGraphQLService {
    * @param pagination the pagination and sort input
    * @return a page of checklist items
    */
-  @Transactional(value = "echoTransactionManager", readOnly = true)
+  @Transactional(readOnly = true)
   public PagedChecklistItems items(PaginationInput pagination) {
     Page<ChecklistItemEntity> result = itemService.findAllPaged(toPageable(pagination, "name", Sort.Direction.ASC));
     List<ChecklistItem> items = result.getContent().stream().map(itemMapper::map).collect(Collectors.toList());
@@ -125,7 +125,7 @@ public class ChecklistGraphQLService {
    * @param id the item id
    * @return the GraphQL ChecklistItem, or null if not found
    */
-  @Transactional(value = "echoTransactionManager", readOnly = true)
+  @Transactional(readOnly = true)
   public ChecklistItem item(String id) {
     return itemService.locate(UUID.fromString(id)).map(itemMapper::map).orElse(null);
   }
@@ -136,7 +136,7 @@ public class ChecklistGraphQLService {
    * @param id the entry id
    * @return the GraphQL ChecklistEntry, or null if not found
    */
-  @Transactional(value = "echoTransactionManager", readOnly = true)
+  @Transactional(readOnly = true)
   public ChecklistEntry entry(String id) {
     return entryService.locate(UUID.fromString(id)).map(entryMapper::map).orElse(null);
   }
@@ -147,7 +147,7 @@ public class ChecklistGraphQLService {
    * @param id the template id
    * @return the GraphQL ChecklistTemplate, or null if not found
    */
-  @Transactional(value = "echoTransactionManager", readOnly = true)
+  @Transactional(readOnly = true)
   public ChecklistTemplate template(String id) {
     return templateService.locate(UUID.fromString(id)).map(templateMapper::map).orElse(null);
   }
@@ -158,7 +158,7 @@ public class ChecklistGraphQLService {
    * @param id the template id
    * @return the GraphQL ChecklistDetail, or null if none exists
    */
-  @Transactional(value = "echoTransactionManager", readOnly = true)
+  @Transactional(readOnly = true)
   public ChecklistDetail templateDetails(String id) {
     return detailService.findTemplateDetail(UUID.fromString(id)).map(detailMapper::map).orElse(null);
   }
@@ -169,7 +169,7 @@ public class ChecklistGraphQLService {
    * @param id the entry id
    * @return the GraphQL ChecklistDetail, or null if none exists
    */
-  @Transactional(value = "echoTransactionManager", readOnly = true)
+  @Transactional(readOnly = true)
   public ChecklistDetail entryDetails(String id) {
     return detailService.findEntryDetail(UUID.fromString(id)).map(detailMapper::map).orElse(null);
   }
@@ -180,7 +180,7 @@ public class ChecklistGraphQLService {
    * @param id the item id
    * @return the GraphQL ChecklistDetail, or null if none exists
    */
-  @Transactional(value = "echoTransactionManager", readOnly = true)
+  @Transactional(readOnly = true)
   public ChecklistDetail itemDetails(String id) {
     return detailService.findItemDetail(UUID.fromString(id)).map(detailMapper::map).orElse(null);
   }
@@ -192,7 +192,7 @@ public class ChecklistGraphQLService {
    * @param pagination the pagination and sort input
    * @return a page of template items
    */
-  @Transactional(value = "echoTransactionManager", readOnly = true)
+  @Transactional(readOnly = true)
   public PagedChecklistTemplateItems templateItems(String templateId, PaginationInput pagination) {
     Page<ChecklistTemplateItemEntity> result = templateItemService
         .listForTemplatePaged(UUID.fromString(templateId), toPageable(pagination, "position", Sort.Direction.ASC));
@@ -210,7 +210,7 @@ public class ChecklistGraphQLService {
    * @param pagination the pagination and sort input
    * @return a page of entry items
    */
-  @Transactional(value = "echoTransactionManager", readOnly = true)
+  @Transactional(readOnly = true)
   public PagedChecklistEntryItems entryItems(String entryId, PaginationInput pagination) {
     Page<ChecklistEntryItemEntity> result = entryItemService
         .listForEntryPaged(UUID.fromString(entryId), toPageable(pagination, "position", Sort.Direction.ASC));
@@ -226,7 +226,7 @@ public class ChecklistGraphQLService {
    *
    * @return the GraphQL ChecklistEntries
    */
-  @Transactional(value = "echoTransactionManager", readOnly = true)
+  @Transactional(readOnly = true)
   public List<ChecklistEntry> listEntries() {
     return entryService.findAll().stream().map(entryMapper::map).collect(Collectors.toList());
   }
@@ -236,7 +236,7 @@ public class ChecklistGraphQLService {
    *
    * @return the GraphQL ChecklistTemplates
    */
-  @Transactional(value = "echoTransactionManager", readOnly = true)
+  @Transactional(readOnly = true)
   public List<ChecklistTemplate> listTemplates() {
     return templateService.findAll().stream().map(templateMapper::map).collect(Collectors.toList());
   }
@@ -246,7 +246,7 @@ public class ChecklistGraphQLService {
    *
    * @return the GraphQL ChecklistCategories
    */
-  @Transactional(value = "echoTransactionManager", readOnly = true)
+  @Transactional(readOnly = true)
   public List<ChecklistCategory> listCategories() {
     return categoryService.findAll().stream().map(categoryMapper::map).collect(Collectors.toList());
   }
@@ -258,7 +258,7 @@ public class ChecklistGraphQLService {
    * @param ids the foreign object ids to resolve
    * @return the GraphQL RemoteObjectReferences
    */
-  @Transactional(value = "echoTransactionManager", readOnly = true)
+  @Transactional(readOnly = true)
   public List<RemoteObjectReference> locateRemoteObjects(List<String> ids) {
     return detailService.locateRemoteObjects(ids).stream()
         .map(ref -> RemoteObjectReference.newBuilder()
@@ -279,7 +279,7 @@ public class ChecklistGraphQLService {
    * @param icon an optional icon name
    * @return a QueryResult
    */
-  @Transactional("echoTransactionManager")
+  @Transactional
   public QueryResult createItem(String name, String description, String categoryId, String icon) {
     return mutate("createItem", () -> {
       ChecklistItemEntity entity = new ChecklistItemEntity();
@@ -299,7 +299,7 @@ public class ChecklistGraphQLService {
    * @param input the item input
    * @return a QueryResult
    */
-  @Transactional("echoTransactionManager")
+  @Transactional
   public QueryResult saveItem(ChecklistItemInput input) {
     return mutate("saveItem", () -> {
       ChecklistItemEntity entity = resolveItem(input.getId());
@@ -314,7 +314,7 @@ public class ChecklistGraphQLService {
    * @param id the item id
    * @return a QueryResult
    */
-  @Transactional("echoTransactionManager")
+  @Transactional
   public QueryResult retireItem(String id) {
     return mutate("retireItem", () -> itemService.retire(UUID.fromString(id)).getId());
   }
@@ -326,7 +326,7 @@ public class ChecklistGraphQLService {
    * @param description an optional description
    * @return a QueryResult
    */
-  @Transactional("echoTransactionManager")
+  @Transactional
   public QueryResult createCategory(String name, String description) {
     return mutate("createCategory", () -> {
       ChecklistCategoryEntity entity = new ChecklistCategoryEntity();
@@ -342,7 +342,7 @@ public class ChecklistGraphQLService {
    * @param input the category input
    * @return a QueryResult
    */
-  @Transactional("echoTransactionManager")
+  @Transactional
   public QueryResult saveCategory(ChecklistCategoryInput input) {
     return mutate("saveCategory", () -> {
       ChecklistCategoryEntity entity = resolveCategory(input.getId());
@@ -357,7 +357,7 @@ public class ChecklistGraphQLService {
    * @param name an optional name
    * @return a QueryResult
    */
-  @Transactional("echoTransactionManager")
+  @Transactional
   public QueryResult createChecklist(String name) {
     return mutate("createChecklist", () -> {
       ChecklistEntryEntity entity = new ChecklistEntryEntity();
@@ -372,7 +372,7 @@ public class ChecklistGraphQLService {
    * @param templateId the template id
    * @return a QueryResult
    */
-  @Transactional("echoTransactionManager")
+  @Transactional
   public QueryResult createChecklistFromTemplate(String templateId, String name) {
     return mutate("createChecklistFromTemplate",
         () -> entryService.createFromTemplate(UUID.fromString(templateId), name).getId());
@@ -385,7 +385,7 @@ public class ChecklistGraphQLService {
    * @param name an optional name for the new entry
    * @return a QueryResult
    */
-  @Transactional("echoTransactionManager")
+  @Transactional
   public QueryResult createChecklistFromTemplates(List<String> templateIds, String name) {
     return mutate("createChecklistFromTemplates",
         () -> entryService.createFromTemplates(
@@ -398,7 +398,7 @@ public class ChecklistGraphQLService {
    * @param input the entry input
    * @return a QueryResult
    */
-  @Transactional("echoTransactionManager")
+  @Transactional
   public QueryResult saveChecklist(ChecklistEntryInput input) {
     return mutate("saveChecklist", () -> {
       ChecklistEntryEntity entity = resolveEntry(input.getId());
@@ -413,7 +413,7 @@ public class ChecklistGraphQLService {
    * @param id the entry id
    * @return a QueryResult
    */
-  @Transactional("echoTransactionManager")
+  @Transactional
   public QueryResult completeChecklist(String id) {
     return mutate("completeChecklist", () -> entryService.completeChecklist(UUID.fromString(id)).getId());
   }
@@ -424,7 +424,7 @@ public class ChecklistGraphQLService {
    * @param id the entry id
    * @return a QueryResult
    */
-  @Transactional("echoTransactionManager")
+  @Transactional
   public QueryResult archiveChecklist(String id) {
     return mutate("archiveChecklist", () -> entryService.archive(UUID.fromString(id)).getId());
   }
@@ -435,7 +435,7 @@ public class ChecklistGraphQLService {
    * @param id the entry id
    * @return a QueryResult
    */
-  @Transactional("echoTransactionManager")
+  @Transactional
   public QueryResult deleteChecklist(String id) {
     UUID entryId = UUID.fromString(id);
     return mutate("deleteChecklist", () -> {
@@ -452,7 +452,7 @@ public class ChecklistGraphQLService {
    * @param itemIds optional item ids to seed
    * @return a QueryResult
    */
-  @Transactional("echoTransactionManager")
+  @Transactional
   public QueryResult createTemplate(String name, String description, List<String> itemIds) {
     return mutate("createTemplate", () -> {
       ChecklistTemplateEntity entity = new ChecklistTemplateEntity();
@@ -472,7 +472,7 @@ public class ChecklistGraphQLService {
    * @param input the template input
    * @return a QueryResult
    */
-  @Transactional("echoTransactionManager")
+  @Transactional
   public QueryResult saveTemplate(ChecklistTemplateInput input) {
     return mutate("saveTemplate", () -> {
       ChecklistTemplateEntity entity = resolveTemplate(input.getId());
@@ -487,7 +487,7 @@ public class ChecklistGraphQLService {
    * @param id the template id
    * @return a QueryResult
    */
-  @Transactional("echoTransactionManager")
+  @Transactional
   public QueryResult archiveTemplate(String id) {
     return mutate("archiveTemplate", () -> templateService.archive(UUID.fromString(id)).getId());
   }
@@ -500,7 +500,7 @@ public class ChecklistGraphQLService {
    * @param position an optional explicit position
    * @return a QueryResult
    */
-  @Transactional("echoTransactionManager")
+  @Transactional
   public QueryResult addItem(String entryId, String itemId, Integer position) {
     return mutate("addItem",
         () -> entryItemService.addItem(UUID.fromString(entryId), UUID.fromString(itemId), position).getId());
@@ -513,7 +513,7 @@ public class ChecklistGraphQLService {
    * @param itemId the item id
    * @return a QueryResult
    */
-  @Transactional("echoTransactionManager")
+  @Transactional
   public QueryResult removeItem(String entryId, String itemId) {
     UUID entryUuid = UUID.fromString(entryId);
     return mutate("removeItem", () -> {
@@ -530,7 +530,7 @@ public class ChecklistGraphQLService {
    * @param status the new status (NOT_STARTED/COMPLETE/FAILED/NOT_NEEDED)
    * @return a QueryResult
    */
-  @Transactional("echoTransactionManager")
+  @Transactional
   public QueryResult setItemStatus(String entryId, String itemId, ItemStatus status) {
     return mutate("setItemStatus", () -> entryItemService
         .setStatus(UUID.fromString(entryId), UUID.fromString(itemId), status).getId());
@@ -544,7 +544,7 @@ public class ChecklistGraphQLService {
    * @param position an optional explicit position
    * @return a QueryResult
    */
-  @Transactional("echoTransactionManager")
+  @Transactional
   public QueryResult addTemplateItem(String templateId, String itemId, Integer position) {
     return mutate("addTemplateItem", () -> templateItemService
         .addTemplateItem(UUID.fromString(templateId), UUID.fromString(itemId), position).getId());
@@ -557,7 +557,7 @@ public class ChecklistGraphQLService {
    * @param itemId the item id
    * @return a QueryResult
    */
-  @Transactional("echoTransactionManager")
+  @Transactional
   public QueryResult removeTemplateItem(String templateId, String itemId) {
     UUID templateUuid = UUID.fromString(templateId);
     return mutate("removeTemplateItem", () -> {
@@ -574,7 +574,7 @@ public class ChecklistGraphQLService {
    * @param ownerType optional owner type hint
    * @return a QueryResult
    */
-  @Transactional("echoTransactionManager")
+  @Transactional
   public QueryResult attachObject(String source, String target, RemoteObjectType ownerType) {
     return mutate("attachObject", () -> detailService
         .attach(UUID.fromString(source), target, ownerType != null ? ownerType.name() : null));

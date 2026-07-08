@@ -14,7 +14,7 @@ import java.util.UUID;
  * per-entry runtime status of that item and an ordering position.
  */
 @Entity
-@Table(name = "checklist_entry_items")
+@Table(name = "echo_checklist_entry_items")
 public class ChecklistEntryItemEntity extends BaseEntity {
 
   @Column(name = "entry_id", nullable = false)

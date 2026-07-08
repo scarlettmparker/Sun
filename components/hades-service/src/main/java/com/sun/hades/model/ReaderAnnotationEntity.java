@@ -16,7 +16,7 @@ import org.hibernate.annotations.Type;
  * A markdown explanation a user wrote for a position on a text.
  */
 @Entity
-@Table(name = "reader_annotations")
+@Table(name = "hades_reader_annotations")
 public class ReaderAnnotationEntity extends BaseEntity {
 
   @Column(name = "position_id", nullable = false)

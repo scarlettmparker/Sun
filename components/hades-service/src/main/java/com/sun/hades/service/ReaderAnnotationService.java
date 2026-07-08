@@ -23,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
  * Service for annotations and the character-range positions they share.
  */
 @Service
-@Transactional("hadesTransactionManager")
+@Transactional
 public class ReaderAnnotationService extends BaseService<ReaderAnnotationEntity> {
 
   private final ReaderTextRepository textRepository;

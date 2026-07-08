@@ -37,7 +37,7 @@ public class GalleryGraphQLService {
    *
    * @return a list of GraphQL GalleryItem objects
    */
-  @Transactional("cerberusTransactionManager")
+  @Transactional
   public List<GalleryItem> list() {
     logger.info("Retrieving gallery items");
 
@@ -56,7 +56,7 @@ public class GalleryGraphQLService {
    * @param id the gallery item ID as string
    * @return the GraphQL GalleryItem object
    */
-  @Transactional("cerberusTransactionManager")
+  @Transactional
   public GalleryItem locate(String id) {
     logger.info("Retrieving gallery item by ID: {}", id);
 
@@ -75,7 +75,7 @@ public class GalleryGraphQLService {
    * @param ids the list of foreign object IDs to search for
    * @return a list of GraphQL GalleryItem objects
    */
-  @Transactional("cerberusTransactionManager")
+  @Transactional
   public List<GalleryItem> listByRemoteObjects(List<String> ids) {
     logger.info("Retrieving gallery items by foreign object ids: {}", ids);
 
@@ -94,7 +94,7 @@ public class GalleryGraphQLService {
    * @param ids the gallery item IDs as strings
    * @return a list of GraphQL GalleryItem objects
    */
-  @Transactional("cerberusTransactionManager")
+  @Transactional
   public List<GalleryItem> locateGalleryItems(List<String> ids) {
     logger.info("Retrieving gallery items by ids: {}", ids);
 
@@ -113,7 +113,7 @@ public class GalleryGraphQLService {
    * @param input the input data for the gallery item
    * @return QueryResult indicating success or error
    */
-  @Transactional("cerberusTransactionManager")
+  @Transactional
   public QueryResult create(GalleryItemInput input) {
     logger.info("Creating gallery item with title: {}", input.getTitle());
 

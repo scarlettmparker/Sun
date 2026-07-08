@@ -15,7 +15,7 @@ import org.hibernate.annotations.Type;
  * A discussion thread attached to a remote object.
  */
 @Entity
-@Table(name = "forum_threads")
+@Table(name = "icarus_forum_threads")
 public class ForumThreadEntity extends BaseEntity {
 
   @Column(name = "title", nullable = false)

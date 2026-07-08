@@ -18,7 +18,7 @@ import java.util.UUID;
  * Handles creation, archival, and path updates.
  */
 @Service
-@Transactional("dionysusTransactionManager")
+@Transactional
 public class KeyDetailService extends BaseService<KeyDetailEntity> {
 
   private static final Logger logger = LoggerFactory.getLogger(KeyDetailService.class);

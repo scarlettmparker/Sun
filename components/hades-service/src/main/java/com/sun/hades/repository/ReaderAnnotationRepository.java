@@ -15,7 +15,7 @@ public interface ReaderAnnotationRepository extends BaseRepository<ReaderAnnotat
 
   long countByPositionId(UUID positionId);
 
-  @Query(value = "SELECT * FROM reader_annotations WHERE EXISTS "
+  @Query(value = "SELECT * FROM hades_reader_annotations WHERE EXISTS "
       + "(SELECT 1 FROM jsonb_array_elements_text(remote_object) AS elem WHERE elem = ANY(?1))",
       nativeQuery = true)
   List<ReaderAnnotationEntity> findByRemoteObjectsIn(String[] ids);

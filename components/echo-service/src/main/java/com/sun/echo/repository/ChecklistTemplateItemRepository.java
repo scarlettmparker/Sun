@@ -19,7 +19,7 @@ public interface ChecklistTemplateItemRepository extends BaseRepository<Checklis
 
   int deleteByTemplateIdAndItemId(UUID templateId, UUID itemId);
 
-  @Query(value = "SELECT COALESCE(MAX(position), -1) FROM checklist_template_items WHERE template_id = ?1",
+  @Query(value = "SELECT COALESCE(MAX(position), -1) FROM echo_checklist_template_items WHERE template_id = ?1",
       nativeQuery = true)
   Integer findMaxPositionByTemplateId(UUID templateId);
 }

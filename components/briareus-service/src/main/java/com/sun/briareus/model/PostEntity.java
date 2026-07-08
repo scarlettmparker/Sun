@@ -7,7 +7,7 @@ import org.hibernate.annotations.Type;
 import java.util.List;
 
 @Entity
-@Table(name = "posts")
+@Table(name = "briareus_posts")
 public class PostEntity extends BaseEntity {
 
   @Column(name = "title")

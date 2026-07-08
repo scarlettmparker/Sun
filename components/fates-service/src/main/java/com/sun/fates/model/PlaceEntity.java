@@ -6,7 +6,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "places")
+@Table(name = "fates_places")
 public class PlaceEntity extends BaseEntity {
 
   @Column(name = "line_1")
