@@ -1,14 +1,21 @@
 import path from "path";
+import zlib from "node:zlib";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import type { ViteDevServer } from "vite";
 import { pageDataRpcHandler } from "./rpc-handler";
 import { mutationRegistry } from "./mutations";
 import { ServerRedirectError } from "./server-redirect";
+import { enterRequestCache } from "./page-data";
 
 export { handleQuery } from "./query";
 export type { QueryFetchResult } from "./query";
 export { loadModule } from "./load-module";
+
+/** Responses smaller than this are sent uncompressed. */
+const GZIP_THRESHOLD = 1024;
+/** Content types worth gzipping. Excludes already-compressed binary (images, video, fonts). */
+const COMPRESSIBLE_CONTENT_TYPES = /text\/|\+?json|\+?xml|javascript|csv|svg/i;
 
 type ServerConfig = {
   port: number;
@@ -95,11 +102,6 @@ export async function createServer(
     });
     app.use(vite.middlewares as unknown as MiddieHandler);
   } else {
-    const { default: fastifyCompress } = await import("@fastify/compress");
-    await app.register(fastifyCompress, {
-      encodings: ["gzip", "br"],
-      threshold: 1024,
-    });
     await app.register(fastifyStatic, {
       root: path.resolve("dist/client"),
       prefix: "/",
@@ -118,15 +120,56 @@ export async function createServer(
     });
   }
 
+  // Per-request page-data cache. Must run before any route handler so the
+  // AsyncLocalStorage context is active for the whole request (including the
+  // SSR render and its onAllReady callback).
+  app.addHook("onRequest", async () => {
+    enterRequestCache();
+  });
+
+  // App-layer gzip for buffered (string/Buffer) JSON/text responses.
+  app.addHook("onSend", (req, reply, payload, done) => {
+    if (payload == null) {
+      return done();
+    }
+
+    if (typeof payload !== "string" && !Buffer.isBuffer(payload)) {
+      return done();
+    }
+
+    if (reply.getHeader("content-encoding")) {
+      return done();
+    }
+
+    const acceptEncoding = req.headers["accept-encoding"] ?? "";
+    if (
+      typeof acceptEncoding !== "string" ||
+      !acceptEncoding.includes("gzip")
+    ) {
+      return done();
+    }
+    const contentType = String(reply.getHeader("content-type") ?? "");
+    if (contentType && !COMPRESSIBLE_CONTENT_TYPES.test(contentType)) {
+      return done();
+    }
+
+    const buf = Buffer.isBuffer(payload) ? payload : Buffer.from(payload);
+
+    if (buf.length < GZIP_THRESHOLD) {
+      return done();
+    }
+
+    reply.header("content-encoding", "gzip");
+    reply.header("vary", "accept-encoding");
+    reply.removeHeader("content-length");
+    done(null, zlib.gzipSync(buf));
+  });
+
   if (configure) {
     await configure(app, vite);
   }
 
-  app.post(
-    "/__page-data",
-    { config: { compress: false } },
-    pageDataRpcHandler(),
-  );
+  app.post("/__page-data", pageDataRpcHandler());
 
   await setupRoutes(app, vite);
 
@@ -134,7 +177,6 @@ export async function createServer(
     method: "POST",
     url: "/*",
     handler: mutationPostHandler(),
-    config: { compress: false },
   });
 
   const address = await app.listen({ port: config.port, host: config.host });

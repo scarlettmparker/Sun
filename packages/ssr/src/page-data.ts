@@ -3,6 +3,8 @@
  * Provides a registry for page-data loaders and a suspense cache for data loading.
  */
 
+import { AsyncLocalStorage } from "node:async_hooks";
+
 type PageDataLoader = (
   params?: Record<string, unknown>,
 ) => Promise<Record<string, unknown> | null>;
@@ -51,21 +53,72 @@ export function configurePageData(opts: {
 }
 
 /**
- * Cache for React Suspense-based data loading.
- * Stores the status of data fetches: 'pending', 'resolved', or 'rejected'.
- * Used by getPageData to suspend components until data is available.
+ * Cache record for React Suspense-based data loading.
+ * Status of data fetches: 'pending', 'resolved', or 'rejected'.
  */
-export const suspenseCache = new Map<
-  string,
-  {
-    status: "pending" | "resolved" | "rejected";
-    result?: Record<string, unknown>;
-    promise?: Promise<unknown>;
-    error?: unknown;
-    timestamp?: number;
-    errorAt?: number;
+type CacheRecord = {
+  status: "pending" | "resolved" | "rejected";
+  result?: Record<string, unknown>;
+  promise?: Promise<unknown>;
+  error?: unknown;
+  timestamp?: number;
+  errorAt?: number;
+};
+
+/**
+ * On the server, page data is cached **per request** via AsyncLocalStorage, so
+ * concurrent SSR renders never share/leak state and each postlude contains only
+ * the keys the current render resolved (see `enterRequestCache` in server.ts).
+ * On the client there is one session-level map (hydrated from the SSR postlude).
+ */
+const clientCache = new Map<string, CacheRecord>();
+const requestCacheAls = new AsyncLocalStorage<Map<string, CacheRecord>>();
+
+function activeCache(): Map<string, CacheRecord> {
+  // Server inside a request → that request's map; otherwise the client/session map.
+  return (typeof window === "undefined" && requestCacheAls.getStore()) || clientCache;
+}
+
+/** Enter a fresh per-request cache. Called from the Fastify `onRequest` hook. */
+export function enterRequestCache(): Map<string, CacheRecord> {
+  const cache = new Map<string, CacheRecord>();
+  requestCacheAls.enterWith(cache);
+  return cache;
+}
+
+/**
+ * Capture the current request's cache reference. Call at SSR render() entry
+ * (while the AsyncLocalStorage context is live); the returned reference stays
+ * valid for the lifetime of the render, even inside React stream callbacks.
+ */
+export function getRequestCache(): Map<string, CacheRecord> {
+  return activeCache();
+}
+
+/** Snapshot of resolved cache entries for the SSR postlude. */
+export function snapshotResolvedPageData(): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [key, record] of activeCache().entries()) {
+    if (record.status === "resolved") out[key] = record.result;
   }
->();
+  return out;
+}
+
+/**
+ * Backwards-compat export: a Proxy that forwards every access to the active
+ * cache (request-scoped on the server, session-scoped on the client), so
+ * consumers that still do `suspenseCache.clear()` / `.entries()` keep working.
+ */
+export const suspenseCache = new Proxy(
+  {} as Map<string, CacheRecord>,
+  {
+    get(_target, prop) {
+      const cache = activeCache();
+      const value = cache[prop as keyof Map<string, CacheRecord>];
+      return typeof value === "function" ? (value as (...args: unknown[]) => unknown).bind(cache) : value;
+    },
+  },
+);
 
 /**
  * How long a rejected suspense-cache entry is allowed to suppress a retry.
@@ -108,7 +161,7 @@ export function hydratePageData(
   }
 
   Object.keys(initialData).forEach((key) => {
-    suspenseCache.set(key, {
+    activeCache().set(key, {
       status: "resolved",
       result: initialData[key],
       timestamp: Date.now(),
@@ -123,8 +176,8 @@ export function hydratePageData(
         ? patternPart
         : "/" + patternPart;
       const normalizedKey = `${normalizedPattern}${rest}`;
-      if (!suspenseCache.has(normalizedKey)) {
-        suspenseCache.set(normalizedKey, {
+      if (!activeCache().has(normalizedKey)) {
+        activeCache().set(normalizedKey, {
           status: "resolved",
           result: initialData[key],
           timestamp: Date.now(),
@@ -225,14 +278,14 @@ function readPageData<T>(
   params?: Record<string, unknown>,
 ): { data: T } {
   const cacheKey = makeCacheKey(`${pattern}:${key}`, params);
-  let record = suspenseCache.get(cacheKey);
+  let record = activeCache().get(cacheKey);
 
   if (
     record &&
     record.status === "resolved" &&
     isCacheExpired(record, pattern)
   ) {
-    suspenseCache.delete(cacheKey);
+    activeCache().delete(cacheKey);
     record = undefined;
   }
 
@@ -242,7 +295,7 @@ function readPageData<T>(
     record.errorAt &&
     Date.now() - record.errorAt > REJECTED_RETRY_MS
   ) {
-    suspenseCache.delete(cacheKey);
+    activeCache().delete(cacheKey);
     record = undefined;
   }
 
@@ -257,7 +310,7 @@ function readPageData<T>(
     }
 
     record = { status: "pending" };
-    suspenseCache.set(cacheKey, record);
+    activeCache().set(cacheKey, record);
 
     const loadPromise: Promise<Record<string, unknown> | null> =
       typeof window === "undefined"
@@ -320,14 +373,14 @@ export function getPageData<T>(
   params?: Record<string, unknown>,
 ): { data: T } {
   const cacheKey = makeCacheKey(`${pattern}:${key}`, params);
-  let record = suspenseCache.get(cacheKey);
+  let record = activeCache().get(cacheKey);
 
   if (
     record &&
     record.status === "resolved" &&
     isCacheExpired(record, pattern)
   ) {
-    suspenseCache.delete(cacheKey);
+    activeCache().delete(cacheKey);
     record = undefined;
   }
 
@@ -337,20 +390,20 @@ export function getPageData<T>(
     record.errorAt &&
     Date.now() - record.errorAt > REJECTED_RETRY_MS
   ) {
-    suspenseCache.delete(cacheKey);
+    activeCache().delete(cacheKey);
     record = undefined;
   }
 
   // Fallback check to support key structures populated via hydratePageData
   if (!record) {
     const legacyHydrationKey = makeCacheKey(pattern, params);
-    record = suspenseCache.get(legacyHydrationKey);
+    record = activeCache().get(legacyHydrationKey);
     if (
       record &&
       record.status === "resolved" &&
       isCacheExpired(record, pattern)
     ) {
-      suspenseCache.delete(legacyHydrationKey);
+      activeCache().delete(legacyHydrationKey);
       record = undefined;
     }
   }
@@ -395,7 +448,7 @@ function sweepCacheByPattern(
   patternBase: string,
   patternParams: Record<string, unknown>,
 ): void {
-  for (const cacheKey of suspenseCache.keys()) {
+  for (const cacheKey of activeCache().keys()) {
     if (!cacheKey.startsWith(patternBase)) continue;
 
     const cacheFirstBrace = cacheKey.indexOf("{");
@@ -411,7 +464,7 @@ function sweepCacheByPattern(
         }
       }
       if (isMatch) {
-        suspenseCache.delete(cacheKey);
+        activeCache().delete(cacheKey);
       }
     } catch {
       continue;
@@ -425,8 +478,8 @@ function sweepCacheByPattern(
  */
 export function invalidateCacheKeys(patterns: string[]): boolean {
   for (const pattern of patterns) {
-    if (suspenseCache.has(pattern)) {
-      suspenseCache.delete(pattern);
+    if (activeCache().has(pattern)) {
+      activeCache().delete(pattern);
       continue;
     }
 
@@ -435,7 +488,7 @@ export function invalidateCacheKeys(patterns: string[]): boolean {
     if (firstBrace === -1) {
       const baseKey = pattern.replace(/:keys({.*})$/, "$1");
       if (baseKey !== pattern) {
-        suspenseCache.delete(baseKey);
+        activeCache().delete(baseKey);
       }
       continue;
     }
@@ -520,7 +573,7 @@ export function refetchEntry(
     .then((merged) => {
       if (!merged) return;
       const cacheKey = makeCacheKey(`${pattern}:${key}`, params);
-      const record = suspenseCache.get(cacheKey);
+      const record = activeCache().get(cacheKey);
       if (record) {
         record.status = "resolved";
         record.result = merged;
@@ -528,7 +581,7 @@ export function refetchEntry(
         record.promise = undefined;
         record.error = undefined;
       } else {
-        suspenseCache.set(cacheKey, {
+        activeCache().set(cacheKey, {
           status: "resolved",
           result: merged,
           timestamp: Date.now(),

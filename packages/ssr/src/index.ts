@@ -14,6 +14,8 @@ export {
   pageDataLoaders,
   pageDataRegistry,
   configurePageData,
+  getRequestCache,
+  snapshotResolvedPageData,
 } from "./page-data";
 
 export { mutationRegistry, clearMutationHandlers } from "./mutations";
