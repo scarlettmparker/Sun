@@ -23,6 +23,7 @@ type GalleryQueries {
   list: [GalleryItem]
   locate(id: ID!): GalleryItem
   listByRemoteObjects(ids: [String!]!): [GalleryItem]
+  locateGalleryItems(ids: [ID!]!): [GalleryItem]
 }
 
 type GalleryMutations {

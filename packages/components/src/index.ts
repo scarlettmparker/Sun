@@ -28,6 +28,7 @@ export {
   ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from "./components/context-menu";
+export { default as Figure } from "./components/figure";
 export {
   Dialog,
   DialogBody,

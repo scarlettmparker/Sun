@@ -89,6 +89,25 @@ public class GalleryGraphQLService {
   }
 
   /**
+   * Retrieves gallery items by their IDs (batch lookup).
+   *
+   * @param ids the gallery item IDs as strings
+   * @return a list of GraphQL GalleryItem objects
+   */
+  @Transactional("cerberusTransactionManager")
+  public List<GalleryItem> locateGalleryItems(List<String> ids) {
+    logger.info("Retrieving gallery items by ids: {}", ids);
+
+    List<java.util.UUID> uuids = ids.stream()
+        .map(java.util.UUID::fromString)
+        .collect(Collectors.toList());
+    List<GalleryItemEntity> galleryItemEntities = cerberusService.locateByIds(uuids);
+    return galleryItemEntities.stream()
+        .map(galleryItemMapper::map)
+        .collect(Collectors.toList());
+  }
+
+  /**
    * Creates a new gallery item.
    *
    * @param input the input data for the gallery item

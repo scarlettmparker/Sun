@@ -62,4 +62,14 @@ public class CerberusService extends BaseService<GalleryItemEntity> {
   public List<GalleryItemEntity> listByRemoteObjects(List<String> ids) {
     return galleryItemRepository.findByRemoteObjectsIn(ids.toArray(new String[0]));
   }
+
+  /**
+   * Retrieves gallery items by their IDs (batch lookup).
+   *
+   * @param ids the gallery item IDs
+   * @return a list of GalleryItemEntity objects
+   */
+  public List<GalleryItemEntity> locateByIds(List<UUID> ids) {
+    return galleryItemRepository.findAllById(ids);
+  }
 }

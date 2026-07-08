@@ -62,6 +62,17 @@ public class GalleryDataFetcher {
   }
 
   /**
+   * Retrieves gallery items by their IDs (batch lookup).
+   *
+   * @param ids the gallery item IDs
+   * @return a list of GalleryItem objects
+   */
+  @DgsData(parentType = "GalleryQueries", field = "locateGalleryItems")
+  public List<GalleryItem> locateGalleryItems(List<String> ids) {
+    return galleryGraphQLService.locateGalleryItems(ids);
+  }
+
+  /**
    * Provides the gallery mutations object.
    *
    * @return a new GalleryMutations instance

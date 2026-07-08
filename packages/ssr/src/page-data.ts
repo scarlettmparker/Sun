@@ -63,8 +63,16 @@ export const suspenseCache = new Map<
     promise?: Promise<unknown>;
     error?: unknown;
     timestamp?: number;
+    errorAt?: number;
   }
 >();
+
+/**
+ * How long a rejected suspense-cache entry is allowed to suppress a retry.
+ * Picked to be long enough that a tight failure loop won't hammer the
+ * server, but short enough that a brief restart/cold-start blip self-heals.
+ */
+const REJECTED_RETRY_MS = 5000;
 
 /**
  * Gets the TTL for a given cache key pattern.
@@ -228,6 +236,16 @@ function readPageData<T>(
     record = undefined;
   }
 
+  if (
+    record &&
+    record.status === "rejected" &&
+    record.errorAt &&
+    Date.now() - record.errorAt > REJECTED_RETRY_MS
+  ) {
+    suspenseCache.delete(cacheKey);
+    record = undefined;
+  }
+
   if (!record) {
     const loaders = pageDataLoaders[pattern];
     const relevantLoaders = loaders?.filter(() => true) || [];
@@ -259,6 +277,7 @@ function readPageData<T>(
         if (!merged || merged[key] == null) {
           record!.status = "rejected";
           record!.error = new Error(`No data returned for key: ${key}`);
+          record!.errorAt = Date.now();
           return null;
         }
 
@@ -271,6 +290,7 @@ function readPageData<T>(
         console.error(`Error fetching page data for ${key} (${pattern}):`, err);
         record!.status = "rejected";
         record!.error = err;
+        record!.errorAt = Date.now();
         throw err;
       });
 
@@ -306,6 +326,16 @@ export function getPageData<T>(
     record &&
     record.status === "resolved" &&
     isCacheExpired(record, pattern)
+  ) {
+    suspenseCache.delete(cacheKey);
+    record = undefined;
+  }
+
+  if (
+    record &&
+    record.status === "rejected" &&
+    record.errorAt &&
+    Date.now() - record.errorAt > REJECTED_RETRY_MS
   ) {
     suspenseCache.delete(cacheKey);
     record = undefined;

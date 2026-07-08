@@ -122,7 +122,11 @@ export async function createServer(
     await configure(app, vite);
   }
 
-  app.post("/__page-data", pageDataRpcHandler());
+  app.post(
+    "/__page-data",
+    { config: { compress: false } },
+    pageDataRpcHandler(),
+  );
 
   await setupRoutes(app, vite);
 
@@ -130,10 +134,52 @@ export async function createServer(
     method: "POST",
     url: "/*",
     handler: mutationPostHandler(),
+    config: { compress: false },
   });
 
   const address = await app.listen({ port: config.port, host: config.host });
   console.log(`Server started at ${address}`);
+
+  // Graceful shutdown: drain in-flight requests before exiting so a restart
+  // (nodemon SIGUSR2, deploy SIGTERM, Ctrl-C) doesn't truncate responses mid-
+  // stream — which a reverse proxy surfaces as an empty 200 and breaks the
+  // client's page-data RPC for the rest of the session.
+  let shuttingDown = false;
+  const gracefulShutdown = async (reason: string, done?: () => void) => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    console.log(`${reason} received, draining in-flight requests…`);
+
+    // Don't let a stuck request hold the restart hostage.
+    const force = setTimeout(() => {
+      console.error("Force-exiting after shutdown timeout");
+      process.exit(1);
+    }, 10_000);
+    force.unref();
+
+    try {
+      await app.close();
+    } catch (err) {
+      console.error("Error during graceful shutdown:", err);
+    }
+
+    if (done) {
+      done();
+    } else {
+      process.exit(0);
+    }
+  };
+
+  // nodemon's default restart signal. Drain, then re-raise so nodemon completes
+  // the restart (`.once` keeps the re-raised signal from being caught again).
+  process.once("SIGUSR2", () => {
+    void gracefulShutdown("SIGUSR2", () =>
+      process.kill(process.pid, "SIGUSR2"),
+    );
+  });
+  process.on("SIGTERM", () => void gracefulShutdown("SIGTERM"));
+  process.on("SIGINT", () => void gracefulShutdown("SIGINT"));
+
   return address;
 }
 
