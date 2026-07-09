@@ -38,6 +38,11 @@ type GaiaQueries {
   me: Account
   account(id: ID!): Account
   listAccounts: [Account!]
+  propertySet(ownerKey: String!, name: String!, entry: String): JSON
+  propertySets(ownerKey: String!, name: String!): [PropertySetEntry!]!
+  propertySetSchema(ownerKey: String!, name: String!): PropertySetSchema
+  configurations: [Configuration!]!
+  configuration(id: ID!): Configuration
 }
 
 type GaiaMutations {
@@ -47,6 +52,13 @@ type GaiaMutations {
   requestPasswordReset(email: String!): QueryResult
   resetPassword(token: String!, newPassword: String!): QueryResult
   changePassword(currentPassword: String!, newPassword: String!): QueryResult
+  upsertPropertyEntry(ownerKey: String!, name: String!, entry: String!, values: JSON!): PropertySetEntry
+  setProperty(ownerKey: String!, name: String!, entry: String!, property: String!, value: JSON!): PropertySetEntry
+  registerPropertySetSchema(input: PropertySetSchemaInput!): PropertySetSchema
+  createConfiguration(input: ConfigurationInput!): Configuration
+  updateConfiguration(id: ID!, input: ConfigurationInput!): Configuration
+  deleteConfiguration(id: ID!): QueryResult
+  applyConfiguration(id: ID!): Configuration
 }
 
 extend type Query {
@@ -55,4 +67,60 @@ extend type Query {
 
 extend type Mutation {
   gaiaMutations: GaiaMutations!
+}
+
+scalar JSON
+
+enum EntryStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+type PropertySetEntry {
+  id: String!
+  ownerKey: String!
+  propertySet: String!
+  entryName: String!
+  values: JSON!
+  configurable: Boolean!
+  status: EntryStatus!
+  createdAt: Date
+  updatedAt: Date
+}
+
+type PropertySetSchema {
+  id: String!
+  ownerKey: String
+  name: String!
+  properties: JSON!
+  configurable: Boolean!
+  status: EntryStatus!
+  createdAt: Date
+  updatedAt: Date
+}
+
+type Configuration {
+  id: String!
+  name: String!
+  description: String
+  enabled: Boolean!
+  content: JSON!
+  lastAppliedAt: Date
+  lastApplyError: String
+  createdAt: Date
+  updatedAt: Date
+}
+
+input PropertySetSchemaInput {
+  ownerKey: String
+  name: String!
+  configurable: Boolean
+  properties: JSON!
+}
+
+input ConfigurationInput {
+  name: String!
+  description: String
+  enabled: Boolean
+  content: JSON!
 }

@@ -15,7 +15,7 @@ import com.sun.hades.codegen.types.ReaderAnnotation;
 import com.sun.hades.codegen.types.ReaderSource;
 import com.sun.hades.codegen.types.ReaderText;
 import com.sun.hades.codegen.types.ReaderTextInput;
-import com.sun.hades.codegen.types.RemoteObjectReference;
+import com.sun.hades.codegen.types.ReaderObjectReference;
 import com.sun.hades.codegen.types.VoteInput;
 import com.sun.hades.graphql.services.HadesGraphQLService;
 import com.sun.hades.model.enums.CefrLevel;
@@ -156,7 +156,7 @@ public class HadesDataFetcher {
    * @return the references
    */
   @DgsData(parentType = "HadesQueries", field = "locateRemoteObjects")
-  public List<RemoteObjectReference> locateRemoteObjects(List<String> ids) {
+  public List<ReaderObjectReference> locateRemoteObjects(List<String> ids) {
     return hadesGraphQLService.locateRemoteObjects(ids);
   }
 

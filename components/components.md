@@ -7,9 +7,9 @@ Fates - People
 Gaia - Access
 Hades - Reader
 Icarus - Forums
-Jocasta
+Jocasta - Scheduler (stateless)
 Medusa
-Narcissus
+Narcissus - Viewer
 Odysseus
 Persephone
 Rhea

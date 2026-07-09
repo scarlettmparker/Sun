@@ -19,6 +19,11 @@ type QuerySuccess {
 
 union QueryResult = QuerySuccess | StandardError
 
+enum VoteValue {
+  UP
+  DOWN
+}
+
 """
 Generic pagination and sort input.
 """

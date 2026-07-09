@@ -83,7 +83,7 @@ type DiscordLoginResult {
   readerAccountId: ID!
 }
 
-type RemoteObjectReference {
+type ReaderObjectReference {
   id: ID!
   ownerType: String!
   ownerId: ID!
@@ -94,7 +94,6 @@ enum ReaderTextType { SYSTEM USER }
 enum ReaderTextStatus { ACTIVE ARCHIVED }
 enum ReaderStatus { ACTIVE HIDDEN }
 enum ReaderVoteTarget { ANNOTATION COMMENT }
-enum VoteValue { UP DOWN }
 
 input ReaderTextInput {
   title: String!
@@ -135,7 +134,7 @@ type HadesQueries {
   comments(annotationId: ID!, includeHidden: Boolean, pagination: PaginationInput): PagedReaderComments!
   readerAccount: ReaderAccount
   myVote(targetType: ReaderVoteTarget!, targetId: ID!): VoteValue
-  locateRemoteObjects(ids: [String!]!): [RemoteObjectReference!]!
+  locateRemoteObjects(ids: [String!]!): [ReaderObjectReference!]!
 }
 
 """Write operations for the reader."""

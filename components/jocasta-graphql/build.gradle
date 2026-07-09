@@ -7,7 +7,7 @@ plugins {
 
 group = 'com.sun'
 version = '0.0.1-SNAPSHOT'
-description = 'gaia'
+description = 'jocasta'
 
 java {
     toolchain {
@@ -24,19 +24,12 @@ ext {
 }
 
 dependencies {
-    implementation project(':gaia-service')
-    implementation project(':fates-graphql')
-    implementation project(':fates-service')
-    implementation project(':sun-service')
+    implementation project(':jocasta-service')
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.postgresql:postgresql'
     implementation 'com.netflix.graphql.dgs:graphql-dgs-spring-graphql-starter'
-    implementation 'com.netflix.graphql.dgs:graphql-dgs-extended-scalars'
     implementation 'io.github.cdimascio:dotenv-java:3.0.0'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'com.netflix.graphql.dgs:graphql-dgs-spring-graphql-starter-test'
-    testImplementation 'com.h2database:h2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
@@ -47,19 +40,9 @@ dependencyManagement {
 }
 
 generateJava {
-    schemaPaths = [
-        "${projectDir}/src/main/resources",
-        "${project(':fates-graphql').projectDir}/src/main/resources",
-        "${rootProject.projectDir}/sun-graphql/src/main/resources"
-    ]
-    packageName = 'com.sun.gaia.codegen'
+    schemaPaths = ["${projectDir}/src/main/resources", "${rootProject.projectDir}/sun-graphql/src/main/resources"]
+    packageName = 'com.sun.jocasta.codegen'
     generateClient = true
-    typeMapping = [
-        "Date": "java.time.LocalDateTime",
-        "AccountStatus": "com.sun.gaia.model.enums.AccountStatus",
-        "EntryStatus": "com.sun.gaia.model.enums.EntryStatus",
-        "JSON": "java.lang.Object"
-    ]
 }
 
 tasks.named('test') {

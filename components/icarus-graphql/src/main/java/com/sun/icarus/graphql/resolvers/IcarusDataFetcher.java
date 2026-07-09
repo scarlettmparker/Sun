@@ -4,16 +4,16 @@ import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
 import com.sun.icarus.codegen.types.CreatePostInput;
 import com.sun.icarus.codegen.types.CreateThreadInput;
+import com.sun.icarus.codegen.types.ForumObjectReference;
 import com.sun.icarus.codegen.types.ForumPost;
 import com.sun.icarus.codegen.types.ForumThread;
+import com.sun.icarus.codegen.types.ForumVoteInput;
 import com.sun.icarus.codegen.types.IcarusMutations;
 import com.sun.icarus.codegen.types.IcarusQueries;
 import com.sun.icarus.codegen.types.PagedForumPosts;
 import com.sun.icarus.codegen.types.PagedForumThreads;
 import com.sun.icarus.codegen.types.PaginationInput;
 import com.sun.icarus.codegen.types.QueryResult;
-import com.sun.icarus.codegen.types.RemoteObjectReference;
-import com.sun.icarus.codegen.types.VoteInput;
 import com.sun.icarus.graphql.services.IcarusGraphQLService;
 import com.sun.icarus.model.enums.VoteValue;
 import java.util.List;
@@ -91,7 +91,7 @@ public class IcarusDataFetcher {
    * @return the references
    */
   @DgsData(parentType = "IcarusQueries", field = "locateRemoteObjects")
-  public List<RemoteObjectReference> locateRemoteObjects(List<String> ids) {
+  public List<ForumObjectReference> locateRemoteObjects(List<String> ids) {
     return icarusGraphQLService.locateRemoteObjects(ids);
   }
 
@@ -179,7 +179,7 @@ public class IcarusDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "IcarusMutations", field = "vote")
-  public QueryResult vote(VoteInput input) {
+  public QueryResult vote(ForumVoteInput input) {
     return icarusGraphQLService.vote(input);
   }
 

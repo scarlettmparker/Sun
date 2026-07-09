@@ -23,6 +23,9 @@ generateJava {
         enabledModules.collect { "${project(":${it}-graphql").projectDir}/src/main/resources" }
     packageName = 'com.sun.graphql.codegen'
     generateClient = true
+    typeMapping = [
+        "JSON": "java.lang.Object"
+    ]
 }
 
 group = 'com.sun'

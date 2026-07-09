@@ -32,7 +32,7 @@ type PagedForumPosts {
   pageInfo: PageInfo!
 }
 
-type RemoteObjectReference {
+type ForumObjectReference {
   id: ID!
   ownerType: String!
   ownerId: ID!
@@ -40,7 +40,6 @@ type RemoteObjectReference {
 
 enum ThreadStatus { ACTIVE LOCKED ARCHIVED }
 enum PostStatus { ACTIVE HIDDEN DELETED }
-enum VoteValue { UP DOWN }
 
 input CreateThreadInput {
   title: String!
@@ -53,7 +52,7 @@ input CreatePostInput {
   body: String!
 }
 
-input VoteInput {
+input ForumVoteInput {
   postId: ID!
   value: VoteValue!
 }
@@ -64,7 +63,7 @@ type IcarusQueries {
   threadsFor(remoteObject: String!, pagination: PaginationInput): PagedForumThreads!
   posts(threadId: ID!, includeHidden: Boolean, pagination: PaginationInput): PagedForumPosts!
   myVote(postId: ID!): VoteValue
-  locateRemoteObjects(ids: [String!]!): [RemoteObjectReference!]!
+  locateRemoteObjects(ids: [String!]!): [ForumObjectReference!]!
 }
 
 """Write operations for forums."""
@@ -75,7 +74,7 @@ type IcarusMutations {
   createPost(input: CreatePostInput!): QueryResult
   editPost(id: ID!, body: String!): QueryResult
   deletePost(id: ID!): QueryResult
-  vote(input: VoteInput!): QueryResult
+  vote(input: ForumVoteInput!): QueryResult
   removeVote(postId: ID!): QueryResult
   attachObject(source: ID!, target: String!): QueryResult
 }

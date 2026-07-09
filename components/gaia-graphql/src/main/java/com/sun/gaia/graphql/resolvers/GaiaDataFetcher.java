@@ -5,9 +5,14 @@ import com.netflix.graphql.dgs.DgsData;
 import com.netflix.graphql.dgs.DgsEnableDataFetcherInstrumentation;
 import com.sun.gaia.codegen.types.Account;
 import com.sun.gaia.codegen.types.AuthResult;
+import com.sun.gaia.codegen.types.Configuration;
+import com.sun.gaia.codegen.types.ConfigurationInput;
 import com.sun.gaia.codegen.types.GaiaMutations;
 import com.sun.gaia.codegen.types.GaiaQueries;
 import com.sun.gaia.codegen.types.LoginInput;
+import com.sun.gaia.codegen.types.PropertySetEntry;
+import com.sun.gaia.codegen.types.PropertySetSchema;
+import com.sun.gaia.codegen.types.PropertySetSchemaInput;
 import com.sun.gaia.codegen.types.QueryResult;
 import com.sun.gaia.codegen.types.RegisterInput;
 import com.sun.gaia.graphql.services.GaiaGraphQLService;
@@ -72,6 +77,64 @@ public class GaiaDataFetcher {
   @DgsData(parentType = "GaiaQueries", field = "listAccounts")
   public List<Account> listAccounts() {
     return gaiaGraphQLService.listAccounts();
+  }
+
+  /**
+   * Returns one entry's values, or every active entry mapped by name.
+   *
+   * @param ownerKey the owner key
+   * @param name the property set name
+   * @param entry the entry name, or null for all entries
+   * @return the values map, or null when a named entry is missing
+   */
+  @DgsData(parentType = "GaiaQueries", field = "propertySet")
+  public Object propertySet(String ownerKey, String name, String entry) {
+    return gaiaGraphQLService.propertySet(ownerKey, name, entry);
+  }
+
+  /**
+   * Lists all active entries in a property set.
+   *
+   * @param ownerKey the owner key
+   * @param name the property set name
+   * @return the entries
+   */
+  @DgsData(parentType = "GaiaQueries", field = "propertySets")
+  public List<PropertySetEntry> propertySets(String ownerKey, String name) {
+    return gaiaGraphQLService.propertySets(ownerKey, name);
+  }
+
+  /**
+   * Locates the schema for a property set.
+   *
+   * @param ownerKey the owner key
+   * @param name the property set name
+   * @return the schema, or null when absent
+   */
+  @DgsData(parentType = "GaiaQueries", field = "propertySetSchema")
+  public PropertySetSchema propertySetSchema(String ownerKey, String name) {
+    return gaiaGraphQLService.propertySetSchema(ownerKey, name);
+  }
+
+  /**
+   * Lists all configurations.
+   *
+   * @return the configurations
+   */
+  @DgsData(parentType = "GaiaQueries", field = "configurations")
+  public List<Configuration> configurations() {
+    return gaiaGraphQLService.configurations();
+  }
+
+  /**
+   * Locates a configuration by id.
+   *
+   * @param id the configuration id
+   * @return the configuration, or null when absent
+   */
+  @DgsData(parentType = "GaiaQueries", field = "configuration")
+  public Configuration configuration(String id) {
+    return gaiaGraphQLService.configuration(id);
   }
 
   /**
@@ -154,6 +217,93 @@ public class GaiaDataFetcher {
   @DgsData(parentType = "GaiaMutations", field = "changePassword")
   public QueryResult changePassword(String currentPassword, String newPassword) {
     return gaiaGraphQLService.changePassword(currentPassword, newPassword);
+  }
+
+  /**
+   * Creates or replaces a property-set entry.
+   *
+   * @param ownerKey the owner key
+   * @param name the property set name
+   * @param entry the entry name
+   * @param values the values to store
+   * @return the saved entry
+   */
+  @DgsData(parentType = "GaiaMutations", field = "upsertPropertyEntry")
+  public PropertySetEntry upsertPropertyEntry(String ownerKey, String name, String entry,
+      Object values) {
+    return gaiaGraphQLService.upsertPropertyEntry(ownerKey, name, entry, values);
+  }
+
+  /**
+   * Sets a single property on an entry.
+   *
+   * @param ownerKey the owner key
+   * @param name the property set name
+   * @param entry the entry name
+   * @param property the property name
+   * @param value the property value
+   * @return the saved entry
+   */
+  @DgsData(parentType = "GaiaMutations", field = "setProperty")
+  public PropertySetEntry setProperty(String ownerKey, String name, String entry, String property,
+      Object value) {
+    return gaiaGraphQLService.setProperty(ownerKey, name, entry, property, value);
+  }
+
+  /**
+   * Registers a property-set schema.
+   *
+   * @param input the schema input
+   * @return the saved schema
+   */
+  @DgsData(parentType = "GaiaMutations", field = "registerPropertySetSchema")
+  public PropertySetSchema registerPropertySetSchema(PropertySetSchemaInput input) {
+    return gaiaGraphQLService.registerPropertySetSchema(input);
+  }
+
+  /**
+   * Creates a configuration.
+   *
+   * @param input the configuration input
+   * @return the saved configuration
+   */
+  @DgsData(parentType = "GaiaMutations", field = "createConfiguration")
+  public Configuration createConfiguration(ConfigurationInput input) {
+    return gaiaGraphQLService.createConfiguration(input);
+  }
+
+  /**
+   * Updates a configuration.
+   *
+   * @param id the configuration id
+   * @param input the configuration input
+   * @return the saved configuration
+   */
+  @DgsData(parentType = "GaiaMutations", field = "updateConfiguration")
+  public Configuration updateConfiguration(String id, ConfigurationInput input) {
+    return gaiaGraphQLService.updateConfiguration(id, input);
+  }
+
+  /**
+   * Deletes a configuration.
+   *
+   * @param id the configuration id
+   * @return a success result
+   */
+  @DgsData(parentType = "GaiaMutations", field = "deleteConfiguration")
+  public QueryResult deleteConfiguration(String id) {
+    return gaiaGraphQLService.deleteConfiguration(id);
+  }
+
+  /**
+   * Applies a configuration's desired state immediately.
+   *
+   * @param id the configuration id
+   * @return the reconciled configuration
+   */
+  @DgsData(parentType = "GaiaMutations", field = "applyConfiguration")
+  public Configuration applyConfiguration(String id) {
+    return gaiaGraphQLService.applyConfiguration(id);
   }
 
   private void resolveUserFromRequest() {
