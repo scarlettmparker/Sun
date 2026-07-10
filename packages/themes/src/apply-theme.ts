@@ -1,6 +1,11 @@
 import { THEME_STORAGE_KEY, type ThemeValues } from "./types";
 
 /**
+ * Event dispatched on window whenever a theme is applied.
+ */
+export const THEME_APPLIED_EVENT = "sun:theme-applied";
+
+/**
  * Applies a theme by overriding the CSS custom properties on the document root,
  * one per value ("primary" becomes "--primary").
  *
@@ -17,6 +22,7 @@ export function applyTheme(values: ThemeValues): void {
     }
   }
   window.localStorage.setItem(THEME_STORAGE_KEY, JSON.stringify(values));
+  window.dispatchEvent(new Event(THEME_APPLIED_EVENT));
 }
 
 /**

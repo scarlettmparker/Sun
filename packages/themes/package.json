@@ -1,6 +1,6 @@
 {
   "name": "@sun/themes",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Theme loader helpers for Sun applications",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
