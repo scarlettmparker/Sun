@@ -1,0 +1,16 @@
+.theme_switcher_trigger {
+  width: calc(var(--lg) * 2);
+  height: calc(var(--lg) * 2);
+  padding: 0;
+  border-radius: 50%;
+}
+
+.theme_switcher_swatch {
+  display: inline-block;
+  width: var(--xl);
+  height: var(--xl);
+  margin-right: var(--md);
+  border-radius: 50%;
+  border: 1px solid var(--muted-light);
+  background: var(--theme-swatch, var(--primary));
+}
