@@ -75,7 +75,7 @@
 
 .dialog_title {
   font-size: var(--text-xl);
-  color: var(--primary);
+  color: var(--text-primary, var(--primary));
   font-weight: var(--bold);
   margin-bottom: var(--md);
 }

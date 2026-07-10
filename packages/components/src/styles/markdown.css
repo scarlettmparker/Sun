@@ -9,7 +9,7 @@
 .md-h5,
 .md-h6 {
   font-weight: var(--bold);
-  color: var(--primary);
+  color: var(--text-primary, var(--primary));
   text-decoration: none;
 }
 
@@ -44,7 +44,7 @@ h5 {
 
 .md-bold {
   font-weight: var(--bold);
-  color: var(--primary);
+  color: var(--text-primary, var(--primary));
 }
 
 .md-italic {
@@ -54,13 +54,13 @@ h5 {
 
 .md-underline {
   text-decoration: underline;
-  text-decoration-color: var(--primary);
+  text-decoration-color: var(--text-primary, var(--primary));
 }
 
 .md-bold-italic {
   font-weight: bold;
   font-style: italic;
-  color: var(--primary);
+  color: var(--text-primary, var(--primary));
 }
 
 .md-strike {
@@ -73,7 +73,7 @@ h5 {
   background-color: rgba(0, 0, 0, 0.08);
   padding: 0 var(--sm);
   border-radius: var(--sm);
-  color: var(--primary);
+  color: var(--text-primary, var(--primary));
 }
 
 .md-link,
@@ -101,6 +101,6 @@ a:not(:has(button)):not(:has(.breadcrumb_item)):hover {
 }
 
 .md-list {
-  color: var(--primary);
+  color: var(--text-primary, var(--primary));
   font-weight: bold;
 }

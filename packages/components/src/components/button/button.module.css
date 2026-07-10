@@ -23,7 +23,7 @@
 /* Default styles */
 .default {
   background-color: var(--primary);
-  color: var(--secondary);
+  color: var(--text-secondary, var(--secondary));
 }
 
 .default:hover {
@@ -60,7 +60,7 @@
 /* Destructive styles */
 .destructive {
   background-color: var(--destructive);
-  color: var(--secondary);
+  color: var(--text-secondary, var(--secondary));
 }
 
 .destructive:hover {

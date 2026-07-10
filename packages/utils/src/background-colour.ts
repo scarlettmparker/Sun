@@ -1,6 +1,5 @@
-/** Default primary/tertiary colours used when the CSS variables are unset. */
+/** Default primary colour used when the CSS variable is unset. */
 const DEFAULT_PRIMARY = "#d90429";
-const DEFAULT_TERTIARY = "#d03991";
 
 /** Background opacity as a 0-255 alpha channel value (10% ≈ 26). */
 const BACKGROUND_ALPHA = 26;
@@ -32,24 +31,29 @@ function getSecondsOfDay(): number {
 }
 
 /**
- * Get the background colour for the current time of day, blending the themed
- * primary (midday) and tertiary (midnight) colours at 10% opacity.
+ * Get the background colour for the current time of day.
  *
  * @returns The interpolated hex colour with alpha.
  */
 export function getBackgroundHex(): string {
+  const override = readCssVar("--background");
+  if (override) {
+    return override;
+  }
+
   const seconds = getSecondsOfDay();
   const ratio = seconds / 86400;
 
-  // 1 at midday (pure primary), 0 at midnight (pure tertiary).
+  // 1 at midday (pure primary), 0 at midnight (pure accent).
   const dayWeight = 1 - 2 * Math.abs(ratio - 0.5);
 
-  const primary = toRgb(readCssVar("--primary") ?? DEFAULT_PRIMARY);
-  const tertiary = toRgb(readCssVar("--tertiary") ?? DEFAULT_TERTIARY);
+  const primaryHex = readCssVar("--primary") ?? DEFAULT_PRIMARY;
+  const primary = toRgb(primaryHex);
+  const accent = toRgb(readCssVar("--accent") ?? primaryHex);
 
-  const r = Math.round(primary.r * dayWeight + tertiary.r * (1 - dayWeight));
-  const g = Math.round(primary.g * dayWeight + tertiary.g * (1 - dayWeight));
-  const b = Math.round(primary.b * dayWeight + tertiary.b * (1 - dayWeight));
+  const r = Math.round(primary.r * dayWeight + accent.r * (1 - dayWeight));
+  const g = Math.round(primary.g * dayWeight + accent.g * (1 - dayWeight));
+  const b = Math.round(primary.b * dayWeight + accent.b * (1 - dayWeight));
 
   return `#${toHex(r)}${toHex(g)}${toHex(b)}${toHex(BACKGROUND_ALPHA)}`;
 }
