@@ -3,6 +3,7 @@
   height: calc(var(--lg) * 2);
   padding: 0;
   border-radius: 50%;
+  border: 1px solid var(--muted-foreground);
 }
 
 .theme_switcher_swatch {

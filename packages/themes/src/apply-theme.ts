@@ -6,6 +6,26 @@ import { THEME_STORAGE_KEY, type ThemeValues } from "./types";
 export const THEME_APPLIED_EVENT = "sun:theme-applied";
 
 /**
+ * Reads the persisted theme values, or an empty object when none or malformed.
+ *
+ * @returns the persisted theme values
+ */
+function readPersisted(): ThemeValues {
+  if (typeof window === "undefined") {
+    return {};
+  }
+  const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
+  if (!stored) {
+    return {};
+  }
+  try {
+    return JSON.parse(stored) as ThemeValues;
+  } catch {
+    return {};
+  }
+}
+
+/**
  * Applies a theme by overriding the CSS custom properties on the document root,
  * one per value ("primary" becomes "--primary").
  *
@@ -16,6 +36,14 @@ export function applyTheme(values: ThemeValues): void {
     return;
   }
   const root = document.documentElement;
+
+  // Remove any previously applied properties that are no longer present in the new theme.
+  const nextKeys = new Set(Object.keys(values));
+  for (const key of Object.keys(readPersisted())) {
+    if (!nextKeys.has(key)) {
+      root.style.removeProperty(`--${key}`);
+    }
+  }
   for (const [key, value] of Object.entries(values)) {
     if (value) {
       root.style.setProperty(`--${key}`, value);
@@ -29,18 +57,11 @@ export function applyTheme(values: ThemeValues): void {
  * Reapplies the persisted theme, if any.
  */
 export function loadPersistedTheme(): void {
-  if (typeof window === "undefined") {
+  const values = readPersisted();
+  if (Object.keys(values).length === 0) {
     return;
   }
-  const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
-  if (!stored) {
-    return;
-  }
-  try {
-    applyTheme(JSON.parse(stored) as ThemeValues);
-  } catch {
-    // Ignore malformed persisted themes.
-  }
+  applyTheme(values);
 }
 
 /**
@@ -51,16 +72,8 @@ export function clearTheme(): void {
     return;
   }
   const root = document.documentElement;
-  const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
-  if (stored) {
-    try {
-      const values = JSON.parse(stored) as ThemeValues;
-      for (const key of Object.keys(values)) {
-        root.style.removeProperty(`--${key}`);
-      }
-    } catch {
-      // Ignore malformed persisted themes.
-    }
+  for (const key of Object.keys(readPersisted())) {
+    root.style.removeProperty(`--${key}`);
   }
   window.localStorage.removeItem(THEME_STORAGE_KEY);
 }
