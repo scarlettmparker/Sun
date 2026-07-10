@@ -65,7 +65,14 @@ type ReaderAccount {
   globalName: String
   avatar: String
   cefrLevel: CefrLevel
-  roles: [String!]!
+  roles: [ReaderRole!]!
+}
+
+"""A learner level granted by a Discord guild role."""
+type ReaderRole {
+  key: String!
+  name: String!
+  cefrLevel: CefrLevel
 }
 
 type PagedReaderTexts {

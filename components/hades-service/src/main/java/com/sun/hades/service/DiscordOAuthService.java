@@ -1,9 +1,7 @@
 package com.sun.hades.service;
 
 import com.sun.hades.model.enums.CefrLevel;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -15,40 +13,12 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 
 /**
- * Discord OAuth2 code exchange, guild gate, and curated role resolution.
+ * Discord OAuth2 code exchange, guild gate, and learner-level resolution.
  */
 @Service
 public class DiscordOAuthService {
 
   private static final String BASE = "https://discord.com/api";
-
-  /**
-   * A learner level granted by a Discord guild role.
-   *
-   * @param name the display name
-   * @param cefrLevel the CEFR equivalent, or null when none applies
-   */
-  private record Level(String name, CefrLevel cefrLevel) {
-  }
-
-  /**
-   * The fixed guild role ids that carry a learner level, mapped to their display
-   * name and CEFR equivalent.
-   */
-  private static final Map<String, Level> LEVEL_ROLES = levelRoles();
-
-  private static Map<String, Level> levelRoles() {
-    Map<String, Level> roles = new HashMap<>();
-    roles.put("352001527780474881", new Level("Non Learner", null));
-    roles.put("350483752490631181", new Level("Native", CefrLevel.C2));
-    roles.put("351117824300679169", new Level("Beginner", CefrLevel.A1));
-    roles.put("351117954974482435", new Level("Elementary", CefrLevel.A2));
-    roles.put("350485376109903882", new Level("Intermediate", CefrLevel.B1));
-    roles.put("351118486426091521", new Level("Upper Intermediate", CefrLevel.B2));
-    roles.put("350485279238258689", new Level("Advanced", CefrLevel.C1));
-    roles.put("350483489461895168", new Level("Fluent", CefrLevel.C2));
-    return Collections.unmodifiableMap(roles);
-  }
 
   private final String clientId;
   private final String clientSecret;
@@ -72,7 +42,7 @@ public class DiscordOAuthService {
    * Exchanges an authorization code for the member's Discord profile.
    *
    * @param code the authorization code returned by Discord
-   * @return the verified Discord profile, with roles and CEFR level
+   * @return the verified Discord profile, with level keys and CEFR level
    */
   public DiscordProfile exchange(String code) {
     String accessToken = exchangeCode(code);
@@ -86,12 +56,12 @@ public class DiscordOAuthService {
     }
     String discordId = String.valueOf(user.get("id"));
     ensureGuildMember(accessToken);
-    List<Level> levels = resolveLevels(accessToken);
+    List<ReaderLevels.Level> levels = resolveLevels(accessToken);
     List<String> roles = levels.stream()
-        .map(Level::name)
+        .map(ReaderLevels.Level::key)
         .collect(Collectors.toList());
     CefrLevel level = levels.stream()
-        .map(Level::cefrLevel)
+        .map(ReaderLevels.Level::cefrLevel)
         .filter(Objects::nonNull)
         .max(Comparator.comparingInt(Enum::ordinal))
         .orElse(null);
@@ -140,7 +110,7 @@ public class DiscordOAuthService {
    * @param accessToken the member's Discord bearer token
    * @return the matched levels, in role order
    */
-  private List<Level> resolveLevels(String accessToken) {
+  private List<ReaderLevels.Level> resolveLevels(String accessToken) {
     Map<?, ?> member = rest.get()
         .uri(BASE + "/users/@me/guilds/" + guildId + "/member")
         .header("Authorization", "Bearer " + accessToken)
@@ -153,7 +123,9 @@ public class DiscordOAuthService {
     List<?> roleList = rolesRaw instanceof List<?> list ? list : List.of();
     return roleList.stream()
         .map(String::valueOf)
-        .map(LEVEL_ROLES::get)
+        .map(ReaderLevels.ID_TO_KEY::get)
+        .filter(Objects::nonNull)
+        .map(ReaderLevels.BY_KEY::get)
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
   }
