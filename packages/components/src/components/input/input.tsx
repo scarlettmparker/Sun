@@ -68,7 +68,8 @@ const Input = (props: InputProps) => {
       );
     }
     default: {
-      return <input {...rest} type={type} />;
+      const { className, ...restProps } = rest;
+      return <input {...restProps} type={type} className={cn(className, "text")} />;
     }
   }
 };

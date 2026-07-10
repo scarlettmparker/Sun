@@ -96,6 +96,8 @@ public class AccountService extends BaseService<AccountEntity> {
       return existing.get();
     }
     PersonEntity person = new PersonEntity();
+    person.setFirstName(username);
+    person.setLastName("");
     person.setDisplayName(username);
     person = personService.save(person);
 
