@@ -11,6 +11,6 @@
   height: var(--xl);
   margin-right: var(--md);
   border-radius: 50%;
-  border: 1px solid var(--muted-light);
+  border: 1px solid var(--muted-foreground);
   background: var(--theme-swatch, var(--primary));
 }

@@ -8,7 +8,7 @@
   /* text colors */
   --text: #14141b;
   --muted: #7f7f7f;
-  --muted-light: #bfbfbf;
+  --muted-foreground: #bfbfbf;
   --primary: #d90429;
   --primary-hover: #fb3758; /* imperial red */
   --primary-active: #a0031d;
@@ -114,7 +114,7 @@ hr {
   display: block;
   height: 1px;
   border: 0;
-  border-top: 1px solid var(--muted-light);
+  border-top: 1px solid var(--muted-foreground);
   padding: 0;
 }
 
