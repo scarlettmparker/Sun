@@ -2,12 +2,11 @@ import {
   applyTheme,
   loadPersistedTheme,
   clearTheme,
-  THEME_CSS_VAR_MAP,
   THEME_STORAGE_KEY,
-  type Theme,
+  type ThemeValues,
 } from "../src";
 
-const greekTheme: Theme = {
+const greekTheme: ThemeValues = {
   primary: "#1d4ed8",
   "primary-hover": "#3b82f6",
   "primary-active": "#1e3a8a",
@@ -19,7 +18,7 @@ const greekTheme: Theme = {
   "tertiary-hover": "#7c3aed",
 };
 
-const defaultTheme: Theme = {
+const defaultTheme: ThemeValues = {
   primary: "#d90429",
   "primary-hover": "#fb3758",
   "primary-active": "#a0031d",
@@ -31,8 +30,8 @@ const defaultTheme: Theme = {
   "tertiary-hover": "#dc6aad",
 };
 
-function cssVar(key: keyof typeof THEME_CSS_VAR_MAP): string {
-  return document.documentElement.style.getPropertyValue(THEME_CSS_VAR_MAP[key]);
+function cssVar(key: string): string {
+  return document.documentElement.style.getPropertyValue(`--${key}`);
 }
 
 describe("applyTheme", () => {
@@ -41,7 +40,7 @@ describe("applyTheme", () => {
     window.localStorage.clear();
   });
 
-  it("writes the greek theme values to the matching CSS custom properties", () => {
+  it("writes each value to its matching CSS custom property", () => {
     applyTheme(greekTheme);
 
     expect(cssVar("primary")).toBe("#1d4ed8");
@@ -57,9 +56,7 @@ describe("applyTheme", () => {
   });
 
   it("only overrides the properties present in a partial payload", () => {
-    const partial: Theme = { primary: "#1d4ed8", secondary: "#ffffff" };
-
-    applyTheme(partial);
+    applyTheme({ primary: "#1d4ed8", secondary: "#ffffff" });
 
     expect(cssVar("primary")).toBe("#1d4ed8");
     expect(cssVar("secondary")).toBe("#ffffff");
@@ -76,11 +73,11 @@ describe("applyTheme", () => {
     expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe(JSON.stringify(defaultTheme));
   });
 
-  it("ignores unknown keys rather than creating arbitrary CSS variables", () => {
-    applyTheme({ primary: "#1d4ed8", ...{ bogus: "#000000" } });
+  it("passes through arbitrary keys the gaia schema allows", () => {
+    applyTheme({ primary: "#1d4ed8", "custom-var": "#000000" });
 
     expect(cssVar("primary")).toBe("#1d4ed8");
-    expect(document.documentElement.style.getPropertyValue("--bogus")).toBe("");
+    expect(cssVar("custom-var")).toBe("#000000");
   });
 });
 
