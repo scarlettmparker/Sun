@@ -1,2 +1,0 @@
-# Jocasta exposes no GraphQL API; it is a stateless scheduling component that
-# reconciles gaia configurations on a fixed delay.

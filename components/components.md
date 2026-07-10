@@ -7,7 +7,7 @@ Fates - People
 Gaia - Access
 Hades - Reader
 Icarus - Forums
-Jocasta - Scheduler (stateless)
+Jocasta
 Medusa
 Narcissus - Viewer
 Odysseus
