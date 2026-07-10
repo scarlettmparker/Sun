@@ -12,7 +12,7 @@ type ReaderText {
   content: String!
   language: String!
   level: CefrLevel!
-  type: ReaderTextType!
+  ownerId: ID
   sourceId: ID
   status: ReaderTextStatus!
   createdAt: Date
@@ -98,7 +98,6 @@ type ReaderObjectReference {
 }
 
 enum CefrLevel { A1 A2 B1 B2 C1 C2 }
-enum ReaderTextType { SYSTEM USER }
 enum ReaderTextStatus { ACTIVE ARCHIVED }
 enum ReaderStatus { ACTIVE HIDDEN }
 enum ReaderVoteTarget { ANNOTATION COMMENT }
@@ -108,7 +107,7 @@ input ReaderTextInput {
   content: String!
   language: String!
   level: CefrLevel!
-  type: ReaderTextType
+  ownerId: ID
   sourceId: ID
 }
 
@@ -136,7 +135,7 @@ type HadesQueries {
   text(id: ID!): ReaderText
   source(id: ID!): ReaderSource
   sources: [ReaderSource!]
-  texts(level: CefrLevel, sourceId: ID, type: ReaderTextType, pagination: PaginationInput): PagedReaderTexts!
+  texts(level: CefrLevel, sourceId: ID, ownerId: ID, pagination: PaginationInput): PagedReaderTexts!
   annotations(textId: ID!, includeHidden: Boolean): [ReaderAnnotation!]!
   annotation(id: ID!): ReaderAnnotation
   comments(annotationId: ID!, includeHidden: Boolean, pagination: PaginationInput): PagedReaderComments!

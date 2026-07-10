@@ -3,7 +3,7 @@ package com.sun.hades.graphql.mappers;
 import com.sun.hades.codegen.types.ReaderText;
 import com.sun.hades.codegen.types.ReaderTextInput;
 import com.sun.hades.model.ReaderTextEntity;
-import com.sun.hades.model.enums.ReaderTextType;
+import com.sun.gaia.service.UserContextHolder;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +31,7 @@ public class ReaderTextMapper {
         .content(entity.getContent())
         .language(entity.getLanguage())
         .level(entity.getLevel())
-        .type(entity.getType())
+        .ownerId(entity.getOwnerId() != null ? entity.getOwnerId().toString() : null)
         .sourceId(entity.getSourceId() != null ? entity.getSourceId().toString() : null)
         .status(entity.getStatus())
         .createdAt(entity.getCreatedAt())
@@ -54,7 +54,9 @@ public class ReaderTextMapper {
     entity.setContent(input.getContent());
     entity.setLanguage(input.getLanguage());
     entity.setLevel(input.getLevel() != null ? input.getLevel() : com.sun.hades.model.enums.CefrLevel.A1);
-    entity.setType(input.getType() != null ? input.getType() : ReaderTextType.USER);
+    UUID ownerId =
+        input.getOwnerId() != null ? UUID.fromString(input.getOwnerId()) : UserContextHolder.getUserId();
+    entity.setOwnerId(ownerId);
     if (input.getSourceId() != null) {
       entity.setSourceId(UUID.fromString(input.getSourceId()));
     }

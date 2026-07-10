@@ -22,7 +22,6 @@ import com.sun.hades.codegen.types.ReaderObjectReference;
 import com.sun.hades.codegen.types.StandardError;
 import com.sun.hades.codegen.types.VoteInput;
 import com.sun.hades.model.enums.CefrLevel;
-import com.sun.hades.model.enums.ReaderTextType;
 import com.sun.hades.model.enums.ReaderVoteTarget;
 import com.sun.hades.model.enums.VoteValue;
 import com.sun.hades.graphql.mappers.ReaderAccountMapper;
@@ -34,7 +33,6 @@ import com.sun.hades.model.ReaderCommentEntity;
 import com.sun.hades.model.ReaderSourceEntity;
 import com.sun.hades.model.ReaderTextEntity;
 import com.sun.hades.model.enums.ReaderTextStatus;
-import com.sun.hades.model.enums.ReaderTextType;
 import com.sun.hades.service.DiscordOAuthService;
 import com.sun.hades.service.ReaderAccountService;
 import com.sun.hades.service.ReaderAnnotationService;
@@ -110,18 +108,18 @@ public class HadesGraphQLService {
    *
    * @param level optional CEFR level filter
    * @param sourceId optional source id filter
-   * @param type optional type filter
+   * @param ownerId optional owner account id filter
    * @param pagination the pagination and sort input
    * @return a page of texts
    */
   @Transactional(readOnly = true)
   public PagedReaderTexts texts(
-      CefrLevel level, String sourceId, ReaderTextType type, PaginationInput pagination) {
+      CefrLevel level, String sourceId, String ownerId, PaginationInput pagination) {
     Pageable pageable = toPageable(pagination, "createdAt", Sort.Direction.DESC);
     Page<ReaderTextEntity> result = textService.list(
         level,
         sourceId != null ? UUID.fromString(sourceId) : null,
-        type,
+        ownerId != null ? UUID.fromString(ownerId) : null,
         pageable);
     List<ReaderText> items = result.getContent().stream().map(textMapper::map).toList();
     return PagedReaderTexts.newBuilder().items(items).pageInfo(pageInfo(result)).build();

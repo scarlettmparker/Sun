@@ -4,7 +4,6 @@ import com.sun.base.service.BaseService;
 import com.sun.hades.model.ReaderTextEntity;
 import com.sun.hades.model.enums.CefrLevel;
 import com.sun.hades.model.enums.ReaderTextStatus;
-import com.sun.hades.model.enums.ReaderTextType;
 import com.sun.hades.repository.ReaderTextRepository;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -28,16 +27,16 @@ public class ReaderTextService extends BaseService<ReaderTextEntity> {
   }
 
   /**
-   * Lists active texts, optionally filtered by level, source, and type.
+   * Lists active texts, optionally filtered by level, source, and owner.
    *
    * @param level optional CEFR level filter
    * @param sourceId optional source id filter
-   * @param type optional type filter
+   * @param ownerId optional owner account id filter
    * @param pageable the page request
    * @return a page of matching texts
    */
   public Page<ReaderTextEntity> list(
-      CefrLevel level, UUID sourceId, ReaderTextType type, Pageable pageable) {
+      CefrLevel level, UUID sourceId, UUID ownerId, Pageable pageable) {
     Specification<ReaderTextEntity> spec = (root, q, b) ->
         b.equal(root.get("status"), ReaderTextStatus.ACTIVE);
     if (level != null) {
@@ -46,8 +45,8 @@ public class ReaderTextService extends BaseService<ReaderTextEntity> {
     if (sourceId != null) {
       spec = spec.and((root, q, b) -> b.equal(root.get("sourceId"), sourceId));
     }
-    if (type != null) {
-      spec = spec.and((root, q, b) -> b.equal(root.get("type"), type));
+    if (ownerId != null) {
+      spec = spec.and((root, q, b) -> b.equal(root.get("ownerId"), ownerId));
     }
     return textRepository.findAll(spec, pageable);
   }

@@ -3,7 +3,6 @@ package com.sun.hades.model;
 import com.sun.base.model.BaseEntity;
 import com.sun.hades.model.enums.CefrLevel;
 import com.sun.hades.model.enums.ReaderTextStatus;
-import com.sun.hades.model.enums.ReaderTextType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -31,9 +30,8 @@ public class ReaderTextEntity extends BaseEntity {
   @Column(name = "level", nullable = false)
   private CefrLevel level;
 
-  @Enumerated(EnumType.STRING)
-  @Column(name = "type", nullable = false)
-  private ReaderTextType type = ReaderTextType.USER;
+  @Column(name = "owner_id")
+  private UUID ownerId;
 
   @Column(name = "source_id")
   private UUID sourceId;
@@ -74,12 +72,12 @@ public class ReaderTextEntity extends BaseEntity {
     this.level = level;
   }
 
-  public ReaderTextType getType() {
-    return type;
+  public UUID getOwnerId() {
+    return ownerId;
   }
 
-  public void setType(ReaderTextType type) {
-    this.type = type;
+  public void setOwnerId(UUID ownerId) {
+    this.ownerId = ownerId;
   }
 
   public UUID getSourceId() {
