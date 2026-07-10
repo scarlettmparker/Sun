@@ -4,6 +4,7 @@ import com.sun.base.service.BaseService;
 import com.sun.hades.model.ReaderAccountEntity;
 import com.sun.hades.model.enums.CefrLevel;
 import com.sun.hades.repository.ReaderAccountRepository;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -42,10 +43,11 @@ public class ReaderAccountService extends BaseService<ReaderAccountEntity> {
    * @param globalName the Discord global display name
    * @param avatar the Discord avatar hash
    * @param cefrLevel the CEFR level derived from guild roles
+   * @param guildRoles the member's named guild roles
    * @return the reader account id
    */
   public UUID upsertFromDiscord(UUID gaiaAccountId, String discordId, String username,
-      String globalName, String avatar, CefrLevel cefrLevel) {
+      String globalName, String avatar, CefrLevel cefrLevel, List<String> guildRoles) {
     ReaderAccountEntity account = accountRepository.findByDiscordId(discordId)
         .orElseGet(ReaderAccountEntity::new);
     account.setGaiaAccountId(gaiaAccountId);
@@ -54,6 +56,7 @@ public class ReaderAccountService extends BaseService<ReaderAccountEntity> {
     account.setGlobalName(globalName);
     account.setAvatar(avatar);
     account.setCefrLevel(cefrLevel);
+    account.setGuildRoles(guildRoles);
     return accountRepository.save(account).getId();
   }
 }

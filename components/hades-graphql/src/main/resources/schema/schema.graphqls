@@ -65,6 +65,7 @@ type ReaderAccount {
   globalName: String
   avatar: String
   cefrLevel: CefrLevel
+  roles: [String!]!
 }
 
 type PagedReaderTexts {

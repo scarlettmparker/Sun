@@ -30,6 +30,7 @@ public class ReaderAccountMapper {
         .globalName(entity.getGlobalName())
         .avatar(entity.getAvatar())
         .cefrLevel(entity.getCefrLevel())
+        .roles(entity.getGuildRoles())
         .build();
     logger.debug("Mapped reader account with id {}", account.getId());
     return account;

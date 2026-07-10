@@ -450,7 +450,7 @@ public class HadesGraphQLService {
     String token = jwtService.generateToken(account.getId(), account.getPersonId());
     UUID readerAccountId = accountService.upsertFromDiscord(
         account.getId(), profile.discordId(), profile.username(),
-        profile.globalName(), profile.avatar(), profile.cefrLevel());
+        profile.globalName(), profile.avatar(), profile.cefrLevel(), profile.roles());
     return DiscordLoginResult.newBuilder()
         .token(token)
         .accountId(account.getId().toString())

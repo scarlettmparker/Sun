@@ -2,12 +2,16 @@ package com.sun.hades.model;
 
 import com.sun.base.model.BaseEntity;
 import com.sun.hades.model.enums.CefrLevel;
+import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import org.hibernate.annotations.Type;
 
 /**
  * Reader-specific profile for a member, synced from Discord on login.
@@ -34,6 +38,10 @@ public class ReaderAccountEntity extends BaseEntity {
   @Enumerated(EnumType.STRING)
   @Column(name = "cefr_level")
   private CefrLevel cefrLevel;
+
+  @Type(JsonBinaryType.class)
+  @Column(name = "guild_roles", columnDefinition = "jsonb")
+  private List<String> guildRoles = new ArrayList<>();
 
   public UUID getGaiaAccountId() {
     return gaiaAccountId;
@@ -81,5 +89,13 @@ public class ReaderAccountEntity extends BaseEntity {
 
   public void setCefrLevel(CefrLevel cefrLevel) {
     this.cefrLevel = cefrLevel;
+  }
+
+  public List<String> getGuildRoles() {
+    return guildRoles;
+  }
+
+  public void setGuildRoles(List<String> guildRoles) {
+    this.guildRoles = guildRoles;
   }
 }
