@@ -253,6 +253,7 @@ export function mutationPostHandler(): (
       const result = await mutationRegistry.executeMutation(
         mutationPath,
         (request.body as Record<string, unknown>) ?? {},
+        { cookie: request.headers.cookie },
       );
 
       if (result.invalidated && result.invalidated.length) {

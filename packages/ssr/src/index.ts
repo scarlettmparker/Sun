@@ -19,7 +19,7 @@ export {
 } from "./page-data";
 
 export { mutationRegistry, clearMutationHandlers } from "./mutations";
-export type { MutationHandler } from "./mutations";
+export type { MutationHandler, MutationContext } from "./mutations";
 
 export { ServerRedirectError } from "./server-redirect";
 

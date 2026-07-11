@@ -6,8 +6,20 @@
 import { MutationResult } from "./client-mutation";
 import { ServerRedirectError } from "./server-redirect";
 
+/**
+ * Per-request context passed to mutation handlers, so they can forward auth
+ * (e.g. extract the app's JWT cookie) to authenticated backend calls.
+ */
+export type MutationContext = {
+  /**
+   * Raw Cookie header from the request, for the handler to extract app-specific cookies.
+   */
+  cookie?: string;
+};
+
 export type MutationHandler = (
   body: Record<string, unknown>,
+  context: MutationContext,
 ) => Promise<MutationResult>;
 
 const mutationHandlers: Record<string, MutationHandler> = {};
@@ -25,18 +37,20 @@ function registerMutationHandler(path: string, handler: MutationHandler): void {
  * Executes a mutation for a given path.
  * @param path The route path.
  * @param body The request body.
+ * @param context Per-request context (e.g. the Cookie header) for the handler.
  * @returns Promise resolving to the mutation result.
  */
 async function executeMutation(
   path: string,
   body: Record<string, unknown>,
+  context: MutationContext,
 ): Promise<MutationResult> {
   const handler = mutationHandlers[path];
   if (!handler) {
     return { __typename: "StandardError", message: "Unknown mutation path" };
   }
   try {
-    return await handler(body);
+    return await handler(body, context);
   } catch (error) {
     if (error instanceof ServerRedirectError) {
       throw error;
@@ -55,6 +69,7 @@ interface MutationRegistry {
   executeMutation: (
     path: string,
     body: Record<string, unknown>,
+    context: MutationContext,
   ) => Promise<MutationResult>;
 }
 

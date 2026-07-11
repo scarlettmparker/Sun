@@ -89,12 +89,20 @@ const Dialog = (props: DialogProps) => {
   }, []);
 
   /**
-   * Updates the dialog position when the position prop changes.
+   * Resets the dragged position only when the position value actually changes,
+   * so re-renders that pass a new object (e.g. typing in a child input) don't
+   * snap the dialog back to its origin.
    */
+  const lastPosition = useRef(position);
   useEffect(() => {
-    if (position) {
+    if (
+      position &&
+      (position.top !== lastPosition.current?.top ||
+        position.left !== lastPosition.current?.left)
+    ) {
       setDragPos(position);
     }
+    lastPosition.current = position;
   }, [position]);
 
   /**
@@ -114,6 +122,31 @@ const Dialog = (props: DialogProps) => {
       return () => clearTimeout(timer);
     }
   }, [open, mounted, draggable]);
+
+  /**
+   * Updates the dialog position as the mouse moves during a drag.
+   */
+  useEffect(() => {
+    if (!dragOffset) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      setDragPos({
+        top: e.clientY - dragOffset.y,
+        left: e.clientX - dragOffset.x,
+      });
+    };
+
+    const handleMouseUp = () => {
+      setDragOffset(null);
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [dragOffset]);
 
   if (!mounted || !open) return null;
 
@@ -151,31 +184,6 @@ const Dialog = (props: DialogProps) => {
       dialogRef.current.style.zIndex = String(dragZCounter);
     }
   };
-
-  /**
-   * Updates the dialog position as the mouse moves during a drag.
-   */
-  useEffect(() => {
-    if (!dragOffset) return;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      setDragPos({
-        top: e.clientY - dragOffset.y,
-        left: e.clientX - dragOffset.x,
-      });
-    };
-
-    const handleMouseUp = () => {
-      setDragOffset(null);
-    };
-
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
-  }, [dragOffset]);
 
   const isModal = modal && !draggable;
 

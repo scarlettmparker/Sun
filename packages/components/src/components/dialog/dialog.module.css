@@ -25,7 +25,7 @@
   box-shadow: var(--shadow-soft);
   background-color: rgb(from var(--secondary) r g b / var(--visible));
   overflow: hidden;
-  transition: all var(--medium);
+  transition: box-shadow var(--fast) ease;
   backdrop-filter: blur(var(--sm));
   pointer-events: auto;
   min-width: 20rem;
