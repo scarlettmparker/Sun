@@ -1,6 +1,6 @@
 import Button from "../button";
 import { cn } from "~/utils/cn";
-import "./pagination.module.css";
+import styles from "./pagination.module.css";
 
 type PaginationProps = {
   /**
@@ -34,7 +34,7 @@ const Pagination = ({
   const pages = pageWindow(page, totalPages);
 
   return (
-    <nav className={cn("pagination", className)} {...rest}>
+    <nav className={cn(styles.pagination, className)} {...rest}>
       <Button
         variant="secondary"
         disabled={page <= 1}

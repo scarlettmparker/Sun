@@ -1,6 +1,6 @@
 import React from "react";
 import { cn } from "~/utils/cn";
-import "./separator.module.css";
+import styles from "./separator.module.css";
 
 type SeparatorProps = React.HTMLAttributes<HTMLHRElement>;
 
@@ -10,7 +10,7 @@ type SeparatorProps = React.HTMLAttributes<HTMLHRElement>;
 const Separator = (props: SeparatorProps) => {
   const { className, ...rest } = props;
 
-  return <hr {...rest} className={cn("separator", className)} />;
+  return <hr {...rest} className={cn(styles.separator, className)} />;
 };
 
 export default Separator;

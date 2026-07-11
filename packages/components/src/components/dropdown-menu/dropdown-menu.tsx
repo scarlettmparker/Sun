@@ -18,7 +18,7 @@ import {
   useMenuIds,
   useMenuCloseHandlers,
 } from "../menu";
-import "./dropdown-menu.module.css";
+import styles from "./dropdown-menu.module.css";
 
 /**
  * Context value containing shared state for managing the visibility and
@@ -131,7 +131,7 @@ const DropdownMenu = (props: React.HTMLAttributes<HTMLDivElement>) => {
     >
       <div
         ref={rootRef}
-        className={cn("dropdown_menu", className)}
+        className={cn(styles.dropdown_menu, className)}
         data-state={open ? "open" : "closed"}
         {...rest}
       >
@@ -191,7 +191,7 @@ const DropdownMenuTrigger = (props: DropdownMenuTriggerProps) => {
       aria-expanded={open}
       aria-controls={open ? contentId : undefined}
       data-state={open ? "open" : "closed"}
-      className={cn("dropdown_menu_trigger", className)}
+      className={cn(styles.dropdown_menu_trigger, className)}
       onClick={handleClick}
       {...rest}
     >
@@ -225,7 +225,7 @@ const DropdownMenuContent = (props: DropdownMenuContentProps) => {
       triggerId={triggerId}
       aria-label="Dropdown Menu"
       contentDataAttr="dropdown-menu-content"
-      className={cn("dropdown_menu_content", props.className)}
+      className={cn(styles.dropdown_menu_content, props.className)}
       style={props.style}
     />
   );
@@ -252,7 +252,7 @@ type DropdownMenuItemProps = React.ComponentProps<typeof Button> & {
 const DropdownMenuItem = (props: DropdownMenuItemProps) => {
   const { close } = useDropdownMenu();
   return (
-    <MenuItem {...props} className="dropdown_menu_item" closeMenu={close} />
+    <MenuItem {...props} className={styles.dropdown_menu_item} closeMenu={close} />
   );
 };
 
@@ -263,7 +263,7 @@ const DropdownMenuGroup = (props: React.HTMLAttributes<HTMLDivElement>) => {
   const { className, children, ...rest } = props;
   return (
     <div
-      className={cn("dropdown_menu_group", className)}
+      className={cn(styles.dropdown_menu_group, className)}
       role="group"
       {...rest}
     >
@@ -281,7 +281,7 @@ type DropdownMenuSubProps = React.HTMLAttributes<HTMLDivElement>;
 const DropdownMenuSub = (props: DropdownMenuSubProps) => {
   const { resetNonce } = useDropdownMenu();
   return (
-    <MenuSub {...props} className="dropdown_menu_sub" resetNonce={resetNonce} />
+    <MenuSub {...props} className={styles.dropdown_menu_sub} resetNonce={resetNonce} />
   );
 };
 
@@ -294,9 +294,8 @@ type DropdownMenuSubTriggerProps = React.ComponentProps<typeof Button>;
 const DropdownMenuSubTrigger = (props: DropdownMenuSubTriggerProps) => (
   <MenuSubTrigger
     {...props}
-    className="dropdown_menu_subtrigger"
-    arrowClassName="dropdown_menu_subarrow"
-  />
+    className={styles.dropdown_menu_subtrigger}
+    arrowClassName={styles.dropdown_menu_subarrow}   />
 );
 
 type DropdownMenuSubContentProps = React.HTMLAttributes<HTMLDivElement>;
@@ -306,7 +305,7 @@ type DropdownMenuSubContentProps = React.HTMLAttributes<HTMLDivElement>;
  * adjacent to active sub-triggers.
  */
 const DropdownMenuSubContent = (props: DropdownMenuSubContentProps) => (
-  <MenuSubContent {...props} className="dropdown_menu_subcontent" />
+  <MenuSubContent {...props} className={styles.dropdown_menu_subcontent} />
 );
 
 export default DropdownMenu;

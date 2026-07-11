@@ -8,7 +8,7 @@ import React, {
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "~/utils/cn";
-import "./dialog.module.css";
+import styles from "./dialog.module.css";
 
 /**
  * Context value containing shared state for managing visibility and close handlers.
@@ -117,30 +117,29 @@ const Dialog = (props: DialogProps) => {
     <DialogContext.Provider
       value={{ open, setOpen: onOpenChange ?? (() => {}) }}
     >
-      <div className={cn("dialog_wrapper", modal && "dialog_modal_active")}>
+      <div className={cn(styles.dialog_wrapper, modal && styles.dialog_modal_active)}>
         {modal && (
           <div
-            className="dialog_overlay"
+            className={styles.dialog_overlay}
             aria-hidden="true"
             onClick={handleClose}
           />
         )}
         <article
           ref={dialogRef}
-          className={cn("dialog", className)}
-          role="dialog"
-          aria-modal={modal}
+          className={cn(styles.dialog, className)}
+          role={styles.dialog}           aria-modal={modal}
           onKeyDown={handleKeyDown}
           tabIndex={-1}
           {...rest}
         >
           <button
             type="button"
-            className="dialog_close_button"
+            className={styles.dialog_close_button}
             aria-label="Close"
             onClick={handleClose}
           >
-            <X className="dialog_close_icon" />
+            <X className={styles.dialog_close_icon} />
           </button>
           {children}
         </article>
@@ -160,7 +159,7 @@ const DialogHeader = (props: DialogHeaderProps) => {
   const { className, children, ...rest } = props;
 
   return (
-    <header className={cn("dialog_header", className)} {...rest}>
+    <header className={cn(styles.dialog_header, className)} {...rest}>
       {children}
     </header>
   );
@@ -175,7 +174,7 @@ const DialogTitle = (props: DialogTitleProps) => {
   const { className, children, ...rest } = props;
 
   return (
-    <h3 className={cn("dialog_title", className)} {...rest}>
+    <h3 className={cn(styles.dialog_title, className)} {...rest}>
       {children}
     </h3>
   );
@@ -190,7 +189,7 @@ const DialogDescription = (props: DialogDescriptionProps) => {
   const { className, children, ...rest } = props;
 
   return (
-    <p className={cn("dialog_description", className)} {...rest}>
+    <p className={cn(styles.dialog_description, className)} {...rest}>
       {children}
     </p>
   );
@@ -205,7 +204,7 @@ const DialogBody = (props: DialogBodyProps) => {
   const { className, children, ...rest } = props;
 
   return (
-    <div className={cn("dialog_body", className)} {...rest}>
+    <div className={cn(styles.dialog_body, className)} {...rest}>
       {children}
     </div>
   );
@@ -220,7 +219,7 @@ const DialogFooter = (props: DialogFooterProps) => {
   const { className, children, ...rest } = props;
 
   return (
-    <footer className={cn("dialog_footer", className)} {...rest}>
+    <footer className={cn(styles.dialog_footer, className)} {...rest}>
       {children}
     </footer>
   );
@@ -257,14 +256,14 @@ const DialogClose = (props: DialogCloseProps) => {
         childProps.onClick?.(event);
         handleClick(event);
       },
-      className: cn("dialog_close", className, childProps.className),
+      className: cn(styles.dialog_close, className, childProps.className),
     } as React.Attributes & React.HTMLAttributes<HTMLElement>);
   }
 
   return (
     <button
       type="button"
-      className={cn("dialog_close", className)}
+      className={cn(styles.dialog_close, className)}
       onClick={handleClick}
       {...rest}
     >

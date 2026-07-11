@@ -8,6 +8,7 @@ export {
   BreadcrumbProvider,
   useBreadcrumbContext,
 } from "./components/breadcrumb";
+export { default as Badge } from "./components/badge";
 export { default as Button } from "./components/button";
 export {
   default as Card,

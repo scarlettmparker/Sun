@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
 import { cn } from "~/utils/cn";
-import "./breadcrumb.module.css";
+import styles from "./breadcrumb.module.css";
 
 export type Crumb = {
   /**
@@ -134,8 +134,8 @@ const Breadcrumb = (props: BreadcrumbProps) => {
   const { crumbs, current } = context;
 
   return (
-    <nav aria-label="breadcrumb" {...rest}>
-      <ol className={cn("breadcrumb", className)}>
+    <nav aria-label={styles.breadcrumb} {...rest}>
+      <ol className={cn(styles.breadcrumb, className)}>
         {crumbs.map((crumb, index) => {
           // The item is visually active if it matches `current` or is the final node
           const isActive =
@@ -181,7 +181,7 @@ const BreadcrumbItem = (props: BreadcrumbItemProps) => {
 
   const renderContent = () => (
     <li
-      className={cn("breadcrumb_item", active && "active", className)}
+      className={cn(styles.breadcrumb_item, active && styles.active, className)}
       aria-current={active ? "page" : undefined}
       {...rest}
     >
@@ -192,7 +192,7 @@ const BreadcrumbItem = (props: BreadcrumbItemProps) => {
   return (
     <>
       {renderContent()}
-      {!active && <span className="breadcrumb_separator">{separator}</span>}
+      {!active && <span className={styles.breadcrumb_separator}>{separator}</span>}
     </>
   );
 };

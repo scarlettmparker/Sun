@@ -1,5 +1,5 @@
 import { cn } from "~/utils/cn";
-import "./card.module.css";
+import styles from "./card.module.css";
 
 type CardProps = React.HTMLAttributes<HTMLDivElement>;
 
@@ -10,7 +10,7 @@ const Card = (props: CardProps) => {
   const { className, children, ...rest } = props;
 
   return (
-    <article className={cn("card", className)} {...rest}>
+    <article className={cn(styles.card, className)} {...rest}>
       {children}
     </article>
   );
@@ -25,7 +25,7 @@ const CardHeader = (props: CardHeaderProps) => {
   const { className, children, ...rest } = props;
 
   return (
-    <header className={cn("card_header", className)} {...rest}>
+    <header className={cn(styles.card_header, className)} {...rest}>
       {children}
     </header>
   );
@@ -40,7 +40,7 @@ const CardTitle = (props: CardTitleProps) => {
   const { className, children, ...rest } = props;
 
   return (
-    <h3 className={cn("card_title", className)} {...rest}>
+    <h3 className={cn(styles.card_title, className)} {...rest}>
       {children}
     </h3>
   );
@@ -55,7 +55,7 @@ const CardDescription = (props: CardDescriptionProps) => {
   const { className, children, ...rest } = props;
 
   return (
-    <p className={cn("card_description", className)} {...rest}>
+    <p className={cn(styles.card_description, className)} {...rest}>
       {children}
     </p>
   );
@@ -70,7 +70,7 @@ const CardBody = (props: CardBodyProps) => {
   const { className, children, ...rest } = props;
 
   return (
-    <div className={cn("card_body", className)} {...rest}>
+    <div className={cn(styles.card_body, className)} {...rest}>
       {children}
     </div>
   );
@@ -85,7 +85,7 @@ const CardFooter = (props: CardFooterProps) => {
   const { className, children, ...rest } = props;
 
   return (
-    <footer className={cn("card_footer", className)} {...rest}>
+    <footer className={cn(styles.card_footer, className)} {...rest}>
       {children}
     </footer>
   );

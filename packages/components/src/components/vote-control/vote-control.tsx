@@ -1,7 +1,7 @@
 import Button from "../button";
 import { ArrowDownIcon, ArrowUpIcon } from "@heroicons/react/24/outline";
 import { cn } from "~/utils/cn";
-import "./vote-control.module.css";
+import styles from "./vote-control.module.css";
 
 export type VoteDirection = "UP" | "DOWN";
 
@@ -37,7 +37,7 @@ const VoteControl = ({
 }: VoteControlProps) => {
   const ICON = 16;
   return (
-    <div className={cn("vote_control", className)} {...rest}>
+    <div className={cn(styles.vote_control, className)} {...rest}>
       <Button
         variant={myVote === "UP" ? "default" : "secondary"}
         onClick={() => onVote("UP")}

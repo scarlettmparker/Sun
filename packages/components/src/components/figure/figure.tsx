@@ -1,5 +1,5 @@
 import { cn } from "~/utils/cn";
-import "./figure.module.css";
+import styles from "./figure.module.css";
 
 type FigureProps = React.ImgHTMLAttributes<HTMLImageElement> & {
   /**
@@ -17,9 +17,9 @@ type FigureProps = React.ImgHTMLAttributes<HTMLImageElement> & {
  */
 const Figure = ({ src, caption, className, ...rest }: FigureProps) => {
   return (
-    <figure className={cn("figure", className)}>
-      <img className="figure_image" src={src} {...rest} />
-      {caption && <figcaption className="figure_caption">{caption}</figcaption>}
+    <figure className={cn(styles.figure, className)}>
+      <img className={styles.figure_image} src={src} {...rest} />
+      {caption && <figcaption className={styles.figure_caption}>{caption}</figcaption>}
     </figure>
   );
 };

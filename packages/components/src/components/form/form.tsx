@@ -1,6 +1,6 @@
 import React, { createContext, useContext } from "react";
 import { cn } from "~/utils/cn";
-import "./form.module.css";
+import styles from "./form.module.css";
 import Label from "../label";
 import Input from "../input";
 import TextArea from "../textarea";
@@ -18,7 +18,7 @@ const Form = (props: FormProps) => {
   const { className, children, ...rest } = props;
 
   return (
-    <form className={cn(className, "form")} {...rest}>
+    <form className={cn(className, styles.form)} {...rest}>
       {children}
     </form>
   );
@@ -37,7 +37,7 @@ const FormField = (props: FormFieldProps) => {
   return (
     <FormItemContext.Provider value={{ name }}>
       {/* TODO: depending on child type (label, message, input, we choose were to display things */}
-      <div className={cn(className, "form_item")} {...rest}>
+      <div className={cn(className, styles.form_item)} {...rest}>
         {children}
       </div>
     </FormItemContext.Provider>
@@ -98,7 +98,7 @@ type FormFooterProps = React.HTMLAttributes<HTMLDivElement>;
 const FormFooter = (props: FormFooterProps) => {
   const { className, children, ...rest } = props;
   return (
-    <footer className={cn(className, "form_footer")} {...rest}>
+    <footer className={cn(className, styles.form_footer)} {...rest}>
       {children}
     </footer>
   );

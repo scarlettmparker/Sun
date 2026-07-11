@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { cn } from "~/utils/cn";
-import "./select.module.css";
+import styles from "./select.module.css";
 
 /**
  * Props for the Select component, extending standard select attributes.
@@ -127,7 +127,7 @@ const Select = (props: SelectProps) => {
 
   return (
     <div
-      className={cn("selectContainer", className)}
+      className={cn(styles.selectContainer, className)}
       id={id}
       style={style}
       data-testid={testId}
@@ -153,7 +153,7 @@ const Select = (props: SelectProps) => {
       </select>
       <button
         type="button"
-        className="select"
+        className={styles.select}
         onClick={handleButtonClick}
         onKeyDown={handleKeyDown}
         aria-expanded={isOpen}
@@ -163,17 +163,16 @@ const Select = (props: SelectProps) => {
         {selectedOption ? selectedOption.label : "Select..."}
       </button>
       {isOpen && (
-        <div className="dropdown" role="listbox">
+        <div className={styles.dropdown} role="listbox">
           {options?.map((option) => (
             <div
               key={option.value}
               className={cn(
-                "option",
-                option.value === selectedValue && "selected",
+                styles.option,
+                option.value === selectedValue && styles.selected,
               )}
               onClick={() => handleOptionClick(option.value)}
-              role="option"
-              aria-selected={option.value === selectedValue}
+              role={styles.option}               aria-selected={option.value === selectedValue}
               tabIndex={0}
               onKeyDown={handleOptionKeyDown(option.value)}
             >

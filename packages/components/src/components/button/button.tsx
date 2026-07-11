@@ -1,5 +1,5 @@
 import { cn } from "~/utils/cn";
-import "./button.module.css";
+import styles from "./button.module.css";
 
 type ButtonProps = {
   /**
@@ -16,7 +16,10 @@ const Button = (props: ButtonProps) => {
   const variant = variant_ ?? "default";
 
   return (
-    <button {...rest} className={cn("button", variant, rest.className)}>
+    <button
+      {...rest}
+      className={cn(styles.button, styles[variant], rest.className)}
+    >
       {rest.children}
     </button>
   );

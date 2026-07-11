@@ -1,5 +1,5 @@
 import { cn } from "~/utils/cn";
-import "./checkbox.module.css";
+import styles from "./checkbox.module.css";
 
 type CheckboxProps = {
   /**
@@ -13,9 +13,9 @@ type CheckboxProps = {
  */
 const Checkbox = ({ label, className, ...rest }: CheckboxProps) => {
   return (
-    <label className={cn("checkbox_wrapper", className)}>
-      <input type="checkbox" className="checkbox" {...rest} />
-      {label != null && <span className="checkbox_label">{label}</span>}
+    <label className={cn(styles.checkbox_wrapper, className)}>
+      <input type={styles.checkbox} className={styles.checkbox} {...rest} />
+      {label != null && <span className={styles.checkbox_label}>{label}</span>}
     </label>
   );
 };

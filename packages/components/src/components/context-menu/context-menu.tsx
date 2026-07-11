@@ -17,7 +17,7 @@ import {
   useMenuIds,
   useMenuCloseHandlers,
 } from "../menu";
-import "./context-menu.module.css";
+import styles from "./context-menu.module.css";
 
 /**
  * X and Y viewport coordinates representing the mouse position during a right-click.
@@ -138,7 +138,7 @@ const ContextMenu = (props: React.HTMLAttributes<HTMLDivElement>) => {
     >
       <div
         ref={rootRef}
-        className={cn("context_menu", className)}
+        className={cn(styles.context_menu, className)}
         data-state={open ? "open" : "closed"}
         {...rest}
       >
@@ -201,7 +201,7 @@ const ContextMenuTrigger = (props: ContextMenuTriggerProps) => {
       aria-expanded={open}
       aria-controls={open ? contentId : undefined}
       data-state={open ? "open" : "closed"}
-      className={cn("context_menu_trigger", className)}
+      className={cn(styles.context_menu_trigger, className)}
       onContextMenu={handleContextMenu}
       onClick={handleClick}
       {...rest}
@@ -233,7 +233,7 @@ const ContextMenuContent = (props: ContextMenuContentProps) => {
       triggerId={triggerId}
       aria-label="Context Menu"
       contentDataAttr="context-menu-content"
-      className={cn("context_menu_content", props.className)}
+      className={cn(styles.context_menu_content, props.className)}
       style={{
         position: "fixed",
         top: `${position.y}px`,
@@ -264,7 +264,7 @@ const ContextMenuItem = (props: ContextMenuItemProps) => {
   return (
     <MenuItem
       {...props}
-      className={cn("context_menu_item", props.className)}
+      className={cn(styles.context_menu_item, props.className)}
       closeMenu={close}
     />
   );
@@ -276,7 +276,7 @@ const ContextMenuItem = (props: ContextMenuItemProps) => {
 const ContextMenuGroup = (props: React.HTMLAttributes<HTMLDivElement>) => {
   const { className, children, ...rest } = props;
   return (
-    <div className={cn("context_menu_group", className)} role="group" {...rest}>
+    <div className={cn(styles.context_menu_group, className)} role="group" {...rest}>
       {children}
     </div>
   );
@@ -293,7 +293,7 @@ const ContextMenuSub = (props: ContextMenuSubProps) => {
   return (
     <MenuSub
       {...props}
-      className={cn("context_menu_sub", props.className)}
+      className={cn(styles.context_menu_sub, props.className)}
       resetNonce={resetNonce}
     />
   );
@@ -308,9 +308,8 @@ type ContextMenuSubTriggerProps = React.ComponentProps<typeof Button>;
 const ContextMenuSubTrigger = (props: ContextMenuSubTriggerProps) => (
   <MenuSubTrigger
     {...props}
-    className={cn("context_menu_subtrigger", props.className)}
-    arrowClassName="context_menu_subarrow"
-  />
+    className={cn(styles.context_menu_subtrigger, props.className)}
+    arrowClassName={styles.context_menu_subarrow}   />
 );
 
 type ContextMenuSubContentProps = React.HTMLAttributes<HTMLDivElement>;
@@ -322,7 +321,7 @@ type ContextMenuSubContentProps = React.HTMLAttributes<HTMLDivElement>;
 const ContextMenuSubContent = (props: ContextMenuSubContentProps) => (
   <MenuSubContent
     {...props}
-    className={cn("context_menu_subcontent", props.className)}
+    className={cn(styles.context_menu_subcontent, props.className)}
   />
 );
 

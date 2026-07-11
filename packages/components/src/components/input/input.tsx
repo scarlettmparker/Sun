@@ -1,5 +1,5 @@
 import { cn } from "~/utils/cn";
-import "./input.module.css";
+import styles from "./input.module.css";
 
 type BaseInputProps = React.InputHTMLAttributes<HTMLInputElement>;
 
@@ -42,12 +42,11 @@ const Input = (props: InputProps) => {
         className,
         ...rangeProps
       } = rest as RangeInputProps;
-      // TODO: don't know what the pattern for this is, check other UI libraries
       return (
         <input
           {...rangeProps}
           type="range"
-          className={cn(className, "range", orient)}
+          className={cn(className, styles.range, styles[orient])}
         />
       );
     }
@@ -57,19 +56,21 @@ const Input = (props: InputProps) => {
         <input
           {...checkboxProps}
           type="checkbox"
-          className={cn(className, "checkbox")}
+          className={cn(className, styles.checkbox)}
         />
       );
     }
     case "text": {
       const { className, ...textProps } = rest;
       return (
-        <input {...textProps} type="text" className={cn(className, "text")} />
+        <input {...textProps} type="text" className={cn(className, styles.text)} />
       );
     }
     default: {
       const { className, ...restProps } = rest;
-      return <input {...restProps} type={type} className={cn(className, "text")} />;
+      return (
+        <input {...restProps} type={type} className={cn(className, styles.text)} />
+      );
     }
   }
 };

@@ -1,5 +1,5 @@
 import { cn } from "~/utils/cn";
-import "./textarea.module.css";
+import styles from "./textarea.module.css";
 
 type TextAreaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement>;
 
@@ -9,7 +9,7 @@ type TextAreaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement>;
 const TextArea = (props: TextAreaProps) => {
   const { className, ...rest } = props;
 
-  return <textarea className={cn(className, "textarea")} {...rest} />;
+  return <textarea className={cn(className, styles.textarea)} {...rest} />;
 };
 
 export default TextArea;

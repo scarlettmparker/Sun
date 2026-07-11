@@ -1,7 +1,7 @@
 import React, { useRef, useLayoutEffect, useState } from "react";
 import { cn } from "~/utils/cn";
 import { highlightMarkdown } from "~/utils/markdown";
-import "./markdown-editor.module.css";
+import styles from "./markdown-editor.module.css";
 import "~/components/textarea/textarea.module.css";
 
 type MarkdownEditorProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
@@ -262,7 +262,7 @@ const MarkdownEditor = (props: MarkdownEditorProps) => {
     <>
       <div
         ref={contentEditableRef}
-        className={cn("textarea", "editor", className)}
+        className={cn("textarea", styles.editor, className)}
         contentEditable
         onInput={handleInput}
         onPaste={handlePaste}

@@ -3,7 +3,7 @@ import Input from "../input";
 import Button from "../button";
 import { Search, X } from "lucide-react";
 import { cn } from "~/utils/cn";
-import "./search-bar.module.css";
+import styles from "./search-bar.module.css";
 
 type SearchBarProps = Omit<
   React.InputHTMLAttributes<HTMLInputElement>,
@@ -43,8 +43,8 @@ const SearchBar = ({
   };
 
   return (
-    <div className={cn("search_bar", className)}>
-      <Search className="search_bar_icon" width={16} height={16} />
+    <div className={cn(styles.search_bar, className)}>
+      <Search className={styles.search_bar_icon} width={16} height={16} />
       <Input
         type="text"
         value={value}
@@ -55,15 +55,16 @@ const SearchBar = ({
           if (e.key === "Enter") fire();
         }}
         onBlur={fire}
-        className="search_bar_input"
+        className={styles.search_bar_input}
         {...rest}
       />
       {value && (
         <Button
           variant="secondary"
-          className="search_bar_clear"
+          className={styles.search_bar_clear}
           title="Clear search"
           aria-label="Clear search"
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => {
             onChange("");
             lastSearched.current = "";

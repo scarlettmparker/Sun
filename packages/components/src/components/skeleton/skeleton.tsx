@@ -1,5 +1,5 @@
 import { cn } from "~/utils/cn";
-import "./skeleton.module.css";
+import styles from "./skeleton.module.css";
 
 type SkeletonProps = React.HTMLAttributes<HTMLDivElement>;
 
@@ -10,7 +10,7 @@ const Skeleton = (props: SkeletonProps) => {
   const { className, ...rest } = props;
 
   return (
-    <div data-slot="skeleton" className={cn(className, "skeleton")} {...rest} />
+    <div data-slot={styles.skeleton} className={cn(className, styles.skeleton)} {...rest} />
   );
 };
 
