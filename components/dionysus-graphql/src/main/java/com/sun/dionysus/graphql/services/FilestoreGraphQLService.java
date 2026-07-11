@@ -12,6 +12,7 @@ import com.sun.dionysus.codegen.types.File;
 import com.sun.dionysus.codegen.types.KeyEntry;
 import com.sun.dionysus.codegen.types.KeyDetail;
 import com.sun.dionysus.codegen.types.RenameKeyResult;
+import com.sun.dionysus.codegen.types.PresignInput;
 import com.sun.dionysus.graphql.mappers.FileMapper;
 import com.sun.dionysus.graphql.mappers.KeyEntryMapper;
 import com.sun.dionysus.graphql.mappers.KeyDetailMapper;
@@ -335,6 +336,26 @@ public class FilestoreGraphQLService {
    * Returns a presigned PUT URL for direct browser upload (avoids base64 + GraphQL overhead).
    */
   public String getPresignedUploadUrl(String bucket, String key, String contentType) {
+    return presignOne(bucket, key, contentType);
+  }
+
+  /**
+   * Batch-presigns multiple PUT URLs for multi-file uploads.
+   *
+   * @param inputs one presign request per file
+   * @return presigned URLs in the same order as the inputs
+   */
+  public List<String> getPresignedUploadUrls(List<PresignInput> input) {
+    logger.info("Batch-presigning {} upload URLs", input.size());
+    return input.stream()
+        .map(input -> presignOne(input.getBucket(), input.getKey(), input.getContentType()))
+        .collect(Collectors.toList());
+  }
+
+  /**
+   * Generates a single presigned PUT URL (15-min expiry) and registers the key detail.
+   */
+  private String presignOne(String bucket, String key, String contentType) {
     logger.info("Generating presigned upload URL for {} / {}", bucket, key);
 
     PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()

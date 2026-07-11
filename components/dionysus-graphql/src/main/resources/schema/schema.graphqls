@@ -79,8 +79,17 @@ type FilestoreMutations {
     key: String!
     contentType: String
   ): String
+  # Batch-presigns multiple PUT URLs for multi-file uploads.
+  getPresignedUploadUrls(input: [PresignInput!]!): [String!]!
   # Returns a presigned GET URL for direct browser download.
   getPresignedDownloadUrl(bucket: String!, key: String!): String
+}
+
+# Input for a single presigned-upload request.
+input PresignInput {
+  bucket: String!
+  key: String!
+  contentType: String
 }
 
 extend type Query {
