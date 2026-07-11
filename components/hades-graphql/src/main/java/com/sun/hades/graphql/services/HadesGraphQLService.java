@@ -45,6 +45,7 @@ import com.sun.hades.service.ReaderPositionService;
 import com.sun.hades.service.ReaderSourceService;
 import com.sun.hades.service.ReaderTextService;
 import com.sun.hades.service.ReaderVoteService;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -182,15 +183,16 @@ public class HadesGraphQLService {
                     .startOffset(p.getStartOffset())
                     .endOffset(p.getEndOffset())
                     .build()));
-    Map<UUID, ReaderAccount> authors =
-        entities.stream()
-            .map(ReaderAnnotationEntity::getCreatedBy)
-            .filter(Objects::nonNull)
-            .distinct()
-            .collect(Collectors.toMap(
-                gaiaAccountId -> gaiaAccountId,
-                gaiaAccountId -> accountService.findByGaiaAccountId(gaiaAccountId
-                ).map(accountMapper::map).orElse(null)));
+    Map<UUID, ReaderAccount> authors = new HashMap<>();
+    entities.stream()
+        .map(ReaderAnnotationEntity::getCreatedBy)
+        .filter(Objects::nonNull)
+        .distinct()
+        .forEach(gaiaAccountId -> authors.put(
+            gaiaAccountId,
+            accountService.findByGaiaAccountId(gaiaAccountId)
+                .map(accountMapper::map)
+                .orElse(null)));
     return entities.stream()
         .map(a -> annotationMapper.map(a, positions.get(a.getPositionId()),
             authors.get(a.getCreatedBy())))
@@ -206,7 +208,7 @@ public class HadesGraphQLService {
   @Transactional(readOnly = true)
   public ReaderAnnotation annotation(String id) {
     return annotationService.findById(UUID.fromString(id))
-        .map(a -> annotationMapper.map(a, null))
+        .map(a -> annotationMapper.map(a, null, null))
         .orElse(null);
   }
 

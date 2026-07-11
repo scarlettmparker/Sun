@@ -171,7 +171,12 @@ const useTooltipPositioning = (
     };
 
     update();
-    const raf = requestAnimationFrame(update);
+    let raf: number;
+    const loop = () => {
+      update();
+      raf = requestAnimationFrame(loop);
+    };
+    loop();
     return () => cancelAnimationFrame(raf);
   }, [open, side, contentRef, triggerRef]);
 };
@@ -218,17 +223,21 @@ const TooltipGroup = ({ children }: TooltipGroupProps) => {
 /**
  * Component prop types for Tooltip.
  */
-type TooltipProps = React.PropsWithChildren;
+type TooltipProps = React.PropsWithChildren<{
+  /**
+   * Overrides hover to control visibility directly.
+   */
+  open?: boolean;
+}>;
 
 /**
- * Provider wrapper that manages the open/close timers and shared state for a
- * single tooltip.
- *
- * @param children the trigger and content elements
+ * Manages the open/close timers and shared state for a single tooltip.
  */
-const Tooltip = ({ children }: TooltipProps) => {
-  const [open, setOpen] = useState(false);
+const Tooltip = ({ children, open: controlledOpen }: TooltipProps) => {
+  const [internalOpen, setInternalOpen] = useState(false);
   const [instant, setInstant] = useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
   const triggerRef = useRef<HTMLElement | null>(null);
   const group = useContext(TooltipGroupContext);
   const openTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -246,19 +255,21 @@ const Tooltip = ({ children }: TooltipProps) => {
   };
 
   const show = () => {
+    if (isControlled) return;
     clearTimers();
     const delay = group.anyOpen ? 0 : OPEN_DELAY;
     openTimer.current = setTimeout(() => {
       setInstant(Date.now() - group.lastClosedAt < 500);
-      setOpen(true);
+      setInternalOpen(true);
       group.onOpen();
     }, delay);
   };
 
   const hide = () => {
+    if (isControlled) return;
     clearTimers();
     closeTimer.current = setTimeout(() => {
-      setOpen(false);
+      setInternalOpen(false);
       group.onClose();
     }, CLOSE_DELAY);
   };
@@ -266,7 +277,15 @@ const Tooltip = ({ children }: TooltipProps) => {
   useEffect(() => () => clearTimers(), []);
 
   return (
-    <TooltipContext.Provider value={{ open, instant, triggerRef, show, hide }}>
+    <TooltipContext.Provider
+      value={{
+        open,
+        instant: isControlled || instant,
+        triggerRef,
+        show,
+        hide,
+      }}
+    >
       {children}
     </TooltipContext.Provider>
   );
