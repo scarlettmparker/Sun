@@ -19,7 +19,7 @@
     "publish": "npm publish --ignore-scripts --registry https://registry.int.scarlettparker.co.uk"
   },
   "dependencies": {
-    "@sun/components": "^0.7.4"
+    "@sun/components": "^0.9.2"
   },
   "devDependencies": {
     "@swc/core": "^1.15.33",

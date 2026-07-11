@@ -3,7 +3,13 @@ import react from "@vitejs/plugin-react";
 import dts from "vite-plugin-dts";
 
 export default defineConfig({
-  plugins: [react(), dts()],
+  plugins: [
+    react(),
+    dts({
+      include: ["src/**/*.ts", "src/**/*.tsx"],
+      exclude: ["__tests__/**", "testing/**", "src/**/*.test.*"],
+    }),
+  ],
   build: {
     lib: {
       entry: "src/index.ts",

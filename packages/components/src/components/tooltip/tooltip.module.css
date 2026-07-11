@@ -1,0 +1,10 @@
+.content {
+  position: fixed;
+  z-index: 201;
+  padding: var(--sm) var(--md);
+  border-radius: var(--sm);
+  border: 1px solid var(--muted-foreground);
+  background-color: rgb(from var(--secondary) r g b / var(--visible));
+  backdrop-filter: blur(var(--sm));
+  pointer-events: auto;
+}
