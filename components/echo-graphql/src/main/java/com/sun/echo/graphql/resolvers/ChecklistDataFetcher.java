@@ -445,4 +445,9 @@ public class ChecklistDataFetcher {
   public QueryResult attachObject(String source, String target, RemoteObjectType ownerType) {
     return checklistGraphQLService.attachObject(source, target, ownerType);
   }
+
+  @DgsData(parentType = "ChecklistMutations", field = "detachObject")
+  public QueryResult detachObject(String source, String target, RemoteObjectType ownerType) {
+    return checklistGraphQLService.detachObject(source, target, ownerType);
+  }
 }

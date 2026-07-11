@@ -187,6 +187,7 @@ type ChecklistMutations {
   removeTemplateItem(templateId: ID!, itemId: ID!): QueryResult
 
   attachObject(source: ID!, target: ID!, ownerType: RemoteObjectType): QueryResult
+  detachObject(source: ID!, target: ID!, ownerType: RemoteObjectType): QueryResult
 }
 
 extend type Query {

@@ -181,4 +181,47 @@ public class ChecklistDetailService {
     }
     detail.setRemoteObject(remoteObject);
   }
+
+  /**
+   * Detaches a target from a detail's remote objects if present.
+   *
+   * @param source the owning entity id
+   * @param target the object id to remove
+   * @param ownerType the owner type (ENTRY, TEMPLATE, or ITEM)
+   * @return the detail id
+   */
+  public UUID detach(UUID source, String target, String ownerType) {
+    Optional<ChecklistEntryDetailEntity> entry = entryDetailRepository.findByOwnerId(source);
+    if (entry.isPresent()) {
+      removeIfPresent(entry.get(), target);
+      return entryDetailRepository.save(entry.get()).getId();
+    }
+    Optional<ChecklistTemplateDetailEntity> template = templateDetailRepository.findByOwnerId(source);
+    if (template.isPresent()) {
+      removeIfPresent(template.get(), target);
+      return templateDetailRepository.save(template.get()).getId();
+    }
+    Optional<ChecklistItemDetailEntity> item = itemDetailRepository.findByOwnerId(source);
+    if (item.isPresent()) {
+      removeIfPresent(item.get(), target);
+      return itemDetailRepository.save(item.get()).getId();
+    }
+    throw new IllegalArgumentException("No detail found for owner " + source);
+  }
+
+  /**
+   * Removes a target from a detail's remote objects if present.
+   *
+   * @param detail the detail to update
+   * @param target the object id to remove
+   */
+  private void removeIfPresent(AbstractDetailEntity detail, String target) {
+    List<String> remoteObject = detail.getRemoteObject();
+    if (remoteObject == null) {
+      return;
+    }
+    remoteObject = new ArrayList<>(remoteObject);
+    remoteObject.remove(target);
+    detail.setRemoteObject(remoteObject);
+  }
 }

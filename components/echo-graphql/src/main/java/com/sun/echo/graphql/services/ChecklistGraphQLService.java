@@ -581,6 +581,15 @@ public class ChecklistGraphQLService {
   }
 
   /**
+   * Removes a remote object reference from an owner's detail.
+   */
+  @Transactional
+  public QueryResult detachObject(String source, String target, RemoteObjectType ownerType) {
+    return mutate("detachObject", () -> detailService
+        .detach(UUID.fromString(source), target, ownerType != null ? ownerType.name() : null));
+  }
+
+  /**
    * Converts the pagination input into a pageable, applying the given defaults.
    *
    * @param pagination the pagination and sort input
