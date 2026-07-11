@@ -348,7 +348,7 @@ public class FilestoreGraphQLService {
   public List<String> getPresignedUploadUrls(List<PresignInput> input) {
     logger.info("Batch-presigning {} upload URLs", input.size());
     return input.stream()
-        .map(input -> presignOne(input.getBucket(), input.getKey(), input.getContentType()))
+        .map(item -> presignOne(item.getBucket(), item.getKey(), item.getContentType()))
         .collect(Collectors.toList());
   }
 
