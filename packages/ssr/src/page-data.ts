@@ -300,7 +300,7 @@ function readPageData<T>(
     const relevantLoaders = loaders?.filter(() => true) || [];
 
     // On the server, no registered loaders means no data. The client never runs
-    // loaders — it fetches via the /__page-data RPC instead.
+    // loaders - it fetches via the /__page-data RPC instead.
     if (typeof window === "undefined" && !relevantLoaders.length) {
       return { data: null as T };
     }
@@ -548,7 +548,7 @@ export function invalidatePageData(patterns?: string[]): void {
 
 /**
  * Notifies usePageData consumers to background-refetch the given cache keys in
- * place — stale data stays visible until fresh data arrives, so there is no
+ * place - stale data stays visible until fresh data arrives, so there is no
  * suspense flash. Use this after mutations.
  */
 export function revalidatePageData(cacheKeys?: string[]): void {

@@ -46,7 +46,7 @@ public class KeyDetailService extends BaseService<KeyDetailEntity> {
   }
 
   /**
-   * Extracts the display name from a key path — the last segment after the final slash.
+   * Extracts the display name from a key path - the last segment after the final slash.
    *
    * @param keyPath the full S3 key path
    * @return the display name (e.g. "photo.jpg" from "photos/vacation/photo.jpg")

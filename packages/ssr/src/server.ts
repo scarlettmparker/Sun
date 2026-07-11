@@ -194,7 +194,7 @@ export async function createServer(
 
   // Graceful shutdown: drain in-flight requests before exiting so a restart
   // (nodemon SIGUSR2, deploy SIGTERM, Ctrl-C) doesn't truncate responses mid-
-  // stream — which a reverse proxy surfaces as an empty 200 and breaks the
+  // stream - which a reverse proxy surfaces as an empty 200 and breaks the
   // client's page-data RPC for the rest of the session.
   let shuttingDown = false;
   const gracefulShutdown = async (reason: string, done?: () => void) => {

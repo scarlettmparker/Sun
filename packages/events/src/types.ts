@@ -1,6 +1,6 @@
 /**
  * An event map where K = event name, V = event payload type.
- * Apps define their own maps — the package never needs to know about them.
+ * Apps define their own maps - the package never needs to know about them.
  */
 export interface EventMap {
   [key: string]: unknown;
