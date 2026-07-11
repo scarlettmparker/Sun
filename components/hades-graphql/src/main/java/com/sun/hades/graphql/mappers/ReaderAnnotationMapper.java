@@ -5,6 +5,7 @@ import com.sun.hades.codegen.types.ReaderAnnotation;
 import com.sun.hades.codegen.types.ReaderPosition;
 import com.sun.hades.model.ReaderAnnotationEntity;
 import com.sun.hades.model.ReaderPositionEntity;
+import com.sun.hades.model.enums.VoteValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -19,15 +20,16 @@ public class ReaderAnnotationMapper {
 
   /**
    * Maps an annotation entity to the GraphQL ReaderAnnotation type, with its
-   * position and author resolved by the caller.
+   * position, author, and the caller's vote resolved by the caller.
    *
    * @param entity the annotation entity
    * @param position the resolved position, or null
    * @param author the resolved author account, or null
+   * @param myVote the caller's vote on this annotation, or null
    * @return the GraphQL ReaderAnnotation
    */
   public ReaderAnnotation map(ReaderAnnotationEntity entity, ReaderPosition position,
-      ReaderAccount author) {
+      ReaderAccount author, VoteValue myVote) {
     logger.debug("Mapping annotation {}", entity.getId());
     ReaderAnnotation annotation = ReaderAnnotation.newBuilder()
         .id(entity.getId().toString())
@@ -40,6 +42,7 @@ public class ReaderAnnotationMapper {
         .netScore(entity.getUpvotes() - entity.getDownvotes())
         .remoteObject(entity.getRemoteObject())
         .author(author)
+        .myVote(myVote)
         .createdAt(entity.getCreatedAt())
         .updatedAt(entity.getLastUpdatedAt())
         .build();

@@ -10,9 +10,12 @@ import com.sun.hades.model.enums.VoteValue;
 import com.sun.hades.repository.ReaderAnnotationRepository;
 import com.sun.hades.repository.ReaderCommentRepository;
 import com.sun.hades.repository.ReaderVoteRepository;
+import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.IntUnaryOperator;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -107,6 +110,25 @@ public class ReaderVoteService {
     return voteRepository
         .findByAccountIdAndTargetTypeAndTargetId(accountId, targetType, targetId)
         .map(ReaderVoteEntity::getValue);
+  }
+
+  /**
+   * Resolves the caller's votes for a batch of targets in one query.
+   *
+   * @param targetType the target type
+   * @param targetIds the target ids
+   * @return a map of target id to the caller's vote value, empty when not logged in
+   */
+  public Map<UUID, VoteValue> myVotes(
+      ReaderVoteTarget targetType, Collection<UUID> targetIds) {
+    UUID accountId = UserContextHolder.getUserId();
+    if (accountId == null || targetIds.isEmpty()) {
+      return Map.of();
+    }
+    return voteRepository
+        .findByAccountIdAndTargetTypeAndTargetIdIn(accountId, targetType, targetIds)
+        .stream()
+        .collect(Collectors.toMap(ReaderVoteEntity::getTargetId, ReaderVoteEntity::getValue));
   }
 
   private void adjust(

@@ -193,9 +193,12 @@ public class HadesGraphQLService {
             accountService.findByGaiaAccountId(gaiaAccountId)
                 .map(accountMapper::map)
                 .orElse(null)));
+    Map<UUID, VoteValue> myVotes = voteService.myVotes(
+        ReaderVoteTarget.ANNOTATION,
+        entities.stream().map(ReaderAnnotationEntity::getId).toList());
     return entities.stream()
         .map(a -> annotationMapper.map(a, positions.get(a.getPositionId()),
-            authors.get(a.getCreatedBy())))
+            authors.get(a.getCreatedBy()), myVotes.get(a.getId())))
         .toList();
   }
 
@@ -208,7 +211,7 @@ public class HadesGraphQLService {
   @Transactional(readOnly = true)
   public ReaderAnnotation annotation(String id) {
     return annotationService.findById(UUID.fromString(id))
-        .map(a -> annotationMapper.map(a, null, null))
+        .map(a -> annotationMapper.map(a, null, null, null))
         .orElse(null);
   }
 
