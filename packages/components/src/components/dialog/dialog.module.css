@@ -35,6 +35,11 @@
   flex-direction: column;
 }
 
+.dialog_draggable {
+  position: fixed;
+  pointer-events: auto;
+}
+
 .dialog:hover {
   box-shadow: var(--shadow-medium);
 }

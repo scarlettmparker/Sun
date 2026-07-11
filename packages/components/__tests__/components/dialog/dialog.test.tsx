@@ -3,7 +3,7 @@
  * Tests the Dialog component and its sub-components for rendering, styling, portal behavior, and attribute passing.
  */
 
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {
   Dialog,
@@ -250,5 +250,49 @@ describe("DialogClose", () => {
 
     await userEvent.click(customBtn);
     expect(handleOpenChange).toHaveBeenCalledWith(false);
+  });
+});
+
+describe("Dialog draggable", () => {
+  it("does not render overlay when draggable is true", () => {
+    render(
+      <Dialog open={true} draggable={true}>
+        <DialogBody>Content</DialogBody>
+      </Dialog>,
+    );
+    const wrapper = screen.getByRole("dialog").parentElement;
+    const overlay = wrapper?.querySelector('[aria-hidden="true"]');
+    expect(overlay).not.toBeInTheDocument();
+  });
+
+  it("renders at the given position", () => {
+    render(
+      <Dialog open={true} draggable={true} position={{ top: 200, left: 300 }}>
+        <DialogBody>Content</DialogBody>
+      </Dialog>,
+    );
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveStyle({ top: "200px", left: "300px" });
+  });
+
+  it("disables modal when draggable is true", () => {
+    render(
+      <Dialog open={true} modal={true} draggable={true}>
+        <DialogBody>Content</DialogBody>
+      </Dialog>,
+    );
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveAttribute("aria-modal", "false");
+  });
+
+  it("calls onOpenChange when close button is clicked in draggable mode", () => {
+    const onOpenChange = jest.fn();
+    render(
+      <Dialog open={true} draggable={true} onOpenChange={onOpenChange}>
+        <DialogBody>Content</DialogBody>
+      </Dialog>,
+    );
+    fireEvent.click(screen.getByLabelText(/close/i));
+    expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 });

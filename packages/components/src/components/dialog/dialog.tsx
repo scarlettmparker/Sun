@@ -2,8 +2,8 @@ import React, {
   createContext,
   useContext,
   useEffect,
-  useState,
   useRef,
+  useState,
 } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
@@ -43,6 +43,11 @@ type DialogProps = React.HTMLAttributes<HTMLElement> & {
    */
   modal?: boolean;
   /**
+   * Makes the dialog draggable by its header. Disables modal mode (no overlay).
+   * @default false
+   */
+  draggable?: boolean;
+  /**
    * Controls the visibility of the dialog.
    * @default true
    */
@@ -51,7 +56,13 @@ type DialogProps = React.HTMLAttributes<HTMLElement> & {
    * Callback invoked when the open state changes (e.g., when close buttons are clicked).
    */
   onOpenChange?: (open: boolean) => void;
+  /**
+   * Initial position for draggable dialogs.
+   */
+  position?: { top: number; left: number };
 };
+
+let dragZCounter = 100;
 
 /**
  * Scarlet UI Dialog Component.
@@ -61,21 +72,36 @@ const Dialog = (props: DialogProps) => {
     className,
     children,
     modal = true,
+    draggable = false,
     open = true,
     onOpenChange,
+    position,
     onKeyDown,
     ...rest
   } = props;
   const [mounted, setMounted] = useState(false);
   const dialogRef = useRef<HTMLElement>(null);
+  const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(null);
+  const [dragPos, setDragPos] = useState(position ?? { top: 100, left: 100 });
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Autofocus the submit button when the dialog opens
+  /**
+   * Updates the dialog position when the position prop changes.
+   */
   useEffect(() => {
-    if (open && mounted && dialogRef.current) {
+    if (position) {
+      setDragPos(position);
+    }
+  }, [position]);
+
+  /**
+   * Autofocus the submit button when the dialog opens.
+   */
+  useEffect(() => {
+    if (open && mounted && dialogRef.current && !draggable) {
       const timer = setTimeout(() => {
         const submitBtn = dialogRef.current?.querySelector(
           'button[type="submit"]',
@@ -87,7 +113,7 @@ const Dialog = (props: DialogProps) => {
       }, 0);
       return () => clearTimeout(timer);
     }
-  }, [open, mounted]);
+  }, [open, mounted, draggable]);
 
   if (!mounted || !open) return null;
 
@@ -113,12 +139,52 @@ const Dialog = (props: DialogProps) => {
     }
   };
 
+  /**
+   * Starts dragging: records the offset between the mouse and the dialog's top-left.
+   */
+  const handleDragStart = (e: React.MouseEvent<HTMLElement>) => {
+    if (!draggable) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    setDragOffset({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+    dragZCounter += 1;
+    if (dialogRef.current) {
+      dialogRef.current.style.zIndex = String(dragZCounter);
+    }
+  };
+
+  /**
+   * Updates the dialog position as the mouse moves during a drag.
+   */
+  useEffect(() => {
+    if (!dragOffset) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      setDragPos({
+        top: e.clientY - dragOffset.y,
+        left: e.clientX - dragOffset.x,
+      });
+    };
+
+    const handleMouseUp = () => {
+      setDragOffset(null);
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [dragOffset]);
+
+  const isModal = modal && !draggable;
+
   const content = (
     <DialogContext.Provider
       value={{ open, setOpen: onOpenChange ?? (() => {}) }}
     >
-      <div className={cn(styles.dialog_wrapper, modal && styles.dialog_modal_active)}>
-        {modal && (
+      <div className={cn(styles.dialog_wrapper, isModal && styles.dialog_modal_active)}>
+        {isModal && (
           <div
             className={styles.dialog_overlay}
             aria-hidden="true"
@@ -127,10 +193,20 @@ const Dialog = (props: DialogProps) => {
         )}
         <article
           ref={dialogRef}
-          className={cn(styles.dialog, className)}
-          role={styles.dialog}           aria-modal={modal}
+          className={cn(
+            styles.dialog,
+            draggable && styles.dialog_draggable,
+            className,
+          )}
+          role="dialog"
+          aria-modal={isModal}
           onKeyDown={handleKeyDown}
           tabIndex={-1}
+          onMouseDown={draggable ? handleDragStart : undefined}
+          style={draggable ? {
+            top: `${dragPos.top}px`,
+            left: `${dragPos.left}px`,
+          } : undefined}
           {...rest}
         >
           <button
@@ -153,7 +229,8 @@ const Dialog = (props: DialogProps) => {
 type DialogHeaderProps = React.HTMLAttributes<HTMLElement>;
 
 /**
- * Scarlet UI Dialog Header wrapper container.
+ * Scarlet UI Dialog Header wrapper container. Acts as the drag handle when the
+ * dialog is draggable.
  */
 const DialogHeader = (props: DialogHeaderProps) => {
   const { className, children, ...rest } = props;

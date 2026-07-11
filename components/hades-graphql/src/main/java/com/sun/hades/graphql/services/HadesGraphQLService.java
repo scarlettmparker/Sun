@@ -15,8 +15,10 @@ import com.sun.hades.codegen.types.PagedReaderTexts;
 import com.sun.hades.codegen.types.PaginationInput;
 import com.sun.hades.codegen.types.QueryResult;
 import com.sun.hades.codegen.types.QuerySuccess;
+import com.sun.hades.codegen.types.ReaderAccount;
 import com.sun.hades.codegen.types.ReaderAnnotation;
 import com.sun.hades.codegen.types.ReaderComment;
+import com.sun.hades.codegen.types.ReaderPosition;
 import com.sun.hades.codegen.types.ReaderSource;
 import com.sun.hades.codegen.types.ReaderText;
 import com.sun.hades.codegen.types.ReaderTextInput;
@@ -30,6 +32,7 @@ import com.sun.hades.graphql.mappers.ReaderAnnotationMapper;
 import com.sun.hades.graphql.mappers.ReaderCommentMapper;
 import com.sun.hades.graphql.mappers.ReaderSourceMapper;
 import com.sun.hades.graphql.mappers.ReaderTextMapper;
+import com.sun.hades.model.ReaderAnnotationEntity;
 import com.sun.hades.model.ReaderCommentEntity;
 import com.sun.hades.model.ReaderSourceEntity;
 import com.sun.hades.model.ReaderTextEntity;
@@ -44,6 +47,7 @@ import com.sun.hades.service.ReaderTextService;
 import com.sun.hades.service.ReaderVoteService;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -166,18 +170,30 @@ public class HadesGraphQLService {
   @Transactional(readOnly = true)
   public List<ReaderAnnotation> annotations(String textId, Boolean includeHidden) {
     UUID id = UUID.fromString(textId);
-    Map<UUID, com.sun.hades.codegen.types.ReaderPosition> positions =
+    List<ReaderAnnotationEntity> entities =
+        annotationService.listForText(id, Boolean.TRUE.equals(includeHidden));
+    Map<UUID, ReaderPosition> positions =
         positionService.listForText(id).stream()
             .collect(Collectors.toMap(
                 p -> p.getId(),
-                p -> com.sun.hades.codegen.types.ReaderPosition.newBuilder()
+                p -> ReaderPosition.newBuilder()
                     .id(p.getId().toString())
                     .textId(p.getTextId().toString())
                     .startOffset(p.getStartOffset())
                     .endOffset(p.getEndOffset())
                     .build()));
-    return annotationService.listForText(id, Boolean.TRUE.equals(includeHidden)).stream()
-        .map(a -> annotationMapper.map(a, positions.get(a.getPositionId())))
+    Map<UUID, ReaderAccount> authors =
+        entities.stream()
+            .map(ReaderAnnotationEntity::getCreatedBy)
+            .filter(Objects::nonNull)
+            .distinct()
+            .collect(Collectors.toMap(
+                gaiaAccountId -> gaiaAccountId,
+                gaiaAccountId -> accountService.findByGaiaAccountId(gaiaAccountId
+                ).map(accountMapper::map).orElse(null)));
+    return entities.stream()
+        .map(a -> annotationMapper.map(a, positions.get(a.getPositionId()),
+            authors.get(a.getCreatedBy())))
         .toList();
   }
 

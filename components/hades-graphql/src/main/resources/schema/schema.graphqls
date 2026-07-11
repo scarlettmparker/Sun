@@ -38,6 +38,7 @@ type ReaderAnnotation {
   downvotes: Int!
   netScore: Int!
   remoteObject: [String!]
+  author: ReaderAccount
   createdAt: Date
   updatedAt: Date
 }

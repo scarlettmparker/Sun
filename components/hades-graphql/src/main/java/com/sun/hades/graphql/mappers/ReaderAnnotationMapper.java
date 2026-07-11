@@ -1,5 +1,6 @@
 package com.sun.hades.graphql.mappers;
 
+import com.sun.hades.codegen.types.ReaderAccount;
 import com.sun.hades.codegen.types.ReaderAnnotation;
 import com.sun.hades.codegen.types.ReaderPosition;
 import com.sun.hades.model.ReaderAnnotationEntity;
@@ -18,13 +19,15 @@ public class ReaderAnnotationMapper {
 
   /**
    * Maps an annotation entity to the GraphQL ReaderAnnotation type, with its
-   * position resolved by the caller.
+   * position and author resolved by the caller.
    *
    * @param entity the annotation entity
    * @param position the resolved position, or null
+   * @param author the resolved author account, or null
    * @return the GraphQL ReaderAnnotation
    */
-  public ReaderAnnotation map(ReaderAnnotationEntity entity, ReaderPosition position) {
+  public ReaderAnnotation map(ReaderAnnotationEntity entity, ReaderPosition position,
+      ReaderAccount author) {
     logger.debug("Mapping annotation {}", entity.getId());
     ReaderAnnotation annotation = ReaderAnnotation.newBuilder()
         .id(entity.getId().toString())
@@ -36,6 +39,7 @@ public class ReaderAnnotationMapper {
         .downvotes(entity.getDownvotes())
         .netScore(entity.getUpvotes() - entity.getDownvotes())
         .remoteObject(entity.getRemoteObject())
+        .author(author)
         .createdAt(entity.getCreatedAt())
         .updatedAt(entity.getLastUpdatedAt())
         .build();

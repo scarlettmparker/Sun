@@ -4,7 +4,21 @@
   padding: var(--sm) var(--md);
   border-radius: var(--sm);
   border: 1px solid var(--muted-foreground);
-  background-color: rgb(from var(--secondary) r g b / var(--visible));
+  background-color: var(--text);
+  color: var(--secondary);
   backdrop-filter: blur(var(--sm));
   pointer-events: auto;
+}
+
+.fade_in {
+  animation: tooltip_fade_in var(--fast) ease;
+}
+
+@keyframes tooltip_fade_in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }

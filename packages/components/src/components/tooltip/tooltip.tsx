@@ -15,8 +15,8 @@ import styles from "./tooltip.module.css";
 const useIsomorphicLayoutEffect =
   typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
-const OPEN_DELAY = 1000;
-const CLOSE_DELAY = 500;
+const OPEN_DELAY = 400;
+const CLOSE_DELAY = 650;
 
 /**
  * Shared state across all tooltips in a group, enabling the instant-switch
@@ -27,6 +27,10 @@ type TooltipGroupContextValue = {
    * Whether any tooltip in the group is currently open.
    */
   anyOpen: boolean;
+  /**
+   * Timestamp of the last tooltip close, for the instant-reopen rule.
+   */
+  lastClosedAt: number;
   /**
    * Called when a tooltip becomes visible.
    */
@@ -39,6 +43,7 @@ type TooltipGroupContextValue = {
 
 const TooltipGroupContext = createContext<TooltipGroupContextValue>({
   anyOpen: false,
+  lastClosedAt: 0,
   onOpen: () => {},
   onClose: () => {},
 });
@@ -51,6 +56,10 @@ type TooltipContextValue = {
    * Whether this tooltip is currently visible.
    */
   open: boolean;
+  /**
+   * Skip the fade-in animation (recent tooltip switch).
+   */
+  instant: boolean;
   /**
    * Mutable ref to the trigger element, used for positioning.
    */
@@ -114,13 +123,19 @@ const useTooltipPositioning = (
       if (side === "top" && trigger.top < rect.height + gap) {
         actualSide = "bottom";
       }
-      if (side === "bottom" && trigger.bottom + rect.height + gap > window.innerHeight) {
+      if (
+        side === "bottom" &&
+        trigger.bottom + rect.height + gap > window.innerHeight
+      ) {
         actualSide = "top";
       }
       if (side === "left" && trigger.left < rect.width + gap) {
         actualSide = "right";
       }
-      if (side === "right" && trigger.right + rect.width + gap > window.innerWidth) {
+      if (
+        side === "right" &&
+        trigger.right + rect.width + gap > window.innerWidth
+      ) {
         actualSide = "left";
       }
 
@@ -174,12 +189,14 @@ type TooltipGroupProps = React.PropsWithChildren;
  */
 const TooltipGroup = ({ children }: TooltipGroupProps) => {
   const [anyOpen, setAnyOpen] = useState(false);
+  const [lastClosedAt, setLastClosedAt] = useState(0);
   const openCount = useRef(0);
 
   return (
     <TooltipGroupContext.Provider
       value={{
         anyOpen,
+        lastClosedAt,
         onOpen: () => {
           openCount.current++;
           setAnyOpen(true);
@@ -188,6 +205,7 @@ const TooltipGroup = ({ children }: TooltipGroupProps) => {
           openCount.current = Math.max(0, openCount.current - 1);
           if (openCount.current === 0) {
             setAnyOpen(false);
+            setLastClosedAt(Date.now());
           }
         },
       }}
@@ -210,6 +228,7 @@ type TooltipProps = React.PropsWithChildren;
  */
 const Tooltip = ({ children }: TooltipProps) => {
   const [open, setOpen] = useState(false);
+  const [instant, setInstant] = useState(false);
   const triggerRef = useRef<HTMLElement | null>(null);
   const group = useContext(TooltipGroupContext);
   const openTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -230,6 +249,7 @@ const Tooltip = ({ children }: TooltipProps) => {
     clearTimers();
     const delay = group.anyOpen ? 0 : OPEN_DELAY;
     openTimer.current = setTimeout(() => {
+      setInstant(Date.now() - group.lastClosedAt < 500);
       setOpen(true);
       group.onOpen();
     }, delay);
@@ -246,7 +266,7 @@ const Tooltip = ({ children }: TooltipProps) => {
   useEffect(() => () => clearTimers(), []);
 
   return (
-    <TooltipContext.Provider value={{ open, triggerRef, show, hide }}>
+    <TooltipContext.Provider value={{ open, instant, triggerRef, show, hide }}>
       {children}
     </TooltipContext.Provider>
   );
@@ -318,7 +338,7 @@ const TooltipContent = ({
   children,
   ...rest
 }: TooltipContentProps) => {
-  const { open, triggerRef, hide } = useTooltip();
+  const { open, instant, triggerRef, show, hide } = useTooltip();
   const contentRef = useRef<HTMLDivElement>(null);
 
   useTooltipPositioning(contentRef, triggerRef, open, side);
@@ -330,7 +350,8 @@ const TooltipContent = ({
   return createPortal(
     <div
       ref={contentRef}
-      className={cn(styles.content, className)}
+      className={cn(styles.content, !instant && styles.fade_in, className)}
+      onMouseEnter={show}
       onMouseLeave={hide}
       {...rest}
     >
