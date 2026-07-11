@@ -1,15 +1,17 @@
 .search_bar {
   position: relative;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
 }
 
 .search_bar_input {
+  width: 100%;
   padding-left: calc(var(--lg) * 2 + 16px);
 }
 
 .search_bar_icon {
   position: absolute;
-  left: var(--md);
+  left: var(--lg);
   top: 50%;
   transform: translateY(-50%);
   color: var(--muted-foreground);

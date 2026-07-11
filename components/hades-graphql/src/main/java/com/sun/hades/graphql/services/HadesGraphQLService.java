@@ -1,6 +1,8 @@
 package com.sun.hades.graphql.services;
 
+import com.sun.base.util.GraphQLSupport;
 import com.sun.base.util.PageRequests;
+import com.sun.base.util.FilterSpec;
 import com.sun.gaia.model.AccountEntity;
 import com.sun.gaia.service.AccountService;
 import com.sun.gaia.service.JwtService;
@@ -21,7 +23,6 @@ import com.sun.hades.codegen.types.ReaderTextInput;
 import com.sun.hades.codegen.types.ReaderObjectReference;
 import com.sun.hades.codegen.types.StandardError;
 import com.sun.hades.codegen.types.VoteInput;
-import com.sun.hades.model.enums.CefrLevel;
 import com.sun.hades.model.enums.ReaderVoteTarget;
 import com.sun.hades.model.enums.VoteValue;
 import com.sun.hades.graphql.mappers.ReaderAccountMapper;
@@ -113,14 +114,12 @@ public class HadesGraphQLService {
    * @return a page of texts
    */
   @Transactional(readOnly = true)
-  public PagedReaderTexts texts(
-      CefrLevel level, String sourceId, String ownerId, PaginationInput pagination) {
-    Pageable pageable = toPageable(pagination, "createdAt", Sort.Direction.DESC);
-    Page<ReaderTextEntity> result = textService.list(
-        level,
-        sourceId != null ? UUID.fromString(sourceId) : null,
-        ownerId != null ? UUID.fromString(ownerId) : null,
-        pageable);
+  public PagedReaderTexts texts(PaginationInput pagination) {
+    Pageable pageable = toPageable(pagination, "level", Sort.Direction.ASC);
+    List<FilterSpec> filters = GraphQLSupport.toFilterSpecs(
+        pagination != null ? pagination.getFilters() : null,
+        f -> new FilterSpec(f.getField(), f.getOperator().name(), f.getValue()));
+    Page<ReaderTextEntity> result = textService.list(filters, pageable);
     List<ReaderText> items = result.getContent().stream().map(textMapper::map).toList();
     return PagedReaderTexts.newBuilder().items(items).pageInfo(pageInfo(result)).build();
   }

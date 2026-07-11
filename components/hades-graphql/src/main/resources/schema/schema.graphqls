@@ -135,7 +135,7 @@ type HadesQueries {
   text(id: ID!): ReaderText
   source(id: ID!): ReaderSource
   sources: [ReaderSource!]
-  texts(level: CefrLevel, sourceId: ID, ownerId: ID, pagination: PaginationInput): PagedReaderTexts!
+  texts(pagination: PaginationInput): PagedReaderTexts!
   annotations(textId: ID!, includeHidden: Boolean): [ReaderAnnotation!]!
   annotation(id: ID!): ReaderAnnotation
   comments(annotationId: ID!, includeHidden: Boolean, pagination: PaginationInput): PagedReaderComments!

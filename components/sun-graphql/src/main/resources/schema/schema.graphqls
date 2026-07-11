@@ -25,18 +25,44 @@ enum VoteValue {
 }
 
 """
-Generic pagination and sort input.
+Generic pagination, sort, and filter input.
 """
 input PaginationInput {
   page: Int
   size: Int
   sortBy: String
   sortDir: SortDirection
+  filters: [FilterInput!]
 }
 
 enum SortDirection {
   ASC
   DESC
+}
+
+"""
+A single filter applied to a paginated query.
+"""
+input FilterInput {
+  field: String!
+  operator: FilterOperator!
+  value: String!
+}
+
+"""
+Operators for FilterInput.
+"""
+enum FilterOperator {
+  EQUALS
+  NOT_EQUALS
+  MATCHES
+  STARTS_WITH
+  ENDS_WITH
+  GREATER_THAN
+  LESS_THAN
+  GREATER_THAN_OR_EQUAL
+  LESS_THAN_OR_EQUAL
+  IN
 }
 
 """

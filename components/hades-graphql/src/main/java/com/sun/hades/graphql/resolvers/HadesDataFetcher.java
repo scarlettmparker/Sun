@@ -18,7 +18,6 @@ import com.sun.hades.codegen.types.ReaderTextInput;
 import com.sun.hades.codegen.types.ReaderObjectReference;
 import com.sun.hades.codegen.types.VoteInput;
 import com.sun.hades.graphql.services.HadesGraphQLService;
-import com.sun.hades.model.enums.CefrLevel;
 import com.sun.hades.model.enums.ReaderVoteTarget;
 import com.sun.hades.model.enums.VoteValue;
 import java.util.List;
@@ -53,9 +52,8 @@ public class HadesDataFetcher {
    * @return a page of texts
    */
   @DgsData(parentType = "HadesQueries", field = "texts")
-  public PagedReaderTexts texts(
-      CefrLevel level, String sourceId, String ownerId, PaginationInput pagination) {
-    return hadesGraphQLService.texts(level, sourceId, ownerId, pagination);
+  public PagedReaderTexts texts(PaginationInput pagination) {
+    return hadesGraphQLService.texts(pagination);
   }
 
   /**

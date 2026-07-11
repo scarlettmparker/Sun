@@ -83,11 +83,11 @@ class HadesGraphQLServiceTest {
     entity.setId(UUID.randomUUID());
     entity.setTitle("Title");
     Page<ReaderTextEntity> page = new PageImpl<>(List.of(entity), PageRequest.of(0, 20), 1);
-    when(textService.list(any(), any(), any(), any())).thenReturn(page);
+    when(textService.list(any(), any())).thenReturn(page);
     ReaderText mapped = ReaderText.newBuilder().id(entity.getId().toString()).title("Title").build();
     when(textMapper.map(entity)).thenReturn(mapped);
 
-    List<ReaderText> result = service.texts(CefrLevel.A1, null, null, null).getItems();
+    List<ReaderText> result = service.texts(null).getItems();
 
     assertThat(result).hasSize(1);
     assertThat(result.get(0).getTitle()).isEqualTo("Title");

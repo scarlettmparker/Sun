@@ -30,7 +30,7 @@ class HadesDataFetcherTest {
   @Test
   void texts_shouldDelegateToService() {
     ReaderText text = ReaderText.newBuilder().id("1").title("Title").build();
-    when(service.texts(CefrLevel.A1, null, null, null)).thenReturn(
+    when(service.texts(null)).thenReturn(
         com.sun.hades.codegen.types.PagedReaderTexts.newBuilder()
             .items(List.of(text)).pageInfo(
                 com.sun.hades.codegen.types.PageInfo.newBuilder()
@@ -38,7 +38,7 @@ class HadesDataFetcherTest {
                     .hasNextPage(false).hasPreviousPage(false).build())
             .build());
 
-    List<ReaderText> result = fetcher.texts(CefrLevel.A1, null, null, null).getItems();
+    List<ReaderText> result = fetcher.texts(null).getItems();
 
     assertThat(result).hasSize(1);
     assertThat(result.get(0).getTitle()).isEqualTo("Title");
