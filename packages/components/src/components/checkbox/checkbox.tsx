@@ -14,7 +14,7 @@ type CheckboxProps = {
 const Checkbox = ({ label, className, ...rest }: CheckboxProps) => {
   return (
     <label className={cn(styles.checkbox_wrapper, className)}>
-      <input type={styles.checkbox} className={styles.checkbox} {...rest} />
+      <input type="checkbox" className={styles.checkbox} {...rest} />
       {label != null && <span className={styles.checkbox_label}>{label}</span>}
     </label>
   );

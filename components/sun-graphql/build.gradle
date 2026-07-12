@@ -53,6 +53,8 @@ dependencies {
     implementation 'org.postgresql:postgresql'
     implementation 'com.netflix.graphql.dgs:graphql-dgs-spring-graphql-starter'
     implementation 'io.github.cdimascio:dotenv-java:3.0.0'
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-database-postgresql:11.7.2'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'com.netflix.graphql.dgs:graphql-dgs-spring-graphql-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

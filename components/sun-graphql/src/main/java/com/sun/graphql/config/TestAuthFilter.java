@@ -8,6 +8,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.UUID;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -16,6 +18,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
  */
 @Component
 @Profile("test")
+@Order(Ordered.HIGHEST_PRECEDENCE + 50)
 public class TestAuthFilter extends OncePerRequestFilter {
 
   public static final UUID TEST_USER_ID =
