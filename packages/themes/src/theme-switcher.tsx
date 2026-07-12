@@ -5,9 +5,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
 } from "@sun/components";
 import { applyTheme } from "./apply-theme";
 import type { ThemeValues } from "./types";
@@ -40,18 +37,14 @@ export const ThemeSwitcher = ({ themes }: ThemeSwitcherProps) => {
 
   return (
     <DropdownMenu>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="default"
-              className="theme_switcher_trigger"
-              aria-label="Switch theme"
-            />
-          </DropdownMenuTrigger>
-        </TooltipTrigger>
-        <TooltipContent side="left">Switch theme</TooltipContent>
-      </Tooltip>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="default"
+          className="theme_switcher_trigger"
+          aria-label="Switch theme"
+          title="Switch theme"
+        />
+      </DropdownMenuTrigger>
       <DropdownMenuContent>
         {themes.map((option) => (
           <DropdownMenuItem

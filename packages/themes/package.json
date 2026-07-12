@@ -1,6 +1,6 @@
 {
   "name": "@sun/themes",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "description": "Theme loader helpers for Sun applications",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -18,10 +18,9 @@
     "test": "jest --maxWorkers=50%",
     "publish": "npm publish --ignore-scripts --registry https://registry.int.scarlettparker.co.uk"
   },
-  "dependencies": {
-    "@sun/components": "^0.9.12"
-  },
+  "dependencies": {},
   "devDependencies": {
+    "@sun/components": "^0.9.12",
     "@swc/core": "^1.15.33",
     "@swc/jest": "^0.2.39",
     "@types/jest": "^30.0.0",
@@ -32,6 +31,7 @@
     "typescript": "^5.7.2"
   },
   "peerDependencies": {
+    "@sun/components": ">=0.9.12",
     "react": "^19.0.0"
   },
   "publishConfig": {
