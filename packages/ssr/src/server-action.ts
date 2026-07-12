@@ -1,6 +1,6 @@
 import { executeMutation } from "./client-mutation";
 import type { MutationResult } from "./client-mutation";
-import type { TypedDocumentNode } from "./mutations";
+import type { VariablesOf } from "./mutations";
 
 /**
  * Schema describing a form's fields and their primitive kind.
@@ -10,23 +10,17 @@ export type FormFieldSchema = Record<string, "string" | "number" | "boolean">;
 /**
  * Built action returned by {@link defineAction}.
  */
-export interface DefinedAction<
-  TDoc extends TypedDocumentNode<unknown, unknown>,
-> {
+export interface DefinedAction<TDoc> {
   /**
    * Invokes the action with typed variables.
    */
-  run: (
-    variables: TDoc extends TypedDocumentNode<unknown, infer V> ? V : never,
-  ) => Promise<MutationResult>;
+  run: (variables: VariablesOf<TDoc>) => Promise<MutationResult>;
 }
 
 /**
  * Defines a typed client-side server action for a registered mutation path.
  */
-export function defineAction<
-  TDoc extends TypedDocumentNode<unknown, unknown>,
->(opts: {
+export function defineAction<TDoc>(opts: {
   /**
    * Registered mutation path the action posts to.
    */

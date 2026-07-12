@@ -335,15 +335,17 @@ function readPageData<T>(
 
     const loadPromise: Promise<Record<string, unknown> | null> =
       typeof window === "undefined"
-        ? Promise.all(relevantLoaders.map((l) => l(params, context))).then((results) => {
-            const merged: Record<string, unknown> = {};
-            for (const r of results) {
-              if (r && typeof r === "object") {
-                Object.assign(merged, r);
+        ? Promise.all(relevantLoaders.map((l) => l(params, context))).then(
+            (results) => {
+              const merged: Record<string, unknown> = {};
+              for (const r of results) {
+                if (r && typeof r === "object") {
+                  Object.assign(merged, r);
+                }
               }
-            }
-            return merged;
-          })
+              return merged;
+            },
+          )
         : fetchPageDataRpc(pattern, params);
 
     const promise = loadPromise

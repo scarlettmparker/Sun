@@ -87,18 +87,18 @@ export function clearMutationHandlers(): void {
   }
 }
 
-export interface TypedDocumentNode<TResult, TVariables> {
-  /**
-   * Marker carrying the inferred result type.
-   */
-  readonly __result?: TResult;
-  /**
-   * Marker carrying the inferred variables type.
-   */
-  readonly __variables?: TVariables;
+/**
+ * Extracts the variables type from a generated document's __apiType marker
+ * (the @graphql-typed-document-node/core convention), falling back to a loose
+ * record. Unconstrained so any document shape satisfies the generic.
+ */
+export type VariablesOf<TDoc> = TDoc extends {
+  readonly __apiType?: (variables: infer V) => unknown;
 }
+  ? V
+  : Record<string, unknown>;
 
-export interface MutationDefinition<TDoc extends TypedDocumentNode<unknown, unknown>> {
+export interface MutationDefinition<TDoc> {
   /**
    * Registered URL path, e.g. "hades/createAnnotation".
    */
@@ -111,7 +111,7 @@ export interface MutationDefinition<TDoc extends TypedDocumentNode<unknown, unkn
    * Handler that receives typed variables and returns the mutation result.
    */
   handler: (
-    variables: TDoc extends TypedDocumentNode<unknown, infer V> ? V : never,
+    variables: VariablesOf<TDoc>,
     context: MutationContext,
   ) => Promise<MutationResult>;
 }
@@ -119,7 +119,7 @@ export interface MutationDefinition<TDoc extends TypedDocumentNode<unknown, unkn
 /**
  * Registers a typed mutation handler.
  */
-export function defineMutation<TDoc extends TypedDocumentNode<unknown, unknown>>(
+export function defineMutation<TDoc>(
   definition: MutationDefinition<TDoc>,
 ): MutationDefinition<TDoc> {
   registerMutationHandler(definition.path, async (body, context) =>

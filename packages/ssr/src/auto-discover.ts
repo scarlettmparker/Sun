@@ -8,6 +8,8 @@ export function autoDiscoverRegistrations(
 ): void {
   const count = Object.keys(glob).length;
   if (count > 0) {
-    console.log(`[ssr] auto-loaded ${count} ${label ?? "registration"} module(s)`);
+    console.log(
+      `[ssr] auto-loaded ${count} ${label ?? "registration"} module(s)`,
+    );
   }
 }

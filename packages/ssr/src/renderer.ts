@@ -117,7 +117,7 @@ export type AppRenderConfig = {
   initI18n?: (
     locale: string,
     translations: Record<string, unknown>,
-  ) => Promise<void> | void;
+  ) => Promise<unknown> | unknown;
   /**
    * Emits window.__posthog_key__/__posthog_host__ when true.
    */
@@ -185,10 +185,14 @@ function metaTags(meta: RouteMeta | undefined, fallbackTitle: string): string {
     tags.push(`<meta property="og:description" content="${desc}" />`);
   }
   if (meta?.ogImage) {
-    tags.push(`<meta property="og:image" content="${escapeAttr(meta.ogImage)}" />`);
+    tags.push(
+      `<meta property="og:image" content="${escapeAttr(meta.ogImage)}" />`,
+    );
   }
   if (meta?.title) {
-    tags.push(`<meta property="og:title" content="${escapeAttr(meta.title)}" />`);
+    tags.push(
+      `<meta property="og:title" content="${escapeAttr(meta.title)}" />`,
+    );
   }
   tags.push(`<meta property="og:type" content="website" />`);
   return tags.join("\n              ");
@@ -228,7 +232,10 @@ export function createRenderer(config: AppRenderConfig): {
   };
 }
 
-async function renderApp(config: AppRenderConfig, options: RenderOptions): Promise<RenderResult> {
+async function renderApp(
+  config: AppRenderConfig,
+  options: RenderOptions,
+): Promise<RenderResult> {
   const {
     app,
     didMatch,
@@ -268,8 +275,8 @@ async function renderApp(config: AppRenderConfig, options: RenderOptions): Promi
   const themes = theme?.all ?? [];
 
   const extraGlobals = config.windowGlobals?.(options) ?? {};
-  const posthogKey = config.posthog ? process.env.POSTHOG_API_KEY ?? "" : "";
-  const posthogHost = config.posthog ? process.env.POSTHOG_HOST ?? "" : "";
+  const posthogKey = config.posthog ? (process.env.POSTHOG_API_KEY ?? "") : "";
+  const posthogHost = config.posthog ? (process.env.POSTHOG_HOST ?? "") : "";
 
   const cssContent = await inlineCss(isProduction, clientCss);
 
@@ -284,7 +291,8 @@ async function renderApp(config: AppRenderConfig, options: RenderOptions): Promi
         const cssTag = generateCssTag(isProduction, cssContent, clientCss);
         const headers: Record<string, string> = { "Content-Type": "text/html" };
         if (shouldDeleteCookie) {
-          headers["Set-Cookie"] = "invalidate_cache=; Path=/; Max-Age=0; SameSite=Lax;";
+          headers["Set-Cookie"] =
+            "invalidate_cache=; Path=/; Max-Age=0; SameSite=Lax;";
         }
         const globals = Object.entries({
           __translations__: translations,
@@ -295,7 +303,9 @@ async function renderApp(config: AppRenderConfig, options: RenderOptions): Promi
           ...(config.posthog
             ? { __posthog_key__: posthogKey, __posthog_host__: posthogHost }
             : {}),
-          ...(config.emitFrontendMode && frontendMode ? { __FRONTEND_MODE__: frontendMode } : {}),
+          ...(config.emitFrontendMode && frontendMode
+            ? { __FRONTEND_MODE__: frontendMode }
+            : {}),
           ...extraGlobals,
         })
           .map(
