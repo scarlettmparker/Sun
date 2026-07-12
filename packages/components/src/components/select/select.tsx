@@ -172,7 +172,8 @@ const Select = (props: SelectProps) => {
                 option.value === selectedValue && styles.selected,
               )}
               onClick={() => handleOptionClick(option.value)}
-              role={styles.option}               aria-selected={option.value === selectedValue}
+              role="option"
+              aria-selected={option.value === selectedValue}
               tabIndex={0}
               onKeyDown={handleOptionKeyDown(option.value)}
             >
