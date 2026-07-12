@@ -81,6 +81,7 @@ const Dialog = (props: DialogProps) => {
   } = props;
   const [mounted, setMounted] = useState(false);
   const dialogRef = useRef<HTMLElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(null);
   const [dragPos, setDragPos] = useState(position ?? { top: 100, left: 100 });
 
@@ -122,6 +123,33 @@ const Dialog = (props: DialogProps) => {
       return () => clearTimeout(timer);
     }
   }, [open, mounted, draggable]);
+
+  /**
+   * Brings a draggable dialog to the front when it opens.
+   */
+  useEffect(() => {
+    if (open && mounted && draggable) {
+      bringToFront();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, mounted, draggable]);
+
+  /**
+   * Keeps a draggable dialog inside the viewport when the window resizes.
+   */
+  useEffect(() => {
+    if (!draggable) return;
+    const handleResize = () => {
+      const el = dialogRef.current;
+      if (!el) return;
+      setDragPos((pos) => ({
+        top: Math.max(0, Math.min(pos.top, window.innerHeight - el.offsetHeight)),
+        left: Math.max(0, Math.min(pos.left, window.innerWidth - el.offsetWidth)),
+      }));
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [draggable]);
 
   /**
    * Updates the dialog position as the mouse moves during a drag.
@@ -173,16 +201,35 @@ const Dialog = (props: DialogProps) => {
   };
 
   /**
-   * Starts dragging: records the offset between the mouse and the dialog's top-left.
+   * Brings this dialog's wrapper in front of other open dialogs by giving it the
+   * next z-index. The wrapper (not the article) must carry the z-index, since the
+   * article is trapped inside the wrapper's stacking context.
+   */
+  const bringToFront = () => {
+    dragZCounter += 1;
+    if (wrapperRef.current) {
+      wrapperRef.current.style.zIndex = String(dragZCounter);
+    }
+  };
+
+  /**
+   * Starts dragging: records the offset between the mouse and the dialog's
+   * top-left. Ignored when the press begins on an interactive element (editor,
+   * input, button) so resizing the editor or clicking controls doesn't drag.
    */
   const handleDragStart = (e: React.MouseEvent<HTMLElement>) => {
     if (!draggable) return;
+    const target = e.target as HTMLElement | null;
+    if (
+      target?.closest(
+        "input, textarea, select, button, a, [contenteditable], [data-no-drag]",
+      )
+    ) {
+      return;
+    }
     const rect = e.currentTarget.getBoundingClientRect();
     setDragOffset({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-    dragZCounter += 1;
-    if (dialogRef.current) {
-      dialogRef.current.style.zIndex = String(dragZCounter);
-    }
+    bringToFront();
   };
 
   const isModal = modal && !draggable;
@@ -191,7 +238,10 @@ const Dialog = (props: DialogProps) => {
     <DialogContext.Provider
       value={{ open, setOpen: onOpenChange ?? (() => {}) }}
     >
-      <div className={cn(styles.dialog_wrapper, isModal && styles.dialog_modal_active)}>
+      <div
+        ref={wrapperRef}
+        className={cn(styles.dialog_wrapper, isModal && styles.dialog_modal_active)}
+      >
         {isModal && (
           <div
             className={styles.dialog_overlay}

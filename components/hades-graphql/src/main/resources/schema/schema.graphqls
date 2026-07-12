@@ -39,6 +39,7 @@ type ReaderAnnotation {
   netScore: Int!
   remoteObject: [String!]
   author: ReaderAccount
+  myVote: VoteValue
   createdAt: Date
   updatedAt: Date
 }
