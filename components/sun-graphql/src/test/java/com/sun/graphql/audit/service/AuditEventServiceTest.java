@@ -17,27 +17,43 @@ import com.sun.base.audit.enums.OperationType;
 import com.sun.base.audit.redaction.PayloadRedactor;
 import com.sun.base.audit.repository.AuditEventRepository;
 import com.sun.graphql.audit.config.AuditProperties;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class AuditEventServiceTest {
 
   @Mock private AuditEventRepository repository;
+  @Mock private EntityManager entityManager;
+
+  @BeforeEach
+  void stubAdvisoryLock() {
+    // persist() acquires pg_advisory_xact_lock before seeding the chain. Lenient
+    // because the disabled-skip test returns before reaching it.
+    Query lockQuery = Mockito.mock(Query.class);
+    Mockito.lenient().when(entityManager.createNativeQuery(Mockito.anyString())).thenReturn(lockQuery);
+    Mockito.lenient().when(lockQuery.setParameter(Mockito.anyString(), Mockito.any())).thenReturn(lockQuery);
+    Mockito.lenient().when(lockQuery.getSingleResult()).thenReturn(1L);
+  }
 
   private AuditEventService service(boolean enabled, String chainKey) {
     return new AuditEventService(
         repository,
         new PayloadRedactor(new ObjectMapper()),
         new ObjectMapper(),
-        new AuditProperties(enabled, new AuditProperties.Chain(chainKey)));
+        new AuditProperties(enabled, new AuditProperties.Chain(chainKey)),
+        entityManager);
   }
 
   private AuditContext.AuditOperation op(String name, Object variables) {
@@ -116,5 +132,18 @@ class AuditEventServiceTest {
 
     // Must not propagate - auditing never breaks the response.
     svc.persist(snapshot(UUID.randomUUID(), List.of(op("createAnnotation", Map.of()))), 1L);
+  }
+
+  @Test
+  void persist_acquiresAdvisoryLockBeforeSeedingTheChain() {
+    when(repository.findFirstByOrderByCreatedAtDescIdDesc()).thenReturn(Optional.empty());
+    AuditEventService svc = service(true, null);
+
+    svc.persist(snapshot(UUID.randomUUID(), List.of(op("createAnnotation", Map.of()))), 1L);
+
+    // The lock must be taken before the predecessor is read.
+    org.mockito.InOrder order = Mockito.inOrder(entityManager, repository);
+    order.verify(entityManager).createNativeQuery("SELECT pg_advisory_xact_lock(:key)");
+    order.verify(repository).findFirstByOrderByCreatedAtDescIdDesc();
   }
 }

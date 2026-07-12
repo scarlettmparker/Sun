@@ -8,6 +8,7 @@ import com.sun.base.audit.entity.AuditEvent;
 import com.sun.base.audit.redaction.PayloadRedactor;
 import com.sun.base.audit.repository.AuditEventRepository;
 import com.sun.graphql.audit.config.AuditProperties;
+import jakarta.persistence.EntityManager;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Optional;
@@ -30,19 +31,25 @@ public class AuditEventService {
 
   private static final Logger logger = LoggerFactory.getLogger(AuditEventService.class);
 
+  /** Advisory-lock key; any constant works, it just must be stable across writes. */
+  private static final long CHAIN_LOCK_KEY = 8_521_479_633L;
+
   private final AuditEventRepository repository;
   private final PayloadRedactor redactor;
   private final ObjectMapper objectMapper;
   private final AuditProperties properties;
+  private final EntityManager entityManager;
 
   public AuditEventService(AuditEventRepository repository,
                            PayloadRedactor redactor,
                            ObjectMapper objectMapper,
-                           AuditProperties properties) {
+                           AuditProperties properties,
+                           EntityManager entityManager) {
     this.repository = repository;
     this.redactor = redactor;
     this.objectMapper = objectMapper;
     this.properties = properties;
+    this.entityManager = entityManager;
   }
 
   /**
@@ -60,6 +67,10 @@ public class AuditEventService {
       return;
     }
     try {
+      // Hold the advisory lock so concurrent persists keep a linear chain.
+      entityManager.createNativeQuery("SELECT pg_advisory_xact_lock(:key)")
+          .setParameter("key", CHAIN_LOCK_KEY)
+          .getSingleResult();
       // Seed the chain from the latest existing row globally.
       String prevHash = latestRowHash().orElse(null);
 
