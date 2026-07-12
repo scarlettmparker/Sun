@@ -7,7 +7,7 @@ import type { ViteDevServer } from "vite";
 import { pageDataRpcHandler } from "./rpc-handler";
 import { mutationRegistry } from "./mutations";
 import { ServerRedirectError } from "./server-redirect";
-import { setRequestCacheProvider } from "./page-data";
+import { setRequestCacheProvider, setRequestCookieProvider } from "./page-data";
 import type { CacheRecord } from "./page-data";
 
 export { handleQuery } from "./query";
@@ -26,6 +26,9 @@ const COMPRESSIBLE_CONTENT_TYPES = /text\/|\+?json|\+?xml|javascript|csv|svg/i;
  */
 const requestCacheAls = new AsyncLocalStorage<Map<string, CacheRecord>>();
 setRequestCacheProvider(() => requestCacheAls.getStore() ?? null);
+
+const requestCookieAls = new AsyncLocalStorage<string | undefined>();
+setRequestCookieProvider(() => requestCookieAls.getStore() ?? undefined);
 
 type ServerConfig = {
   port: number;
@@ -133,8 +136,9 @@ export async function createServer(
   // Per-request page-data cache. Must run before any route handler so the
   // AsyncLocalStorage context is active for the whole request (including the
   // SSR render and its onAllReady callback).
-  app.addHook("onRequest", async () => {
+  app.addHook("onRequest", async (request) => {
     requestCacheAls.enterWith(new Map());
+    requestCookieAls.enterWith(request.headers.cookie);
   });
 
   // App-layer gzip for buffered (string/Buffer) JSON/text responses.

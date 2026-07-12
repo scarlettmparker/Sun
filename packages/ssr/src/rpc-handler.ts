@@ -23,7 +23,9 @@ export function pageDataRpcHandler() {
       return;
     }
     try {
-      const results = await Promise.all(loaders.map((l) => l(params)));
+      const results = await Promise.all(
+        loaders.map((l) => l(params, { cookie: request.headers.cookie })),
+      );
       const merged: Record<string, unknown> = {};
       for (const r of results) {
         if (r && typeof r === "object") Object.assign(merged, r);

@@ -3,8 +3,20 @@
  * Provides a registry for page-data loaders and a suspense cache for data loading.
  */
 
+/**
+ * Per-request context passed to page-data loaders, so they can forward auth
+ * (e.g. resolve the current user's data) to authenticated backend calls.
+ */
+export type PageDataContext = {
+  /**
+   * Raw Cookie header from the request.
+   */
+  cookie?: string;
+};
+
 type PageDataLoader = (
   params?: Record<string, unknown>,
+  context?: PageDataContext,
 ) => Promise<Record<string, unknown> | null>;
 
 // Event emitter for cache hydration
@@ -72,10 +84,19 @@ export type CacheRecord = {
 const clientCache = new Map<string, CacheRecord>();
 type RequestCacheProvider = () => Map<string, CacheRecord> | null;
 let requestCacheProvider: RequestCacheProvider | null = null;
+type RequestCookieProvider = () => string | undefined;
+let requestCookieProvider: RequestCookieProvider | null = null;
 
 /** server.ts calls this at boot to plug in the AsyncLocalStorage-backed store. */
 export function setRequestCacheProvider(provider: RequestCacheProvider): void {
   requestCacheProvider = provider;
+}
+
+/** server.ts calls this at boot to plug in the request's Cookie header. */
+export function setRequestCookieProvider(
+  provider: RequestCookieProvider,
+): void {
+  requestCookieProvider = provider;
 }
 
 function activeCache(): Map<string, CacheRecord> {
@@ -308,9 +329,13 @@ function readPageData<T>(
     record = { status: "pending" };
     activeCache().set(cacheKey, record);
 
+    const context: PageDataContext = {
+      cookie: requestCookieProvider?.(),
+    };
+
     const loadPromise: Promise<Record<string, unknown> | null> =
       typeof window === "undefined"
-        ? Promise.all(relevantLoaders.map((l) => l(params))).then((results) => {
+        ? Promise.all(relevantLoaders.map((l) => l(params, context))).then((results) => {
             const merged: Record<string, unknown> = {};
             for (const r of results) {
               if (r && typeof r === "object") {

@@ -82,10 +82,12 @@ const Dialog = (props: DialogProps) => {
   const [mounted, setMounted] = useState(false);
   const dialogRef = useRef<HTMLElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const viewportRef = useRef<{ w: number; h: number } | null>(null);
   const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(null);
   const [dragPos, setDragPos] = useState(position ?? { top: 100, left: 100 });
 
   useEffect(() => {
+    viewportRef.current = { w: window.innerWidth, h: window.innerHeight };
     setMounted(true);
   }, []);
 
@@ -135,17 +137,26 @@ const Dialog = (props: DialogProps) => {
   }, [open, mounted, draggable]);
 
   /**
-   * Keeps a draggable dialog inside the viewport when the window resizes.
+   * Keeps a draggable dialog at the same relative spot when the window
+   * resizes, scaling its position by the viewport change then clamping on-screen.
    */
   useEffect(() => {
     if (!draggable) return;
     const handleResize = () => {
       const el = dialogRef.current;
-      if (!el) return;
-      setDragPos((pos) => ({
-        top: Math.max(0, Math.min(pos.top, window.innerHeight - el.offsetHeight)),
-        left: Math.max(0, Math.min(pos.left, window.innerWidth - el.offsetWidth)),
-      }));
+      const prev = viewportRef.current;
+      const nextW = window.innerWidth;
+      const nextH = window.innerHeight;
+      viewportRef.current = { w: nextW, h: nextH };
+      if (!el || !prev) return;
+      setDragPos((pos) => {
+        const top = (pos.top / prev.h) * nextH;
+        const left = (pos.left / prev.w) * nextW;
+        return {
+          top: Math.max(0, Math.min(top, nextH - el.offsetHeight)),
+          left: Math.max(0, Math.min(left, nextW - el.offsetWidth)),
+        };
+      });
     };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
