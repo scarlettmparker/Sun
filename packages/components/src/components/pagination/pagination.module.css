@@ -5,3 +5,9 @@
   gap: var(--sm);
   flex-wrap: wrap;
 }
+
+.ellipsis {
+  padding: 0 var(--sm);
+  color: var(--muted);
+  user-select: none;
+}

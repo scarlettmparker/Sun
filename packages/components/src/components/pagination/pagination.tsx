@@ -1,3 +1,9 @@
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from "lucide-react";
 import Button from "../button";
 import { cn } from "~/utils/cn";
 import styles from "./pagination.module.css";
@@ -18,7 +24,8 @@ type PaginationProps = {
 } & Omit<React.HTMLAttributes<HTMLElement>, "children">;
 
 /**
- * Pagination renders previous/next controls and a window of page numbers.
+ * Pagination renders first/previous controls, a window of page numbers with
+ * ellipses, and next/last controls.
  */
 const Pagination = ({
   page,
@@ -31,49 +38,80 @@ const Pagination = ({
     return null;
   }
 
-  const pages = pageWindow(page, totalPages);
+  const items = pageItems(page, totalPages);
+  const atStart = page <= 1;
+  const atEnd = page >= totalPages;
 
   return (
     <nav className={cn(styles.pagination, className)} {...rest}>
       <Button
         variant="secondary"
-        disabled={page <= 1}
-        onClick={() => onPageChange(page - 1)}
+        aria-label="First page"
+        disabled={atStart}
+        onClick={() => onPageChange(1)}
       >
-        Previous
+        <ChevronsLeft />
       </Button>
-      {pages.map((p) => (
-        <Button
-          key={p}
-          variant={p === page ? "default" : "secondary"}
-          onClick={() => onPageChange(p)}
-        >
-          {p}
-        </Button>
-      ))}
       <Button
         variant="secondary"
-        disabled={page >= totalPages}
+        aria-label="Previous page"
+        disabled={atStart}
+        onClick={() => onPageChange(page - 1)}
+      >
+        <ChevronLeft />
+      </Button>
+      {items.map((item, i) =>
+        item === "ellipsis" ? (
+          <span key={`gap-${i}`} className={styles.ellipsis} aria-hidden>
+            …
+          </span>
+        ) : (
+          <Button
+            key={item}
+            variant={item === page ? "default" : "secondary"}
+            onClick={() => onPageChange(item)}
+          >
+            {item}
+          </Button>
+        ),
+      )}
+      <Button
+        variant="secondary"
+        aria-label="Next page"
+        disabled={atEnd}
         onClick={() => onPageChange(page + 1)}
       >
-        Next
+        <ChevronRight />
+      </Button>
+      <Button
+        variant="secondary"
+        aria-label="Last page"
+        disabled={atEnd}
+        onClick={() => onPageChange(totalPages)}
+      >
+        <ChevronsRight />
       </Button>
     </nav>
   );
 };
 
 /**
- * Returns up to 5 contiguous page numbers centred on the current page.
+ * Builds the page-number sequence with ellipses: always the first and last
+ * page, with a small window around the current page in between.
  */
-function pageWindow(page: number, totalPages: number): number[] {
-  const max = 5;
-  if (totalPages <= max) {
-    return Array.from({ length: totalPages }, (_, i) => i + 1);
-  }
-  let start = Math.max(1, page - 2);
-  const end = Math.min(totalPages, start + max - 1);
-  start = Math.max(1, end - max + 1);
-  return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+function pageItems(page: number, totalPages: number): (number | "ellipsis")[] {
+  const items: (number | "ellipsis")[] = [];
+  const push = (v: number | "ellipsis") => items.push(v);
+  const surround = 1;
+  const start = Math.max(2, page - surround);
+  const end = Math.min(totalPages - 1, page + surround);
+
+  push(1);
+  if (start > 2) push("ellipsis");
+  for (let p = start; p <= end; p++) push(p);
+  if (end < totalPages - 1) push("ellipsis");
+  if (totalPages > 1) push(totalPages);
+  return items;
 }
 
 export default Pagination;
