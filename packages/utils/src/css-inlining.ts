@@ -1,4 +1,5 @@
 import fs from "fs/promises";
+import { statSync } from "fs";
 import path from "path";
 
 /**
@@ -9,6 +10,31 @@ import path from "path";
  *
  * @returns Concatenated CSS content as a string, or empty string if not in production.
  */
+
+let cachedKey = "";
+let cachedCss = "";
+
+/**
+ * Builds a cache key from the max mtime of the given CSS file paths, so a rebuild invalidates
+ * the memoised concatenation without re-reading file contents.
+ *
+ * @param paths - Resolved CSS file paths.
+ * @returns A string key, or empty string if no files could be statted.
+ */
+function buildMtimeKey(paths: string[]): string {
+  let key = "";
+  for (const p of paths) {
+    try {
+      const mtime = statSync(p).mtimeMs;
+      if (mtime > 0) key += `${p}:${mtime}|`;
+    } catch {
+      // File may not exist yet (e.g. missing manifest entry); its absence is part of the key.
+      key += `${p}:missing|`;
+    }
+  }
+  return key;
+}
+
 export async function inlineCss(
   isProduction: boolean,
   clientCss: string[],
@@ -17,38 +43,52 @@ export async function inlineCss(
     return "";
   }
 
+  const stylesDir = path.resolve("src/styles");
+  let styleFiles: string[] = [];
+  try {
+    const files = await fs.readdir(stylesDir);
+    styleFiles = files
+      .filter((file) => file.endsWith(".css"))
+      .map((file) => path.join(stylesDir, file));
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+      throw error;
+    }
+  }
+
+  const manifestFiles = (clientCss ?? []).map((css) =>
+    path.resolve("dist/client", css.replace(/^\//, "")),
+  );
+
+  const key = buildMtimeKey([...styleFiles, ...manifestFiles]);
+  if (key && key === cachedKey) {
+    return cachedCss;
+  }
+
   let cssContent = "";
 
   try {
-    // Read all CSS files in src/styles
-    const stylesDir = path.resolve("src/styles");
-    try {
-      await fs.access(stylesDir);
-      const styleFiles = await fs.readdir(stylesDir);
-      const cssFiles = styleFiles.filter((file) => file.endsWith(".css"));
-      const stylePromises = cssFiles.map(async (file) => {
-        const filePath = path.join(stylesDir, file);
-        return await fs.readFile(filePath, "utf-8");
-      });
-      const styleContents = await Promise.all(stylePromises);
+    if (styleFiles.length > 0) {
+      const styleContents = await Promise.all(
+        styleFiles.map((filePath) => fs.readFile(filePath, "utf-8")),
+      );
       cssContent += styleContents.join("\n") + "\n";
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
-        throw error;
-      }
     }
 
-    // Then read manifest CSS
-    if (clientCss && clientCss.length > 0) {
-      const cssPromises = clientCss.map(async (css) => {
-        const cssPath = path.resolve("dist/client", css.replace(/^\//, ""));
-        return await fs.readFile(cssPath, "utf-8");
-      });
-      const cssContents = await Promise.all(cssPromises);
+    if (manifestFiles.length > 0) {
+      const cssContents = await Promise.all(
+        manifestFiles.map((filePath) => fs.readFile(filePath, "utf-8")),
+      );
       cssContent += cssContents.join("\n");
     }
   } catch (error) {
     console.warn("Failed to read CSS files for inlining:", error);
+    return cssContent;
+  }
+
+  if (key) {
+    cachedKey = key;
+    cachedCss = cssContent;
   }
 
   return cssContent;

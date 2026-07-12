@@ -9,7 +9,12 @@
 FROM gradle:8-jdk21 AS build
 WORKDIR /home/gradle/project
 COPY --chown=gradle:gradle . .
-RUN gradle :sun-graphql:bootJar --no-daemon -x test
+# Cache mounts keep GRADLE_USER_HOME (+ maven deps) across builds, so a source
+# change does not re-download every dependency or rebuild unchanged tasks — even
+# though the `COPY . .` layer above busts on any source edit.
+RUN --mount=type=cache,target=/home/gradle/.gradle \
+    --mount=type=cache,target=/home/gradle/.m2/repository \
+    gradle :sun-graphql:bootJar --no-daemon -x test
 
 FROM eclipse-temurin:21-jre
 WORKDIR /app

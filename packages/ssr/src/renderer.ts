@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import type { ReactElement } from "react";
 import { renderToPipeableStream } from "react-dom/server";
-import { inlineCss, generateCssTag } from "@sun/utils";
+import { inlineCss, generateCssTag } from "@sun/utils/css-inlining";
 import { getRequestCache, invalidateCache } from "./page-data";
 import type { MutationResult } from "./client-mutation";
 
