@@ -3,13 +3,8 @@
  * `defineLoader`/`defineMutation` call sites register themselves at boot.
  */
 export function autoDiscoverRegistrations(
-  glob: Record<string, unknown>,
-  label?: string,
+  _glob: Record<string, unknown>,
 ): void {
-  const count = Object.keys(glob).length;
-  if (count > 0) {
-    console.log(
-      `[ssr] auto-loaded ${count} ${label ?? "registration"} module(s)`,
-    );
-  }
+  // The eager glob already imported every module as a side effect; this hook
+  // exists so the intent is explicit at the call site.
 }

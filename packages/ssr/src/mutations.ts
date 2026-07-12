@@ -90,7 +90,7 @@ export function clearMutationHandlers(): void {
 /**
  * Extracts the variables type from a generated document's __apiType marker
  * (the @graphql-typed-document-node/core convention), falling back to a loose
- * record. Unconstrained so any document shape satisfies the generic.
+ * record.
  */
 export type VariablesOf<TDoc> = TDoc extends {
   readonly __apiType?: (variables: infer V) => unknown;
@@ -98,32 +98,28 @@ export type VariablesOf<TDoc> = TDoc extends {
   ? V
   : Record<string, unknown>;
 
-export interface MutationDefinition<TDoc> {
+export interface MutationDefinition<TBody> {
   /**
    * Registered URL path, e.g. "hades/createAnnotation".
    */
   path: string;
   /**
-   * Generated document supplying the variable and result types.
-   */
-  document: TDoc;
-  /**
-   * Handler that receives typed variables and returns the mutation result.
+   * Handler that receives the typed request body and returns the result.
    */
   handler: (
-    variables: VariablesOf<TDoc>,
+    body: TBody,
     context: MutationContext,
   ) => Promise<MutationResult>;
 }
 
 /**
- * Registers a typed mutation handler.
+ * Registers a typed mutation handler. TBody is inferred from the handler's
+ * first parameter, so call sites declare the body shape and need no casts.
  */
-export function defineMutation<TDoc>(
-  definition: MutationDefinition<TDoc>,
-): MutationDefinition<TDoc> {
+export function defineMutation<TBody>(
+  definition: MutationDefinition<TBody>,
+): void {
   registerMutationHandler(definition.path, async (body, context) =>
-    definition.handler(body as never, context),
+    definition.handler(body as TBody, context),
   );
-  return definition;
 }
