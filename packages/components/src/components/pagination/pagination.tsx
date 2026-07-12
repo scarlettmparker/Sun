@@ -50,7 +50,7 @@ const Pagination = ({
         disabled={atStart}
         onClick={() => onPageChange(1)}
       >
-        <ChevronsLeft />
+        <ChevronsLeft width={16} height={16} />
       </Button>
       <Button
         variant="secondary"
@@ -58,7 +58,7 @@ const Pagination = ({
         disabled={atStart}
         onClick={() => onPageChange(page - 1)}
       >
-        <ChevronLeft />
+        <ChevronLeft width={16} height={16} />
       </Button>
       {items.map((item, i) =>
         item === "ellipsis" ? (
@@ -81,7 +81,7 @@ const Pagination = ({
         disabled={atEnd}
         onClick={() => onPageChange(page + 1)}
       >
-        <ChevronRight />
+        <ChevronRight width={16} height={16} />
       </Button>
       <Button
         variant="secondary"
@@ -89,7 +89,7 @@ const Pagination = ({
         disabled={atEnd}
         onClick={() => onPageChange(totalPages)}
       >
-        <ChevronsRight />
+        <ChevronsRight width={16} height={16} />
       </Button>
     </nav>
   );
