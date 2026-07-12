@@ -10,6 +10,8 @@ export default defineConfig({
   external: [
     "react",
     "react-dom",
+    "react-dom/server",
+    "@sun/utils",
     "fastify",
     "@fastify/static",
     "@fastify/compress",

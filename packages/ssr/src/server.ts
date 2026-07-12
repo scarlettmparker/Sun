@@ -13,6 +13,17 @@ import type { CacheRecord } from "./page-data";
 export { handleQuery } from "./query";
 export type { QueryFetchResult } from "./query";
 export { loadModule } from "./load-module";
+export { renderApp } from "./render-stream";
+export type { RenderAppOptions } from "./render-stream";
+export { createRenderer } from "./renderer";
+export type {
+  AppRenderConfig,
+  RenderOptions,
+  RenderResult,
+  ResolvedTheme,
+  RouteMeta,
+} from "./renderer";
+export { autoDiscoverRegistrations } from "./auto-discover";
 
 /** Responses smaller than this are sent uncompressed. */
 const GZIP_THRESHOLD = 1024;

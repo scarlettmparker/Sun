@@ -27,3 +27,12 @@ export { pageDataRpcHandler } from "./rpc-handler";
 
 export { executeMutation } from "./client-mutation";
 export type { BaseMutationResult, MutationResult } from "./client-mutation";
+
+export { defineAction, parseForm } from "./server-action";
+export type {
+  DefinedAction,
+  FormFieldSchema,
+  FormValues,
+} from "./server-action";
+export { initClientBootstrap } from "./client-bootstrap";
+export type { BootstrapI18n } from "./client-bootstrap";

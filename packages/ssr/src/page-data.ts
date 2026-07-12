@@ -634,4 +634,26 @@ export const pageDataRegistry: PageDataRegistry = {
   pageDataCache,
 };
 
+/**
+ * Registers a typed page-data loader.
+ */
+export function defineLoader<TData>(opts: {
+  /**
+   * Route pattern the loader serves.
+   */
+  pattern: string;
+  /**
+   * Loader returning the page's data slice, or null when absent.
+   */
+  loader: (
+    params: Record<string, unknown>,
+    context: PageDataContext,
+  ) => Promise<TData | null>;
+}): void {
+  registerPageDataLoader(opts.pattern, async (params, context) => {
+    const data = await opts.loader(params ?? {}, context ?? {});
+    return data as Record<string, unknown> | null;
+  });
+}
+
 export type { PageDataLoader };

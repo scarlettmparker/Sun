@@ -86,3 +86,44 @@ export function clearMutationHandlers(): void {
     delete mutationHandlers[key];
   }
 }
+
+export interface TypedDocumentNode<TResult, TVariables> {
+  /**
+   * Marker carrying the inferred result type.
+   */
+  readonly __result?: TResult;
+  /**
+   * Marker carrying the inferred variables type.
+   */
+  readonly __variables?: TVariables;
+}
+
+export interface MutationDefinition<TDoc extends TypedDocumentNode<unknown, unknown>> {
+  /**
+   * Registered URL path, e.g. "hades/createAnnotation".
+   */
+  path: string;
+  /**
+   * Generated document supplying the variable and result types.
+   */
+  document: TDoc;
+  /**
+   * Handler that receives typed variables and returns the mutation result.
+   */
+  handler: (
+    variables: TDoc extends TypedDocumentNode<unknown, infer V> ? V : never,
+    context: MutationContext,
+  ) => Promise<MutationResult>;
+}
+
+/**
+ * Registers a typed mutation handler.
+ */
+export function defineMutation<TDoc extends TypedDocumentNode<unknown, unknown>>(
+  definition: MutationDefinition<TDoc>,
+): MutationDefinition<TDoc> {
+  registerMutationHandler(definition.path, async (body, context) =>
+    definition.handler(body as never, context),
+  );
+  return definition;
+}
