@@ -22,7 +22,6 @@
 
 .dropdown_menu_item,
 .dropdown_menu_subtrigger {
-  width: 100%;
   padding: var(--md) var(--lg);
   border-radius: var(--sm);
   background-color: rgb(from var(--secondary) r g b / var(--visible));
