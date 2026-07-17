@@ -33,10 +33,14 @@ import com.sun.hades.model.enums.VoteValue;
 import com.sun.hades.graphql.mappers.ReaderAccountMapper;
 import com.sun.hades.graphql.mappers.ReaderAnnotationMapper;
 import com.sun.hades.graphql.mappers.ReaderCommentMapper;
+import com.sun.hades.graphql.mappers.ReaderObjectReferenceMapper;
+import com.sun.hades.graphql.mappers.ReaderPositionMapper;
 import com.sun.hades.graphql.mappers.ReaderSourceMapper;
 import com.sun.hades.graphql.mappers.ReaderTextMapper;
+import com.sun.hades.graphql.mappers.RemoteUserMapper;
 import com.sun.hades.model.ReaderAnnotationEntity;
 import com.sun.hades.model.ReaderCommentEntity;
+import com.sun.hades.model.ReaderPositionEntity;
 import com.sun.hades.model.ReaderSourceEntity;
 import com.sun.hades.model.ReaderTextEntity;
 import com.sun.hades.model.enums.ReaderTextStatus;
@@ -87,6 +91,9 @@ public class HadesGraphQLService {
   private final ReaderAnnotationMapper annotationMapper;
   private final ReaderCommentMapper commentMapper;
   private final ReaderAccountMapper accountMapper;
+  private final ReaderPositionMapper positionMapper;
+  private final ReaderObjectReferenceMapper objectReferenceMapper;
+  private final RemoteUserMapper remoteUserMapper;
 
   public HadesGraphQLService(ReaderTextService textService, ReaderSourceService sourceService,
       ReaderAnnotationService annotationService, ReaderCommentService commentService,
@@ -94,7 +101,9 @@ public class HadesGraphQLService {
       ReaderPositionService positionService, DiscordOAuthService discordOAuthService,
       AccountService gaiaAccountService, JwtService jwtService, ReaderTextMapper textMapper,
       ReaderSourceMapper sourceMapper, ReaderAnnotationMapper annotationMapper,
-      ReaderCommentMapper commentMapper, ReaderAccountMapper accountMapper) {
+      ReaderCommentMapper commentMapper, ReaderAccountMapper accountMapper,
+      ReaderPositionMapper positionMapper, ReaderObjectReferenceMapper objectReferenceMapper,
+      RemoteUserMapper remoteUserMapper) {
     this.textService = textService;
     this.sourceService = sourceService;
     this.annotationService = annotationService;
@@ -110,6 +119,9 @@ public class HadesGraphQLService {
     this.annotationMapper = annotationMapper;
     this.commentMapper = commentMapper;
     this.accountMapper = accountMapper;
+    this.positionMapper = positionMapper;
+    this.objectReferenceMapper = objectReferenceMapper;
+    this.remoteUserMapper = remoteUserMapper;
   }
 
   /**
@@ -179,26 +191,24 @@ public class HadesGraphQLService {
     Map<UUID, ReaderPosition> positions =
         positionService.listForText(id).stream()
             .collect(Collectors.toMap(
-                p -> p.getId(),
-                p -> ReaderPosition.newBuilder()
-                    .id(p.getId().toString())
-                    .textId(p.getTextId().toString())
-                    .startOffset(p.getStartOffset())
-                    .endOffset(p.getEndOffset())
-                    .build()));
+                ReaderPositionEntity::getId, positionMapper::map, (a, b) -> a));
     Map<UUID, RemoteUser> authors = new HashMap<>();
     entities.stream()
         .map(ReaderAnnotationEntity::getCreatedBy)
         .filter(Objects::nonNull)
         .distinct()
         .forEach(gaiaAccountId -> accountService.findByGaiaAccountId(gaiaAccountId)
-            .ifPresent(acc -> authors.put(gaiaAccountId, remoteUser(acc.getDiscordId()))));
+            .ifPresent(acc -> authors.put(gaiaAccountId, remoteUserMapper.discord(acc.getDiscordId()))));
     Map<UUID, VoteValue> myVotes = voteService.myVotes(
         ReaderVoteTarget.ANNOTATION,
         entities.stream().map(ReaderAnnotationEntity::getId).toList());
+    Map<UUID, Long> replyCounts = commentService.countByAnnotationIds(
+        entities.stream().map(ReaderAnnotationEntity::getId).toList());
     return entities.stream()
         .map(a -> annotationMapper.map(a, positions.get(a.getPositionId()),
-            authors.get(a.getCreatedBy()), myVotes.get(a.getId())))
+            authors.get(a.getCreatedBy()),
+            replyCounts.getOrDefault(a.getId(), 0L).intValue(),
+            myVotes.get(a.getId())))
         .toList();
   }
 
@@ -210,8 +220,15 @@ public class HadesGraphQLService {
    */
   @Transactional(readOnly = true)
   public ReaderAnnotation annotation(String id) {
-    return annotationService.findById(UUID.fromString(id))
-        .map(a -> annotationMapper.map(a, null, null, null))
+    UUID annotationId = UUID.fromString(id);
+    return annotationService.findById(annotationId)
+        .map(a -> {
+          int replyCount = commentService
+              .countByAnnotationIds(List.of(annotationId))
+              .getOrDefault(annotationId, 0L)
+              .intValue();
+          return annotationMapper.map(a, null, null, replyCount, null);
+        })
         .orElse(null);
   }
 
@@ -238,7 +255,7 @@ public class HadesGraphQLService {
         .filter(Objects::nonNull)
         .distinct()
         .forEach(gaiaAccountId -> accountService.findByGaiaAccountId(gaiaAccountId)
-            .ifPresent(acc -> authors.put(gaiaAccountId, remoteUser(acc.getDiscordId()))));
+            .ifPresent(acc -> authors.put(gaiaAccountId, remoteUserMapper.discord(acc.getDiscordId()))));
     Map<UUID, VoteValue> myVotes = voteService.myVotes(
         ReaderVoteTarget.COMMENT,
         visible.stream().map(ReaderCommentEntity::getId).toList());
@@ -246,19 +263,6 @@ public class HadesGraphQLService {
         .map(c -> commentMapper.map(c, authors.get(c.getCreatedBy()), myVotes.get(c.getId())))
         .toList();
     return PagedReaderComments.newBuilder().items(items).pageInfo(pageInfo(result)).build();
-  }
-
-  /**
-   * Builds a DISCORD RemoteUser reference from a Discord id.
-   *
-   * @param discordId the Discord user id
-   * @return the RemoteUser reference
-   */
-  private RemoteUser remoteUser(String discordId) {
-    return RemoteUser.newBuilder()
-        .type(RemoteUserType.DISCORD)
-        .id(discordId)
-        .build();
   }
 
   /**
@@ -315,11 +319,7 @@ public class HadesGraphQLService {
   @Transactional(readOnly = true)
   public List<ReaderObjectReference> locateRemoteObjects(List<String> ids) {
     return annotationService.locateRemoteObjects(ids).stream()
-        .map(r -> ReaderObjectReference.newBuilder()
-            .id(r.id().toString())
-            .ownerType(r.ownerType())
-            .ownerId(r.ownerId().toString())
-            .build())
+        .map(objectReferenceMapper::map)
         .toList();
   }
 

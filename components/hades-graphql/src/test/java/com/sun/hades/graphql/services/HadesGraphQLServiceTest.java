@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.sun.gaia.service.UserContextHolder;
@@ -21,8 +22,11 @@ import com.sun.hades.codegen.types.StandardError;
 import com.sun.hades.graphql.mappers.ReaderAccountMapper;
 import com.sun.hades.graphql.mappers.ReaderAnnotationMapper;
 import com.sun.hades.graphql.mappers.ReaderCommentMapper;
+import com.sun.hades.graphql.mappers.ReaderObjectReferenceMapper;
+import com.sun.hades.graphql.mappers.ReaderPositionMapper;
 import com.sun.hades.graphql.mappers.ReaderSourceMapper;
 import com.sun.hades.graphql.mappers.ReaderTextMapper;
+import com.sun.hades.graphql.mappers.RemoteUserMapper;
 import com.sun.hades.model.ReaderAccountEntity;
 import com.sun.hades.model.ReaderAnnotationEntity;
 import com.sun.hades.model.ReaderPositionEntity;
@@ -71,6 +75,9 @@ class HadesGraphQLServiceTest {
   @Mock private ReaderAnnotationMapper annotationMapper;
   @Mock private ReaderCommentMapper commentMapper;
   @Mock private ReaderAccountMapper accountMapper;
+  @Mock private ReaderPositionMapper positionMapper;
+  @Mock private ReaderObjectReferenceMapper objectReferenceMapper;
+  @Mock private RemoteUserMapper remoteUserMapper;
 
   @InjectMocks private HadesGraphQLService service;
 
@@ -121,11 +128,13 @@ class HadesGraphQLServiceTest {
     when(annotationService.listForText(textId, false)).thenReturn(List.of(annotation));
     when(accountService.findByGaiaAccountId(userId)).thenReturn(Optional.empty());
     when(voteService.myVotes(eq(ReaderVoteTarget.ANNOTATION), anyList())).thenReturn(Map.of());
+    when(commentService.countByAnnotationIds(anyList())).thenReturn(Map.of());
     ReaderPosition mappedPosition = ReaderPosition.newBuilder()
         .id(positionId.toString()).textId(textId.toString()).startOffset(0).endOffset(10).build();
     ReaderAnnotation mapped = ReaderAnnotation.newBuilder()
         .id(annotation.getId().toString()).position(mappedPosition).body("body").build();
-    when(annotationMapper.map(annotation, mappedPosition, null, null)).thenReturn(mapped);
+    when(positionMapper.map(position)).thenReturn(mappedPosition);
+    when(annotationMapper.map(annotation, mappedPosition, null, 0, null)).thenReturn(mapped);
 
     List<ReaderAnnotation> result = service.annotations(textId.toString(), false);
 
@@ -160,12 +169,15 @@ class HadesGraphQLServiceTest {
     when(annotationService.listForText(textId, false)).thenReturn(List.of(annotation));
     when(accountService.findByGaiaAccountId(userId)).thenReturn(Optional.of(accountEntity));
     when(voteService.myVotes(eq(ReaderVoteTarget.ANNOTATION), anyList())).thenReturn(Map.of());
+    when(commentService.countByAnnotationIds(anyList())).thenReturn(Map.of());
     ReaderPosition mappedPosition = ReaderPosition.newBuilder()
         .id(positionId.toString()).textId(textId.toString()).startOffset(0).endOffset(10).build();
     ReaderAnnotation mapped = ReaderAnnotation.newBuilder()
         .id(annotation.getId().toString()).position(mappedPosition).body("body")
         .author(author).build();
-    when(annotationMapper.map(annotation, mappedPosition, author, null)).thenReturn(mapped);
+    when(positionMapper.map(position)).thenReturn(mappedPosition);
+    when(remoteUserMapper.discord("123")).thenReturn(author);
+    when(annotationMapper.map(annotation, mappedPosition, author, 0, null)).thenReturn(mapped);
 
     List<ReaderAnnotation> result = service.annotations(textId.toString(), false);
 
@@ -214,5 +226,60 @@ class HadesGraphQLServiceTest {
 
     assertThat(result).isInstanceOf(QuerySuccess.class);
     assertThat(((QuerySuccess) result).getId()).isEqualTo(id.toString());
+  }
+
+  @Test
+  void annotations_shouldPropagateReplyCount() {
+    UUID textId = UUID.randomUUID();
+    UUID positionId = UUID.randomUUID();
+    UUID annotationId = UUID.randomUUID();
+    ReaderPositionEntity position = new ReaderPositionEntity();
+    position.setId(positionId);
+    position.setTextId(textId);
+    position.setStartOffset(0);
+    position.setEndOffset(10);
+    ReaderAnnotationEntity annotation = new ReaderAnnotationEntity();
+    annotation.setId(annotationId);
+    annotation.setPositionId(positionId);
+    annotation.setBody("body");
+    annotation.setStatus(ReaderStatus.ACTIVE);
+    annotation.setCreatedBy(userId);
+    when(positionService.listForText(textId)).thenReturn(List.of(position));
+    when(annotationService.listForText(textId, false)).thenReturn(List.of(annotation));
+    when(accountService.findByGaiaAccountId(userId)).thenReturn(Optional.empty());
+    when(voteService.myVotes(eq(ReaderVoteTarget.ANNOTATION), anyList())).thenReturn(Map.of());
+    when(commentService.countByAnnotationIds(anyList())).thenReturn(Map.of(annotationId, 5L));
+    ReaderPosition mappedPosition = ReaderPosition.newBuilder()
+        .id(positionId.toString()).textId(textId.toString()).startOffset(0).endOffset(10).build();
+    ReaderAnnotation mapped = ReaderAnnotation.newBuilder()
+        .id(annotationId.toString()).replyCount(5).build();
+    when(positionMapper.map(position)).thenReturn(mappedPosition);
+    when(annotationMapper.map(annotation, mappedPosition, null, 5, null)).thenReturn(mapped);
+
+    List<ReaderAnnotation> result = service.annotations(textId.toString(), false);
+
+    assertThat(result).hasSize(1);
+    assertThat(result.get(0).getReplyCount()).isEqualTo(5);
+    verify(commentService).countByAnnotationIds(List.of(annotationId));
+  }
+
+  @Test
+  void locateRemoteObjects_shouldDelegateToMapper() {
+    UUID id = UUID.randomUUID();
+    UUID ownerId = UUID.randomUUID();
+    com.sun.hades.service.RemoteObjectReference reference =
+        new com.sun.hades.service.RemoteObjectReference(id, "ANNOTATION", ownerId, null);
+    when(annotationService.locateRemoteObjects(any())).thenReturn(List.of(reference));
+    com.sun.hades.codegen.types.ReaderObjectReference mapped =
+        com.sun.hades.codegen.types.ReaderObjectReference.newBuilder()
+            .id(id.toString()).ownerType("ANNOTATION").ownerId(ownerId.toString()).build();
+    when(objectReferenceMapper.map(reference)).thenReturn(mapped);
+
+    List<com.sun.hades.codegen.types.ReaderObjectReference> result =
+        service.locateRemoteObjects(List.of("hades:annotation:" + id));
+
+    assertThat(result).hasSize(1);
+    assertThat(result.get(0).getOwnerType()).isEqualTo("ANNOTATION");
+    verify(objectReferenceMapper).map(reference);
   }
 }

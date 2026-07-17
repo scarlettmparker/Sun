@@ -19,16 +19,17 @@ public class ReaderAnnotationMapper {
 
   /**
    * Maps an annotation entity to the GraphQL ReaderAnnotation type, with its
-   * position, author, and the caller's vote resolved by the caller.
+   * position, author, reply count, and the caller's vote resolved by the caller.
    *
    * @param entity the annotation entity
    * @param position the resolved position, or null
    * @param author the resolved author reference, or null
+   * @param replyCount the number of active replies
    * @param myVote the caller's vote on this annotation, or null
    * @return the GraphQL ReaderAnnotation
    */
   public ReaderAnnotation map(ReaderAnnotationEntity entity, ReaderPosition position,
-      RemoteUser author, VoteValue myVote) {
+      RemoteUser author, int replyCount, VoteValue myVote) {
     logger.debug("Mapping annotation {}", entity.getId());
     ReaderAnnotation annotation = ReaderAnnotation.newBuilder()
         .id(entity.getId().toString())
@@ -39,6 +40,7 @@ public class ReaderAnnotationMapper {
         .upvotes(entity.getUpvotes())
         .downvotes(entity.getDownvotes())
         .netScore(entity.getUpvotes() - entity.getDownvotes())
+        .replyCount(replyCount)
         .remoteObject(entity.getRemoteObject())
         .author(author)
         .myVote(myVote)

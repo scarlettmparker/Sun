@@ -6,7 +6,10 @@ import com.sun.hades.model.ReaderCommentEntity;
 import com.sun.hades.model.enums.ReaderVoteTarget;
 import com.sun.hades.repository.ReaderCommentRepository;
 import com.sun.hades.repository.ReaderVoteRepository;
+import java.util.Collection;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -38,6 +41,22 @@ public class ReaderCommentService extends BaseService<ReaderCommentEntity> {
    */
   public Page<ReaderCommentEntity> listForAnnotation(UUID annotationId, Pageable pageable) {
     return commentRepository.findByAnnotationId(annotationId, pageable);
+  }
+
+  /**
+   * Counts active replies for each annotation in a batch.
+   *
+   * @param annotationIds the annotations to count replies for
+   * @return annotation id to active reply count
+   */
+  public Map<UUID, Long> countByAnnotationIds(Collection<UUID> annotationIds) {
+    if (annotationIds == null || annotationIds.isEmpty()) {
+      return Map.of();
+    }
+    return commentRepository.countActiveByAnnotationIdIn(annotationIds).stream()
+        .collect(Collectors.toMap(
+            row -> (UUID) row[0],
+            row -> (Long) row[1]));
   }
 
   /**
