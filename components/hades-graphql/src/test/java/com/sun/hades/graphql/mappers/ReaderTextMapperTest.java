@@ -6,7 +6,6 @@ import com.sun.hades.codegen.types.ReaderTextInput;
 import com.sun.hades.model.ReaderTextEntity;
 import com.sun.hades.model.enums.CefrLevel;
 import com.sun.hades.model.enums.ReaderTextStatus;
-import com.sun.hades.model.enums.ReaderTextType;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -27,7 +26,6 @@ class ReaderTextMapperTest {
     entity.setContent("content");
     entity.setLanguage("fr");
     entity.setLevel(CefrLevel.A1);
-    entity.setType(ReaderTextType.SYSTEM);
     entity.setSourceId(sourceId);
     entity.setStatus(ReaderTextStatus.ACTIVE);
     entity.setCreatedAt(createdAt);
@@ -40,7 +38,6 @@ class ReaderTextMapperTest {
     assertThat(result.getContent()).isEqualTo("content");
     assertThat(result.getLanguage()).isEqualTo("fr");
     assertThat(result.getLevel()).isEqualTo(CefrLevel.A1);
-    assertThat(result.getType()).isEqualTo(ReaderTextType.SYSTEM);
     assertThat(result.getSourceId()).isEqualTo(sourceId.toString());
     assertThat(result.getStatus()).isEqualTo(ReaderTextStatus.ACTIVE);
   }
@@ -49,7 +46,7 @@ class ReaderTextMapperTest {
   void mapInput_shouldMapAllFields() {
     ReaderTextInput input = ReaderTextInput.newBuilder()
         .title("Title").content("content").language("fr")
-        .level(CefrLevel.B2).type(ReaderTextType.USER).build();
+        .level(CefrLevel.B2).build();
 
     ReaderTextEntity result = mapper.mapInput(input);
 
@@ -57,6 +54,5 @@ class ReaderTextMapperTest {
     assertThat(result.getContent()).isEqualTo("content");
     assertThat(result.getLanguage()).isEqualTo("fr");
     assertThat(result.getLevel()).isEqualTo(CefrLevel.B2);
-    assertThat(result.getType()).isEqualTo(ReaderTextType.USER);
   }
 }

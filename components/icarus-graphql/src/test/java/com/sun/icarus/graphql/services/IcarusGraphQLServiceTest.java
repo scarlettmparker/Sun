@@ -30,6 +30,7 @@ class IcarusGraphQLServiceTest {
   @Mock private ForumVoteService voteService;
   @Mock private ForumThreadMapper threadMapper;
   @Mock private ForumPostMapper postMapper;
+  @Mock private com.sun.gaia.service.AccountService accountService;
 
   @InjectMocks private IcarusGraphQLService service;
 

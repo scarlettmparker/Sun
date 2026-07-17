@@ -1,6 +1,6 @@
 {
   "name": "@sun/components",
-  "version": "0.9.23",
+  "version": "0.9.24",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",

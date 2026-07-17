@@ -18,6 +18,8 @@ type ForumPost {
   upvotes: Int!
   downvotes: Int!
   netScore: Int!
+  author: RemoteUser
+  myVote: VoteValue
   createdAt: Date
   updatedAt: Date
 }

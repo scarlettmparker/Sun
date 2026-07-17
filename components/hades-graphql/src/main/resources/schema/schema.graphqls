@@ -1,11 +1,15 @@
-"""The website a reader text originated from."""
+"""
+The website a reader text originated from.
+"""
 type ReaderSource {
   id: String!
   name: String!
   url: String!
 }
 
-"""A foreign-language text that users annotate."""
+"""
+A foreign-language text that users annotate.
+"""
 type ReaderText {
   id: String!
   title: String!
@@ -19,7 +23,9 @@ type ReaderText {
   updatedAt: Date
 }
 
-"""A character range on a text."""
+"""
+A character range on a text.
+"""
 type ReaderPosition {
   id: String!
   textId: ID!
@@ -27,7 +33,9 @@ type ReaderPosition {
   endOffset: Int!
 }
 
-"""A markdown explanation a user wrote for a position."""
+"""
+A markdown explanation a user wrote for a position.
+"""
 type ReaderAnnotation {
   id: String!
   positionId: ID!
@@ -38,13 +46,15 @@ type ReaderAnnotation {
   downvotes: Int!
   netScore: Int!
   remoteObject: [String!]
-  author: ReaderAccount
+  author: RemoteUser
   myVote: VoteValue
   createdAt: Date
   updatedAt: Date
 }
 
-"""A threaded reply on an annotation."""
+"""
+A threaded reply on an annotation.
+"""
 type ReaderComment {
   id: String!
   annotationId: ID!
@@ -54,11 +64,15 @@ type ReaderComment {
   upvotes: Int!
   downvotes: Int!
   netScore: Int!
+  author: RemoteUser
+  myVote: VoteValue
   createdAt: Date
   updatedAt: Date
 }
 
-"""Reader-specific profile for a member."""
+"""
+Reader-specific profile for a member.
+"""
 type ReaderAccount {
   id: String!
   gaiaAccountId: ID!
@@ -70,7 +84,9 @@ type ReaderAccount {
   roles: [ReaderRole!]!
 }
 
-"""A learner level granted by a Discord guild role."""
+"""
+A learner level granted by a Discord guild role.
+"""
 type ReaderRole {
   key: String!
   name: String!
@@ -99,10 +115,26 @@ type ReaderObjectReference {
   ownerId: ID!
 }
 
-enum CefrLevel { A1 A2 B1 B2 C1 C2 }
-enum ReaderTextStatus { ACTIVE ARCHIVED }
-enum ReaderStatus { ACTIVE HIDDEN }
-enum ReaderVoteTarget { ANNOTATION COMMENT }
+enum CefrLevel {
+  A1
+  A2
+  B1
+  B2
+  C1
+  C2
+}
+enum ReaderTextStatus {
+  ACTIVE
+  ARCHIVED
+}
+enum ReaderStatus {
+  ACTIVE
+  HIDDEN
+}
+enum ReaderVoteTarget {
+  ANNOTATION
+  COMMENT
+}
 
 input ReaderTextInput {
   title: String!
@@ -132,7 +164,9 @@ input VoteInput {
   value: VoteValue!
 }
 
-"""Read operations for the reader."""
+"""
+Read operations for the reader.
+"""
 type HadesQueries {
   text(id: ID!): ReaderText
   source(id: ID!): ReaderSource
@@ -140,13 +174,20 @@ type HadesQueries {
   texts(pagination: PaginationInput): PagedReaderTexts!
   annotations(textId: ID!, includeHidden: Boolean): [ReaderAnnotation!]!
   annotation(id: ID!): ReaderAnnotation
-  comments(annotationId: ID!, includeHidden: Boolean, pagination: PaginationInput): PagedReaderComments!
+  comments(
+    annotationId: ID!
+    includeHidden: Boolean
+    pagination: PaginationInput
+  ): PagedReaderComments!
   readerAccount: ReaderAccount
+  readerAccounts(remoteUsers: [RemoteUserInput!]!): [ReaderAccount!]!
   myVote(targetType: ReaderVoteTarget!, targetId: ID!): VoteValue
   locateRemoteObjects(ids: [String!]!): [ReaderObjectReference!]!
 }
 
-"""Write operations for the reader."""
+"""
+Write operations for the reader.
+"""
 type HadesMutations {
   createSource(name: String!, url: String!): QueryResult
   createText(input: ReaderTextInput!): QueryResult

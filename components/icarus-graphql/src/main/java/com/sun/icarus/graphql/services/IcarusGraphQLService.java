@@ -13,6 +13,8 @@ import com.sun.icarus.codegen.types.QueryResult;
 import com.sun.icarus.codegen.types.QuerySuccess;
 import com.sun.icarus.codegen.types.ForumObjectReference;
 import com.sun.icarus.codegen.types.ForumVoteInput;
+import com.sun.icarus.codegen.types.RemoteUser;
+import com.sun.icarus.codegen.types.RemoteUserType;
 import com.sun.icarus.codegen.types.StandardError;
 import com.sun.icarus.graphql.mappers.ForumPostMapper;
 import com.sun.icarus.graphql.mappers.ForumThreadMapper;
@@ -47,14 +49,17 @@ public class IcarusGraphQLService {
   private final ForumVoteService voteService;
   private final ForumThreadMapper threadMapper;
   private final ForumPostMapper postMapper;
+  private final com.sun.gaia.service.AccountService accountService;
 
   public IcarusGraphQLService(ForumThreadService threadService, ForumPostService postService,
-      ForumVoteService voteService, ForumThreadMapper threadMapper, ForumPostMapper postMapper) {
+      ForumVoteService voteService, ForumThreadMapper threadMapper, ForumPostMapper postMapper,
+      com.sun.gaia.service.AccountService accountService) {
     this.threadService = threadService;
     this.postService = postService;
     this.voteService = voteService;
     this.threadMapper = threadMapper;
     this.postMapper = postMapper;
+    this.accountService = accountService;
   }
 
   /**
@@ -103,11 +108,38 @@ public class IcarusGraphQLService {
   public PagedForumPosts posts(String threadId, Boolean includeHidden, PaginationInput pagination) {
     Pageable pageable = toPageable(pagination, "createdAt", Sort.Direction.ASC);
     Page<ForumPostEntity> result = postService.listForThread(UUID.fromString(threadId), pageable);
-    List<ForumPost> items = result.getContent().stream()
+    List<ForumPostEntity> visible = result.getContent().stream()
         .filter(p -> Boolean.TRUE.equals(includeHidden) || p.getStatus() == PostStatus.ACTIVE)
-        .map(postMapper::map)
+        .toList();
+    java.util.Map<UUID, RemoteUser> authors = new java.util.HashMap<>();
+    visible.stream()
+        .map(ForumPostEntity::getCreatedBy)
+        .filter(java.util.Objects::nonNull)
+        .distinct()
+        .forEach(gaiaAccountId -> accountService.findById(gaiaAccountId).ifPresent(acc -> {
+          if ("discord".equals(acc.getProvider()) && acc.getProviderId() != null) {
+            authors.put(gaiaAccountId, remoteUser(acc.getProviderId()));
+          }
+        }));
+    java.util.Map<UUID, VoteValue> myVotes = voteService.myVotes(
+        visible.stream().map(ForumPostEntity::getId).toList());
+    List<ForumPost> items = visible.stream()
+        .map(p -> postMapper.map(p, authors.get(p.getCreatedBy()), myVotes.get(p.getId())))
         .toList();
     return PagedForumPosts.newBuilder().items(items).pageInfo(pageInfo(result)).build();
+  }
+
+  /**
+   * Builds a DISCORD RemoteUser reference from a Discord id.
+   *
+   * @param discordId the Discord user id
+   * @return the RemoteUser reference
+   */
+  private RemoteUser remoteUser(String discordId) {
+    return RemoteUser.newBuilder()
+        .type(RemoteUserType.DISCORD)
+        .id(discordId)
+        .build();
   }
 
   /**

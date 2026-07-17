@@ -94,6 +94,21 @@ public class ForumVoteService {
     return voteRepository.findByAccountIdAndPostId(accountId, postId).map(ForumVoteEntity::getValue);
   }
 
+  /**
+   * Returns the caller's votes for a batch of posts.
+   *
+   * @param postIds the post ids
+   * @return a map of post id to the caller's vote value
+   */
+  public java.util.Map<UUID, VoteValue> myVotes(java.util.Collection<UUID> postIds) {
+    UUID accountId = UserContextHolder.getUserId();
+    if (accountId == null || postIds == null || postIds.isEmpty()) {
+      return java.util.Map.of();
+    }
+    return voteRepository.findByAccountIdAndPostIdIn(accountId, postIds).stream()
+        .collect(java.util.stream.Collectors.toMap(ForumVoteEntity::getPostId, ForumVoteEntity::getValue));
+  }
+
   private void adjust(ForumPostEntity post, VoteValue value, int delta) {
     if (value == VoteValue.UP) {
       post.setUpvotes(post.getUpvotes() + delta);

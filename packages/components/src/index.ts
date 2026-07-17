@@ -50,6 +50,11 @@ export {
   DropdownMenuTrigger,
 } from "./components/dropdown-menu";
 export {
+  default as Accordion,
+  AccordionTrigger,
+  AccordionContent,
+} from "./components/accordion";
+export {
   Form,
   FormFooter,
   FormField,

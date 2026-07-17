@@ -4,6 +4,7 @@ type Account {
   personId: ID!
   status: AccountStatus!
   provider: String
+  remoteUsers: [RemoteUser!]
   createdAt: Date
   updatedAt: Date
 }

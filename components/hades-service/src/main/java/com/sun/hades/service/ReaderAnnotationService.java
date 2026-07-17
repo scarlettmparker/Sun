@@ -73,9 +73,8 @@ public class ReaderAnnotationService extends BaseService<ReaderAnnotationEntity>
       }
       boolean overlaps = startOffset < p.getEndOffset() && p.getStartOffset() < endOffset;
       boolean exact = startOffset == p.getStartOffset() && endOffset == p.getEndOffset();
-      if (overlaps) {
-        throw new IllegalArgumentException(
-            exact ? "Range already has an active annotation" : "Range overlaps an active annotation");
+      if (overlaps && !exact) {
+        throw new IllegalArgumentException("Range overlaps an active annotation");
       }
     }
 

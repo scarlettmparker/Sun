@@ -23,6 +23,9 @@ import com.sun.hades.codegen.types.ReaderSource;
 import com.sun.hades.codegen.types.ReaderText;
 import com.sun.hades.codegen.types.ReaderTextInput;
 import com.sun.hades.codegen.types.ReaderObjectReference;
+import com.sun.hades.codegen.types.RemoteUser;
+import com.sun.hades.codegen.types.RemoteUserInput;
+import com.sun.hades.codegen.types.RemoteUserType;
 import com.sun.hades.codegen.types.StandardError;
 import com.sun.hades.codegen.types.VoteInput;
 import com.sun.hades.model.enums.ReaderVoteTarget;
@@ -183,16 +186,13 @@ public class HadesGraphQLService {
                     .startOffset(p.getStartOffset())
                     .endOffset(p.getEndOffset())
                     .build()));
-    Map<UUID, ReaderAccount> authors = new HashMap<>();
+    Map<UUID, RemoteUser> authors = new HashMap<>();
     entities.stream()
         .map(ReaderAnnotationEntity::getCreatedBy)
         .filter(Objects::nonNull)
         .distinct()
-        .forEach(gaiaAccountId -> authors.put(
-            gaiaAccountId,
-            accountService.findByGaiaAccountId(gaiaAccountId)
-                .map(accountMapper::map)
-                .orElse(null)));
+        .forEach(gaiaAccountId -> accountService.findByGaiaAccountId(gaiaAccountId)
+            .ifPresent(acc -> authors.put(gaiaAccountId, remoteUser(acc.getDiscordId()))));
     Map<UUID, VoteValue> myVotes = voteService.myVotes(
         ReaderVoteTarget.ANNOTATION,
         entities.stream().map(ReaderAnnotationEntity::getId).toList());
@@ -229,11 +229,36 @@ public class HadesGraphQLService {
     Pageable pageable = toPageable(pagination, "createdAt", Sort.Direction.ASC);
     Page<ReaderCommentEntity> result =
         commentService.listForAnnotation(UUID.fromString(annotationId), pageable);
-    List<ReaderComment> items = result.getContent().stream()
+    List<ReaderCommentEntity> visible = result.getContent().stream()
         .filter(c -> Boolean.TRUE.equals(includeHidden) || c.getStatus() == com.sun.hades.model.enums.ReaderStatus.ACTIVE)
-        .map(commentMapper::map)
+        .toList();
+    Map<UUID, RemoteUser> authors = new HashMap<>();
+    visible.stream()
+        .map(ReaderCommentEntity::getCreatedBy)
+        .filter(Objects::nonNull)
+        .distinct()
+        .forEach(gaiaAccountId -> accountService.findByGaiaAccountId(gaiaAccountId)
+            .ifPresent(acc -> authors.put(gaiaAccountId, remoteUser(acc.getDiscordId()))));
+    Map<UUID, VoteValue> myVotes = voteService.myVotes(
+        ReaderVoteTarget.COMMENT,
+        visible.stream().map(ReaderCommentEntity::getId).toList());
+    List<ReaderComment> items = visible.stream()
+        .map(c -> commentMapper.map(c, authors.get(c.getCreatedBy()), myVotes.get(c.getId())))
         .toList();
     return PagedReaderComments.newBuilder().items(items).pageInfo(pageInfo(result)).build();
+  }
+
+  /**
+   * Builds a DISCORD RemoteUser reference from a Discord id.
+   *
+   * @param discordId the Discord user id
+   * @return the RemoteUser reference
+   */
+  private RemoteUser remoteUser(String discordId) {
+    return RemoteUser.newBuilder()
+        .type(RemoteUserType.DISCORD)
+        .id(discordId)
+        .build();
   }
 
   /**
@@ -248,6 +273,25 @@ public class HadesGraphQLService {
       return null;
     }
     return accountService.findByGaiaAccountId(userId).map(accountMapper::map).orElse(null);
+  }
+
+  /**
+   * Locates reader accounts for a set of remote users.
+   *
+   * @param remoteUsers the remote-user references
+   * @return the matching reader accounts
+   */
+  @Transactional(readOnly = true)
+  public List<ReaderAccount> readerAccounts(List<RemoteUserInput> remoteUsers) {
+    List<String> discordIds = remoteUsers == null ? List.of()
+        : remoteUsers.stream()
+            .filter(r -> r.getType() == RemoteUserType.DISCORD)
+            .map(RemoteUserInput::getId)
+            .distinct()
+            .toList();
+    return accountService.findByDiscordIds(discordIds).stream()
+        .map(accountMapper::map)
+        .toList();
   }
 
   /**

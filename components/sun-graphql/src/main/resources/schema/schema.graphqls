@@ -76,3 +76,20 @@ type PageInfo {
   hasNextPage: Boolean!
   hasPreviousPage: Boolean!
 }
+
+"""
+A user identity on a remote provider.
+"""
+type RemoteUser {
+  type: RemoteUserType!
+  id: String!
+}
+
+enum RemoteUserType {
+  DISCORD
+}
+
+input RemoteUserInput {
+  type: RemoteUserType!
+  id: String!
+}

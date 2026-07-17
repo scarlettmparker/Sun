@@ -4,6 +4,7 @@ import com.sun.base.service.BaseService;
 import com.sun.hades.model.ReaderAccountEntity;
 import com.sun.hades.model.enums.CefrLevel;
 import com.sun.hades.repository.ReaderAccountRepository;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -32,6 +33,19 @@ public class ReaderAccountService extends BaseService<ReaderAccountEntity> {
    */
   public Optional<ReaderAccountEntity> findByGaiaAccountId(UUID gaiaAccountId) {
     return accountRepository.findByGaiaAccountId(gaiaAccountId);
+  }
+
+  /**
+   * Finds reader accounts for a collection of Discord ids.
+   *
+   * @param discordIds the Discord user ids
+   * @return the matching reader accounts
+   */
+  public List<ReaderAccountEntity> findByDiscordIds(Collection<String> discordIds) {
+    if (discordIds == null || discordIds.isEmpty()) {
+      return List.of();
+    }
+    return accountRepository.findByDiscordIdIn(discordIds);
   }
 
   /**

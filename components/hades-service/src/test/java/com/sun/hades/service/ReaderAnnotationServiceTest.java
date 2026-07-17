@@ -86,6 +86,25 @@ class ReaderAnnotationServiceTest {
   }
 
   @Test
+  void createAnnotation_allowsExactRangeCoAnnotation() {
+    ReaderPositionEntity existing = position(textId, 10, 20);
+    when(textRepository.findByIdForUpdate(textId)).thenReturn(Optional.of(new ReaderTextEntity()));
+    when(positionRepository.findByTextId(textId)).thenReturn(List.of(existing));
+    ReaderAnnotationEntity active = annotation(existing.getId());
+    active.setStatus(ReaderStatus.ACTIVE);
+    when(annotationRepository.findByTextId(textId)).thenReturn(List.of(active));
+    when(positionRepository.findByTextIdAndStartOffsetAndEndOffset(textId, 10, 20))
+        .thenReturn(Optional.of(existing));
+    when(annotationRepository.save(any())).thenReturn(annotation(existing.getId()));
+
+    UUID id = service.createAnnotation(textId, 10, 20, "body");
+
+    assertThat(id).isNotNull();
+    verify(positionRepository, never()).save(any());
+    verify(annotationRepository).save(any());
+  }
+
+  @Test
   void createAnnotation_reusesExactRangePosition() {
     ReaderPositionEntity existing = position(textId, 10, 20);
     when(textRepository.findByIdForUpdate(textId)).thenReturn(Optional.of(new ReaderTextEntity()));

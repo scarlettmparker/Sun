@@ -1,0 +1,11 @@
+extend type ReaderAnnotation {
+  authorProfile: ReaderAccount
+}
+
+extend type ReaderComment {
+  authorProfile: ReaderAccount
+}
+
+extend type ForumPost {
+  authorProfile: ReaderAccount
+}

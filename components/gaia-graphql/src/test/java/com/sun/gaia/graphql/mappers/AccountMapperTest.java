@@ -3,6 +3,7 @@ package com.sun.gaia.graphql.mappers;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.sun.gaia.codegen.types.Account;
+import com.sun.gaia.codegen.types.RemoteUserType;
 import com.sun.gaia.model.AccountEntity;
 import com.sun.gaia.model.enums.AccountStatus;
 import java.time.LocalDateTime;
@@ -39,7 +40,25 @@ class AccountMapperTest {
     assertThat(result.getPersonId()).isEqualTo(personId.toString());
     assertThat(result.getStatus()).isEqualTo(AccountStatus.ACTIVE);
     assertThat(result.getProvider()).isEqualTo("local");
+    assertThat(result.getRemoteUsers()).isNull();
     assertThat(result.getCreatedAt()).isEqualTo(createdAt);
     assertThat(result.getUpdatedAt()).isEqualTo(updatedAt);
+  }
+
+  @Test
+  void map_discordProviderDerivesRemoteUser() {
+    AccountEntity entity = new AccountEntity();
+    entity.setId(UUID.randomUUID());
+    entity.setUsername("discord_123");
+    entity.setPersonId(UUID.randomUUID());
+    entity.setStatus(AccountStatus.ACTIVE);
+    entity.setProvider("discord");
+    entity.setProviderId("123456");
+
+    Account result = mapper.map(entity);
+
+    assertThat(result.getRemoteUsers()).hasSize(1);
+    assertThat(result.getRemoteUsers().get(0).getType()).isEqualTo(RemoteUserType.DISCORD);
+    assertThat(result.getRemoteUsers().get(0).getId()).isEqualTo("123456");
   }
 }

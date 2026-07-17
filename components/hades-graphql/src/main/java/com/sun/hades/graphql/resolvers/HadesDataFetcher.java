@@ -16,6 +16,7 @@ import com.sun.hades.codegen.types.ReaderSource;
 import com.sun.hades.codegen.types.ReaderText;
 import com.sun.hades.codegen.types.ReaderTextInput;
 import com.sun.hades.codegen.types.ReaderObjectReference;
+import com.sun.hades.codegen.types.RemoteUserInput;
 import com.sun.hades.codegen.types.VoteInput;
 import com.sun.hades.graphql.services.HadesGraphQLService;
 import com.sun.hades.model.enums.ReaderVoteTarget;
@@ -132,6 +133,18 @@ public class HadesDataFetcher {
   @DgsData(parentType = "HadesQueries", field = "readerAccount")
   public com.sun.hades.codegen.types.ReaderAccount readerAccount() {
     return hadesGraphQLService.readerAccount();
+  }
+
+  /**
+   * Locates reader accounts for a set of remote users.
+   *
+   * @param remoteUsers the remote-user references
+   * @return the matching reader accounts
+   */
+  @DgsData(parentType = "HadesQueries", field = "readerAccounts")
+  public List<com.sun.hades.codegen.types.ReaderAccount> readerAccounts(
+      List<RemoteUserInput> remoteUsers) {
+    return hadesGraphQLService.readerAccounts(remoteUsers);
   }
 
   /**

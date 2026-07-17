@@ -60,7 +60,7 @@ class HadesDataFetcherTest {
   void createText_shouldDelegateToService() {
     ReaderTextInput input = ReaderTextInput.newBuilder()
         .title("Title").content("content").language("fr")
-        .level(CefrLevel.A1).type(ReaderTextType.USER).build();
+        .level(CefrLevel.A1).build();
     QueryResult mockResult = QuerySuccess.newBuilder().message("ok").build();
     when(service.createText(input)).thenReturn(mockResult);
 

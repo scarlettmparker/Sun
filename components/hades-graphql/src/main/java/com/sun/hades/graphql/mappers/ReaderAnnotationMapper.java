@@ -1,10 +1,9 @@
 package com.sun.hades.graphql.mappers;
 
-import com.sun.hades.codegen.types.ReaderAccount;
 import com.sun.hades.codegen.types.ReaderAnnotation;
 import com.sun.hades.codegen.types.ReaderPosition;
+import com.sun.hades.codegen.types.RemoteUser;
 import com.sun.hades.model.ReaderAnnotationEntity;
-import com.sun.hades.model.ReaderPositionEntity;
 import com.sun.hades.model.enums.VoteValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,12 +23,12 @@ public class ReaderAnnotationMapper {
    *
    * @param entity the annotation entity
    * @param position the resolved position, or null
-   * @param author the resolved author account, or null
+   * @param author the resolved author reference, or null
    * @param myVote the caller's vote on this annotation, or null
    * @return the GraphQL ReaderAnnotation
    */
   public ReaderAnnotation map(ReaderAnnotationEntity entity, ReaderPosition position,
-      ReaderAccount author, VoteValue myVote) {
+      RemoteUser author, VoteValue myVote) {
     logger.debug("Mapping annotation {}", entity.getId());
     ReaderAnnotation annotation = ReaderAnnotation.newBuilder()
         .id(entity.getId().toString())

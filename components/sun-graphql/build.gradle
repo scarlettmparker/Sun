@@ -19,13 +19,19 @@ dependencyManagement {
 }
 
 generateJava {
-    schemaPaths = ["${projectDir}/src/main/resources"] +
+    schemaPaths = ["${projectDir}/src/main/resources", "${projectDir}/src/main/graphql-extensions"] +
         enabledModules.collect { "${project(":${it}-graphql").projectDir}/src/main/resources" }
     packageName = 'com.sun.graphql.codegen'
     generateClient = true
     typeMapping = [
         "JSON": "java.lang.Object"
     ]
+}
+
+processResources {
+    from('src/main/graphql-extensions') {
+        into 'schema'
+    }
 }
 
 group = 'com.sun'

@@ -3,6 +3,8 @@ package com.sun.hades.graphql.services;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import com.sun.gaia.service.UserContextHolder;
@@ -13,6 +15,8 @@ import com.sun.hades.codegen.types.ReaderAnnotation;
 import com.sun.hades.codegen.types.ReaderPosition;
 import com.sun.hades.codegen.types.ReaderText;
 import com.sun.hades.codegen.types.ReaderTextInput;
+import com.sun.hades.codegen.types.RemoteUser;
+import com.sun.hades.codegen.types.RemoteUserType;
 import com.sun.hades.codegen.types.StandardError;
 import com.sun.hades.graphql.mappers.ReaderAccountMapper;
 import com.sun.hades.graphql.mappers.ReaderAnnotationMapper;
@@ -25,6 +29,7 @@ import com.sun.hades.model.ReaderPositionEntity;
 import com.sun.hades.model.ReaderTextEntity;
 import com.sun.hades.model.enums.CefrLevel;
 import com.sun.hades.model.enums.ReaderStatus;
+import com.sun.hades.model.enums.ReaderVoteTarget;
 import com.sun.hades.service.DiscordOAuthService;
 import com.sun.hades.service.ReaderAccountService;
 import com.sun.hades.service.ReaderAnnotationService;
@@ -34,6 +39,7 @@ import com.sun.hades.service.ReaderSourceService;
 import com.sun.hades.service.ReaderTextService;
 import com.sun.hades.service.ReaderVoteService;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
@@ -114,11 +120,12 @@ class HadesGraphQLServiceTest {
     when(positionService.listForText(textId)).thenReturn(List.of(position));
     when(annotationService.listForText(textId, false)).thenReturn(List.of(annotation));
     when(accountService.findByGaiaAccountId(userId)).thenReturn(Optional.empty());
+    when(voteService.myVotes(eq(ReaderVoteTarget.ANNOTATION), anyList())).thenReturn(Map.of());
     ReaderPosition mappedPosition = ReaderPosition.newBuilder()
         .id(positionId.toString()).textId(textId.toString()).startOffset(0).endOffset(10).build();
     ReaderAnnotation mapped = ReaderAnnotation.newBuilder()
         .id(annotation.getId().toString()).position(mappedPosition).body("body").build();
-    when(annotationMapper.map(annotation, mappedPosition, null)).thenReturn(mapped);
+    when(annotationMapper.map(annotation, mappedPosition, null, null)).thenReturn(mapped);
 
     List<ReaderAnnotation> result = service.annotations(textId.toString(), false);
 
@@ -145,28 +152,27 @@ class HadesGraphQLServiceTest {
     accountEntity.setId(UUID.randomUUID());
     accountEntity.setGaiaAccountId(userId);
     accountEntity.setDiscordId("123");
-    accountEntity.setDiscordUsername("user");
-    ReaderAccount mappedAccount = ReaderAccount.newBuilder()
-        .id(accountEntity.getId().toString())
-        .discordId("123")
-        .discordUsername("user")
+    RemoteUser author = RemoteUser.newBuilder()
+        .type(RemoteUserType.DISCORD)
+        .id("123")
         .build();
     when(positionService.listForText(textId)).thenReturn(List.of(position));
     when(annotationService.listForText(textId, false)).thenReturn(List.of(annotation));
     when(accountService.findByGaiaAccountId(userId)).thenReturn(Optional.of(accountEntity));
-    when(accountMapper.map(accountEntity)).thenReturn(mappedAccount);
+    when(voteService.myVotes(eq(ReaderVoteTarget.ANNOTATION), anyList())).thenReturn(Map.of());
     ReaderPosition mappedPosition = ReaderPosition.newBuilder()
         .id(positionId.toString()).textId(textId.toString()).startOffset(0).endOffset(10).build();
     ReaderAnnotation mapped = ReaderAnnotation.newBuilder()
         .id(annotation.getId().toString()).position(mappedPosition).body("body")
-        .author(mappedAccount).build();
-    when(annotationMapper.map(annotation, mappedPosition, mappedAccount)).thenReturn(mapped);
+        .author(author).build();
+    when(annotationMapper.map(annotation, mappedPosition, author, null)).thenReturn(mapped);
 
     List<ReaderAnnotation> result = service.annotations(textId.toString(), false);
 
     assertThat(result).hasSize(1);
     assertThat(result.get(0).getAuthor()).isNotNull();
-    assertThat(result.get(0).getAuthor().getDiscordUsername()).isEqualTo("user");
+    assertThat(result.get(0).getAuthor().getType()).isEqualTo(RemoteUserType.DISCORD);
+    assertThat(result.get(0).getAuthor().getId()).isEqualTo("123");
   }
 
   @Test
