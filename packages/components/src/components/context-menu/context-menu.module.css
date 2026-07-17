@@ -22,7 +22,7 @@
 
 .context_menu_item,
 .context_menu_subtrigger {
-  width: 100%;
+  min-width: 8rem;
   padding: var(--md) var(--lg);
   border-radius: var(--sm);
   background-color: rgb(from var(--secondary) r g b / var(--visible));

@@ -13,17 +13,16 @@
   padding: var(--md) var(--lg);
   border: none;
   border-radius: var(--sm);
-  background-color: rgb(from var(--secondary) r g b / var(--visible));
-  backdrop-filter: blur(var(--sm));
+  background-color: transparent;
   color: var(--foreground);
   font: inherit;
   text-align: left;
   cursor: pointer;
-  transition: background-color var(--fast) ease;
+  transition: color var(--fast) ease;
 }
 
 .trigger:hover {
-  background-color: rgb(from var(--secondary-hover) r g b / var(--visible));
+  color: var(--tertiary-hover);
 }
 
 .trigger_label {
@@ -42,5 +41,5 @@
 }
 
 .content {
-  padding: var(--sm);
+  padding: var(--lg);
 }
