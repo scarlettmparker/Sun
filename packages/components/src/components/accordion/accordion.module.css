@@ -22,7 +22,7 @@
 }
 
 .trigger:hover {
-  color: var(--tertiary-hover);
+  color: var(--tertiary);
 }
 
 .trigger_label {
