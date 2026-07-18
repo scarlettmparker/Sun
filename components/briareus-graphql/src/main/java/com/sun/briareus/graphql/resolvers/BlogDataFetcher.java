@@ -3,6 +3,7 @@ package com.sun.briareus.graphql.resolvers;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import com.sun.briareus.graphql.services.BlogGraphQLService;
 import com.netflix.graphql.dgs.DgsComponent;
@@ -35,6 +36,7 @@ public class BlogDataFetcher {
    * @return a list of BlogPost objects
    */
   @DgsData(parentType = "BlogQueries", field = "listBlogPosts")
+  @PreAuthorize("@permissions.has('graphql.briareus.listBlogPosts')")
   public List<BlogPost> listBlogPosts() {
     return blogGraphQLService.listBlogPosts();
   }
@@ -46,6 +48,7 @@ public class BlogDataFetcher {
    * @return the BlogPost object
    */
   @DgsData(parentType = "BlogQueries", field = "locateBlogPost")
+  @PreAuthorize("@permissions.has('graphql.briareus.locateBlogPost')")
   public BlogPost locateBlogPost(String id) {
     return blogGraphQLService.locateBlogPost(id);
   }
@@ -57,6 +60,7 @@ public class BlogDataFetcher {
    * @return a list of BlogPost objects
    */
   @DgsData(parentType = "BlogQueries", field = "listByRemoteObjects")
+  @PreAuthorize("@permissions.has('graphql.briareus.listByRemoteObjects')")
   public List<BlogPost> listByRemoteObjects(List<String> ids) {
     return blogGraphQLService.listByRemoteObjects(ids);
   }
@@ -79,6 +83,7 @@ public class BlogDataFetcher {
    * @return QueryResult indicating success or error
    */
   @DgsData(parentType = "BlogMutations", field = "createBlogPost")
+  @PreAuthorize("@permissions.has('graphql.briareus.createBlogPost')")
   public QueryResult createBlogPost(String title, BlogPostInput input) {
     return blogGraphQLService.createBlogPost(title, input);
   }

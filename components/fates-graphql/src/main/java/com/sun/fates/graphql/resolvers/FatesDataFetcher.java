@@ -12,6 +12,7 @@ import com.sun.fates.codegen.types.QueryResult;
 import com.sun.fates.graphql.services.FatesGraphQLService;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 /**
  * Data fetchers for the people queries and mutations.
@@ -39,6 +40,7 @@ public class FatesDataFetcher {
    * @return the Person object
    */
   @DgsData(parentType = "FatesQueries", field = "person")
+  @PreAuthorize("@permissions.has('graphql.fates.person')")
   public Person person(String id) {
     return fatesGraphQLService.person(id);
   }
@@ -49,6 +51,7 @@ public class FatesDataFetcher {
    * @return a list of Person objects
    */
   @DgsData(parentType = "FatesQueries", field = "listPeople")
+  @PreAuthorize("@permissions.has('graphql.fates.listPeople')")
   public List<Person> listPeople() {
     return fatesGraphQLService.listPeople();
   }
@@ -60,6 +63,7 @@ public class FatesDataFetcher {
    * @return the Place object
    */
   @DgsData(parentType = "FatesQueries", field = "place")
+  @PreAuthorize("@permissions.has('graphql.fates.place')")
   public Place place(String id) {
     return fatesGraphQLService.place(id);
   }
@@ -70,6 +74,7 @@ public class FatesDataFetcher {
    * @return a list of Place objects
    */
   @DgsData(parentType = "FatesQueries", field = "listPlaces")
+  @PreAuthorize("@permissions.has('graphql.fates.listPlaces')")
   public List<Place> listPlaces() {
     return fatesGraphQLService.listPlaces();
   }
@@ -91,6 +96,7 @@ public class FatesDataFetcher {
    * @return the result of the create operation
    */
   @DgsData(parentType = "FatesMutations", field = "createPerson")
+  @PreAuthorize("@permissions.has('graphql.fates.createPerson')")
   public QueryResult createPerson(PersonInput input) {
     return fatesGraphQLService.createPerson(input);
   }
@@ -102,6 +108,7 @@ public class FatesDataFetcher {
    * @return the result of the update operation
    */
   @DgsData(parentType = "FatesMutations", field = "savePerson")
+  @PreAuthorize("@permissions.has('graphql.fates.savePerson')")
   public QueryResult savePerson(PersonInput input) {
     return fatesGraphQLService.savePerson(input);
   }
@@ -113,6 +120,7 @@ public class FatesDataFetcher {
    * @return the result of the delete operation
    */
   @DgsData(parentType = "FatesMutations", field = "deletePerson")
+  @PreAuthorize("@permissions.has('graphql.fates.deletePerson')")
   public QueryResult deletePerson(String id) {
     return fatesGraphQLService.deletePerson(id);
   }
@@ -124,6 +132,7 @@ public class FatesDataFetcher {
    * @return the result of the create operation
    */
   @DgsData(parentType = "FatesMutations", field = "createPlace")
+  @PreAuthorize("@permissions.has('graphql.fates.createPlace')")
   public QueryResult createPlace(PlaceInput input) {
     return fatesGraphQLService.createPlace(input);
   }
@@ -135,6 +144,7 @@ public class FatesDataFetcher {
    * @return the result of the update operation
    */
   @DgsData(parentType = "FatesMutations", field = "savePlace")
+  @PreAuthorize("@permissions.has('graphql.fates.savePlace')")
   public QueryResult savePlace(PlaceInput input) {
     return fatesGraphQLService.savePlace(input);
   }
@@ -146,6 +156,7 @@ public class FatesDataFetcher {
    * @return the result of the delete operation
    */
   @DgsData(parentType = "FatesMutations", field = "deletePlace")
+  @PreAuthorize("@permissions.has('graphql.fates.deletePlace')")
   public QueryResult deletePlace(String id) {
     return fatesGraphQLService.deletePlace(id);
   }

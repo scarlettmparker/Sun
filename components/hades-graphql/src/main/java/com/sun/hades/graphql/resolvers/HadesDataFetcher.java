@@ -23,6 +23,7 @@ import com.sun.hades.model.enums.ReaderVoteTarget;
 import com.sun.hades.model.enums.VoteValue;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 /**
  * Data fetchers for the reader queries and mutations.
@@ -53,6 +54,7 @@ public class HadesDataFetcher {
    * @return a page of texts
    */
   @DgsData(parentType = "HadesQueries", field = "texts")
+  @PreAuthorize("@permissions.has('graphql.hades.texts')")
   public PagedReaderTexts texts(PaginationInput pagination) {
     return hadesGraphQLService.texts(pagination);
   }
@@ -64,6 +66,7 @@ public class HadesDataFetcher {
    * @return the text
    */
   @DgsData(parentType = "HadesQueries", field = "text")
+  @PreAuthorize("@permissions.has('graphql.hades.text')")
   public ReaderText text(String id) {
     return hadesGraphQLService.text(id);
   }
@@ -75,6 +78,7 @@ public class HadesDataFetcher {
    * @return the source
    */
   @DgsData(parentType = "HadesQueries", field = "source")
+  @PreAuthorize("@permissions.has('graphql.hades.source')")
   public ReaderSource source(String id) {
     return hadesGraphQLService.source(id);
   }
@@ -85,6 +89,7 @@ public class HadesDataFetcher {
    * @return the sources
    */
   @DgsData(parentType = "HadesQueries", field = "sources")
+  @PreAuthorize("@permissions.has('graphql.hades.sources')")
   public List<ReaderSource> sources() {
     return hadesGraphQLService.sources();
   }
@@ -97,6 +102,7 @@ public class HadesDataFetcher {
    * @return the annotations
    */
   @DgsData(parentType = "HadesQueries", field = "annotations")
+  @PreAuthorize("@permissions.has('graphql.hades.annotations')")
   public List<ReaderAnnotation> annotations(String textId, Boolean includeHidden) {
     return hadesGraphQLService.annotations(textId, includeHidden);
   }
@@ -108,6 +114,7 @@ public class HadesDataFetcher {
    * @return the annotation
    */
   @DgsData(parentType = "HadesQueries", field = "annotation")
+  @PreAuthorize("@permissions.has('graphql.hades.annotation')")
   public ReaderAnnotation annotation(String id) {
     return hadesGraphQLService.annotation(id);
   }
@@ -121,6 +128,7 @@ public class HadesDataFetcher {
    * @return a page of comments
    */
   @DgsData(parentType = "HadesQueries", field = "comments")
+  @PreAuthorize("@permissions.has('graphql.hades.comments')")
   public PagedReaderComments comments(String annotationId, Boolean includeHidden, PaginationInput pagination) {
     return hadesGraphQLService.comments(annotationId, includeHidden, pagination);
   }
@@ -131,6 +139,7 @@ public class HadesDataFetcher {
    * @return the reader account
    */
   @DgsData(parentType = "HadesQueries", field = "readerAccount")
+  @PreAuthorize("@permissions.has('graphql.hades.readerAccount')")
   public com.sun.hades.codegen.types.ReaderAccount readerAccount() {
     return hadesGraphQLService.readerAccount();
   }
@@ -142,6 +151,7 @@ public class HadesDataFetcher {
    * @return the matching reader accounts
    */
   @DgsData(parentType = "HadesQueries", field = "readerAccounts")
+  @PreAuthorize("@permissions.has('graphql.hades.readerAccounts')")
   public List<com.sun.hades.codegen.types.ReaderAccount> readerAccounts(
       List<RemoteUserInput> remoteUsers) {
     return hadesGraphQLService.readerAccounts(remoteUsers);
@@ -155,6 +165,7 @@ public class HadesDataFetcher {
    * @return the vote value
    */
   @DgsData(parentType = "HadesQueries", field = "myVote")
+  @PreAuthorize("@permissions.has('graphql.hades.myVote')")
   public VoteValue myVote(ReaderVoteTarget targetType, String targetId) {
     return hadesGraphQLService.myVote(targetType, targetId);
   }
@@ -166,6 +177,7 @@ public class HadesDataFetcher {
    * @return the references
    */
   @DgsData(parentType = "HadesQueries", field = "locateRemoteObjects")
+  @PreAuthorize("@permissions.has('graphql.hades.locateRemoteObjects')")
   public List<ReaderObjectReference> locateRemoteObjects(List<String> ids) {
     return hadesGraphQLService.locateRemoteObjects(ids);
   }
@@ -188,6 +200,7 @@ public class HadesDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "HadesMutations", field = "createSource")
+  @PreAuthorize("@permissions.has('graphql.hades.createSource')")
   public QueryResult createSource(String name, String url) {
     return hadesGraphQLService.createSource(name, url);
   }
@@ -199,6 +212,7 @@ public class HadesDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "HadesMutations", field = "createText")
+  @PreAuthorize("@permissions.has('graphql.hades.createText')")
   public QueryResult createText(ReaderTextInput input) {
     return hadesGraphQLService.createText(input);
   }
@@ -210,6 +224,7 @@ public class HadesDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "HadesMutations", field = "archiveText")
+  @PreAuthorize("@permissions.has('graphql.hades.archiveText')")
   public QueryResult archiveText(String id) {
     return hadesGraphQLService.archiveText(id);
   }
@@ -221,6 +236,7 @@ public class HadesDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "HadesMutations", field = "createAnnotation")
+  @PreAuthorize("@permissions.has('graphql.hades.createAnnotation')")
   public QueryResult createAnnotation(AnnotationInput input) {
     return hadesGraphQLService.createAnnotation(
         input.getTextId(), input.getStartOffset(), input.getEndOffset(), input.getBody());
@@ -234,6 +250,7 @@ public class HadesDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "HadesMutations", field = "editAnnotation")
+  @PreAuthorize("@permissions.has('graphql.hades.editAnnotation')")
   public QueryResult editAnnotation(String id, String body) {
     return hadesGraphQLService.editAnnotation(id, body);
   }
@@ -245,6 +262,7 @@ public class HadesDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "HadesMutations", field = "deleteAnnotation")
+  @PreAuthorize("@permissions.has('graphql.hades.deleteAnnotation')")
   public QueryResult deleteAnnotation(String id) {
     return hadesGraphQLService.deleteAnnotation(id);
   }
@@ -256,6 +274,7 @@ public class HadesDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "HadesMutations", field = "addComment")
+  @PreAuthorize("@permissions.has('graphql.hades.addComment')")
   public QueryResult addComment(CommentInput input) {
     return hadesGraphQLService.addComment(input);
   }
@@ -268,6 +287,7 @@ public class HadesDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "HadesMutations", field = "editComment")
+  @PreAuthorize("@permissions.has('graphql.hades.editComment')")
   public QueryResult editComment(String id, String body) {
     return hadesGraphQLService.editComment(id, body);
   }
@@ -279,6 +299,7 @@ public class HadesDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "HadesMutations", field = "deleteComment")
+  @PreAuthorize("@permissions.has('graphql.hades.deleteComment')")
   public QueryResult deleteComment(String id) {
     return hadesGraphQLService.deleteComment(id);
   }
@@ -290,6 +311,7 @@ public class HadesDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "HadesMutations", field = "vote")
+  @PreAuthorize("@permissions.has('graphql.hades.vote')")
   public QueryResult vote(VoteInput input) {
     return hadesGraphQLService.vote(input);
   }
@@ -302,6 +324,7 @@ public class HadesDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "HadesMutations", field = "removeVote")
+  @PreAuthorize("@permissions.has('graphql.hades.removeVote')")
   public QueryResult removeVote(ReaderVoteTarget targetType, String targetId) {
     return hadesGraphQLService.removeVote(targetType, targetId);
   }
@@ -314,6 +337,7 @@ public class HadesDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "HadesMutations", field = "attachObject")
+  @PreAuthorize("@permissions.has('graphql.hades.attachObject')")
   public QueryResult attachObject(String source, String target) {
     return hadesGraphQLService.attachObject(source, target);
   }
@@ -326,6 +350,7 @@ public class HadesDataFetcher {
    * @return the login result
    */
   @DgsData(parentType = "HadesMutations", field = "discordLogin")
+  @PreAuthorize("permitAll()")
   public DiscordLoginResult discordLogin(String code, String state) {
     return hadesGraphQLService.discordLogin(code, state);
   }

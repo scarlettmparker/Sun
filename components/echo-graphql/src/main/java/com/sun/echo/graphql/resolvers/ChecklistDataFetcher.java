@@ -26,6 +26,7 @@ import com.sun.echo.graphql.services.ChecklistGraphQLService;
 import com.sun.echo.model.enums.ItemStatus;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 /**
  * Data fetchers for the checklist queries and mutations.
@@ -53,6 +54,7 @@ public class ChecklistDataFetcher {
    * @return a page of ChecklistItem objects
    */
   @DgsData(parentType = "ChecklistQueries", field = "items")
+  @PreAuthorize("@permissions.has('graphql.echo.items')")
   public PagedChecklistItems items(PaginationInput pagination) {
     return checklistGraphQLService.items(pagination);
   }
@@ -64,6 +66,7 @@ public class ChecklistDataFetcher {
    * @return the ChecklistItem object
    */
   @DgsData(parentType = "ChecklistQueries", field = "item")
+  @PreAuthorize("@permissions.has('graphql.echo.item')")
   public ChecklistItem item(String id) {
     return checklistGraphQLService.item(id);
   }
@@ -75,6 +78,7 @@ public class ChecklistDataFetcher {
    * @return the ChecklistEntry object
    */
   @DgsData(parentType = "ChecklistQueries", field = "entry")
+  @PreAuthorize("@permissions.has('graphql.echo.entry')")
   public ChecklistEntry entry(String id) {
     return checklistGraphQLService.entry(id);
   }
@@ -86,6 +90,7 @@ public class ChecklistDataFetcher {
    * @return the ChecklistTemplate object
    */
   @DgsData(parentType = "ChecklistQueries", field = "template")
+  @PreAuthorize("@permissions.has('graphql.echo.template')")
   public ChecklistTemplate template(String id) {
     return checklistGraphQLService.template(id);
   }
@@ -97,6 +102,7 @@ public class ChecklistDataFetcher {
    * @return the ChecklistDetail object
    */
   @DgsData(parentType = "ChecklistQueries", field = "templateDetails")
+  @PreAuthorize("@permissions.has('graphql.echo.templateDetails')")
   public ChecklistDetail templateDetails(String id) {
     return checklistGraphQLService.templateDetails(id);
   }
@@ -108,6 +114,7 @@ public class ChecklistDataFetcher {
    * @return the ChecklistDetail object
    */
   @DgsData(parentType = "ChecklistQueries", field = "entryDetails")
+  @PreAuthorize("@permissions.has('graphql.echo.entryDetails')")
   public ChecklistDetail entryDetails(String id) {
     return checklistGraphQLService.entryDetails(id);
   }
@@ -119,6 +126,7 @@ public class ChecklistDataFetcher {
    * @return the ChecklistDetail object
    */
   @DgsData(parentType = "ChecklistQueries", field = "itemDetails")
+  @PreAuthorize("@permissions.has('graphql.echo.itemDetails')")
   public ChecklistDetail itemDetails(String id) {
     return checklistGraphQLService.itemDetails(id);
   }
@@ -131,6 +139,7 @@ public class ChecklistDataFetcher {
    * @return a page of ChecklistTemplateItem objects
    */
   @DgsData(parentType = "ChecklistQueries", field = "templateItems")
+  @PreAuthorize("@permissions.has('graphql.echo.templateItems')")
   public PagedChecklistTemplateItems templateItems(String templateId, PaginationInput pagination) {
     return checklistGraphQLService.templateItems(templateId, pagination);
   }
@@ -143,6 +152,7 @@ public class ChecklistDataFetcher {
    * @return a page of ChecklistEntryItem objects
    */
   @DgsData(parentType = "ChecklistQueries", field = "entryItems")
+  @PreAuthorize("@permissions.has('graphql.echo.entryItems')")
   public PagedChecklistEntryItems entryItems(String entryId, PaginationInput pagination) {
     return checklistGraphQLService.entryItems(entryId, pagination);
   }
@@ -153,6 +163,7 @@ public class ChecklistDataFetcher {
    * @return a list of ChecklistEntry objects
    */
   @DgsData(parentType = "ChecklistQueries", field = "listEntries")
+  @PreAuthorize("@permissions.has('graphql.echo.listEntries')")
   public List<ChecklistEntry> listEntries() {
     return checklistGraphQLService.listEntries();
   }
@@ -163,6 +174,7 @@ public class ChecklistDataFetcher {
    * @return a list of ChecklistTemplate objects
    */
   @DgsData(parentType = "ChecklistQueries", field = "listTemplates")
+  @PreAuthorize("@permissions.has('graphql.echo.listTemplates')")
   public List<ChecklistTemplate> listTemplates() {
     return checklistGraphQLService.listTemplates();
   }
@@ -173,6 +185,7 @@ public class ChecklistDataFetcher {
    * @return a list of ChecklistCategory objects
    */
   @DgsData(parentType = "ChecklistQueries", field = "listCategories")
+  @PreAuthorize("@permissions.has('graphql.echo.listCategories')")
   public List<ChecklistCategory> listCategories() {
     return checklistGraphQLService.listCategories();
   }
@@ -184,6 +197,7 @@ public class ChecklistDataFetcher {
    * @return a list of RemoteObjectReference objects
    */
   @DgsData(parentType = "ChecklistQueries", field = "locateRemoteObjects")
+  @PreAuthorize("@permissions.has('graphql.echo.locateRemoteObjects')")
   public List<RemoteObjectReference> locateRemoteObjects(List<String> ids) {
     return checklistGraphQLService.locateRemoteObjects(ids);
   }
@@ -208,6 +222,7 @@ public class ChecklistDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "ChecklistMutations", field = "createItem")
+  @PreAuthorize("@permissions.has('graphql.echo.createItem')")
   public QueryResult createItem(String name, String description, String categoryId, String icon) {
     return checklistGraphQLService.createItem(name, description, categoryId, icon);
   }
@@ -219,6 +234,7 @@ public class ChecklistDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "ChecklistMutations", field = "saveItem")
+  @PreAuthorize("@permissions.has('graphql.echo.saveItem')")
   public QueryResult saveItem(ChecklistItemInput input) {
     return checklistGraphQLService.saveItem(input);
   }
@@ -230,6 +246,7 @@ public class ChecklistDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "ChecklistMutations", field = "retireItem")
+  @PreAuthorize("@permissions.has('graphql.echo.retireItem')")
   public QueryResult retireItem(String id) {
     return checklistGraphQLService.retireItem(id);
   }
@@ -242,6 +259,7 @@ public class ChecklistDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "ChecklistMutations", field = "createCategory")
+  @PreAuthorize("@permissions.has('graphql.echo.createCategory')")
   public QueryResult createCategory(String name, String description) {
     return checklistGraphQLService.createCategory(name, description);
   }
@@ -253,6 +271,7 @@ public class ChecklistDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "ChecklistMutations", field = "saveCategory")
+  @PreAuthorize("@permissions.has('graphql.echo.saveCategory')")
   public QueryResult saveCategory(ChecklistCategoryInput input) {
     return checklistGraphQLService.saveCategory(input);
   }
@@ -264,6 +283,7 @@ public class ChecklistDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "ChecklistMutations", field = "createChecklist")
+  @PreAuthorize("@permissions.has('graphql.echo.createChecklist')")
   public QueryResult createChecklist(String name) {
     return checklistGraphQLService.createChecklist(name);
   }
@@ -275,6 +295,7 @@ public class ChecklistDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "ChecklistMutations", field = "createChecklistFromTemplate")
+  @PreAuthorize("@permissions.has('graphql.echo.createChecklistFromTemplate')")
   public QueryResult createChecklistFromTemplate(String templateId, String name) {
     return checklistGraphQLService.createChecklistFromTemplate(templateId, name);
   }
@@ -287,6 +308,7 @@ public class ChecklistDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "ChecklistMutations", field = "createChecklistFromTemplates")
+  @PreAuthorize("@permissions.has('graphql.echo.createChecklistFromTemplates')")
   public QueryResult createChecklistFromTemplates(List<String> templateIds, String name) {
     return checklistGraphQLService.createChecklistFromTemplates(templateIds, name);
   }
@@ -298,6 +320,7 @@ public class ChecklistDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "ChecklistMutations", field = "saveChecklist")
+  @PreAuthorize("@permissions.has('graphql.echo.saveChecklist')")
   public QueryResult saveChecklist(ChecklistEntryInput input) {
     return checklistGraphQLService.saveChecklist(input);
   }
@@ -309,6 +332,7 @@ public class ChecklistDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "ChecklistMutations", field = "completeChecklist")
+  @PreAuthorize("@permissions.has('graphql.echo.completeChecklist')")
   public QueryResult completeChecklist(String id) {
     return checklistGraphQLService.completeChecklist(id);
   }
@@ -320,6 +344,7 @@ public class ChecklistDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "ChecklistMutations", field = "archiveChecklist")
+  @PreAuthorize("@permissions.has('graphql.echo.archiveChecklist')")
   public QueryResult archiveChecklist(String id) {
     return checklistGraphQLService.archiveChecklist(id);
   }
@@ -331,6 +356,7 @@ public class ChecklistDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "ChecklistMutations", field = "deleteChecklist")
+  @PreAuthorize("@permissions.has('graphql.echo.deleteChecklist')")
   public QueryResult deleteChecklist(String id) {
     return checklistGraphQLService.deleteChecklist(id);
   }
@@ -344,6 +370,7 @@ public class ChecklistDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "ChecklistMutations", field = "createTemplate")
+  @PreAuthorize("@permissions.has('graphql.echo.createTemplate')")
   public QueryResult createTemplate(String name, String description, List<String> itemIds) {
     return checklistGraphQLService.createTemplate(name, description, itemIds);
   }
@@ -355,6 +382,7 @@ public class ChecklistDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "ChecklistMutations", field = "saveTemplate")
+  @PreAuthorize("@permissions.has('graphql.echo.saveTemplate')")
   public QueryResult saveTemplate(ChecklistTemplateInput input) {
     return checklistGraphQLService.saveTemplate(input);
   }
@@ -366,6 +394,7 @@ public class ChecklistDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "ChecklistMutations", field = "archiveTemplate")
+  @PreAuthorize("@permissions.has('graphql.echo.archiveTemplate')")
   public QueryResult archiveTemplate(String id) {
     return checklistGraphQLService.archiveTemplate(id);
   }
@@ -379,6 +408,7 @@ public class ChecklistDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "ChecklistMutations", field = "addItem")
+  @PreAuthorize("@permissions.has('graphql.echo.addItem')")
   public QueryResult addItem(String entryId, String itemId, Integer position) {
     return checklistGraphQLService.addItem(entryId, itemId, position);
   }
@@ -391,6 +421,7 @@ public class ChecklistDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "ChecklistMutations", field = "removeItem")
+  @PreAuthorize("@permissions.has('graphql.echo.removeItem')")
   public QueryResult removeItem(String entryId, String itemId) {
     return checklistGraphQLService.removeItem(entryId, itemId);
   }
@@ -404,6 +435,7 @@ public class ChecklistDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "ChecklistMutations", field = "setItemStatus")
+  @PreAuthorize("@permissions.has('graphql.echo.setItemStatus')")
   public QueryResult setItemStatus(String entryId, String itemId, ItemStatus status) {
     return checklistGraphQLService.setItemStatus(entryId, itemId, status);
   }
@@ -417,6 +449,7 @@ public class ChecklistDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "ChecklistMutations", field = "addTemplateItem")
+  @PreAuthorize("@permissions.has('graphql.echo.addTemplateItem')")
   public QueryResult addTemplateItem(String templateId, String itemId, Integer position) {
     return checklistGraphQLService.addTemplateItem(templateId, itemId, position);
   }
@@ -429,6 +462,7 @@ public class ChecklistDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "ChecklistMutations", field = "removeTemplateItem")
+  @PreAuthorize("@permissions.has('graphql.echo.removeTemplateItem')")
   public QueryResult removeTemplateItem(String templateId, String itemId) {
     return checklistGraphQLService.removeTemplateItem(templateId, itemId);
   }
@@ -442,11 +476,13 @@ public class ChecklistDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "ChecklistMutations", field = "attachObject")
+  @PreAuthorize("@permissions.has('graphql.echo.attachObject')")
   public QueryResult attachObject(String source, String target, RemoteObjectType ownerType) {
     return checklistGraphQLService.attachObject(source, target, ownerType);
   }
 
   @DgsData(parentType = "ChecklistMutations", field = "detachObject")
+  @PreAuthorize("@permissions.has('graphql.echo.detachObject')")
   public QueryResult detachObject(String source, String target, RemoteObjectType ownerType) {
     return checklistGraphQLService.detachObject(source, target, ownerType);
   }

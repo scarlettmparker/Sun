@@ -22,6 +22,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -54,6 +55,7 @@ public class GaiaDataFetcher {
    * @return the Account object, or null if not authenticated
    */
   @DgsData(parentType = "GaiaQueries", field = "me")
+  @PreAuthorize("@permissions.isAuthenticated()")
   public Account me() {
     return gaiaGraphQLService.me();
   }
@@ -65,6 +67,7 @@ public class GaiaDataFetcher {
    * @return the Account object
    */
   @DgsData(parentType = "GaiaQueries", field = "account")
+  @PreAuthorize("@permissions.has('graphql.gaia.account')")
   public Account account(String id) {
     return gaiaGraphQLService.account(id);
   }
@@ -75,6 +78,7 @@ public class GaiaDataFetcher {
    * @return a list of Account objects
    */
   @DgsData(parentType = "GaiaQueries", field = "listAccounts")
+  @PreAuthorize("@permissions.has('graphql.gaia.listAccounts')")
   public List<Account> listAccounts() {
     return gaiaGraphQLService.listAccounts();
   }
@@ -88,6 +92,7 @@ public class GaiaDataFetcher {
    * @return the values map, or null when a named entry is missing
    */
   @DgsData(parentType = "GaiaQueries", field = "propertySet")
+  @PreAuthorize("@permissions.has('graphql.gaia.propertySet')")
   public Object propertySet(String ownerKey, String name, String entry) {
     return gaiaGraphQLService.propertySet(ownerKey, name, entry);
   }
@@ -100,6 +105,7 @@ public class GaiaDataFetcher {
    * @return the entries
    */
   @DgsData(parentType = "GaiaQueries", field = "propertySets")
+  @PreAuthorize("@permissions.has('graphql.gaia.propertySets')")
   public List<PropertySetEntry> propertySets(String ownerKey, String name) {
     return gaiaGraphQLService.propertySets(ownerKey, name);
   }
@@ -112,6 +118,7 @@ public class GaiaDataFetcher {
    * @return the schema, or null when absent
    */
   @DgsData(parentType = "GaiaQueries", field = "propertySetSchema")
+  @PreAuthorize("@permissions.has('graphql.gaia.propertySetSchema')")
   public PropertySetSchema propertySetSchema(String ownerKey, String name) {
     return gaiaGraphQLService.propertySetSchema(ownerKey, name);
   }
@@ -122,6 +129,7 @@ public class GaiaDataFetcher {
    * @return the configurations
    */
   @DgsData(parentType = "GaiaQueries", field = "configurations")
+  @PreAuthorize("@permissions.has('graphql.gaia.configurations')")
   public List<Configuration> configurations() {
     return gaiaGraphQLService.configurations();
   }
@@ -133,6 +141,7 @@ public class GaiaDataFetcher {
    * @return the configuration, or null when absent
    */
   @DgsData(parentType = "GaiaQueries", field = "configuration")
+  @PreAuthorize("@permissions.has('graphql.gaia.configuration')")
   public Configuration configuration(String id) {
     return gaiaGraphQLService.configuration(id);
   }
@@ -155,6 +164,7 @@ public class GaiaDataFetcher {
    * @return the auth result with JWT token
    */
   @DgsData(parentType = "GaiaMutations", field = "register")
+  @PreAuthorize("permitAll()")
   @DgsEnableDataFetcherInstrumentation(false)
   public AuthResult register(RegisterInput input) {
     return gaiaGraphQLService.register(input);
@@ -167,6 +177,7 @@ public class GaiaDataFetcher {
    * @return the auth result with JWT token
    */
   @DgsData(parentType = "GaiaMutations", field = "login")
+  @PreAuthorize("permitAll()")
   @DgsEnableDataFetcherInstrumentation(false)
   public AuthResult login(LoginInput input) {
     return gaiaGraphQLService.login(input);
@@ -178,6 +189,7 @@ public class GaiaDataFetcher {
    * @return the result of the logout operation
    */
   @DgsData(parentType = "GaiaMutations", field = "logout")
+  @PreAuthorize("@permissions.isAuthenticated()")
   public QueryResult logout() {
     return gaiaGraphQLService.logout();
   }
@@ -189,6 +201,7 @@ public class GaiaDataFetcher {
    * @return the result of the request
    */
   @DgsData(parentType = "GaiaMutations", field = "requestPasswordReset")
+  @PreAuthorize("permitAll()")
   @DgsEnableDataFetcherInstrumentation(false)
   public QueryResult requestPasswordReset(String email) {
     return gaiaGraphQLService.requestPasswordReset(email);
@@ -202,6 +215,7 @@ public class GaiaDataFetcher {
    * @return the result of the reset operation
    */
   @DgsData(parentType = "GaiaMutations", field = "resetPassword")
+  @PreAuthorize("permitAll()")
   @DgsEnableDataFetcherInstrumentation(false)
   public QueryResult resetPassword(String token, String newPassword) {
     return gaiaGraphQLService.resetPassword(token, newPassword);
@@ -215,6 +229,7 @@ public class GaiaDataFetcher {
    * @return the result of the change operation
    */
   @DgsData(parentType = "GaiaMutations", field = "changePassword")
+  @PreAuthorize("@permissions.isAuthenticated()")
   public QueryResult changePassword(String currentPassword, String newPassword) {
     return gaiaGraphQLService.changePassword(currentPassword, newPassword);
   }
@@ -229,6 +244,7 @@ public class GaiaDataFetcher {
    * @return the saved entry
    */
   @DgsData(parentType = "GaiaMutations", field = "upsertPropertyEntry")
+  @PreAuthorize("@permissions.has('graphql.gaia.upsertPropertyEntry')")
   public PropertySetEntry upsertPropertyEntry(String ownerKey, String name, String entry,
       Object values) {
     return gaiaGraphQLService.upsertPropertyEntry(ownerKey, name, entry, values);
@@ -245,6 +261,7 @@ public class GaiaDataFetcher {
    * @return the saved entry
    */
   @DgsData(parentType = "GaiaMutations", field = "setProperty")
+  @PreAuthorize("@permissions.has('graphql.gaia.setProperty')")
   public PropertySetEntry setProperty(String ownerKey, String name, String entry, String property,
       Object value) {
     return gaiaGraphQLService.setProperty(ownerKey, name, entry, property, value);
@@ -257,6 +274,7 @@ public class GaiaDataFetcher {
    * @return the saved schema
    */
   @DgsData(parentType = "GaiaMutations", field = "registerPropertySetSchema")
+  @PreAuthorize("@permissions.has('graphql.gaia.registerPropertySetSchema')")
   public PropertySetSchema registerPropertySetSchema(PropertySetSchemaInput input) {
     return gaiaGraphQLService.registerPropertySetSchema(input);
   }
@@ -268,6 +286,7 @@ public class GaiaDataFetcher {
    * @return the saved configuration
    */
   @DgsData(parentType = "GaiaMutations", field = "createConfiguration")
+  @PreAuthorize("@permissions.has('graphql.gaia.createConfiguration')")
   public Configuration createConfiguration(ConfigurationInput input) {
     return gaiaGraphQLService.createConfiguration(input);
   }
@@ -280,6 +299,7 @@ public class GaiaDataFetcher {
    * @return the saved configuration
    */
   @DgsData(parentType = "GaiaMutations", field = "updateConfiguration")
+  @PreAuthorize("@permissions.has('graphql.gaia.updateConfiguration')")
   public Configuration updateConfiguration(String id, ConfigurationInput input) {
     return gaiaGraphQLService.updateConfiguration(id, input);
   }
@@ -291,6 +311,7 @@ public class GaiaDataFetcher {
    * @return a success result
    */
   @DgsData(parentType = "GaiaMutations", field = "deleteConfiguration")
+  @PreAuthorize("@permissions.has('graphql.gaia.deleteConfiguration')")
   public QueryResult deleteConfiguration(String id) {
     return gaiaGraphQLService.deleteConfiguration(id);
   }
@@ -302,6 +323,7 @@ public class GaiaDataFetcher {
    * @return the reconciled configuration
    */
   @DgsData(parentType = "GaiaMutations", field = "applyConfiguration")
+  @PreAuthorize("@permissions.has('graphql.gaia.applyConfiguration')")
   public Configuration applyConfiguration(String id) {
     return gaiaGraphQLService.applyConfiguration(id);
   }

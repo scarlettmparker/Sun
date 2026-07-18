@@ -18,6 +18,7 @@ import com.sun.icarus.graphql.services.IcarusGraphQLService;
 import com.sun.icarus.model.enums.VoteValue;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 /**
  * Data fetchers for the forum queries and mutations.
@@ -45,6 +46,7 @@ public class IcarusDataFetcher {
    * @return the thread
    */
   @DgsData(parentType = "IcarusQueries", field = "thread")
+  @PreAuthorize("@permissions.has('graphql.icarus.thread')")
   public ForumThread thread(String id) {
     return icarusGraphQLService.thread(id);
   }
@@ -56,6 +58,7 @@ public class IcarusDataFetcher {
    * @return a page of threads
    */
   @DgsData(parentType = "IcarusQueries", field = "threadsFor")
+  @PreAuthorize("@permissions.has('graphql.icarus.threadsFor')")
   public PagedForumThreads threadsFor(String remoteObject) {
     return icarusGraphQLService.threadsFor(remoteObject);
   }
@@ -69,6 +72,7 @@ public class IcarusDataFetcher {
    * @return a page of posts
    */
   @DgsData(parentType = "IcarusQueries", field = "posts")
+  @PreAuthorize("@permissions.has('graphql.icarus.posts')")
   public PagedForumPosts posts(String threadId, Boolean includeHidden, PaginationInput pagination) {
     return icarusGraphQLService.posts(threadId, includeHidden, pagination);
   }
@@ -80,6 +84,7 @@ public class IcarusDataFetcher {
    * @return the vote value
    */
   @DgsData(parentType = "IcarusQueries", field = "myVote")
+  @PreAuthorize("@permissions.has('graphql.icarus.myVote')")
   public VoteValue myVote(String postId) {
     return icarusGraphQLService.myVote(postId);
   }
@@ -91,6 +96,7 @@ public class IcarusDataFetcher {
    * @return the references
    */
   @DgsData(parentType = "IcarusQueries", field = "locateRemoteObjects")
+  @PreAuthorize("@permissions.has('graphql.icarus.locateRemoteObjects')")
   public List<ForumObjectReference> locateRemoteObjects(List<String> ids) {
     return icarusGraphQLService.locateRemoteObjects(ids);
   }
@@ -112,6 +118,7 @@ public class IcarusDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "IcarusMutations", field = "createThread")
+  @PreAuthorize("@permissions.has('graphql.icarus.createThread')")
   public QueryResult createThread(CreateThreadInput input) {
     return icarusGraphQLService.createThread(input);
   }
@@ -123,6 +130,7 @@ public class IcarusDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "IcarusMutations", field = "lockThread")
+  @PreAuthorize("@permissions.has('graphql.icarus.lockThread')")
   public QueryResult lockThread(String id) {
     return icarusGraphQLService.lockThread(id);
   }
@@ -134,6 +142,7 @@ public class IcarusDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "IcarusMutations", field = "archiveThread")
+  @PreAuthorize("@permissions.has('graphql.icarus.archiveThread')")
   public QueryResult archiveThread(String id) {
     return icarusGraphQLService.archiveThread(id);
   }
@@ -145,6 +154,7 @@ public class IcarusDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "IcarusMutations", field = "createPost")
+  @PreAuthorize("@permissions.has('graphql.icarus.createPost')")
   public QueryResult createPost(CreatePostInput input) {
     return icarusGraphQLService.createPost(input);
   }
@@ -157,6 +167,7 @@ public class IcarusDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "IcarusMutations", field = "editPost")
+  @PreAuthorize("@permissions.has('graphql.icarus.editPost')")
   public QueryResult editPost(String id, String body) {
     return icarusGraphQLService.editPost(id, body);
   }
@@ -168,6 +179,7 @@ public class IcarusDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "IcarusMutations", field = "deletePost")
+  @PreAuthorize("@permissions.has('graphql.icarus.deletePost')")
   public QueryResult deletePost(String id) {
     return icarusGraphQLService.deletePost(id);
   }
@@ -179,6 +191,7 @@ public class IcarusDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "IcarusMutations", field = "vote")
+  @PreAuthorize("@permissions.has('graphql.icarus.vote')")
   public QueryResult vote(ForumVoteInput input) {
     return icarusGraphQLService.vote(input);
   }
@@ -190,6 +203,7 @@ public class IcarusDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "IcarusMutations", field = "removeVote")
+  @PreAuthorize("@permissions.has('graphql.icarus.removeVote')")
   public QueryResult removeVote(String postId) {
     return icarusGraphQLService.removeVote(postId);
   }
@@ -202,6 +216,7 @@ public class IcarusDataFetcher {
    * @return a QueryResult
    */
   @DgsData(parentType = "IcarusMutations", field = "attachObject")
+  @PreAuthorize("@permissions.has('graphql.icarus.attachObject')")
   public QueryResult attachObject(String source, String target) {
     return icarusGraphQLService.attachObject(source, target);
   }

@@ -6,6 +6,7 @@ import com.sun.apollo.graphql.services.StemPlayerGraphQLService;
 import com.sun.apollo.codegen.types.Song;
 import com.sun.apollo.codegen.types.StemPlayerQueries;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.List;
 
 /**
@@ -34,6 +35,7 @@ public class StemPlayerDataFetcher {
    * @return a list of Song objects
    */
   @DgsData(parentType = "StemPlayerQueries", field = "list")
+  @PreAuthorize("@permissions.has('graphql.apollo.list')")
   public List<Song> list() {
     return stemPlayerGraphQLService.list();
   }
@@ -45,6 +47,7 @@ public class StemPlayerDataFetcher {
    * @return the Song object
    */
   @DgsData(parentType = "StemPlayerQueries", field = "locate")
+  @PreAuthorize("@permissions.has('graphql.apollo.locate')")
   public Song locate(String id) {
     return stemPlayerGraphQLService.locate(id);
   }

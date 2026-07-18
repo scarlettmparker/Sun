@@ -27,6 +27,7 @@ dependencies {
     implementation project(':narcissus-service')
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'com.netflix.graphql.dgs:graphql-dgs-spring-graphql-starter'
+    compileOnly 'org.springframework.security:spring-security-core'
     implementation 'io.github.cdimascio:dotenv-java:3.0.0'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'com.netflix.graphql.dgs:graphql-dgs-spring-graphql-starter-test'

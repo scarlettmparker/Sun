@@ -3,6 +3,7 @@ package com.sun.cerberus.graphql.resolvers;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import com.sun.cerberus.graphql.services.GalleryGraphQLService;
 import com.netflix.graphql.dgs.DgsComponent;
@@ -35,6 +36,7 @@ public class GalleryDataFetcher {
    * @return a list of GalleryItem objects
    */
   @DgsData(parentType = "GalleryQueries", field = "list")
+  @PreAuthorize("@permissions.has('graphql.cerberus.list')")
   public List<GalleryItem> list() {
     return galleryGraphQLService.list();
   }
@@ -46,6 +48,7 @@ public class GalleryDataFetcher {
    * @return the GalleryItem object
    */
   @DgsData(parentType = "GalleryQueries", field = "locate")
+  @PreAuthorize("@permissions.has('graphql.cerberus.locate')")
   public GalleryItem locate(String id) {
     return galleryGraphQLService.locate(id);
   }
@@ -57,6 +60,7 @@ public class GalleryDataFetcher {
    * @return a list of GalleryItem objects
    */
   @DgsData(parentType = "GalleryQueries", field = "listByRemoteObjects")
+  @PreAuthorize("@permissions.has('graphql.cerberus.listByRemoteObjects')")
   public List<GalleryItem> listByRemoteObjects(List<String> ids) {
     return galleryGraphQLService.listByRemoteObjects(ids);
   }
@@ -68,6 +72,7 @@ public class GalleryDataFetcher {
    * @return a list of GalleryItem objects
    */
   @DgsData(parentType = "GalleryQueries", field = "locateGalleryItems")
+  @PreAuthorize("@permissions.has('graphql.cerberus.locateGalleryItems')")
   public List<GalleryItem> locateGalleryItems(List<String> ids) {
     return galleryGraphQLService.locateGalleryItems(ids);
   }
@@ -89,6 +94,7 @@ public class GalleryDataFetcher {
    * @return QueryResult indicating success or error
    */
   @DgsData(parentType = "GalleryMutations", field = "create")
+  @PreAuthorize("@permissions.has('graphql.cerberus.create')")
   public QueryResult create(GalleryItemInput input) {
     return galleryGraphQLService.create(input);
   }
