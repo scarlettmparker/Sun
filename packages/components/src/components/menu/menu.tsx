@@ -198,7 +198,7 @@ const MenuSub = (props: MenuSubProps) => {
 };
 
 export type MenuSubTriggerProps = React.ComponentProps<typeof Button> & {
-  arrowClassName: string;
+  arrowClassName?: string;
 };
 
 /**

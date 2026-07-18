@@ -11,8 +11,8 @@ import {
   TooltipTrigger,
 } from "@sun/components";
 
-const OPEN_DELAY = 1000;
-const CLOSE_DELAY = 500;
+const OPEN_DELAY = 400;
+const CLOSE_DELAY = 650;
 
 beforeEach(() => {
   jest.useFakeTimers();

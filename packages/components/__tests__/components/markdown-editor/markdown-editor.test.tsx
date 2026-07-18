@@ -26,11 +26,6 @@ afterAll(() => {
   restoreConsoleError();
 });
 
-jest.mock(
-  "~/components/textarea/textarea.module.css",
-  async () => await import("~/../testing/jest/mock/css-module-mock"),
-);
-
 describe("MarkdownEditor", () => {
   it("renders contentEditable div with correct attributes", () => {
     render(
@@ -443,5 +438,78 @@ describe("MarkdownEditor", () => {
       const textarea = screen.getByTestId("markdown-editor-textarea");
       expect(textarea).toHaveValue(pasteData);
     });
+  });
+
+  it("does not commit or highlight during IME composition", () => {
+    const onChange = jest.fn();
+    render(
+      <MarkdownEditor
+        onChange={onChange}
+        name="content"
+        data-testid="editor"
+      />,
+    );
+
+    const editor = screen.getByTestId("editor");
+
+    // A dead-key / IME composition starts (e.g. Greek tonos, ´ + ε => έ)
+    fireEvent.compositionStart(editor);
+    // The browser inserts intermediate text and fires input mid-composition
+    editor.textContent = "έ";
+    fireEvent.input(editor);
+
+    // While composing, the editor must not rewrite innerHTML or fire onChange,
+    // otherwise the composition is cancelled and the diacritic is split off.
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("commits composed text with diacritics on compositionend", () => {
+    const onChange = jest.fn();
+    render(
+      <MarkdownEditor
+        onChange={onChange}
+        name="content"
+        data-testid="editor"
+      />,
+    );
+
+    const editor = screen.getByTestId("editor");
+
+    fireEvent.compositionStart(editor);
+    editor.textContent = "έχω";
+    fireEvent.input(editor);
+    // The composed text is finalised only when the composition ends.
+    fireEvent.compositionEnd(editor);
+
+    expect(onChange).toHaveBeenCalledTimes(1);
+    const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0];
+    expect(lastCall.target.value).toBe("έχω");
+
+    const textarea = screen.getByTestId("markdown-editor-textarea");
+    expect(textarea).toHaveValue("έχω");
+  });
+
+  it("keeps the diacritic combined instead of a standalone mark", () => {
+    const onChange = jest.fn();
+    render(
+      <MarkdownEditor
+        onChange={onChange}
+        name="content"
+        data-testid="editor"
+      />,
+    );
+
+    const editor = screen.getByTestId("editor");
+
+    fireEvent.compositionStart(editor);
+    editor.textContent = "έ";
+    fireEvent.input(editor);
+    fireEvent.compositionEnd(editor);
+
+    const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0];
+
+    expect(lastCall.target.value).toBe("έ");
+    expect(lastCall.target.value).not.toBe("´ε");
+    expect(lastCall.target.value.length).toBe(1);
   });
 });

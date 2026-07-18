@@ -4,6 +4,9 @@ const config: Config = {
   transform: {
     "^.+\\.(t|j)sx?$": "@swc/jest",
   },
+  // Workspace @sun packages ship TS source; transform them instead of
+  // treating them as opaque node_modules.
+  transformIgnorePatterns: ["/node_modules/(?!@sun/)"],
   testEnvironment: "jsdom",
   setupFilesAfterEnv: ["<rootDir>/testing/jest/setup.ts"],
   rootDir: ".",

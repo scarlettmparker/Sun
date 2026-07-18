@@ -186,9 +186,18 @@ const MarkdownEditor = (props: MarkdownEditorProps) => {
   };
 
   /**
-   * Handles input events by updating the value, pushing to undo stack, and triggering re-highlighting.
+   * True while a dead-key / IME composition is in progress. Re-highlighting the
+   * contentEditable mid-composition cancels it, so the diacritic is inserted as
+   * a standalone character (e.g. tonos becomes "´" instead of combining into
+   * "έ"). Highlighting is deferred to compositionend.
    */
-  const handleInput = () => {
+  const isComposingRef = useRef(false);
+
+  /**
+   * Reads the current DOM text, updates state and the hidden textarea, and
+   * re-highlights. Shared by input and compositionend handlers.
+   */
+  const commitInput = () => {
     const el = contentEditableRef.current;
     if (!el) return;
 
@@ -206,6 +215,30 @@ const MarkdownEditor = (props: MarkdownEditorProps) => {
 
     saveCursor(el);
     highlight(rawText, el, restoreCursor);
+  };
+
+  /**
+   * Handles input events by updating the value, pushing to undo stack, and
+   * triggering re-highlighting. Ignored while composing.
+   */
+  const handleInput = () => {
+    if (isComposingRef.current) return;
+    commitInput();
+  };
+
+  /**
+   * Marks the start of an IME composition so input events are ignored.
+   */
+  const handleCompositionStart = () => {
+    isComposingRef.current = true;
+  };
+
+  /**
+   * Marks the end of an IME composition and commits the final composed text.
+   */
+  const handleCompositionEnd = () => {
+    isComposingRef.current = false;
+    commitInput();
   };
 
   /**
@@ -267,6 +300,8 @@ const MarkdownEditor = (props: MarkdownEditorProps) => {
         onInput={handleInput}
         onPaste={handlePaste}
         onKeyDown={handleKeyDown}
+        onCompositionStart={handleCompositionStart}
+        onCompositionEnd={handleCompositionEnd}
         data-placeholder={placeholder}
         data-testid={testId}
         suppressContentEditableWarning={true}

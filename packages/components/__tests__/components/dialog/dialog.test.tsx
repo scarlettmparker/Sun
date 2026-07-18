@@ -261,7 +261,7 @@ describe("Dialog draggable", () => {
       </Dialog>,
     );
     const wrapper = screen.getByRole("dialog").parentElement;
-    const overlay = wrapper?.querySelector('[aria-hidden="true"]');
+    const overlay = wrapper?.querySelector(".dialog_overlay");
     expect(overlay).not.toBeInTheDocument();
   });
 

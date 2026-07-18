@@ -9,12 +9,20 @@
  */
 
 import { render, screen, act } from "@testing-library/react";
-import { Breadcrumb, BreadcrumbItem, BreadcrumbContext } from "@sun/components";
-import React, { useContext } from "react";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbProvider,
+  useBreadcrumbContext,
+} from "@sun/components";
 
 describe("Breadcrumb", () => {
   it("renders empty initially", () => {
-    render(<Breadcrumb />);
+    render(
+      <BreadcrumbProvider>
+        <Breadcrumb />
+      </BreadcrumbProvider>,
+    );
     const nav = screen.getByRole("navigation", { name: /breadcrumb/i });
     expect(nav).toBeInTheDocument();
     expect(screen.queryByRole("listitem")).not.toBeInTheDocument();
@@ -22,7 +30,7 @@ describe("Breadcrumb", () => {
 
   it("supports dynamic add via context", () => {
     const Controller = () => {
-      const { addBreadcrumb } = useContext(BreadcrumbContext);
+      const { addBreadcrumb } = useBreadcrumbContext();
       return (
         <button onClick={() => addBreadcrumb({ label: "Home", href: "/" })}>
           Add
@@ -30,9 +38,10 @@ describe("Breadcrumb", () => {
       );
     };
     render(
-      <Breadcrumb>
+      <BreadcrumbProvider>
+        <Breadcrumb />
         <Controller />
-      </Breadcrumb>,
+      </BreadcrumbProvider>,
     );
     act(() => {
       screen.getByText("Add").click();
@@ -42,7 +51,7 @@ describe("Breadcrumb", () => {
 
   it("supports setBreadcrumbs, pop, delete, deleteAll", () => {
     const Controller = () => {
-      const ctx = useContext(BreadcrumbContext);
+      const ctx = useBreadcrumbContext();
       return (
         <>
           <button
@@ -63,9 +72,10 @@ describe("Breadcrumb", () => {
       );
     };
     render(
-      <Breadcrumb>
+      <BreadcrumbProvider>
+        <Breadcrumb />
         <Controller />
-      </Breadcrumb>,
+      </BreadcrumbProvider>,
     );
     act(() => screen.getByText("Set").click());
     expect(screen.getAllByRole("listitem")).toHaveLength(3);
@@ -79,7 +89,7 @@ describe("Breadcrumb", () => {
 
   it("sets current and applies active class/aria", () => {
     const Controller = () => {
-      const { setBreadcrumbs, setCurrent } = useContext(BreadcrumbContext);
+      const { setBreadcrumbs, setCurrent } = useBreadcrumbContext();
       return (
         <>
           <button
@@ -94,9 +104,10 @@ describe("Breadcrumb", () => {
       );
     };
     render(
-      <Breadcrumb>
+      <BreadcrumbProvider>
+        <Breadcrumb />
         <Controller />
-      </Breadcrumb>,
+      </BreadcrumbProvider>,
     );
     act(() => screen.getByText("Activate").click());
     const li = screen.getByText("X").closest("li");

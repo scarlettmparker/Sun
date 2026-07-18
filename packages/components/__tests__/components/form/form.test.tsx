@@ -17,7 +17,7 @@ import {
 } from "@sun/components";
 import { Input } from "@sun/components";
 import { TextArea } from "@sun/components";
-import { Select } from "@sun/components";
+import { Select, SelectOption } from "@sun/components";
 
 describe("Form", () => {
   it("renders form element with correct attributes", () => {
@@ -354,13 +354,10 @@ describe("Form components integration", () => {
       render(
         <FormField name="test">
           <FormItem>
-            <Select
-              data-testid="select"
-              options={[
-                { value: "option1", label: "Option 1" },
-                { value: "option2", label: "Option 2" },
-              ]}
-            />
+            <Select data-testid="select">
+              <SelectOption value="option1">Option 1</SelectOption>
+              <SelectOption value="option2">Option 2</SelectOption>
+            </Select>
           </FormItem>
         </FormField>,
       );
