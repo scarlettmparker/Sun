@@ -1,0 +1,33 @@
+{
+  "name": "@sun/api",
+  "version": "0.1.0",
+  "description": "Shared GraphQL client for Sun ecosystem apps",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup",
+    "publish": "npm publish --ignore-scripts --registry https://registry.int.scarlettparker.co.uk"
+  },
+  "publishConfig": {
+    "registry": "https://registry.int.scarlettparker.co.uk"
+  },
+  "peerDependencies": {
+    "@sun/ssr": "*",
+    "graphql": "*"
+  },
+  "devDependencies": {
+    "@sun/ssr": "^0.4.8",
+    "graphql": "^16.0.0",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2"
+  }
+}
