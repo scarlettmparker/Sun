@@ -41,10 +41,7 @@ export interface SecurityConfig {
  * @param suffixes Permitted hostname suffixes.
  * @returns True when the host matches an allowed suffix.
  */
-function isOriginAllowed(
-  request: FastifyRequest,
-  suffixes: string[],
-): boolean {
+function isOriginAllowed(request: FastifyRequest, suffixes: string[]): boolean {
   const raw = request.headers.origin ?? request.headers.referer;
   if (!raw || typeof raw !== "string") return false;
   let hostname: string;
@@ -102,7 +99,8 @@ function verifyToken(token: string | undefined, secret: string): boolean {
 }
 
 /**
- * Sets a fresh signed CSRF token cookie on the reply.
+ * Sets a fresh signed CSRF token cookie on the reply. Writes both to the Fastify
+ * reply (for handlers that use reply.send) and to the raw response.
  *
  * @param reply The Fastify reply to attach the cookie to.
  * @param secret The HMAC key.
@@ -122,10 +120,9 @@ function issueCsrfCookie(
   ]
     .filter(Boolean)
     .join("; ");
-  reply.header(
-    "Set-Cookie",
-    `${CSRF_COOKIE}=${encodeURIComponent(sign(nonce, secret))}; ${flags}`,
-  );
+  const cookie = `${CSRF_COOKIE}=${encodeURIComponent(sign(nonce, secret))}; ${flags}`;
+  reply.header("Set-Cookie", cookie);
+  reply.raw.setHeader("Set-Cookie", cookie);
 }
 
 /**
