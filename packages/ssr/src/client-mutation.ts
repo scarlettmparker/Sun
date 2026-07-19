@@ -3,6 +3,7 @@
  */
 
 import { revalidatePageData } from "./page-data";
+import { getCsrfToken, CSRF_HEADER } from "./csrf";
 
 export type BaseMutationResult =
   | { __typename: "QuerySuccess"; id?: string | null; message: string }
@@ -35,6 +36,7 @@ export async function executeMutation(
       credentials: "include",
       headers: {
         "Content-Type": "application/json",
+        [CSRF_HEADER]: getCsrfToken() ?? "",
       },
       body: JSON.stringify(body),
     });

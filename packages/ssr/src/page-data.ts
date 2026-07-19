@@ -3,6 +3,8 @@
  * Provides a registry for page-data loaders and a suspense cache for data loading.
  */
 
+import { CSRF_HEADER, getCsrfToken } from "./csrf";
+
 /**
  * Per-request context passed to page-data loaders, so they can forward auth
  * (e.g. resolve the current user's data) to authenticated backend calls.
@@ -282,7 +284,10 @@ export async function fetchPageDataRpc(
   try {
     const res = await fetch("/__page-data", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        [CSRF_HEADER]: getCsrfToken() ?? "",
+      },
       body: JSON.stringify({ pattern, params }),
     });
     if (!res.ok) return null;

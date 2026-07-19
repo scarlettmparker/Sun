@@ -7,6 +7,7 @@ import type { ViteDevServer } from "vite";
 import { pageDataRpcHandler } from "./rpc-handler";
 import { mutationRegistry } from "./mutations";
 import { ServerRedirectError } from "./server-redirect";
+import { registerSecurity } from "./security";
 import { setRequestCacheProvider, setRequestCookieProvider } from "./page-data";
 import type { CacheRecord } from "./page-data";
 
@@ -25,15 +26,17 @@ export type {
 } from "./renderer";
 export { autoDiscoverRegistrations } from "./auto-discover";
 
-/** Responses smaller than this are sent uncompressed. */
+/**
+ * Responses smaller than this are sent uncompressed.
+ */
 const GZIP_THRESHOLD = 1024;
-/** Content types worth gzipping. Excludes already-compressed binary (images, video, fonts). */
+/**
+ * Content types worth gzipping. Excludes already-compressed binary (images, video, fonts).
+ */
 const COMPRESSIBLE_CONTENT_TYPES = /text\/|\+?json|\+?xml|javascript|csv|svg/i;
 
 /**
- * Per-request page-data cache. server.ts is the server-only entry (never
- * bundled for the browser), so `node:async_hooks` stays out of the client
- * bundle. page-data.ts reads the store via the provider registered here.
+ * Per-request page-data cache.
  */
 const requestCacheAls = new AsyncLocalStorage<Map<string, CacheRecord>>();
 setRequestCacheProvider(() => requestCacheAls.getStore() ?? null);
@@ -48,6 +51,14 @@ type ServerConfig = {
   isProduction: boolean;
   backendHost: string;
   backendPort: number;
+  /**
+   * HMAC key for CSRF tokens; when unset CSRF protection is disabled.
+   */
+  clientSecret?: string;
+  /**
+   * Hostname suffixes allowed by the origin gate.
+   */
+  allowedOrigins?: string[];
 };
 
 /**
@@ -136,12 +147,6 @@ export async function createServer(
       prefix: "/messages/",
       decorateReply: false,
     });
-    const { default: fastifyHttpProxy } = await import("@fastify/http-proxy");
-    await app.register(fastifyHttpProxy, {
-      upstream: `http://${config.backendHost}:${config.backendPort}`,
-      prefix: "/api",
-      rewritePrefix: "/",
-    });
   }
 
   // Per-request page-data cache. Must run before any route handler so the
@@ -193,6 +198,14 @@ export async function createServer(
   if (configure) {
     await configure(app, vite);
   }
+
+  // Origin gate + signed-token CSRF protection. Runs after body-parser plugins
+  // (formbody) so the preHandler can read the _csrf form field on native posts.
+  registerSecurity(app, {
+    clientSecret: config.clientSecret,
+    allowedOrigins: config.allowedOrigins,
+    isProduction: config.isProduction,
+  });
 
   app.post("/__page-data", pageDataRpcHandler());
 

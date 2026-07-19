@@ -9,12 +9,21 @@ export type ApiResponse<T> = {
 };
 
 let authCookieName: string | undefined;
+let clientSecret: string | undefined;
+let clientId: string | undefined;
 
 /**
- * Sets the auth cookie name used to forward the caller's JWT.
+ * Sets the auth cookie name and per-app backend credentials. Server-only: call
+ * from the app's entry-server bootstrap, never the shared client bootstrap.
  */
-export function configureApi(config: { authCookie?: string }): void {
+export function configureApi(config: {
+  authCookie?: string;
+  clientSecret?: string;
+  clientId?: string;
+}): void {
   authCookieName = config.authCookie;
+  clientSecret = config.clientSecret;
+  clientId = config.clientId;
 }
 
 /**
@@ -61,6 +70,12 @@ export async function executeDocument<T, V = Record<string, unknown>>(
   const token = resolveAuthToken(authToken);
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
+  }
+  if (clientSecret) {
+    headers["X-Client-Secret"] = clientSecret;
+    if (clientId) {
+      headers["X-Client-Id"] = clientId;
+    }
   }
 
   try {

@@ -1,10 +1,11 @@
-import { useEffect, useReducer } from "react";
+import { createElement, useEffect, useReducer, useState } from "react";
 import {
   getPageData,
   makeCacheKey,
   refetchEntry,
   subscribeDataInvalidation,
 } from "./page-data";
+import { CSRF_FIELD, getCsrfToken } from "./csrf";
 
 /**
  * Suspense-aware page-data hook.
@@ -32,4 +33,19 @@ export function usePageData<T>(
   }, [cacheKey]);
 
   return getPageData<T>(key, pattern, params);
+}
+
+/**
+ * Hidden form field carrying the CSRF token for native (PRG) form posts.
+ */
+export function CsrfField() {
+  const [token, setToken] = useState("");
+  useEffect(() => {
+    setToken(getCsrfToken() ?? "");
+  }, []);
+  return createElement("input", {
+    type: "hidden",
+    name: CSRF_FIELD,
+    value: token,
+  });
 }

@@ -1,6 +1,6 @@
 {
   "name": "@sun/api",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Shared GraphQL client for Sun ecosystem apps",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",

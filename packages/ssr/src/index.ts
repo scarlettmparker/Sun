@@ -40,6 +40,8 @@ export { pageDataRpcHandler } from "./rpc-handler";
 export { executeMutation } from "./client-mutation";
 export type { BaseMutationResult, MutationResult } from "./client-mutation";
 
+export { getCsrfToken, CSRF_HEADER, CSRF_FIELD, CSRF_COOKIE } from "./csrf";
+
 export { defineAction, parseForm } from "./server-action";
 export type {
   DefinedAction,
