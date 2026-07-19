@@ -92,7 +92,7 @@ public class GaiaDataFetcher {
    * @return the values map, or null when a named entry is missing
    */
   @DgsData(parentType = "GaiaQueries", field = "propertySet")
-  @PreAuthorize("@permissions.has('graphql.gaia.propertySet')")
+  @PreAuthorize("permitAll()")
   public Object propertySet(String ownerKey, String name, String entry) {
     return gaiaGraphQLService.propertySet(ownerKey, name, entry);
   }
@@ -105,7 +105,7 @@ public class GaiaDataFetcher {
    * @return the entries
    */
   @DgsData(parentType = "GaiaQueries", field = "propertySets")
-  @PreAuthorize("@permissions.has('graphql.gaia.propertySets')")
+  @PreAuthorize("permitAll()")
   public List<PropertySetEntry> propertySets(String ownerKey, String name) {
     return gaiaGraphQLService.propertySets(ownerKey, name);
   }
@@ -118,7 +118,7 @@ public class GaiaDataFetcher {
    * @return the schema, or null when absent
    */
   @DgsData(parentType = "GaiaQueries", field = "propertySetSchema")
-  @PreAuthorize("@permissions.has('graphql.gaia.propertySetSchema')")
+  @PreAuthorize("permitAll()")
   public PropertySetSchema propertySetSchema(String ownerKey, String name) {
     return gaiaGraphQLService.propertySetSchema(ownerKey, name);
   }

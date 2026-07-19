@@ -99,6 +99,14 @@ export function setRequestCookieProvider(
   requestCookieProvider = provider;
 }
 
+/**
+ * The current request's Cookie header, when running server-side inside a
+ * request; otherwise undefined.
+ */
+export function getRequestCookie(): string | undefined {
+  return requestCookieProvider?.();
+}
+
 function activeCache(): Map<string, CacheRecord> {
   // Server inside a request → that request's map; otherwise the client/session map.
   if (typeof window === "undefined" && requestCacheProvider) {
