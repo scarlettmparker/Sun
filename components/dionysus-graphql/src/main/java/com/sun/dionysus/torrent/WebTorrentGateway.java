@@ -5,9 +5,13 @@ import com.sun.dionysus.model.enums.TorrentStatus;
 import com.sun.dionysus.service.torrent.TorrentJobService;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,8 +28,6 @@ import org.springframework.stereotype.Component;
 public class WebTorrentGateway {
 
   private static final Logger log = LoggerFactory.getLogger(WebTorrentGateway.class);
-
-  private static final String[] BASE_CMD = {"npx", "--yes", "webtorrent"};
 
   @Autowired private TorrentJobService jobService;
 
@@ -48,50 +50,82 @@ public class WebTorrentGateway {
   private void download(UUID jobId, String source, File saveDir) {
     saveDir.mkdirs();
 
-    String[] fullCmd = new String[BASE_CMD.length + 5];
-    System.arraycopy(BASE_CMD, 0, fullCmd, 0, BASE_CMD.length);
-    fullCmd[BASE_CMD.length] = "download";
-    fullCmd[BASE_CMD.length + 1] = source;
-    fullCmd[BASE_CMD.length + 2] = "--out";
-    fullCmd[BASE_CMD.length + 3] = saveDir.getAbsolutePath();
-    fullCmd[BASE_CMD.length + 4] = "--json";
+    Path scriptDir = Paths.get(".").toAbsolutePath().normalize();
+    if (!Files.isDirectory(scriptDir.resolve("node_modules"))) {
+      scriptDir = scriptDir.getParent();
+    }
+    File scriptFile = new File(scriptDir.toFile(), "webtorrent-dl.mjs");
+    scriptFile.deleteOnExit();
+    try (InputStream in = WebTorrentGateway.class.getResourceAsStream("/webtorrent-download.mjs")) {
+      if (in != null) Files.copy(in, scriptFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+    } catch (Exception e) {
+      log.warn("Failed to write webtorrent wrapper script, may already exist: {}", e.getMessage());
+    }
+    String[] fullCmd = new String[]{"node", scriptFile.getAbsolutePath(), source, saveDir.getAbsolutePath()};
     log.info("Starting webtorrent: {}", String.join(" ", fullCmd));
 
     ProcessBuilder pb = new ProcessBuilder(fullCmd);
     pb.environment().put("PATH", System.getenv("PATH"));
     pb.redirectErrorStream(true);
 
-    try {
-      Process process = pb.start();
-      log.info("Webtorrent process started for job {} (pid?)", jobId);
+    // Retry loop: if the process exits non-zero, restart it
+    int maxRetries = 10;
+    StringBuilder output = new StringBuilder();
 
-      StringBuilder output = new StringBuilder();
-      try (BufferedReader reader = new BufferedReader(
-          new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+    for (int attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        Process process = pb.start();
+        log.info("Webtorrent process started for job {} (attempt {})", jobId, attempt);
 
-        String line;
-        while ((line = reader.readLine()) != null) {
-          line = line.trim();
-          if (line.startsWith("{")) {
-            parseAndUpdate(jobId, line);
-          } else if (!line.isEmpty()) {
-            log.info("Webtorrent output for job {}: {}", jobId, line);
-            if (output.length() < 2000) {
-              output.append(line).append(" ");
+        StringBuilder jsonBuf = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(
+            new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+
+          int ch;
+          while ((ch = reader.read()) != -1) {
+            char c = (char) ch;
+            jsonBuf.append(c);
+            if (c == '\n') {
+              String line = jsonBuf.toString().trim();
+              jsonBuf.setLength(0);
+              if (line.startsWith("{")) {
+                parseAndUpdate(jobId, line);
+              } else if (!line.isEmpty()) {
+                log.info("Webtorrent output for job {}: {}", jobId, line);
+                if (output.length() < 2000) output.append(line).append(" ");
+              }
             }
           }
         }
+
+        int exitCode = process.waitFor();
+        log.info("Webtorrent process exited with code {} for job {}", exitCode, jobId);
+
+        if (exitCode == 0) {
+          updateDone(jobId, true, "");
+          return;
+        }
+
+        // Non-zero exit — log and retry
+        log.warn("Webtorrent attempt {} failed for job {}, retrying...", attempt, jobId);
+        Thread.sleep(2000L * attempt);
+
+      } catch (Exception e) {
+        log.error("Webtorrent attempt {} failed for job {}", attempt, jobId, e);
+        if (attempt < maxRetries) {
+          try { Thread.sleep(2000L * attempt); } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            updateFailed(jobId, "Interrupted");
+            return;
+          }
+        }
       }
-
-      int exitCode = process.waitFor();
-      log.info("Webtorrent process exited with code {} for job {}", exitCode, jobId);
-      updateDone(jobId, exitCode == 0, output.toString().trim());
-
-    } catch (Exception e) {
-      log.error("Webtorrent process failed for job {}", jobId, e);
-      updateFailed(jobId, e.getMessage());
     }
+
+    updateFailed(jobId, "Webtorrent failed after " + maxRetries + " attempts");
   }
+
+  private String jsonAccumulator = "";
 
   /**
    * Parses a JSON progress line from webtorrent and updates the job.
