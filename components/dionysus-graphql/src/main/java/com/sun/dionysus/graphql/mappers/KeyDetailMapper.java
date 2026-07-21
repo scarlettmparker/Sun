@@ -1,7 +1,7 @@
 package com.sun.dionysus.graphql.mappers;
 
 import com.sun.dionysus.codegen.types.KeyDetail;
-import com.sun.dionysus.graphql.models.KeyDetailEntity;
+import com.sun.dionysus.model.KeyDetailEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;

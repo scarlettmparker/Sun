@@ -1,7 +1,9 @@
 package com.sun.dionysus.graphql.mappers;
 
 import com.sun.dionysus.codegen.types.KeyEntry;
-import com.sun.dionysus.graphql.models.KeyDetailEntity;
+import com.sun.dionysus.codegen.types.TorrentDownload;
+import com.sun.dionysus.model.KeyDetailEntity;
+import com.sun.dionysus.model.TorrentJobEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -91,5 +93,55 @@ public class KeyEntryMapper {
       entry.setDescription(keyDetail.getDescription());
     }
     return entry;
+  }
+
+  /**
+   * Builds a new KeyEntry from a torrent job, for keys that have no S3 object yet.
+   */
+  public KeyEntry mapTorrentJob(TorrentJobEntity job) {
+    KeyEntry entry = new KeyEntry();
+    entry.setKey(job.getTargetKeyPath());
+    entry.setIsDirectory(job.getTargetKeyPath().endsWith("/"));
+    entry.setSize((int) Math.min(job.getTotalBytes(), Integer.MAX_VALUE));
+    if (job.getMagnetDetail() != null) {
+      entry.setName(job.getMagnetDetail().getDisplayName());
+    }
+    entry.setTorrent(toTorrentDownload(job));
+    return entry;
+  }
+
+  /**
+   * Copies torrent download fields onto an existing S3-derived KeyEntry.
+   */
+  public void mergeTorrentJob(KeyEntry entry, TorrentJobEntity job) {
+    entry.setTorrent(toTorrentDownload(job));
+  }
+
+  /**
+   * Builds the nested download state from a job.
+   */
+  private TorrentDownload toTorrentDownload(TorrentJobEntity job) {
+    TorrentDownload download =
+        TorrentDownload.newBuilder()
+            .jobId(job.getId().toString())
+            .status(job.getStatus().name())
+            .progress(job.getProgress())
+            .build();
+    if (job.getMagnetDetail() != null && job.getMagnetDetail().getId() != null) {
+      download.setMagnetDetailId(job.getMagnetDetail().getId().toString());
+    }
+    if (job.getDownloadRateBps() != null) {
+      download.setDownloadRateBps(job.getDownloadRateBps());
+    }
+    if (job.getEtaSeconds() != null) {
+      download.setEtaSeconds(job.getEtaSeconds().intValue());
+    }
+    if (job.getPeersConnected() != null) {
+      download.setPeersConnected(job.getPeersConnected());
+    }
+    if (job.getErrorMessage() != null) {
+      download.setErrorMessage(job.getErrorMessage());
+    }
+    return download;
   }
 }

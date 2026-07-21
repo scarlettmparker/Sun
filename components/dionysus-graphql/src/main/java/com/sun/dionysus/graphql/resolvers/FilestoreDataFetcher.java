@@ -10,6 +10,8 @@ import com.sun.dionysus.codegen.types.Bucket;
 import com.sun.dionysus.codegen.types.File;
 import com.sun.dionysus.codegen.types.KeyEntry;
 import com.sun.dionysus.codegen.types.KeyDetail;
+import com.sun.dionysus.codegen.types.TorrentJob;
+import com.sun.dionysus.graphql.services.TorrentGraphQLService;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,6 +21,9 @@ public class FilestoreDataFetcher {
 
   @Autowired
   private FilestoreGraphQLService filestoreGraphQLService;
+
+  @Autowired
+  private TorrentGraphQLService torrentGraphQLService;
 
   @DgsData(parentType = "Query", field = "filestoreQueries")
   public FilestoreQueries getFilestoreQueries() {
@@ -59,6 +64,42 @@ public class FilestoreDataFetcher {
   @PreAuthorize("@permissions.has('graphql.dionysus.locateImage')")
   public KeyDetail locateImage(String bucket, String keyPath) {
     return filestoreGraphQLService.locateImage(bucket, keyPath);
+  }
+
+  @DgsData(parentType = "FilestoreQueries", field = "torrentJob")
+  @PreAuthorize("@permissions.has('graphql.dionysus.torrent.view')")
+  public TorrentJob torrentJob(String jobId) {
+    return torrentGraphQLService.locate(jobId);
+  }
+
+  @DgsData(parentType = "FilestoreQueries", field = "torrentJobs")
+  @PreAuthorize("@permissions.has('graphql.dionysus.torrent.view')")
+  public List<TorrentJob> torrentJobs(String bucket, String status) {
+    return torrentGraphQLService.list(bucket, status);
+  }
+
+  @DgsData(parentType = "FilestoreMutations", field = "addTorrent")
+  @PreAuthorize("@permissions.has('graphql.dionysus.torrent.add')")
+  public TorrentJob addTorrent(String bucket, String path, String magnet, String torrentFileBase64) {
+    return torrentGraphQLService.addTorrent(bucket, path, magnet, torrentFileBase64);
+  }
+
+  @DgsData(parentType = "FilestoreMutations", field = "pauseTorrent")
+  @PreAuthorize("@permissions.has('graphql.dionysus.torrent.pause')")
+  public TorrentJob pauseTorrent(String jobId) {
+    return torrentGraphQLService.pauseTorrent(jobId);
+  }
+
+  @DgsData(parentType = "FilestoreMutations", field = "resumeTorrent")
+  @PreAuthorize("@permissions.has('graphql.dionysus.torrent.resume')")
+  public TorrentJob resumeTorrent(String jobId) {
+    return torrentGraphQLService.resumeTorrent(jobId);
+  }
+
+  @DgsData(parentType = "FilestoreMutations", field = "cancelTorrent")
+  @PreAuthorize("@permissions.has('graphql.dionysus.torrent.cancel')")
+  public TorrentJob cancelTorrent(String jobId) {
+    return torrentGraphQLService.cancelTorrent(jobId);
   }
 
   @DgsData(parentType = "Mutation", field = "filestoreMutations")

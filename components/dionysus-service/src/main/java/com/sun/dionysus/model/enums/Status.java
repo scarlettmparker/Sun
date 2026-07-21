@@ -1,4 +1,4 @@
-package com.sun.dionysus.graphql.models;
+package com.sun.dionysus.model.enums;
 
 /**
  * Status enumeration for KeyDetail records.

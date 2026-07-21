@@ -1,8 +1,8 @@
 package com.sun.dionysus.service;
 
-import com.sun.dionysus.graphql.models.KeyDetailEntity;
-import com.sun.dionysus.graphql.models.Status;
-import com.sun.dionysus.service.repository.KeyDetailEntityRepository;
+import com.sun.dionysus.model.KeyDetailEntity;
+import com.sun.dionysus.model.enums.Status;
+import com.sun.dionysus.repository.KeyDetailEntityRepository;
 import com.sun.base.service.BaseService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,7 +1,7 @@
-package com.sun.dionysus.service.repository;
+package com.sun.dionysus.repository;
 
-import com.sun.dionysus.graphql.models.KeyDetailEntity;
-import com.sun.dionysus.graphql.models.Status;
+import com.sun.dionysus.model.KeyDetailEntity;
+import com.sun.dionysus.model.enums.Status;
 import com.sun.base.repository.BaseRepository;
 import org.springframework.stereotype.Repository;
 import java.util.List;

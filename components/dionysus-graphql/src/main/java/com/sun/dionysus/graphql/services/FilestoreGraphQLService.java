@@ -16,8 +16,10 @@ import com.sun.dionysus.codegen.types.PresignInput;
 import com.sun.dionysus.graphql.mappers.FileMapper;
 import com.sun.dionysus.graphql.mappers.KeyEntryMapper;
 import com.sun.dionysus.graphql.mappers.KeyDetailMapper;
-import com.sun.dionysus.graphql.models.KeyDetailEntity;
+import com.sun.dionysus.model.KeyDetailEntity;
+import com.sun.dionysus.model.TorrentJobEntity;
 import com.sun.dionysus.service.KeyDetailService;
+import com.sun.dionysus.service.torrent.TorrentJobService;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
@@ -65,6 +67,9 @@ public class FilestoreGraphQLService {
 
   @Autowired
   private KeyDetailService keyDetailService;
+
+  @Autowired
+  private TorrentJobService torrentJobService;
 
   private RestClient restClient;
 
@@ -132,8 +137,30 @@ public class FilestoreGraphQLService {
           .toList());
     }
 
+    mergeInProgressTorrentJobs(bucket, prefix, entries);
+
     logger.info("Found {} directory/file entries for bucket: {} with prefix: {}", entries.size(), bucket, prefix);
     return entries;
+  }
+
+  /**
+   * Folds in-progress torrent jobs into the listing so a downloading torrent
+   * appears as a key even though no S3 object exists yet.
+   */
+  private void mergeInProgressTorrentJobs(String bucket, String prefix, List<KeyEntry> entries) {
+    Map<String, KeyEntry> byKey =
+        entries.stream().collect(Collectors.toMap(KeyEntry::getKey, e -> e, (a, b) -> a));
+
+    for (TorrentJobEntity job : torrentJobService.findVisibleInBucketUnderPrefix(bucket, prefix)) {
+      KeyEntry existing = byKey.get(job.getTargetKeyPath());
+      if (existing != null) {
+        keyEntryMapper.mergeTorrentJob(existing, job);
+      } else {
+        KeyEntry synthetic = keyEntryMapper.mapTorrentJob(job);
+        entries.add(synthetic);
+        byKey.put(synthetic.getKey(), synthetic);
+      }
+    }
   }
 
   /**

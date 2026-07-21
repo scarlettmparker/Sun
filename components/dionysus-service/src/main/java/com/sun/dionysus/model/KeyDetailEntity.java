@@ -1,7 +1,8 @@
-package com.sun.dionysus.graphql.models;
+package com.sun.dionysus.model;
 
 import jakarta.persistence.*;
 import com.sun.base.model.BaseEntity;
+import com.sun.dionysus.model.enums.Status;
 import java.time.LocalDateTime;
 
 /**

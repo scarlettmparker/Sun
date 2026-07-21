@@ -1,6 +1,9 @@
 package com.sun.dionysus.graphql.mappers;
 
-import com.sun.dionysus.graphql.models.KeyDetailEntity;
+import com.sun.dionysus.model.KeyDetailEntity;
+import com.sun.dionysus.model.MagnetDetailEntity;
+import com.sun.dionysus.model.TorrentJobEntity;
+import com.sun.dionysus.model.enums.TorrentStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -8,6 +11,7 @@ import com.sun.dionysus.codegen.types.KeyEntry;
 import software.amazon.awssdk.services.s3.model.CommonPrefix;
 import software.amazon.awssdk.services.s3.model.S3Object;
 import java.time.Instant;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -75,6 +79,55 @@ class KeyEntryMapperTest {
     assertThat(result.getIsDirectory()).isFalse();
     assertThat(result.getName()).isEqualTo("Important File");
     assertThat(result.getDescription()).isEqualTo("Document");
+  }
+
+  @Test
+  void mapTorrentJob_buildsEntryWithNestedDownload() {
+    MagnetDetailEntity magnet = new MagnetDetailEntity();
+    magnet.setDisplayName("ubuntu.iso");
+
+    TorrentJobEntity job = new TorrentJobEntity();
+    job.setId(UUID.randomUUID());
+    job.setBucket("bucket");
+    job.setTargetKeyPath("ubuntu.iso");
+    job.setTotalBytes(500L);
+    job.setProgress(0.5);
+    job.setStatus(TorrentStatus.DOWNLOADING);
+    job.setDownloadRateBps(1000);
+    job.setPeersConnected(12);
+    job.setMagnetDetail(magnet);
+
+    KeyEntry result = keyEntryMapper.mapTorrentJob(job);
+
+    assertThat(result.getKey()).isEqualTo("ubuntu.iso");
+    assertThat(result.getIsDirectory()).isFalse();
+    assertThat(result.getSize()).isEqualTo(500);
+    assertThat(result.getName()).isEqualTo("ubuntu.iso");
+    assertThat(result.getTorrent()).isNotNull();
+    assertThat(result.getTorrent().getStatus()).isEqualTo("DOWNLOADING");
+    assertThat(result.getTorrent().getProgress()).isEqualTo(0.5);
+    assertThat(result.getTorrent().getDownloadRateBps()).isEqualTo(1000);
+    assertThat(result.getTorrent().getPeersConnected()).isEqualTo(12);
+    assertThat(result.getTorrent().getMagnetDetailId()).isEqualTo(magnet.getId() == null ? null : magnet.getId().toString());
+  }
+
+  @Test
+  void mergeTorrentJob_attachesDownloadToExistingEntry() {
+    S3Object object = S3Object.builder().key("ubuntu.iso").size(500L).build();
+    KeyEntry entry = keyEntryMapper.mapFile(object);
+
+    TorrentJobEntity job = new TorrentJobEntity();
+    job.setId(UUID.randomUUID());
+    job.setTargetKeyPath("ubuntu.iso");
+    job.setTotalBytes(500L);
+    job.setProgress(0.75);
+    job.setStatus(TorrentStatus.UPLOADING);
+
+    keyEntryMapper.mergeTorrentJob(entry, job);
+
+    assertThat(entry.getTorrent()).isNotNull();
+    assertThat(entry.getTorrent().getStatus()).isEqualTo("UPLOADING");
+    assertThat(entry.getTorrent().getProgress()).isEqualTo(0.75);
   }
 }
 

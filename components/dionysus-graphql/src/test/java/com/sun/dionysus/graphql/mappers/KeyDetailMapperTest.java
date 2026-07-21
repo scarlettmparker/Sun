@@ -1,7 +1,7 @@
 package com.sun.dionysus.graphql.mappers;
 
-import com.sun.dionysus.graphql.models.KeyDetailEntity;
-import com.sun.dionysus.graphql.models.Status;
+import com.sun.dionysus.model.KeyDetailEntity;
+import com.sun.dionysus.model.enums.Status;
 import com.sun.dionysus.codegen.types.KeyDetail;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,6 +23,7 @@ class KeyDetailMapperTest {
   @Test
   void map_withKeyDetail_mapsAllFields() {
     KeyDetailEntity entity = new KeyDetailEntity();
+    entity.setId(UUID.randomUUID());
     entity.setBucket("my-bucket");
     entity.setKeyPath("documents/report.pdf");
     entity.setName("Quarterly Report");
@@ -48,6 +49,7 @@ class KeyDetailMapperTest {
   @Test
   void map_withArchivedEntity_mapsArchivedAt() {
     KeyDetailEntity entity = new KeyDetailEntity();
+    entity.setId(UUID.randomUUID());
     entity.setBucket("b");
     entity.setKeyPath("old/file.txt");
     entity.setStatus(Status.ARCHIVED);
@@ -65,6 +67,7 @@ class KeyDetailMapperTest {
   @Test
   void map_withNullTimestamps_mapsToNull() {
     KeyDetailEntity entity = new KeyDetailEntity();
+    entity.setId(UUID.randomUUID());
     entity.setBucket("b");
     entity.setKeyPath("k");
     entity.setStatus(Status.ACTIVE);
