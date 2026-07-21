@@ -55,6 +55,8 @@ type TorrentDownload {
   etaSeconds: Int
   peersConnected: Int
   errorMessage: String
+  downloadedBytes: Long
+  totalBytes: Long
 }
 
 # Detailed metadata for a specific key.

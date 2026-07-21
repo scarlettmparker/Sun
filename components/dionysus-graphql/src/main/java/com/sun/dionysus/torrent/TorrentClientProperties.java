@@ -11,7 +11,7 @@ public class TorrentClientProperties {
   /**
    * Local directory holding the per-job scratch folders where pieces download.
    */
-  private String scratchDir = "/var/dionysus/torrent";
+  private String scratchDir = "/tmp/dionysus/torrent";
 
   /**
    * How many torrents may download concurrently; extras stay queued.

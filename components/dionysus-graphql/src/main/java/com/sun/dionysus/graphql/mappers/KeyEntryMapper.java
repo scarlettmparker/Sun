@@ -142,6 +142,8 @@ public class KeyEntryMapper {
     if (job.getErrorMessage() != null) {
       download.setErrorMessage(job.getErrorMessage());
     }
+    download.setDownloadedBytes(job.getDownloadedBytes());
+    download.setTotalBytes(job.getTotalBytes());
     return download;
   }
 }

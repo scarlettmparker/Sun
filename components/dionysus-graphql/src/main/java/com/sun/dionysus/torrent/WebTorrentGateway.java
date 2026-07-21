@@ -46,6 +46,7 @@ public class WebTorrentGateway {
       """;
 
   @Autowired private TorrentJobService jobService;
+  @Autowired private TorrentCompletionService completionService;
 
   /**
    * Downloads a magnet link via webtorrent-cli.
@@ -177,7 +178,8 @@ public class WebTorrentGateway {
       TorrentJobEntity job = jobService.findById(jobId).orElse(null);
       if (job == null) return;
 
-      job.setStatus(status);
+      boolean wasComplete = progress >= 1.0;
+      job.setStatus(wasComplete ? TorrentStatus.DOWNLOADING : TorrentStatus.DOWNLOADING);
       job.setProgress(progress);
       job.setDownloadedBytes(downloaded);
       job.setTotalBytes(total != 0 ? total : job.getTotalBytes());
@@ -185,6 +187,10 @@ public class WebTorrentGateway {
       job.setPeersConnected(peers);
       job.setEtaSeconds(eta);
       jobService.save(job);
+
+      if (wasComplete) {
+        completionService.complete(jobId);
+      }
     } catch (Exception e) {
       log.warn("Failed to parse webtorrent JSON for job {}: {}", jobId, e.getMessage());
     }

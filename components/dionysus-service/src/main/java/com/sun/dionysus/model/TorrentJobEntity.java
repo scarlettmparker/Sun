@@ -10,6 +10,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PostLoad;
 import jakarta.persistence.PostPersist;
@@ -62,7 +63,7 @@ public class TorrentJobEntity extends BaseEntity implements Persistable<UUID> {
   @JoinColumn(name = "magnet_detail_id", nullable = false)
   private MagnetDetailEntity magnetDetail;
 
-  @OneToOne(fetch = FetchType.LAZY)
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "key_detail_id")
   private KeyDetailEntity keyDetail;
 

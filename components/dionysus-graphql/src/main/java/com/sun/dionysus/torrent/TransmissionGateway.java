@@ -7,9 +7,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -51,17 +49,19 @@ public class TransmissionGateway {
 
   /**
    * Adds the torrent to transmission and polls for progress until completion or cancel.
+   *
+   * @param source magnet URI or torrent file path.
    */
   private void download(UUID jobId, String source, File saveDir) {
+    log.info("Starting download for job {} in {}", jobId, saveDir);
     saveDir.mkdirs();
-    File dlDir = new File("/tmp", "tdl-" + jobId.toString());
-    dlDir.mkdirs();
-    exec("--add", source, "--download-dir", dlDir.getAbsolutePath());
+    exec("--add", source);
 
+    String infoHash = jobService.findById(jobId).map(TorrentJobEntity::getInfoHash).orElse(null);
     String tid = null;
     for (int i = 0; i < 10 && tid == null; i++) {
       try { Thread.sleep(1000); } catch (InterruptedException e) { return; }
-      tid = findTorrentId(exec("-l"), saveDir.getName());
+      tid = findTorrentId(exec("-l"), infoHash);
     }
     if (tid == null) {
       log.warn("Torrent never appeared in transmission for job {}", jobId);
@@ -93,7 +93,7 @@ public class TransmissionGateway {
       TorrentJobEntity job = jobService.findById(jobId).orElse(null);
       if (job == null) { removeTransmission(jobId); return; }
 
-      job.setStatus(progress >= 1.0 ? TorrentStatus.COMPLETED : TorrentStatus.DOWNLOADING);
+      job.setStatus(TorrentStatus.DOWNLOADING);
       job.setProgress(progress);
       job.setDownloadedBytes(downloaded);
       job.setTotalBytes(total);
@@ -103,43 +103,51 @@ public class TransmissionGateway {
       log.info("transmission progress for {}: {}% {}", jobId, String.format("%.1f", progress * 100), formatRate(rate));
 
       if (progress >= 1.0) {
-        exec("-t", torrentId, "--remove");
-        moveFiles(dlDir, saveDir);
-        completionService.complete(jobId);
+        log.info("Download complete for job {}...", jobId);
+        TorrentJobEntity j = jobService.findById(jobId).orElse(null);
+        if (j != null && j.getStatus() != TorrentStatus.COMPLETED) {
+          completionService.complete(jobId);
+        }
         return;
       }
     }
   }
 
   /**
-   * Moves completed files from the temp download dir to the scratch dir for upload.
+   * Moves all files from one directory to another, preserving subdirectory structure.
    */
   private void moveFiles(File from, File to) {
-    try {
-      to.mkdirs();
-      try (var files = Files.walk(from.toPath())) {
-        files.filter(Files::isRegularFile).forEach(f -> {
-          try {
-            Files.move(f, new File(to, f.getFileName().toString()).toPath(), StandardCopyOption.REPLACE_EXISTING);
-          } catch (Exception ignored) {}
-        });
-      }
+    if (!from.isDirectory()) return;
+    log.info("Moving files from {} to {}", from, to);
+    try (var paths = java.nio.file.Files.walk(from.toPath())) {
+      paths.filter(java.nio.file.Files::isRegularFile).forEach(f -> {
+        try {
+          Path rel = from.toPath().relativize(f);
+          Path dest = new java.io.File(to, rel.toString()).toPath();
+          dest.getParent().toFile().mkdirs();
+          java.nio.file.Files.move(f, dest, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        } catch (Exception e) {
+          log.warn("Failed to move {}: {}", f.getFileName(), e.getMessage());
+        }
+      });
     } catch (Exception e) {
-      log.warn("Failed to move files from {} to {}", from, to);
+      log.warn("Failed to walk {}", from, e);
     }
   }
 
   /**
-   * Removes the torrent from transmission by matching the download directory.
+   * Removes the torrent from transmission by matching the info hash.
    */
   private void removeTransmission(UUID jobId) {
+    String infoHash = jobService.findById(jobId).map(TorrentJobEntity::getInfoHash).orElse(null);
+    if (infoHash == null) return;
     String list = exec("-l");
     if (list == null) return;
     for (String line : list.split("\n")) {
       String id = new String(line).replaceAll("^\\s*(\\d+).*", "$1").trim();
       if (id.matches("\\d+")) {
         String details = exec("-t", id, "-i");
-        if (details != null && details.contains(jobId.toString())) {
+        if (details != null && details.toLowerCase().contains(infoHash.toLowerCase())) {
           exec("-t", id, "--remove-and-delete");
           return;
         }
@@ -156,6 +164,8 @@ public class TransmissionGateway {
 
   /**
    * Runs transmission-remote with the given arguments and returns stdout.
+   *
+   * @return stdout, or null on failure.
    */
   private String exec(String... args) {
     try {
@@ -173,22 +183,40 @@ public class TransmissionGateway {
   }
 
   /**
-   * Extracts the first numeric ID from a transmission-remote -l listing.
+   * Finds the torrent ID by matching the info hash in its details.
    */
-  private String findTorrentId(String list, String dirHint) {
+  private String findTorrentId(String list, String infoHash) {
+    if (infoHash == null || infoHash.isEmpty()) {
+      for (String line : list.split("\n")) {
+        line = line.trim();
+        if (line.isEmpty() || line.startsWith("Sum:") || line.startsWith("ID")) continue;
+        String[] parts = line.split("\\s+");
+        if (parts.length < 2) continue;
+        String id = parts[0].replaceAll("[^0-9]", "");
+        if (!id.isEmpty()) return id;
+      }
+      return null;
+    }
     for (String line : list.split("\n")) {
       line = line.trim();
       if (line.isEmpty() || line.startsWith("Sum:") || line.startsWith("ID")) continue;
       String[] parts = line.split("\\s+");
       if (parts.length < 2) continue;
       String id = parts[0].replaceAll("[^0-9]", "");
-      if (!id.isEmpty()) return id;
+      if (!id.isEmpty()) {
+        String details = exec("-t", id, "-i");
+        if (details != null && details.toLowerCase().contains(infoHash.toLowerCase())) return id;
+      }
     }
     return null;
   }
 
   /**
    * Parses a numeric value from transmission-remote -i output.
+   *
+   * @param output the full -i output.
+   * @param label  the line label to match (e.g. "Percent Done:").
+   * @param regex  a capturing regex for the value on the matched line.
    */
   private double parseValue(String output, String label, String regex) {
     for (String line : output.split("\n")) {
@@ -202,6 +230,10 @@ public class TransmissionGateway {
 
   /**
    * Parses a string value from transmission-remote -i output.
+   *
+   * @param output the full -i output.
+   * @param label  the line label to match (e.g. "  Status:").
+   * @param regex  a capturing regex for the value on the matched line.
    */
   private String parseValueStr(String output, String label, String regex) {
     if (output == null) return null;

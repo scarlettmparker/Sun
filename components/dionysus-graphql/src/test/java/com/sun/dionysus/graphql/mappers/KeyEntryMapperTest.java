@@ -109,6 +109,8 @@ class KeyEntryMapperTest {
     assertThat(result.getTorrent().getDownloadRateBps()).isEqualTo(1000);
     assertThat(result.getTorrent().getPeersConnected()).isEqualTo(12);
     assertThat(result.getTorrent().getMagnetDetailId()).isEqualTo(magnet.getId() == null ? null : magnet.getId().toString());
+    assertThat(result.getTorrent().getDownloadedBytes()).isZero();
+    assertThat(result.getTorrent().getTotalBytes()).isEqualTo(500L);
   }
 
   @Test

@@ -47,14 +47,20 @@ public class TorrentCompletionService {
 
     Path scratch = Path.of(job.getScratchPath());
     try {
-      upload(job, scratch);
+      java.util.List<String> uploadedKeys = upload(job, scratch);
 
-      KeyDetailEntity detail =
-          keyDetailService.createOrUpdateDetail(
-              job.getBucket(), job.getTargetKeyPath(), extractName(job.getTargetKeyPath()), contentTypeFor(job.getTargetKeyPath()));
+      for (String key : uploadedKeys) {
+        keyDetailService.createOrUpdateDetail(
+            job.getBucket(), key, extractName(key), contentTypeFor(key));
+      }
+      if (uploadedKeys.isEmpty()) {
+        keyDetailService.createOrUpdateDetail(
+            job.getBucket(), job.getTargetKeyPath(), extractName(job.getTargetKeyPath()), contentTypeFor(job.getTargetKeyPath()));
+      }
+
       job.setStatus(TorrentStatus.COMPLETED);
       job.setCompletedAt(LocalDateTime.now());
-      job.setKeyDetail(detail);
+      job.setKeyDetail(null);
       job.setProgress(1.0);
       jobService.save(job);
 
@@ -71,15 +77,53 @@ public class TorrentCompletionService {
 
   /**
    * Walks the scratch directory and uploads each downloaded file into the bucket.
+   *
+   * @return the list of uploaded S3 keys.
    */
-  private void upload(TorrentJobEntity job, Path scratch) throws IOException {
+  private java.util.List<String> upload(TorrentJobEntity job, Path scratch) throws IOException {
     boolean targetIsFolder = job.getTargetKeyPath().endsWith("/");
-    try (Stream<Path> paths = Files.walk(scratch)) {
-      for (Path file : paths.filter(Files::isRegularFile).filter(this::isRealFile).toList()) {
-        String key = targetKeyFor(job, scratch, file, targetIsFolder);
+    java.util.HashSet<String> dirs = new java.util.HashSet<>();
+    java.util.ArrayList<String> uploadedKeys = new java.util.ArrayList<>();
+
+    Path searchDir = scratch;
+    if (!Files.isDirectory(searchDir) || Files.list(searchDir).findAny().isEmpty()) {
+      Path txBase = Path.of("/var/lib/transmission-daemon/downloads");
+      if (Files.isDirectory(txBase)) {
+        try (Stream<Path> listing = Files.list(txBase)) {
+          searchDir = listing
+              .filter(Files::isDirectory)
+              .filter(d -> !d.getFileName().toString().startsWith("."))
+              .max(java.util.Comparator.comparingLong(d -> {
+                try { return Files.walk(d).filter(Files::isRegularFile).count(); } catch (Exception e) { return 0L; }
+              }))
+              .orElse(searchDir);
+        } catch (Exception e) {
+          logger.warn("Failed to scan {} for download dirs", txBase, e);
+        }
+      }
+    }
+
+    try (Stream<Path> paths = Files.walk(searchDir)) {
+      var files = paths.filter(Files::isRegularFile).filter(this::isRealFile).toList();
+      if (files.isEmpty()) {
+        logger.warn("No files found to upload in {} or {}", scratch, "/var/lib/transmission-daemon/downloads/" + scratch.getFileName());
+      }
+      for (Path file : files) {
+        String key = targetKeyFor(job, searchDir, file, targetIsFolder);
         s3Client.putObject(
             PutObjectRequest.builder().bucket(job.getBucket()).key(key).contentType(contentTypeFor(key)).build(),
             RequestBody.fromFile(file));
+        uploadedKeys.add(key);
+        int idx = key.lastIndexOf('/');
+        while (idx > 0) {
+          dirs.add(key.substring(0, idx + 1));
+          idx = key.lastIndexOf('/', idx - 1);
+        }
+      }
+      for (String dir : dirs) {
+        s3Client.putObject(
+            PutObjectRequest.builder().bucket(job.getBucket()).key(dir).build(),
+            RequestBody.empty());
       }
     }
     if (targetIsFolder) {
@@ -87,10 +131,13 @@ public class TorrentCompletionService {
           PutObjectRequest.builder().bucket(job.getBucket()).key(job.getTargetKeyPath()).build(),
           RequestBody.empty());
     }
+    return uploadedKeys;
   }
 
   /**
    * Skips libtorrent internal piece and part files.
+   *
+   * @return true if the file is a real download, not a libtorrent internal file.
    */
   private boolean isRealFile(Path file) {
     String name = file.getFileName().toString();
@@ -99,30 +146,51 @@ public class TorrentCompletionService {
 
   /**
    * Maps a scratch file to its destination S3 key.
+   *
+   * @param scratch the base scratch directory.
+   * @param file the downloaded file to map.
    */
   private String targetKeyFor(TorrentJobEntity job, Path scratch, Path file, boolean targetIsFolder) {
-    if (!targetIsFolder) {
-      return job.getTargetKeyPath();
-    }
     String relative = scratch.relativize(file).toString().replace('\\', '/');
-    return job.getTargetKeyPath() + relative;
+    if (targetIsFolder) {
+      return job.getTargetKeyPath() + relative;
+    }
+    if (relative.contains("/")) {
+      return job.getTargetKeyPath() + "/" + relative;
+    }
+    if (!job.getTargetKeyPath().contains(".") && relative.contains(".")) {
+      return relative;
+    }
+    return job.getTargetKeyPath();
   }
 
+  /**
+   * Extracts the file name from a key path.
+   */
   private String extractName(String keyPath) {
     String trimmed = keyPath.endsWith("/") ? keyPath.substring(0, keyPath.length() - 1) : keyPath;
     int slash = trimmed.lastIndexOf('/');
     return slash >= 0 ? trimmed.substring(slash + 1) : trimmed;
   }
 
+  /**
+   * Guesses the MIME type from a key path.
+   */
   private String contentTypeFor(String keyPath) {
     String guess = java.net.URLConnection.guessContentTypeFromName(keyPath);
     return guess != null ? guess : "application/octet-stream";
   }
 
+  /**
+   * Truncates a string to a max length.
+   */
   private String truncate(String value, int max) {
     return value.length() <= max ? value : value.substring(0, max);
   }
 
+  /**
+   * Deletes a directory tree recursively.
+   */
   private void deleteRecursively(Path path) throws IOException {
     if (!Files.exists(path)) {
       return;

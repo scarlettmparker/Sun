@@ -37,6 +37,23 @@ public class TorrentSchemaBootstrapper implements ApplicationRunner {
       $$;
       """;
 
+  /**
+   * Drops the unique constraint on key_detail_id in dionysus_torrent_job.
+   */
+  private static final String DROP_KEYDETAIL_UNIQUE_SQL = """
+      DO $$ BEGIN
+        EXECUTE (
+          SELECT 'ALTER TABLE dionysus_torrent_job DROP CONSTRAINT IF EXISTS ' || c.conname
+          FROM pg_constraint c
+          JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = ANY(c.conkey)
+          WHERE c.conrelid = 'dionysus_torrent_job'::regclass
+            AND c.contype = 'u'
+            AND a.attname = 'key_detail_id'
+        );
+      EXCEPTION WHEN OTHERS THEN END;
+      $$;
+      """;
+
   private final JdbcTemplate jdbcTemplate;
 
   public TorrentSchemaBootstrapper(JdbcTemplate jdbcTemplate) {
@@ -46,6 +63,7 @@ public class TorrentSchemaBootstrapper implements ApplicationRunner {
   @Override
   public void run(ApplicationArguments args) {
     jdbcTemplate.execute(DROP_INFOHASH_UNIQUE_SQL);
+    jdbcTemplate.execute(DROP_KEYDETAIL_UNIQUE_SQL);
     jdbcTemplate.execute(CREATE_INDEX_SQL);
     logger.info("Ensured torrent one-active-job-per-key index exists");
   }
