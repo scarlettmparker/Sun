@@ -17,3 +17,5 @@ stats.html
 
 backups/
 .claude/
+.opencode/
+opencode.json

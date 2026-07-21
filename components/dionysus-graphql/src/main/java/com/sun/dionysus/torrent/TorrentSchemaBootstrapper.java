@@ -19,7 +19,7 @@ public class TorrentSchemaBootstrapper implements ApplicationRunner {
 
   private static final String CREATE_INDEX_SQL = """
       CREATE UNIQUE INDEX IF NOT EXISTS uq_active_job_per_key
-      ON dionysus_torrent_job (bucket, target_key_path)
+      ON dionysus_torrent_job (bucket, targetKeyPath)
       WHERE status IN ('QUEUED','METADATA','DOWNLOADING','PAUSED','UPLOADING')
       """;
 

@@ -9,9 +9,15 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.PostLoad;
+import jakarta.persistence.PostPersist;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import java.time.LocalDateTime;
+import java.util.UUID;
+import org.springframework.data.domain.Persistable;
 
 /**
  * A torrent being downloaded into a bucket key, keeping the progress and on-disk
@@ -22,9 +28,23 @@ import java.time.LocalDateTime;
     name = "dionysus_torrent_job",
     indexes = {
       @Index(name = "idx_job_status", columnList = "status"),
-      @Index(name = "idx_job_bucket_path", columnList = "bucket,target_key_path")
+      @Index(name = "idx_job_bucket_path", columnList = "bucket,targetKeyPath")
     })
-public class TorrentJobEntity extends BaseEntity {
+public class TorrentJobEntity extends BaseEntity implements Persistable<UUID> {
+
+  @Transient
+  private boolean isNewEntry = true;
+
+  @Override
+  public boolean isNew() {
+    return isNewEntry;
+  }
+
+  @PostPersist
+  @PostLoad
+  void markNotNew() {
+    isNewEntry = false;
+  }
 
   @Column(nullable = false, length = 64)
   private String infoHash;
@@ -38,7 +58,7 @@ public class TorrentJobEntity extends BaseEntity {
   @Column(nullable = false, length = 16)
   private String sourceType;
 
-  @OneToOne(fetch = FetchType.LAZY, optional = false, orphanRemoval = true)
+  @OneToOne(fetch = FetchType.LAZY, optional = false, cascade = CascadeType.ALL, orphanRemoval = true)
   @JoinColumn(name = "magnet_detail_id", nullable = false)
   private MagnetDetailEntity magnetDetail;
 

@@ -20,6 +20,7 @@ import org.libtorrent4j.TorrentInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.stereotype.Service;
 
@@ -28,16 +29,19 @@ import org.springframework.stereotype.Service;
  * with the application, and exposes add/pause/resume/cancel for jobs.
  */
 @Service
+@EnableConfigurationProperties(TorrentClientProperties.class)
 public class TorrentClientService implements SmartLifecycle {
 
   private static final Logger logger = LoggerFactory.getLogger(TorrentClientService.class);
 
-  @Autowired private SessionManager session;
+  private SessionManager session;
+
   @Autowired private TorrentAlertDispatcher dispatcher;
   @Autowired private TorrentJobService jobService;
   @Autowired private MagnetDetailService magnetService;
   @Autowired private TorrentJobRegistry registry;
   @Autowired private TorrentDownloadGateway gateway;
+  @Autowired private WebTorrentGateway webGateway;
   @Autowired private TorrentClientProperties properties;
 
   private volatile boolean running = false;
@@ -56,6 +60,12 @@ public class TorrentClientService implements SmartLifecycle {
 
   @Override
   public synchronized void start() {
+    try {
+      session = new SessionManager();
+    } catch (LinkageError e) {
+      logger.warn("libtorrent4j native library not available — torrent client disabled: {}", e.getMessage());
+      return;
+    }
     scratchRoot = new File(properties.getScratchDir());
     scratchRoot.mkdirs();
     session.start();
@@ -67,6 +77,7 @@ public class TorrentClientService implements SmartLifecycle {
   @Override
   public synchronized void stop() {
     running = false;
+    if (session == null) return;
     for (UUID jobId : registry.jobIds()) {
       registry
           .findHandle(jobId)
@@ -89,6 +100,13 @@ public class TorrentClientService implements SmartLifecycle {
   }
 
   /**
+   * Returns the session manager, or null if the native library was unavailable.
+   */
+  public SessionManager getSession() {
+    return session;
+  }
+
+  /**
    * Adds a magnet link as a new download job targeting a key under the parent path.
    */
   public TorrentJobEntity addFromMagnet(String bucket, String parentPath, String magnet) {
@@ -96,9 +114,6 @@ public class TorrentClientService implements SmartLifecycle {
     String name = parsed.displayName() != null ? parsed.displayName() : parsed.infoHash();
     String targetKeyPath = targetKeyPath(parentPath, name, false);
     guardUnique(bucket, targetKeyPath);
-
-    UUID jobId = UUID.randomUUID();
-    File saveDir = newFile(jobId);
 
     MagnetDetailEntity magnetDetail = new MagnetDetailEntity();
     magnetDetail.setInfoHash(parsed.infoHash());
@@ -108,12 +123,16 @@ public class TorrentClientService implements SmartLifecycle {
     magnetDetail.setTrackers(parsed.trackers());
     magnetDetail.setPrivate(false);
 
-    TorrentJobEntity job =
-        newJob(jobId, bucket, targetKeyPath, "MAGNET", parsed.infoHash(), saveDir, magnetDetail, TorrentStatus.METADATA, 0L);
+    TorrentJobEntity job = newJob(bucket, targetKeyPath, "MAGNET", parsed.infoHash(), magnetDetail, TorrentStatus.METADATA, 0L);
+    job.setScratchPath("");
+    job = jobService.save(job);
+
+    File saveDir = newFile(job.getId());
+    job.setScratchPath(saveDir.getAbsolutePath());
     job = jobService.save(job);
 
     registry.register(job.getId(), job.getScratchPath(), null);
-    gateway.downloadMagnet(job.getId(), magnet, saveDir);
+    webGateway.downloadMagnet(job.getId(), magnet, saveDir);
     return job;
   }
 
@@ -127,9 +146,6 @@ public class TorrentClientService implements SmartLifecycle {
     boolean multiFile = storage.numFiles() > 1;
     String targetKeyPath = targetKeyPath(parentPath, name, multiFile);
     guardUnique(bucket, targetKeyPath);
-
-    UUID jobId = UUID.randomUUID();
-    File saveDir = newFile(jobId);
 
     long total = 0L;
     MagnetDetailEntity magnetDetail = new MagnetDetailEntity();
@@ -151,12 +167,23 @@ public class TorrentClientService implements SmartLifecycle {
     magnetDetail.setFiles(files);
     magnetDetail.setTotalSize(total);
 
-    TorrentJobEntity job =
-        newJob(jobId, bucket, targetKeyPath, "FILE", info.infoHash().toString(), saveDir, magnetDetail, TorrentStatus.DOWNLOADING, total);
+    TorrentJobEntity job = newJob(bucket, targetKeyPath, "FILE", info.infoHash().toString(), magnetDetail, TorrentStatus.DOWNLOADING, total);
+    job.setScratchPath("");
+    job = jobService.save(job);
+
+    File saveDir = newFile(job.getId());
+    job.setScratchPath(saveDir.getAbsolutePath());
     job = jobService.save(job);
 
     registry.register(job.getId(), job.getScratchPath(), null);
-    gateway.downloadTorrentFile(job.getId(), bytes, saveDir);
+
+    File torrentFile = new File(saveDir, "source.torrent");
+    try {
+      Files.write(torrentFile.toPath(), bytes);
+    } catch (IOException e) {
+      logger.error("Failed to write torrent file for job {}", job.getId(), e);
+    }
+    webGateway.downloadTorrentFile(job.getId(), torrentFile, saveDir);
     return job;
   }
 
@@ -175,7 +202,7 @@ public class TorrentClientService implements SmartLifecycle {
     job.setStatus(TorrentStatus.DOWNLOADING);
     jobService.save(job);
     String magnet = job.getMagnetDetail().getSourceUri();
-    gateway.downloadMagnet(job.getId(), magnet, saveDir);
+    gateway.downloadMagnet(job.getId(), session, magnet, saveDir);
   }
 
   /**
@@ -255,23 +282,19 @@ public class TorrentClientService implements SmartLifecycle {
   }
 
   private TorrentJobEntity newJob(
-      UUID jobId,
       String bucket,
       String targetKeyPath,
       String sourceType,
       String infoHash,
-      File saveDir,
       MagnetDetailEntity magnetDetail,
       TorrentStatus status,
       long totalBytes) {
     TorrentJobEntity job = new TorrentJobEntity();
-    job.setId(jobId);
     job.setBucket(bucket);
     job.setTargetKeyPath(targetKeyPath);
     job.setSourceType(sourceType);
     job.setInfoHash(infoHash);
     job.setMagnetDetail(magnetDetail);
-    job.setScratchPath(saveDir.getAbsolutePath());
     job.setStatus(status);
     job.setTotalBytes(totalBytes);
     job.setDownloadedBytes(0L);

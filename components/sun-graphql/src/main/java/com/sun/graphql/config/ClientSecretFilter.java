@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Map;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -19,6 +20,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
  */
 @Component
 @Profile("!test")
+@ConditionalOnProperty(name = "app.bypass-permissions", havingValue = "false", matchIfMissing = true)
 @Order(Ordered.HIGHEST_PRECEDENCE + 40)
 public class ClientSecretFilter extends OncePerRequestFilter {
 

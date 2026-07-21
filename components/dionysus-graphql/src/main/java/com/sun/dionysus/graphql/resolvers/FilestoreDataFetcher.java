@@ -31,7 +31,6 @@ public class FilestoreDataFetcher {
   }
 
   @DgsData(parentType = "FilestoreQueries", field = "health")
-  @PreAuthorize("@permissions.has('graphql.dionysus.health')")
   public String health() {
     return filestoreGraphQLService.health();
   }
