@@ -7,6 +7,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,6 +31,7 @@ public class TransmissionGateway {
   private static final String[] BASE = {"transmission-remote", "-n", "transmission:transmission"};
 
   @Autowired private TorrentJobService jobService;
+  @Autowired private TorrentCompletionService completionService;
 
   /**
    * Starts a magnet download via transmission-daemon.
@@ -98,7 +102,30 @@ public class TransmissionGateway {
       jobService.save(job);
       log.info("transmission progress for {}: {}% {}", jobId, String.format("%.1f", progress * 100), formatRate(rate));
 
-      if (progress >= 1.0) { exec("-t", torrentId, "--remove"); return; }
+      if (progress >= 1.0) {
+        exec("-t", torrentId, "--remove");
+        moveFiles(dlDir, saveDir);
+        completionService.complete(jobId);
+        return;
+      }
+    }
+  }
+
+  /**
+   * Moves completed files from the temp download dir to the scratch dir for upload.
+   */
+  private void moveFiles(File from, File to) {
+    try {
+      to.mkdirs();
+      try (var files = Files.walk(from.toPath())) {
+        files.filter(Files::isRegularFile).forEach(f -> {
+          try {
+            Files.move(f, new File(to, f.getFileName().toString()).toPath(), StandardCopyOption.REPLACE_EXISTING);
+          } catch (Exception ignored) {}
+        });
+      }
+    } catch (Exception e) {
+      log.warn("Failed to move files from {} to {}", from, to);
     }
   }
 
