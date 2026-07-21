@@ -7,6 +7,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -23,5 +25,9 @@ public interface TorrentJobEntityRepository extends BaseRepository<TorrentJobEnt
 
   Optional<TorrentJobEntity> findByScratchPath(String scratchPath);
 
-  Optional<TorrentJobEntity> findByBucketAndTargetKeyPath(String bucket, String targetKeyPath);
+  List<TorrentJobEntity> findByBucketAndTargetKeyPath(String bucket, String targetKeyPath);
+
+  @Modifying
+  @Query("update TorrentJobEntity set status = :status where id = :id")
+  void updateStatus(UUID id, TorrentStatus status);
 }

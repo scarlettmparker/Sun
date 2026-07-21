@@ -58,7 +58,7 @@ public class TorrentJobEntity extends BaseEntity implements Persistable<UUID> {
   @Column(nullable = false, length = 16)
   private String sourceType;
 
-  @OneToOne(fetch = FetchType.LAZY, optional = false, cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToOne(fetch = FetchType.LAZY, optional = false, cascade = {CascadeType.PERSIST, CascadeType.REMOVE}, orphanRemoval = true)
   @JoinColumn(name = "magnet_detail_id", nullable = false)
   private MagnetDetailEntity magnetDetail;
 

@@ -73,7 +73,7 @@ public class TorrentJobService extends BaseService<TorrentJobEntity> {
   /**
    * Finds a job by the bucket and key path it targets.
    */
-  public Optional<TorrentJobEntity> findByBucketAndTargetKeyPath(String bucket, String targetKeyPath) {
+  public List<TorrentJobEntity> findByBucketAndTargetKeyPath(String bucket, String targetKeyPath) {
     return jobRepository.findByBucketAndTargetKeyPath(bucket, targetKeyPath);
   }
 
@@ -102,6 +102,14 @@ public class TorrentJobService extends BaseService<TorrentJobEntity> {
     return jobRepository.findByBucketAndStatusIn(bucket, VISIBLE_STATUSES).stream()
         .filter(job -> isDirectlyUnder(job.getTargetKeyPath(), normalized))
         .toList();
+  }
+
+  /**
+   * Updates a job's status without loading the entity into the persistence
+   * context, avoiding cascade issues with immutable element collections.
+   */
+  public void updateStatus(UUID id, TorrentStatus status) {
+    jobRepository.updateStatus(id, status);
   }
 
   /**

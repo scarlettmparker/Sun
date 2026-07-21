@@ -7,9 +7,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,31 +25,7 @@ public class WebTorrentGateway {
 
   private static final Logger log = LoggerFactory.getLogger(WebTorrentGateway.class);
 
-  private static final String WEBTORRENT_CMD;
-
-  static {
-    String cmd = resolveWebtorrent();
-    WEBTORRENT_CMD = cmd;
-    log.info("WebTorrent binary resolved to: {}", cmd);
-  }
-
-  /**
-   * Searches for the webtorrent binary in node_modules/.bin relative to common
-   * working directories, falling back to "npx webtorrent".
-   */
-  private static String resolveWebtorrent() {
-    String[] candidates = {
-      "node_modules/.bin/webtorrent",
-      "../node_modules/.bin/webtorrent",
-      "../../node_modules/.bin/webtorrent",
-    };
-    for (String c : candidates) {
-      Path p = Paths.get(c);
-      if (Files.isExecutable(p)) return p.toAbsolutePath().toString();
-    }
-    // Fallback: rely on npx finding it
-    return "npx";
-  }
+  private static final String[] BASE_CMD = {"npx", "--yes", "webtorrent"};
 
   @Autowired private TorrentJobService jobService;
 
@@ -74,31 +48,24 @@ public class WebTorrentGateway {
   private void download(UUID jobId, String source, File saveDir) {
     saveDir.mkdirs();
 
-    String cmd;
-    if ("npx".equals(WEBTORRENT_CMD)) {
-      cmd = "npx webtorrent";
-      log.info("Starting webtorrent via npx for job {} in dir {}", jobId, saveDir);
-    } else {
-      cmd = WEBTORRENT_CMD;
-      log.info("Starting webtorrent at {} for job {} in dir {}", cmd, jobId, saveDir);
-    }
+    String[] fullCmd = new String[BASE_CMD.length + 5];
+    System.arraycopy(BASE_CMD, 0, fullCmd, 0, BASE_CMD.length);
+    fullCmd[BASE_CMD.length] = "download";
+    fullCmd[BASE_CMD.length + 1] = source;
+    fullCmd[BASE_CMD.length + 2] = "--out";
+    fullCmd[BASE_CMD.length + 3] = saveDir.getAbsolutePath();
+    fullCmd[BASE_CMD.length + 4] = "--json";
+    log.info("Starting webtorrent: {}", String.join(" ", fullCmd));
 
-    ProcessBuilder pb;
-    if ("npx".equals(WEBTORRENT_CMD)) {
-      pb = new ProcessBuilder("npx", "webtorrent", "download", source,
-          "--out", saveDir.getAbsolutePath(), "--json");
-    } else {
-      pb = new ProcessBuilder(WEBTORRENT_CMD, "download", source,
-          "--out", saveDir.getAbsolutePath(), "--json");
-    }
+    ProcessBuilder pb = new ProcessBuilder(fullCmd);
     pb.environment().put("PATH", System.getenv("PATH"));
-    pb.directory(new File("."));
     pb.redirectErrorStream(true);
 
     try {
       Process process = pb.start();
       log.info("Webtorrent process started for job {} (pid?)", jobId);
 
+      StringBuilder output = new StringBuilder();
       try (BufferedReader reader = new BufferedReader(
           new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
 
@@ -108,14 +75,17 @@ public class WebTorrentGateway {
           if (line.startsWith("{")) {
             parseAndUpdate(jobId, line);
           } else if (!line.isEmpty()) {
-            log.debug("Webtorrent output for job {}: {}", jobId, line);
+            log.info("Webtorrent output for job {}: {}", jobId, line);
+            if (output.length() < 2000) {
+              output.append(line).append(" ");
+            }
           }
         }
       }
 
       int exitCode = process.waitFor();
       log.info("Webtorrent process exited with code {} for job {}", exitCode, jobId);
-      updateDone(jobId, exitCode == 0);
+      updateDone(jobId, exitCode == 0, output.toString().trim());
 
     } catch (Exception e) {
       log.error("Webtorrent process failed for job {}", jobId, e);
@@ -157,7 +127,7 @@ public class WebTorrentGateway {
     }
   }
 
-  private void updateDone(UUID jobId, boolean success) {
+  private void updateDone(UUID jobId, boolean success, String output) {
     jobService.findById(jobId).ifPresent(job -> {
       if (success) {
         job.setStatus(TorrentStatus.COMPLETED);
@@ -167,7 +137,7 @@ public class WebTorrentGateway {
         job.setEtaSeconds(0L);
       } else {
         job.setStatus(TorrentStatus.FAILED);
-        job.setErrorMessage("webtorrent process exited with error");
+        job.setErrorMessage(output.isEmpty() ? "webtorrent process exited with error" : output);
       }
       jobService.save(job);
     });

@@ -13,6 +13,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Set;
 import java.util.UUID;
 import org.libtorrent4j.FileStorage;
 import org.libtorrent4j.SessionManager;
@@ -271,9 +272,12 @@ public class TorrentClientService implements SmartLifecycle {
   }
 
   private void guardUnique(String bucket, String targetKeyPath) {
-    if (jobService.hasActiveAt(bucket, targetKeyPath)) {
-      throw new DuplicateTorrentJobException(
-          "A torrent is already downloading to " + bucket + "/" + targetKeyPath);
+    for (TorrentJobEntity existing : jobService.findByBucketAndTargetKeyPath(bucket, targetKeyPath)) {
+      if (TorrentJobService.ACTIVE_STATUSES.contains(existing.getStatus())) {
+        logger.info("Cancelling existing active job {} for {}/{}", existing.getId(), bucket, targetKeyPath);
+        jobService.updateStatus(existing.getId(), TorrentStatus.CANCELLED);
+        deleteQuietly(new File(existing.getScratchPath()));
+      }
     }
   }
 
