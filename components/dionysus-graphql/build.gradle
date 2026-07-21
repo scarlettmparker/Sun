@@ -41,6 +41,10 @@ dependencies {
   testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
+bootJar {
+  requiresUnpack '**/libtorrent4j-linux-*.jar'
+}
+
 dependencyManagement {
     imports {
         mavenBom "com.netflix.graphql.dgs:graphql-dgs-platform-dependencies:${netflixDgsVersion}"

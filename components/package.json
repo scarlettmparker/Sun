@@ -11,6 +11,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "torrent-stream": "^1.2.1",
     "webtorrent": "^3.0.16",
     "webtorrent-cli": "^6.0.0"
   }

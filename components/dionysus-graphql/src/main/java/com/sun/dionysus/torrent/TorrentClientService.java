@@ -43,6 +43,8 @@ public class TorrentClientService implements SmartLifecycle {
   @Autowired private TorrentJobRegistry registry;
   @Autowired private TorrentDownloadGateway gateway;
   @Autowired private WebTorrentGateway webGateway;
+  @Autowired private Aria2Gateway aria2Gateway;
+  @Autowired private TransmissionGateway transmissionGateway;
   @Autowired private TorrentClientProperties properties;
 
   private volatile boolean running = false;
@@ -61,18 +63,17 @@ public class TorrentClientService implements SmartLifecycle {
 
   @Override
   public synchronized void start() {
-    try {
-      session = new SessionManager();
-    } catch (LinkageError e) {
-      logger.warn("libtorrent4j native library not available — torrent client disabled: {}", e.getMessage());
-      return;
-    }
     scratchRoot = new File(properties.getScratchDir());
     scratchRoot.mkdirs();
-    session.start();
-    session.addListener(dispatcher);
-    running = true;
-    logger.info("Torrent client started, scratch dir {}", scratchRoot.getAbsolutePath());
+    try {
+      session = new SessionManager();
+      session.start();
+      session.addListener(dispatcher);
+      running = true;
+      logger.info("Torrent client started, scratch dir {}", scratchRoot.getAbsolutePath());
+    } catch (LinkageError e) {
+      logger.warn("libtorrent4j native library not available — torrent client disabled: {}", e.getMessage());
+    }
   }
 
   @Override
@@ -133,7 +134,7 @@ public class TorrentClientService implements SmartLifecycle {
     job = jobService.save(job);
 
     registry.register(job.getId(), job.getScratchPath(), null);
-    webGateway.downloadMagnet(job.getId(), magnet, saveDir);
+    transmissionGateway.downloadMagnet(job.getId(), magnet, saveDir);
     return job;
   }
 
@@ -184,7 +185,7 @@ public class TorrentClientService implements SmartLifecycle {
     } catch (IOException e) {
       logger.error("Failed to write torrent file for job {}", job.getId(), e);
     }
-    webGateway.downloadTorrentFile(job.getId(), torrentFile, saveDir);
+    transmissionGateway.downloadTorrentFile(job.getId(), torrentFile, saveDir);
     return job;
   }
 
@@ -192,18 +193,13 @@ public class TorrentClientService implements SmartLifecycle {
    * Re-adds an existing job to the session on startup, resuming into its scratch dir.
    */
   public void resumeExistingJob(TorrentJobEntity job) {
-    File saveDir = new File(job.getScratchPath());
-    if (!saveDir.isDirectory()) {
-      job.setStatus(TorrentStatus.FAILED);
-      job.setErrorMessage("scratch dir missing on restart");
-      jobService.save(job);
-      return;
-    }
-    registry.register(job.getId(), job.getScratchPath(), null);
     job.setStatus(TorrentStatus.DOWNLOADING);
+    job.setErrorMessage(null);
     jobService.save(job);
     String magnet = job.getMagnetDetail().getSourceUri();
-    gateway.downloadMagnet(job.getId(), session, magnet, saveDir);
+    File saveDir = new File(job.getScratchPath());
+    saveDir.mkdirs();
+    transmissionGateway.downloadMagnet(job.getId(), magnet, saveDir);
   }
 
   /**

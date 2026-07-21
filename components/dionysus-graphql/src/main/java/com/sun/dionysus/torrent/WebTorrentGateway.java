@@ -5,13 +5,11 @@ import com.sun.dionysus.model.enums.TorrentStatus;
 import com.sun.dionysus.service.torrent.TorrentJobService;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,14 +18,32 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 /**
- * Downloads torrents via the webtorrent-cli Node.js process — no native library
- * required. Spawns {@code webtorrent download <magnet|torrent> --json --out <dir>}
+ * Downloads torrents via the webtorrent-cli Node.js process.
+ * Spawns {@code webtorrent download <magnet|torrent> --json --out <dir>}
  * and parses the JSON progress lines to update the job in the database.
  */
 @Component
 public class WebTorrentGateway {
 
   private static final Logger log = LoggerFactory.getLogger(WebTorrentGateway.class);
+
+  private static final String WRAPPER_SCRIPT = """
+      import { createHash } from 'crypto'
+      const WebTorrent = (await import('webtorrent')).default
+      const src = process.argv[2], dest = process.argv[3]
+      if (!src || !dest) { process.exit(1) }
+      const key = createHash('sha1').update(src).digest('hex').slice(0, 20)
+      const client = new WebTorrent({ maxConns: 200, uploads: 5, tracker: true, dht: true, utp: true, tcp: true })
+      let running = true
+      function die(c) { if (!running) return; running = false; client.destroy(() => process.exit(c)) }
+      const tor = client.add(src, { path: dest, name: key })
+      function r() { console.log(JSON.stringify({progress: tor.progress, downloaded: tor.downloaded, length: tor.length || 1, downloadSpeed: tor.downloadSpeed, numPeers: tor.numPeers, timeRemaining: tor.timeRemaining})) }
+      tor.on('download', r)
+      tor.on('done', () => { r(); die(0) })
+      tor.on('error', (e) => { console.error('err:', e.message); die(1) })
+      tor.on('warning', (e) => console.error('warn:', e.message))
+      setInterval(() => { if (tor.progress >= 1) die(0); r() }, 10000)
+      """;
 
   @Autowired private TorrentJobService jobService;
 
@@ -55,24 +71,28 @@ public class WebTorrentGateway {
       scriptDir = scriptDir.getParent();
     }
     File scriptFile = new File(scriptDir.toFile(), "webtorrent-dl.mjs");
-    scriptFile.deleteOnExit();
-    try (InputStream in = WebTorrentGateway.class.getResourceAsStream("/webtorrent-download.mjs")) {
-      if (in != null) Files.copy(in, scriptFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-    } catch (Exception e) {
-      log.warn("Failed to write webtorrent wrapper script, may already exist: {}", e.getMessage());
+    try { Files.write(scriptFile.toPath(), WRAPPER_SCRIPT.getBytes(StandardCharsets.UTF_8)); } catch (Exception e) {
+      updateFailed(jobId, "Failed to write wrapper script");
+      return;
     }
-    String[] fullCmd = new String[]{"node", scriptFile.getAbsolutePath(), source, saveDir.getAbsolutePath()};
-    log.info("Starting webtorrent: {}", String.join(" ", fullCmd));
+    String node = Paths.get(System.getProperty("user.home"), ".config/nvm/versions/node/v20.20.2/bin/node").toString();
+    if (!Files.isExecutable(Paths.get(node))) node = "node";
+    String[] fullCmd = new String[]{node, scriptFile.getAbsolutePath(), source, saveDir.getAbsolutePath()};
+    log.info("Starting webtorrent: {} {}", node, scriptFile.getAbsolutePath());
 
     ProcessBuilder pb = new ProcessBuilder(fullCmd);
     pb.environment().put("PATH", System.getenv("PATH"));
     pb.redirectErrorStream(true);
 
-    // Retry loop: if the process exits non-zero, restart it
-    int maxRetries = 10;
+    // Retry loop: if the process exits non-zero, restart it forever until cancelled
     StringBuilder output = new StringBuilder();
 
-    for (int attempt = 1; attempt <= maxRetries; attempt++) {
+    for (int attempt = 1; ; attempt++) {
+      // Stop retrying if the job was cancelled
+      if (jobService.findById(jobId).map(j -> j.getStatus() == TorrentStatus.CANCELLED).orElse(false)) {
+        log.info("Job {} was cancelled, stopping retry", jobId);
+        return;
+      }
       try {
         Process process = pb.start();
         log.info("Webtorrent process started for job {} (attempt {})", jobId, attempt);
@@ -106,26 +126,35 @@ public class WebTorrentGateway {
           return;
         }
 
-        // Non-zero exit — log and retry
+        // Reset attempt counter if any progress was made
+        long downloaded = jobService.findById(jobId).map(TorrentJobEntity::getDownloadedBytes).orElse(0L);
+        if (downloaded > 0) {
+          log.info("Progress made ({} bytes), resetting attempt counter", downloaded);
+          attempt = 0;
+        }
         log.warn("Webtorrent attempt {} failed for job {}, retrying...", attempt, jobId);
-        Thread.sleep(2000L * attempt);
+        // Don't overwrite CANCELLED, user may have cancelled during the attempt
+        if (jobService.findById(jobId).map(j -> j.getStatus() == TorrentStatus.CANCELLED).orElse(false)) {
+          log.info("Job {} was cancelled, stopping retry", jobId);
+          return;
+        }
+        int attemptFinal = attempt;
+        jobService.findById(jobId).ifPresent(job -> {
+          job.setStatus(TorrentStatus.DOWNLOADING);
+          job.setErrorMessage("Retrying after attempt " + attemptFinal);
+          jobService.save(job);
+        });
+        Thread.sleep(2000L * Math.min(attempt + 1, 30));
 
       } catch (Exception e) {
         log.error("Webtorrent attempt {} failed for job {}", attempt, jobId, e);
-        if (attempt < maxRetries) {
-          try { Thread.sleep(2000L * attempt); } catch (InterruptedException ie) {
-            Thread.currentThread().interrupt();
-            updateFailed(jobId, "Interrupted");
-            return;
-          }
+        try { Thread.sleep(2000L * Math.min(attempt, 30)); } catch (InterruptedException ie) {
+          Thread.currentThread().interrupt();
+          return;
         }
       }
     }
-
-    updateFailed(jobId, "Webtorrent failed after " + maxRetries + " attempts");
   }
-
-  private String jsonAccumulator = "";
 
   /**
    * Parses a JSON progress line from webtorrent and updates the job.
@@ -151,7 +180,7 @@ public class WebTorrentGateway {
       job.setStatus(status);
       job.setProgress(progress);
       job.setDownloadedBytes(downloaded);
-      job.setTotalBytes(total);
+      job.setTotalBytes(total != 0 ? total : job.getTotalBytes());
       job.setDownloadRateBps(speedBps);
       job.setPeersConnected(peers);
       job.setEtaSeconds(eta);

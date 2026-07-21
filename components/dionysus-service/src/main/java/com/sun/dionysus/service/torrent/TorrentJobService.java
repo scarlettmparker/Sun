@@ -54,7 +54,8 @@ public class TorrentJobService extends BaseService<TorrentJobEntity> {
           TorrentStatus.METADATA,
           TorrentStatus.DOWNLOADING,
           TorrentStatus.PAUSED,
-          TorrentStatus.UPLOADING);
+          TorrentStatus.UPLOADING,
+          TorrentStatus.FAILED);
 
   private final TorrentJobEntityRepository jobRepository;
 
