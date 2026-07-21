@@ -35,6 +35,17 @@ public class TorrentJobService extends BaseService<TorrentJobEntity> {
           TorrentStatus.FAILED);
 
   /**
+   * Statuses that block a new job for the same key path.
+   */
+  public static final Set<TorrentStatus> ACTIVE_STATUSES =
+      EnumSet.of(
+          TorrentStatus.QUEUED,
+          TorrentStatus.METADATA,
+          TorrentStatus.DOWNLOADING,
+          TorrentStatus.PAUSED,
+          TorrentStatus.UPLOADING);
+
+  /**
    * Statuses that can be resumed after a restart.
    */
   public static final Set<TorrentStatus> RESUMABLE_STATUSES =
@@ -71,7 +82,7 @@ public class TorrentJobService extends BaseService<TorrentJobEntity> {
    * enforce the one-active-job-per-key rule before inserting.
    */
   public boolean hasActiveAt(String bucket, String targetKeyPath) {
-    return jobRepository.findByBucketAndStatusIn(bucket, VISIBLE_STATUSES).stream()
+    return jobRepository.findByBucketAndStatusIn(bucket, ACTIVE_STATUSES).stream()
         .anyMatch(j -> targetKeyPath.equals(j.getTargetKeyPath()));
   }
 

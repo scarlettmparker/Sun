@@ -123,7 +123,7 @@ public class TorrentClientService implements SmartLifecycle {
     magnetDetail.setTrackers(parsed.trackers());
     magnetDetail.setPrivate(false);
 
-    TorrentJobEntity job = newJob(bucket, targetKeyPath, "MAGNET", parsed.infoHash(), magnetDetail, TorrentStatus.METADATA, 0L);
+    TorrentJobEntity job = newJob(bucket, targetKeyPath, "MAGNET", parsed.infoHash(), magnetDetail, TorrentStatus.DOWNLOADING, 0L);
     job.setScratchPath("");
     job = jobService.save(job);
 
@@ -251,16 +251,18 @@ public class TorrentClientService implements SmartLifecycle {
         .findById(jobId)
         .ifPresent(
             job -> {
-              registry
-                  .findHandle(jobId)
-                  .ifPresent(
-                      handle -> {
-                        try {
-                          handle.pause();
-                          session.remove(handle);
-                        } catch (Exception ignored) {
-                        }
-                      });
+              if (session != null) {
+                registry
+                    .findHandle(jobId)
+                    .ifPresent(
+                        handle -> {
+                          try {
+                            handle.pause();
+                            session.remove(handle);
+                          } catch (Exception ignored) {
+                          }
+                        });
+              }
               registry.forget(jobId, job.getScratchPath());
               job.setStatus(TorrentStatus.CANCELLED);
               jobService.save(job);

@@ -23,6 +23,20 @@ public class TorrentSchemaBootstrapper implements ApplicationRunner {
       WHERE status IN ('QUEUED','METADATA','DOWNLOADING','PAUSED','UPLOADING')
       """;
 
+  private static final String DROP_INFOHASH_UNIQUE_SQL = """
+      DO $$ BEGIN
+        EXECUTE (
+          SELECT 'ALTER TABLE dionysus_magnet_detail DROP CONSTRAINT IF EXISTS ' || c.conname
+          FROM pg_constraint c
+          JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = ANY(c.conkey)
+          WHERE c.conrelid = 'dionysus_magnet_detail'::regclass
+            AND c.contype = 'u'
+            AND a.attname = 'infohash'
+        );
+      EXCEPTION WHEN OTHERS THEN END;
+      $$;
+      """;
+
   private final JdbcTemplate jdbcTemplate;
 
   public TorrentSchemaBootstrapper(JdbcTemplate jdbcTemplate) {
@@ -31,6 +45,7 @@ public class TorrentSchemaBootstrapper implements ApplicationRunner {
 
   @Override
   public void run(ApplicationArguments args) {
+    jdbcTemplate.execute(DROP_INFOHASH_UNIQUE_SQL);
     jdbcTemplate.execute(CREATE_INDEX_SQL);
     logger.info("Ensured torrent one-active-job-per-key index exists");
   }

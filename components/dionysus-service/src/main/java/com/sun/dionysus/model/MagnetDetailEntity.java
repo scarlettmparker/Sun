@@ -21,7 +21,7 @@ import java.util.List;
 @Table(name = "dionysus_magnet_detail")
 public class MagnetDetailEntity extends BaseEntity {
 
-  @Column(nullable = false, unique = true, length = 64)
+  @Column(nullable = false, length = 64)
   private String infoHash;
 
   @Column(length = 16)

@@ -7,6 +7,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +26,32 @@ import org.springframework.stereotype.Component;
 public class WebTorrentGateway {
 
   private static final Logger log = LoggerFactory.getLogger(WebTorrentGateway.class);
+
+  private static final String WEBTORRENT_CMD;
+
+  static {
+    String cmd = resolveWebtorrent();
+    WEBTORRENT_CMD = cmd;
+    log.info("WebTorrent binary resolved to: {}", cmd);
+  }
+
+  /**
+   * Searches for the webtorrent binary in node_modules/.bin relative to common
+   * working directories, falling back to "npx webtorrent".
+   */
+  private static String resolveWebtorrent() {
+    String[] candidates = {
+      "node_modules/.bin/webtorrent",
+      "../node_modules/.bin/webtorrent",
+      "../../node_modules/.bin/webtorrent",
+    };
+    for (String c : candidates) {
+      Path p = Paths.get(c);
+      if (Files.isExecutable(p)) return p.toAbsolutePath().toString();
+    }
+    // Fallback: rely on npx finding it
+    return "npx";
+  }
 
   @Autowired private TorrentJobService jobService;
 
@@ -45,30 +74,48 @@ public class WebTorrentGateway {
   private void download(UUID jobId, String source, File saveDir) {
     saveDir.mkdirs();
 
-    ProcessBuilder pb = new ProcessBuilder(
-        "npx", "webtorrent", "download", source,
-        "--out", saveDir.getAbsolutePath(),
-        "--json");
+    String cmd;
+    if ("npx".equals(WEBTORRENT_CMD)) {
+      cmd = "npx webtorrent";
+      log.info("Starting webtorrent via npx for job {} in dir {}", jobId, saveDir);
+    } else {
+      cmd = WEBTORRENT_CMD;
+      log.info("Starting webtorrent at {} for job {} in dir {}", cmd, jobId, saveDir);
+    }
+
+    ProcessBuilder pb;
+    if ("npx".equals(WEBTORRENT_CMD)) {
+      pb = new ProcessBuilder("npx", "webtorrent", "download", source,
+          "--out", saveDir.getAbsolutePath(), "--json");
+    } else {
+      pb = new ProcessBuilder(WEBTORRENT_CMD, "download", source,
+          "--out", saveDir.getAbsolutePath(), "--json");
+    }
     pb.environment().put("PATH", System.getenv("PATH"));
+    pb.directory(new File("."));
     pb.redirectErrorStream(true);
 
     try {
       Process process = pb.start();
+      log.info("Webtorrent process started for job {} (pid?)", jobId);
+
       try (BufferedReader reader = new BufferedReader(
           new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
 
         String line;
         while ((line = reader.readLine()) != null) {
           line = line.trim();
-          if (line.isEmpty() || line.startsWith("{")) {
+          if (line.startsWith("{")) {
             parseAndUpdate(jobId, line);
+          } else if (!line.isEmpty()) {
+            log.debug("Webtorrent output for job {}: {}", jobId, line);
           }
         }
       }
 
       int exitCode = process.waitFor();
+      log.info("Webtorrent process exited with code {} for job {}", exitCode, jobId);
       updateDone(jobId, exitCode == 0);
-      log.info("Webtorrent process exited {} for job {}", exitCode == 0 ? "ok" : "with code " + exitCode, jobId);
 
     } catch (Exception e) {
       log.error("Webtorrent process failed for job {}", jobId, e);
