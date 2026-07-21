@@ -138,7 +138,7 @@ public class TransmissionGateway {
   /**
    * Removes the torrent from transmission by matching the info hash.
    */
-  private void removeTransmission(UUID jobId) {
+  public void removeTransmission(UUID jobId) {
     String infoHash = jobService.findById(jobId).map(TorrentJobEntity::getInfoHash).orElse(null);
     if (infoHash == null) return;
     String list = exec("-l");

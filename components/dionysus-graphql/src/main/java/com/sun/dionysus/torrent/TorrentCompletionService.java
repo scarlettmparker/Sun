@@ -33,6 +33,7 @@ public class TorrentCompletionService {
   @Autowired private KeyDetailService keyDetailService;
   @Autowired private S3Client s3Client;
   @Autowired private TorrentJobRegistry registry;
+  @Autowired private TransmissionGateway transmissionGateway;
 
   /**
    * Uploads the completed download into S3 and finalises the job.
@@ -65,6 +66,7 @@ public class TorrentCompletionService {
       jobService.save(job);
 
       registry.forget(job.getId(), job.getScratchPath());
+      transmissionGateway.removeTransmission(jobId);
       deleteRecursively(scratch);
       logger.info("Torrent job {} completed into {}/{}", jobId, job.getBucket(), job.getTargetKeyPath());
     } catch (Exception e) {
