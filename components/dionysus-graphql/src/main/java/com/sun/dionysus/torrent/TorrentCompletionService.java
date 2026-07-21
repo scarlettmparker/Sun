@@ -14,6 +14,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -33,7 +34,7 @@ public class TorrentCompletionService {
   @Autowired private KeyDetailService keyDetailService;
   @Autowired private S3Client s3Client;
   @Autowired private TorrentJobRegistry registry;
-  @Autowired private TransmissionGateway transmissionGateway;
+  @Autowired @Lazy private TransmissionGateway transmissionGateway;
 
   /**
    * Uploads the completed download into S3 and finalises the job.
