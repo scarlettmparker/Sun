@@ -66,6 +66,7 @@ export { default as Label } from "./components/label";
 export { default as MarkdownEditor } from "./components/markdown-editor";
 export { default as MarkdownViewer } from "./components/markdown-viewer";
 export { default as Pagination } from "./components/pagination";
+export { default as ScrollArea } from "./components/scroll-area";
 export { default as SearchBar } from "./components/search-bar";
 export { default as Select, SelectOption } from "./components/select";
 export { default as Separator } from "./components/separator";

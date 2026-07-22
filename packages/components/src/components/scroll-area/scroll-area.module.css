@@ -1,0 +1,38 @@
+.outer {
+  position: relative;
+}
+
+.inner {
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.inner::-webkit-scrollbar {
+  display: none;
+}
+
+.track {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 6px;
+  height: 100%;
+  pointer-events: none;
+}
+
+.thumb {
+  position: absolute;
+  right: 0;
+  width: 6px;
+  background: var(--primary);
+  border-radius: 3px;
+  opacity: 0.25;
+  transition: opacity var(--fast) ease;
+  pointer-events: auto;
+  cursor: default;
+}
+
+.outer:hover .thumb {
+  opacity: 1;
+}
