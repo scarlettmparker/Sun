@@ -19,10 +19,12 @@ import com.sun.gaia.codegen.types.StandardError;
 import com.sun.gaia.graphql.mappers.AccountMapper;
 import com.sun.gaia.model.AccountEntity;
 import com.sun.gaia.model.enums.AccountStatus;
+import com.sun.gaia.repository.AccountRepository;
 import com.sun.gaia.service.AccountService;
 import com.sun.gaia.service.EmailService;
 import com.sun.gaia.service.JwtService;
 import com.sun.gaia.service.PasswordResetService;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -35,6 +37,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class GaiaGraphQLServiceTest {
 
   @Mock private AccountService accountService;
+  @Mock private AccountRepository accountRepository;
   @Mock private PersonService personService;
   @Mock private JwtService jwtService;
   @Mock private EmailService emailService;
@@ -144,5 +147,65 @@ class GaiaGraphQLServiceTest {
     } finally {
       com.sun.gaia.service.UserContextHolder.clear();
     }
+  }
+
+  @Test
+  void myRoles_returnsRoleKeysWhenAuthenticated() {
+    UUID userId = UUID.randomUUID();
+    com.sun.gaia.service.UserContextHolder.setUserId(userId);
+    try {
+      when(accountRepository.findEffectiveRoleNames(userId)).thenReturn(List.of("admin"));
+
+      List<String> roles = service.myRoles();
+
+      assertThat(roles).containsExactly("admin");
+    } finally {
+      com.sun.gaia.service.UserContextHolder.clear();
+    }
+  }
+
+  @Test
+  void myRoles_returnsEmptyListWhenNotAuthenticated() {
+    assertThat(service.myRoles()).isEmpty();
+  }
+
+  @Test
+  void suspendAccount_marksAccountSuspended() {
+    UUID id = UUID.randomUUID();
+    AccountEntity account = new AccountEntity();
+    account.setId(id);
+    account.setStatus(AccountStatus.ACTIVE);
+    when(accountService.findById(id)).thenReturn(Optional.of(account));
+
+    QueryResult result = service.suspendAccount(id.toString());
+
+    assertThat(result).isInstanceOf(QuerySuccess.class);
+    assertThat(((QuerySuccess) result).getId()).isEqualTo(id.toString());
+    assertThat(account.getStatus()).isEqualTo(AccountStatus.SUSPENDED);
+    verify(accountService).save(account);
+  }
+
+  @Test
+  void suspendAccount_throwsWhenAccountNotFound() {
+    UUID id = UUID.randomUUID();
+    when(accountService.findById(id)).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> service.suspendAccount(id.toString()))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void unsuspendAccount_reactivatesAccount() {
+    UUID id = UUID.randomUUID();
+    AccountEntity account = new AccountEntity();
+    account.setId(id);
+    account.setStatus(AccountStatus.SUSPENDED);
+    when(accountService.findById(id)).thenReturn(Optional.of(account));
+
+    QueryResult result = service.unsuspendAccount(id.toString());
+
+    assertThat(result).isInstanceOf(QuerySuccess.class);
+    assertThat(account.getStatus()).isEqualTo(AccountStatus.ACTIVE);
+    verify(accountService).save(account);
   }
 }

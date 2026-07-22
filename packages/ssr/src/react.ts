@@ -1,4 +1,4 @@
-import { createElement, useEffect, useReducer, useState } from "react";
+import { createElement, Fragment, type ReactNode, useEffect, useReducer, useState } from "react";
 import {
   getPageData,
   makeCacheKey,
@@ -34,6 +34,33 @@ export function usePageData<T>(
 
   return getPageData<T>(key, pattern, params);
 }
+
+type RoleCheckProps = {
+  /**
+   * Role keys the user must hold, e.g. `["admin"]`.
+   */
+  roles: string[];
+  /**
+   * `"all"` — user needs every role. `"any"` — user needs at least one.
+   *
+   * @default "all"
+   */
+  match?: "all" | "any";
+  children?: ReactNode;
+};
+
+/**
+ * Renders children only when the current user holds the given roles.
+ */
+export const RoleCheck = ({ roles, match = "all", children }: RoleCheckProps) => {
+  const { data: userRoles } = usePageData<string[]>("currentRoles", "currentRoles");
+  if (!userRoles) return null;
+  const has =
+    match === "all"
+      ? roles.every((r) => userRoles.includes(r))
+      : roles.some((r) => userRoles.includes(r));
+  return has ? createElement(Fragment, null, children) : null;
+};
 
 /**
  * Hidden form field carrying the CSRF token for native (PRG) form posts.

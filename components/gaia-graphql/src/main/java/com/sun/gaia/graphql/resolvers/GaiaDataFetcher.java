@@ -10,6 +10,8 @@ import com.sun.gaia.codegen.types.ConfigurationInput;
 import com.sun.gaia.codegen.types.GaiaMutations;
 import com.sun.gaia.codegen.types.GaiaQueries;
 import com.sun.gaia.codegen.types.LoginInput;
+import com.sun.gaia.codegen.types.PagedAccounts;
+import com.sun.gaia.codegen.types.PaginationInput;
 import com.sun.gaia.codegen.types.PropertySetEntry;
 import com.sun.gaia.codegen.types.PropertySetSchema;
 import com.sun.gaia.codegen.types.PropertySetSchemaInput;
@@ -37,6 +39,9 @@ public class GaiaDataFetcher {
 
   @Autowired
   private JwtService jwtService;
+
+  @Autowired
+  private com.sun.gaia.repository.AccountRepository accountRepository;
 
   /**
    * Provides the access queries object.
@@ -81,6 +86,24 @@ public class GaiaDataFetcher {
   @PreAuthorize("@permissions.has('graphql.gaia.listAccounts')")
   public List<Account> listAccounts() {
     return gaiaGraphQLService.listAccounts();
+  }
+
+  /**
+   * Returns the caller's role key strings.
+   */
+  @DgsData(parentType = "GaiaQueries", field = "myRoles")
+  @PreAuthorize("@permissions.isAuthenticated()")
+  public List<String> myRoles() {
+    return gaiaGraphQLService.myRoles();
+  }
+
+  /**
+   * Looks up every account across the system, paginated.
+   */
+  @DgsData(parentType = "GaiaQueries", field = "accounts")
+  @PreAuthorize("@permissions.has('graphql.gaia.accounts')")
+  public PagedAccounts accounts(PaginationInput pagination) {
+    return gaiaGraphQLService.accounts(pagination);
   }
 
   /**
@@ -235,6 +258,24 @@ public class GaiaDataFetcher {
   }
 
   /**
+   * Suspends an account, revoking all active sessions.
+   */
+  @DgsData(parentType = "GaiaMutations", field = "suspendAccount")
+  @PreAuthorize("@permissions.has('graphql.gaia.suspendAccount')")
+  public QueryResult suspendAccount(String id) {
+    return gaiaGraphQLService.suspendAccount(id);
+  }
+
+  /**
+   * Re-activates a suspended account.
+   */
+  @DgsData(parentType = "GaiaMutations", field = "unsuspendAccount")
+  @PreAuthorize("@permissions.has('graphql.gaia.unsuspendAccount')")
+  public QueryResult unsuspendAccount(String id) {
+    return gaiaGraphQLService.unsuspendAccount(id);
+  }
+
+  /**
    * Creates or replaces a property-set entry.
    *
    * @param ownerKey the owner key
@@ -341,7 +382,9 @@ public class GaiaDataFetcher {
         String token = authHeader.substring(7);
         if (jwtService.isValid(token)) {
           UUID accountId = jwtService.extractAccountId(token);
-          UserContextHolder.setUserId(accountId);
+          accountRepository.findById(accountId)
+              .filter(a -> a.getStatus() != com.sun.gaia.model.enums.AccountStatus.SUSPENDED)
+              .ifPresent(a -> UserContextHolder.setUserId(accountId));
         }
       }
     } catch (Exception e) {

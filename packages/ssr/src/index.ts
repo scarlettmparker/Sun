@@ -50,3 +50,5 @@ export type {
 } from "./server-action";
 export { initClientBootstrap } from "./client-bootstrap";
 export type { BootstrapI18n } from "./client-bootstrap";
+
+export { RoleCheck } from "./react";

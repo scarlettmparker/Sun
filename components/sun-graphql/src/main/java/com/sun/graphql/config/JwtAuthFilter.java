@@ -1,5 +1,7 @@
 package com.sun.graphql.config;
 
+import com.sun.gaia.model.enums.AccountStatus;
+import com.sun.gaia.repository.AccountRepository;
 import com.sun.gaia.service.JwtService;
 import com.sun.gaia.service.UserContextHolder;
 import jakarta.servlet.FilterChain;
@@ -16,6 +18,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
  * Stamps the caller's account id into {@link UserContextHolder} from a bearer JWT.
+ * Skips accounts with {@link AccountStatus#SUSPENDED} status so their sessions
+ * are immediately revoked — every downstream check sees an unauthenticated user.
  */
 @Component
 @Profile("!test")
@@ -23,9 +27,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class JwtAuthFilter extends OncePerRequestFilter {
 
   private final JwtService jwtService;
+  private final AccountRepository accountRepository;
 
-  public JwtAuthFilter(JwtService jwtService) {
+  public JwtAuthFilter(JwtService jwtService, AccountRepository accountRepository) {
     this.jwtService = jwtService;
+    this.accountRepository = accountRepository;
   }
 
   @Override
@@ -37,7 +43,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
       String token = authHeader.substring(7);
       if (jwtService.isValid(token)) {
         UUID accountId = jwtService.extractAccountId(token);
-        UserContextHolder.setUserId(accountId);
+        accountRepository.findById(accountId)
+            .filter(a -> a.getStatus() != AccountStatus.SUSPENDED)
+            .ifPresent(a -> UserContextHolder.setUserId(accountId));
       }
     }
     try {

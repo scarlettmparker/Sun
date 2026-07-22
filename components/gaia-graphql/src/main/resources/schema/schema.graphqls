@@ -35,10 +35,17 @@ input LoginInput {
   password: String!
 }
 
+type PagedAccounts {
+  items: [Account!]!
+  pageInfo: PageInfo!
+}
+
 type GaiaQueries {
   me: Account
   account(id: ID!): Account
   listAccounts: [Account!]
+  myRoles: [String!]!
+  accounts(pagination: PaginationInput): PagedAccounts!
   propertySet(ownerKey: String!, name: String!, entry: String): JSON
   propertySets(ownerKey: String!, name: String!): [PropertySetEntry!]!
   propertySetSchema(ownerKey: String!, name: String!): PropertySetSchema
@@ -50,6 +57,8 @@ type GaiaMutations {
   register(input: RegisterInput!): AuthResult
   login(input: LoginInput!): AuthResult
   logout: QueryResult
+  suspendAccount(id: ID!): QueryResult
+  unsuspendAccount(id: ID!): QueryResult
   requestPasswordReset(email: String!): QueryResult
   resetPassword(token: String!, newPassword: String!): QueryResult
   changePassword(currentPassword: String!, newPassword: String!): QueryResult

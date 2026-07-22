@@ -5,6 +5,7 @@
 }
 
 .search_bar_input {
+  box-sizing: border-box;
   width: 100%;
   padding-left: calc(var(--lg) * 2 + 16px);
 }

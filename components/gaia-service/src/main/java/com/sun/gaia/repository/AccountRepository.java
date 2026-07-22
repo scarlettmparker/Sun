@@ -6,10 +6,11 @@ import com.sun.gaia.model.enums.AccountType;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface AccountRepository extends BaseRepository<AccountEntity> {
+public interface AccountRepository extends BaseRepository<AccountEntity>, JpaSpecificationExecutor<AccountEntity> {
 
   Optional<AccountEntity> findByUsername(String username);
 
@@ -37,5 +38,16 @@ public interface AccountRepository extends BaseRepository<AccountEntity> {
               + "(SELECT person_id FROM gaia_accounts WHERE id = :accountId))",
       nativeQuery = true)
   List<String> findEffectivePermissions(@Param("accountId") UUID accountId);
+
+  /**
+   * Role names assigned to an account directly.
+   */
+  @Query(
+      value =
+          "SELECT r.name FROM gaia_roles r "
+              + "JOIN gaia_account_roles ar ON ar.role_id = r.id "
+              + "WHERE ar.account_id = :accountId",
+      nativeQuery = true)
+  List<String> findEffectiveRoleNames(@Param("accountId") UUID accountId);
 }
 

@@ -7,6 +7,9 @@ import com.sun.gaia.codegen.types.AuthResult;
 import com.sun.gaia.codegen.types.Configuration;
 import com.sun.gaia.codegen.types.ConfigurationInput;
 import com.sun.gaia.codegen.types.LoginInput;
+import com.sun.gaia.codegen.types.PagedAccounts;
+import com.sun.gaia.codegen.types.PageInfo;
+import com.sun.gaia.codegen.types.PaginationInput;
 import com.sun.gaia.codegen.types.PropertySetEntry;
 import com.sun.gaia.codegen.types.PropertySetSchema;
 import com.sun.gaia.codegen.types.PropertySetSchemaInput;
@@ -19,8 +22,14 @@ import com.sun.gaia.graphql.mappers.ConfigurationMapper;
 import com.sun.gaia.graphql.mappers.PropertySetMapper;
 import com.sun.gaia.model.AccountEntity;
 import com.sun.gaia.model.PropertySetEntryEntity;
+import com.sun.gaia.model.enums.AccountStatus;
+import com.sun.gaia.repository.AccountRepository;
 import com.sun.gaia.service.AccountService;
 import com.sun.gaia.service.ConfigurationReconciler;
+import com.sun.base.util.FilterBuilder;
+import com.sun.base.util.FilterSpec;
+import com.sun.base.util.GraphQLSupport;
+import com.sun.base.util.PageRequests;
 import com.sun.gaia.service.ConfigurationService;
 import com.sun.gaia.service.EmailService;
 import com.sun.gaia.service.JwtService;
@@ -32,6 +41,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -47,6 +61,7 @@ public class GaiaGraphQLService {
   private static final Logger logger = LoggerFactory.getLogger(GaiaGraphQLService.class);
 
   private final AccountService accountService;
+  private final AccountRepository accountRepository;
   private final PersonService personService;
   private final JwtService jwtService;
   private final EmailService emailService;
@@ -59,7 +74,8 @@ public class GaiaGraphQLService {
   private final ConfigurationMapper configurationMapper;
   private final String appBaseUrl;
 
-  public GaiaGraphQLService(AccountService accountService, PersonService personService,
+  public GaiaGraphQLService(AccountService accountService, AccountRepository accountRepository,
+      PersonService personService,
       JwtService jwtService, EmailService emailService,
       PasswordResetService passwordResetService, AccountMapper accountMapper,
       PropertySetService propertySetService, ConfigurationService configurationService,
@@ -67,6 +83,7 @@ public class GaiaGraphQLService {
       ConfigurationMapper configurationMapper,
       @Value("${app.base-url:http://localhost:5176}") String appBaseUrl) {
     this.accountService = accountService;
+    this.accountRepository = accountRepository;
     this.personService = personService;
     this.jwtService = jwtService;
     this.emailService = emailService;
@@ -119,6 +136,64 @@ public class GaiaGraphQLService {
     return accountService.findAll().stream()
         .map(accountMapper::map)
         .collect(Collectors.toList());
+  }
+
+  /**
+   * Returns the caller's role key strings.
+   */
+  @Transactional(readOnly = true)
+  public List<String> myRoles() {
+    UUID userId = UserContextHolder.getUserId();
+    if (userId == null) return List.of();
+    return accountRepository.findEffectiveRoleNames(userId);
+  }
+
+  /**
+   * Looks up every account across the system, paginated.
+   */
+  @Transactional(readOnly = true)
+  public PagedAccounts accounts(PaginationInput pagination) {
+    Pageable pageable = toPageable(pagination, "username", Sort.Direction.ASC);
+    List<FilterSpec> filters = GraphQLSupport.toFilterSpecs(
+        pagination != null ? pagination.getFilters() : null,
+        f -> new FilterSpec(f.getField(), f.getOperator().name(), f.getValue()));
+    Specification<AccountEntity> spec = FilterBuilder.buildFilters(filters);
+    Page<AccountEntity> result = spec != null
+        ? accountRepository.findAll(spec, pageable)
+        : accountService.findAllPaged(pageable);
+    List<Account> items = result.getContent().stream()
+        .map(accountMapper::map)
+        .toList();
+    return PagedAccounts.newBuilder()
+        .items(items)
+        .pageInfo(toPageInfo(result))
+        .build();
+  }
+
+  /**
+   * Marks an account suspended.
+   */
+  @Transactional
+  public QueryResult suspendAccount(String id) {
+    AccountEntity account = accountService.findById(UUID.fromString(id))
+        .orElseThrow(() -> new IllegalArgumentException("Account not found: " + id));
+    account.setStatus(AccountStatus.SUSPENDED);
+    accountService.save(account);
+    logger.info("Suspended account {}", id);
+    return QuerySuccess.newBuilder().message("Account suspended").id(id).build();
+  }
+
+  /**
+   * Re-activates a suspended account.
+   */
+  @Transactional
+  public QueryResult unsuspendAccount(String id) {
+    AccountEntity account = accountService.findById(UUID.fromString(id))
+        .orElseThrow(() -> new IllegalArgumentException("Account not found: " + id));
+    account.setStatus(AccountStatus.ACTIVE);
+    accountService.save(account);
+    logger.info("Unsuspended account {}", id);
+    return QuerySuccess.newBuilder().message("Account unsuspended").id(id).build();
   }
 
   /**
@@ -442,6 +517,35 @@ public class GaiaGraphQLService {
   @Transactional
   public Configuration applyConfiguration(String id) {
     return configurationMapper.map(configurationReconciler.reconcileById(UUID.fromString(id)));
+  }
+
+  /**
+   * Converts a GraphQL PaginationInput into a Spring Pageable.
+   */
+  private Pageable toPageable(PaginationInput pagination, String defaultSortBy,
+      Sort.Direction defaultDir) {
+    if (pagination == null) {
+      return PageRequests.of(null, null, null, null, defaultSortBy, defaultDir);
+    }
+    return PageRequests.of(
+        pagination.getPage(), pagination.getSize(),
+        pagination.getSortBy(),
+        pagination.getSortDir() != null ? pagination.getSortDir().name() : null,
+        defaultSortBy, defaultDir);
+  }
+
+  /**
+   * Converts a Spring Data page into GraphQL PageInfo.
+   */
+  private PageInfo toPageInfo(Page<?> page) {
+    return PageInfo.newBuilder()
+        .page(page.getNumber())
+        .size(page.getSize())
+        .totalPages(page.getTotalPages())
+        .totalCount((int) page.getTotalElements())
+        .hasNextPage(page.hasNext())
+        .hasPreviousPage(page.hasPrevious())
+        .build();
   }
 
   /**

@@ -21,6 +21,7 @@
 /* Text styles */
 
 .text {
+  box-sizing: border-box;
   padding: var(--md) var(--lg);
   border-radius: var(--sm);
   border: 1px solid var(--primary);
