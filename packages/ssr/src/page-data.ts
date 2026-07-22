@@ -284,6 +284,7 @@ export async function fetchPageDataRpc(
   try {
     const res = await fetch("/__page-data", {
       method: "POST",
+      credentials: "same-origin",
       headers: {
         "Content-Type": "application/json",
         [CSRF_HEADER]: getCsrfToken() ?? "",

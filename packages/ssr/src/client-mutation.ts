@@ -2,7 +2,7 @@
  * Server actions for blog post operations.
  */
 
-import { revalidatePageData } from "./page-data";
+import { invalidatePageData } from "./page-data";
 import { getCsrfToken, CSRF_HEADER } from "./csrf";
 
 export type BaseMutationResult =
@@ -51,7 +51,7 @@ export async function executeMutation(
     const result: MutationResult = await response.json();
 
     if (result.invalidated && result.invalidated.length) {
-      revalidatePageData(result.invalidated);
+      invalidatePageData(result.invalidated);
     }
 
     return result;

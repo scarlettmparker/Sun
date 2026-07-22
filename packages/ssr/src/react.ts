@@ -1,4 +1,11 @@
-import { createElement, Fragment, type ReactNode, useEffect, useReducer, useState } from "react";
+import {
+  createElement,
+  Fragment,
+  type ReactNode,
+  useEffect,
+  useReducer,
+  useState,
+} from "react";
 import {
   getPageData,
   makeCacheKey,
@@ -52,9 +59,17 @@ type RoleCheckProps = {
 /**
  * Renders children only when the current user holds the given roles.
  */
-export const RoleCheck = ({ roles, match = "all", children }: RoleCheckProps) => {
-  const { data: userRoles } = usePageData<string[]>("currentRoles", "currentRoles");
-  if (!userRoles) return null;
+export const RoleCheck = ({
+  roles,
+  match = "all",
+  children,
+}: RoleCheckProps) => {
+  if (!roles.length) return null;
+  const { data: userRoles } = getPageData<string[]>(
+    "currentRoles",
+    "currentRoles",
+  );
+  if (!userRoles || !userRoles.length) return null;
   const has =
     match === "all"
       ? roles.every((r) => userRoles.includes(r))

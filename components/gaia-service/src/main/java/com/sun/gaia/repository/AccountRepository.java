@@ -40,13 +40,15 @@ public interface AccountRepository extends BaseRepository<AccountEntity>, JpaSpe
   List<String> findEffectivePermissions(@Param("accountId") UUID accountId);
 
   /**
-   * Role names assigned to an account directly.
+   * Role names granted to the caller's person (any of that person's accounts).
    */
   @Query(
       value =
           "SELECT r.name FROM gaia_roles r "
               + "JOIN gaia_account_roles ar ON ar.role_id = r.id "
-              + "WHERE ar.account_id = :accountId",
+              + "WHERE ar.account_id IN ("
+              + "SELECT id FROM gaia_accounts WHERE person_id = "
+              + "(SELECT person_id FROM gaia_accounts WHERE id = :accountId))",
       nativeQuery = true)
   List<String> findEffectiveRoleNames(@Param("accountId") UUID accountId);
 }
