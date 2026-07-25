@@ -9,6 +9,7 @@ import com.sun.gaia.codegen.types.Configuration;
 import com.sun.gaia.codegen.types.ConfigurationInput;
 import com.sun.gaia.codegen.types.GaiaMutations;
 import com.sun.gaia.codegen.types.IpWhitelistEntry;
+import com.sun.gaia.codegen.types.IpWhitelistEntryInput;
 import com.sun.gaia.codegen.types.GaiaQueries;
 import com.sun.gaia.codegen.types.LoginInput;
 import com.sun.gaia.codegen.types.PagedAccounts;
@@ -390,24 +391,23 @@ public class GaiaDataFetcher {
    */
   @DgsData(parentType = "GaiaMutations", field = "createIpWhitelistEntry")
   @PreAuthorize("@permissions.has('graphql.gaia.ipWhitelist')")
-  public QueryResult createIpWhitelistEntry(String pattern, String description, Boolean immutable) {
-    return gaiaGraphQLService.createIpWhitelistEntry(pattern, description, immutable);
+  public QueryResult createIpWhitelistEntry(IpWhitelistEntryInput input) {
+    return gaiaGraphQLService.createIpWhitelistEntry(
+        input.getPattern(), input.getDescription(), input.getImmutable());
   }
 
   /**
    * Updates an existing IP whitelist entry.
    *
-   * @param id          the entry id
-   * @param pattern     the new pattern
-   * @param description the new description
-   * @param enabled     the new enabled state
+   * @param id    the entry id
+   * @param input the updated fields
    * @return a success result
    */
   @DgsData(parentType = "GaiaMutations", field = "updateIpWhitelistEntry")
   @PreAuthorize("@permissions.has('graphql.gaia.ipWhitelist')")
-  public QueryResult updateIpWhitelistEntry(String id, String pattern, String description,
-      Boolean enabled) {
-    return gaiaGraphQLService.updateIpWhitelistEntry(id, pattern, description, enabled);
+  public QueryResult updateIpWhitelistEntry(String id, IpWhitelistEntryInput input) {
+    return gaiaGraphQLService.updateIpWhitelistEntry(
+        id, input.getPattern(), input.getDescription(), input.getImmutable());
   }
 
   /**
