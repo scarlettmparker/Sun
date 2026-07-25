@@ -8,6 +8,7 @@ import { pageDataRpcHandler } from "./rpc-handler";
 import { mutationRegistry } from "./mutations";
 import { ServerRedirectError } from "./server-redirect";
 import { registerSecurity } from "./security";
+import { registerIpWhitelist, type IpWhitelistConfig } from "./ip-whitelist";
 import { setRequestCacheProvider, setRequestCookieProvider, setRequestIpProvider } from "./page-data";
 import type { CacheRecord } from "./page-data";
 
@@ -62,6 +63,16 @@ type ServerConfig = {
    * Hostname suffixes allowed by the origin gate.
    */
   allowedOrigins?: string[];
+  /**
+   * App identifier forwarded to the backend.
+   */
+  clientId?: string;
+  /**
+   * When set, enables the Fastify-level IP whitelist gate. The whitelist is
+   * fetched from the backend's REST endpoint during boot and refreshed
+   * periodically. Blocked requests receive a 404.
+   */
+  ipWhitelist?: IpWhitelistConfig;
 };
 
 /**
@@ -210,6 +221,10 @@ export async function createServer(
     allowedOrigins: config.allowedOrigins,
     isProduction: config.isProduction,
   });
+
+  if (config.ipWhitelist) {
+    registerIpWhitelist(app, config.ipWhitelist, config.clientId);
+  }
 
   app.post("/__page-data", pageDataRpcHandler());
 

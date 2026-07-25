@@ -43,6 +43,9 @@ export type { BaseMutationResult, MutationResult } from "./client-mutation";
 
 export { getCsrfToken, CSRF_HEADER, CSRF_FIELD, CSRF_COOKIE } from "./csrf";
 
+export { registerIpWhitelist } from "./ip-whitelist";
+export type { IpWhitelistConfig } from "./ip-whitelist";
+
 export { defineAction, parseForm } from "./server-action";
 export type {
   DefinedAction,
