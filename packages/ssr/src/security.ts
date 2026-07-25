@@ -172,6 +172,24 @@ export function registerSecurity(
   const secret = config.clientSecret;
 
   app.addHook("onRequest", async (request, reply) => {
+    if (!config.isProduction) {
+      return;
+    }
+    const host = request.headers.host || "";
+    if (host.includes("localhost") || host.includes("127.0.0.1")) {
+      return;
+    }
+    const proto = request.headers["x-forwarded-proto"] as string | undefined;
+    if (proto === "https") {
+      return;
+    }
+    if (request.protocol === "https") {
+      return;
+    }
+    reply.redirect(301, `https://${host}${request.url}`);
+  });
+
+  app.addHook("onRequest", async (request, reply) => {
     if (SAFE_METHODS.has(request.method.toUpperCase())) return;
     if (!isOriginAllowed(request, suffixes)) {
       reply.code(403).send({ error: "Origin not allowed" });
