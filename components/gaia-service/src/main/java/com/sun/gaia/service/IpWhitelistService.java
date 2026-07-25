@@ -71,23 +71,28 @@ public class IpWhitelistService {
      *
      * @param pattern     the IP pattern (CIDR, glob, or exact).
      * @param description optional human-readable label.
+     * @param immutable   whether the entry is immutable after creation.
      * @return the saved entity.
      */
     @Transactional
-    public IpWhitelistEntryEntity addEntry(String pattern, String description) {
+    public IpWhitelistEntryEntity addEntry(String pattern, String description, boolean immutable) {
         IpWhitelistEntryEntity entity = new IpWhitelistEntryEntity();
         entity.setPattern(pattern.trim());
         entity.setDescription(description != null ? description.trim() : null);
+        entity.setImmutable(immutable);
         return repository.save(entity);
     }
 
     /**
-     * Updates fields on an existing entry.
+     * Updates fields on an existing entry. Immutable entries are rejected.
      */
     @Transactional
     public IpWhitelistEntryEntity updateEntry(UUID id, String pattern, String description, Boolean enabled) {
         IpWhitelistEntryEntity entity = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Whitelist entry not found: " + id));
+        if (entity.isImmutable()) {
+            throw new IllegalArgumentException("Cannot edit an immutable entry");
+        }
         if (pattern != null) {
             entity.setPattern(pattern.trim());
         }
@@ -101,12 +106,14 @@ public class IpWhitelistService {
     }
 
     /**
-     * Deletes a whitelist entry.
+     * Deletes a whitelist entry. Immutable entries are rejected.
      */
     @Transactional
     public void deleteEntry(UUID id) {
-        if (!repository.existsById(id)) {
-            throw new IllegalArgumentException("Whitelist entry not found: " + id);
+        IpWhitelistEntryEntity entity = repository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Whitelist entry not found: " + id));
+        if (entity.isImmutable()) {
+            throw new IllegalArgumentException("Cannot delete an immutable entry");
         }
         repository.deleteById(id);
     }

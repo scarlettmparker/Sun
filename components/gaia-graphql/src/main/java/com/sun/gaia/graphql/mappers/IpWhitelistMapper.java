@@ -22,7 +22,8 @@ public class IpWhitelistMapper {
         IpWhitelistEntry.Builder builder = IpWhitelistEntry.newBuilder()
                 .id(entity.getId().toString())
                 .pattern(entity.getPattern())
-                .enabled(entity.isEnabled());
+                .enabled(entity.isEnabled())
+                .immutable(entity.isImmutable());
 
         if (entity.getDescription() != null) {
             builder.description(entity.getDescription());

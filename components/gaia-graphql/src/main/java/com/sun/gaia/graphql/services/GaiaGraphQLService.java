@@ -547,8 +547,8 @@ public class GaiaGraphQLService {
    * @return a success result with the entry id
    */
   @Transactional
-  public QueryResult createIpWhitelistEntry(String pattern, String description) {
-    IpWhitelistEntryEntity entity = ipWhitelistService.addEntry(pattern, description);
+  public QueryResult createIpWhitelistEntry(String pattern, String description, Boolean immutable) {
+    IpWhitelistEntryEntity entity = ipWhitelistService.addEntry(pattern, description, immutable != null && immutable);
     return QuerySuccess.newBuilder()
         .message("IP whitelist entry created")
         .id(entity.getId().toString())

@@ -372,7 +372,7 @@ describe("Form components integration", () => {
         </FormField>,
       );
     }).toThrow(
-      "FormItem only accepts Input, TextArea, MarkdownEditor, or Select as children",
+      "FormItem only accepts Input, TextArea, MarkdownEditor, Select, or Checkbox as children",
     );
   });
 });

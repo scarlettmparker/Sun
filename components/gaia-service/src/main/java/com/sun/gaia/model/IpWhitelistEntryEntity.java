@@ -21,6 +21,9 @@ public class IpWhitelistEntryEntity extends BaseEntity {
     @Column(nullable = false)
     private boolean enabled = true;
 
+    @Column(nullable = false)
+    private boolean immutable = false;
+
     public String getPattern() {
         return pattern;
     }
@@ -43,5 +46,13 @@ public class IpWhitelistEntryEntity extends BaseEntity {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public boolean isImmutable() {
+        return immutable;
+    }
+
+    public void setImmutable(boolean immutable) {
+        this.immutable = immutable;
     }
 }

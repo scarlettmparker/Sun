@@ -70,8 +70,8 @@ type GaiaMutations {
   updateConfiguration(id: ID!, input: ConfigurationInput!): Configuration
   deleteConfiguration(id: ID!): QueryResult
   applyConfiguration(id: ID!): Configuration
-  createIpWhitelistEntry(pattern: String!, description: String): QueryResult
-  updateIpWhitelistEntry(id: ID!, pattern: String!, description: String, enabled: Boolean): QueryResult
+  createIpWhitelistEntry(input: IpWhitelistEntryInput!): QueryResult
+  updateIpWhitelistEntry(id: ID!, input: IpWhitelistEntryInput!): QueryResult
   deleteIpWhitelistEntry(id: ID!): QueryResult
 }
 
@@ -137,6 +137,7 @@ type IpWhitelistEntry {
   pattern: String!
   description: String
   enabled: Boolean!
+  immutable: Boolean!
   createdAt: Date
   updatedAt: Date
 }

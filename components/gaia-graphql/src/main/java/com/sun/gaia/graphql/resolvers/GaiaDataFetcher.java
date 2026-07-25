@@ -390,8 +390,8 @@ public class GaiaDataFetcher {
    */
   @DgsData(parentType = "GaiaMutations", field = "createIpWhitelistEntry")
   @PreAuthorize("@permissions.has('graphql.gaia.ipWhitelist')")
-  public QueryResult createIpWhitelistEntry(String pattern, String description) {
-    return gaiaGraphQLService.createIpWhitelistEntry(pattern, description);
+  public QueryResult createIpWhitelistEntry(String pattern, String description, Boolean immutable) {
+    return gaiaGraphQLService.createIpWhitelistEntry(pattern, description, immutable);
   }
 
   /**

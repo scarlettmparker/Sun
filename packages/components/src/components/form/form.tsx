@@ -6,6 +6,7 @@ import Input from "../input";
 import TextArea from "../textarea";
 import MarkdownEditor from "../markdown-editor";
 import Select from "../select";
+import Checkbox from "../checkbox";
 
 const FormItemContext = createContext<{ name?: string }>({});
 
@@ -76,10 +77,11 @@ const FormItem = (props: FormItemProps) => {
     children.type !== Input &&
     children.type !== TextArea &&
     children.type !== MarkdownEditor &&
-    children.type !== Select
+    children.type !== Select &&
+    children.type !== Checkbox
   ) {
     throw new Error(
-      "FormItem only accepts Input, TextArea, MarkdownEditor, or Select as children",
+      "FormItem only accepts Input, TextArea, MarkdownEditor, Select, or Checkbox as children",
     );
   }
 
