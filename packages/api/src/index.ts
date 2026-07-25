@@ -1,5 +1,5 @@
 import { print, type DocumentNode } from "graphql";
-import { getRequestCookie } from "@sun/ssr";
+import { getRequestCookie, getRequestIp } from "@sun/ssr";
 
 export type ApiResponse<T> = {
   success: boolean;
@@ -55,6 +55,29 @@ function resolveAuthToken(authToken?: string): string | undefined {
 }
 
 /**
+ * Retries an async function with exponential-ish backoff. Only network errors
+ * (thrown exceptions) trigger a retry; HTTP errors and GraphQL errors are
+ * returned immediately as ApiResponse.
+ */
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  delays: number[],
+): Promise<T> {
+  let lastError: unknown;
+  for (let i = 0; i <= delays.length; i++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      if (i < delays.length) {
+        await new Promise((resolve) => setTimeout(resolve, delays[i]));
+      }
+    }
+  }
+  throw lastError;
+}
+
+/**
  * Runs a GraphQL document against the backend, forwarding the caller's JWT.
  */
 export async function executeDocument<T, V = Record<string, unknown>>(
@@ -77,34 +100,40 @@ export async function executeDocument<T, V = Record<string, unknown>>(
       headers["X-Client-Id"] = clientId;
     }
   }
+  const clientIp = getRequestIp();
+  if (clientIp) {
+    headers["X-Forwarded-For"] = clientIp;
+  }
 
   try {
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({ query: print(document), variables }),
-    });
-    if (!response.ok) {
-      return {
-        success: false,
-        error: `HTTP ${response.status}: ${response.statusText}`,
-        statusCode: response.status,
-      };
-    }
-    const result = await response.json();
-    if (result.errors) {
-      return {
-        success: false,
-        error: result.errors
-          .map((e: { message: string }) => e.message)
-          .join(", "),
-        statusCode: 400,
-      };
-    }
-    if (!result.data) {
-      return { success: false, error: "No data returned", statusCode: 400 };
-    }
-    return { success: true, data: result.data };
+    return await retryWithBackoff(async () => {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ query: print(document), variables }),
+      });
+      if (!response.ok) {
+        return {
+          success: false,
+          error: `HTTP ${response.status}: ${response.statusText}`,
+          statusCode: response.status,
+        };
+      }
+      const result = await response.json();
+      if (result.errors) {
+        return {
+          success: false,
+          error: result.errors
+            .map((e: { message: string }) => e.message)
+            .join(", "),
+          statusCode: 400,
+        };
+      }
+      if (!result.data) {
+        return { success: false, error: "No data returned", statusCode: 400 };
+      }
+      return { success: true, data: result.data };
+    }, [500, 2000, 4000, 6000]);
   } catch (error) {
     return {
       success: false,

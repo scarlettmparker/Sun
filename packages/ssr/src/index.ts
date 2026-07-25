@@ -16,6 +16,7 @@ export {
   configurePageData,
   getRequestCache,
   getRequestCookie,
+  getRequestIp,
   snapshotResolvedPageData,
 } from "./page-data";
 

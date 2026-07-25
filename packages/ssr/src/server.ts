@@ -8,7 +8,7 @@ import { pageDataRpcHandler } from "./rpc-handler";
 import { mutationRegistry } from "./mutations";
 import { ServerRedirectError } from "./server-redirect";
 import { registerSecurity } from "./security";
-import { setRequestCacheProvider, setRequestCookieProvider } from "./page-data";
+import { setRequestCacheProvider, setRequestCookieProvider, setRequestIpProvider } from "./page-data";
 import type { CacheRecord } from "./page-data";
 
 export { handleQuery } from "./query";
@@ -43,6 +43,9 @@ setRequestCacheProvider(() => requestCacheAls.getStore() ?? null);
 
 const requestCookieAls = new AsyncLocalStorage<string | undefined>();
 setRequestCookieProvider(() => requestCookieAls.getStore() ?? undefined);
+
+const requestIpAls = new AsyncLocalStorage<string | undefined>();
+setRequestIpProvider(() => requestIpAls.getStore() ?? undefined);
 
 type ServerConfig = {
   port: number;
@@ -118,7 +121,7 @@ export async function createServer(
   const { default: Fastify } = await import("fastify");
   const { default: fastifyStatic } = await import("@fastify/static");
 
-  const app: FastifyInstance = Fastify({ logger: false });
+  const app: FastifyInstance = Fastify({ logger: false, trustProxy: true });
   let vite: ViteDevServer | undefined;
 
   if (!config.isProduction) {
@@ -155,6 +158,7 @@ export async function createServer(
   app.addHook("onRequest", async (request) => {
     requestCacheAls.enterWith(new Map());
     requestCookieAls.enterWith(request.headers.cookie);
+    requestIpAls.enterWith(request.ip);
   });
 
   // App-layer gzip for buffered (string/Buffer) JSON/text responses.

@@ -1,6 +1,6 @@
 {
   "name": "@sun/api",
-  "version": "0.2.0",
+  "version": "0.2.5",
   "description": "Shared GraphQL client for Sun ecosystem apps",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -12,7 +12,9 @@
       "require": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup",
     "publish": "npm publish --ignore-scripts --registry https://registry.int.scarlettparker.co.uk"

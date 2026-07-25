@@ -109,6 +109,22 @@ export function getRequestCookie(): string | undefined {
   return requestCookieProvider?.();
 }
 
+let requestIpProvider: (() => string | undefined) | null = null;
+
+export function setRequestIpProvider(
+  provider: () => string | undefined,
+): void {
+  requestIpProvider = provider;
+}
+
+/**
+ * The current request's client IP, when running server-side inside a request;
+ * otherwise undefined.
+ */
+export function getRequestIp(): string | undefined {
+  return requestIpProvider?.();
+}
+
 function activeCache(): Map<string, CacheRecord> {
   // Server inside a request → that request's map; otherwise the client/session map.
   if (typeof window === "undefined" && requestCacheProvider) {
