@@ -300,7 +300,14 @@ export async function fetchPageDataRpc(
       body: JSON.stringify({ pattern, params }),
     });
     if (!res.ok) return null;
-    const json = (await res.json()) as { data?: Record<string, unknown> };
+    const json = (await res.json()) as {
+      data?: Record<string, unknown>;
+      code?: string;
+    };
+    if (json?.code === "AUTH_EXPIRED") {
+      window.location.href = "/login";
+      return null;
+    }
     return (json && json.data) || null;
   } catch {
     return null;
