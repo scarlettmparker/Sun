@@ -3,7 +3,7 @@
 --   * a glob         (e.g. "192.168.0.*" or "5.*")
 --   * a bare IP      (e.g. "10.0.0.1")
 
-CREATE TABLE gaia_ip_whitelist_entries (
+CREATE TABLE IF NOT EXISTS gaia_ip_whitelist_entries (
     id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     pattern          VARCHAR(255) NOT NULL,
     description      VARCHAR(255),
