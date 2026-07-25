@@ -220,7 +220,15 @@ export function hydratePageData(
  * Registry of page data loaders.
  * Maps route patterns to their data-loading functions (multiple allowed).
  */
-export const pageDataLoaders: Record<string, PageDataLoader[]> = {};
+const GLOBAL_KEY = "__sun_pageDataLoaders";
+function getPageDataLoaders(): Record<string, PageDataLoader[]> {
+  const g = globalThis as unknown as Record<
+    string,
+    Record<string, PageDataLoader[]> | undefined
+  >;
+  return g[GLOBAL_KEY] ?? (g[GLOBAL_KEY] = {});
+}
+export const pageDataLoaders = getPageDataLoaders();
 
 type PageDataCache = Record<
   string,
