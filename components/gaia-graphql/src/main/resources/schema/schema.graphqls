@@ -51,6 +51,7 @@ type GaiaQueries {
   propertySetSchema(ownerKey: String!, name: String!): PropertySetSchema
   configurations: [Configuration!]!
   configuration(id: ID!): Configuration
+  ipWhitelistEntries: [IpWhitelistEntry!]!
 }
 
 type GaiaMutations {
@@ -69,6 +70,9 @@ type GaiaMutations {
   updateConfiguration(id: ID!, input: ConfigurationInput!): Configuration
   deleteConfiguration(id: ID!): QueryResult
   applyConfiguration(id: ID!): Configuration
+  createIpWhitelistEntry(pattern: String!, description: String): QueryResult
+  updateIpWhitelistEntry(id: ID!, pattern: String!, description: String, enabled: Boolean): QueryResult
+  deleteIpWhitelistEntry(id: ID!): QueryResult
 }
 
 extend type Query {
@@ -126,6 +130,15 @@ input PropertySetSchemaInput {
   name: String!
   configurable: Boolean
   properties: JSON!
+}
+
+type IpWhitelistEntry {
+  id: ID!
+  pattern: String!
+  description: String
+  enabled: Boolean!
+  createdAt: Date
+  updatedAt: Date
 }
 
 input ConfigurationInput {

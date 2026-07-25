@@ -6,6 +6,7 @@ import com.sun.gaia.codegen.types.Account;
 import com.sun.gaia.codegen.types.AuthResult;
 import com.sun.gaia.codegen.types.Configuration;
 import com.sun.gaia.codegen.types.ConfigurationInput;
+import com.sun.gaia.codegen.types.IpWhitelistEntry;
 import com.sun.gaia.codegen.types.LoginInput;
 import com.sun.gaia.codegen.types.PagedAccounts;
 import com.sun.gaia.codegen.types.PageInfo;
@@ -21,10 +22,12 @@ import com.sun.gaia.graphql.mappers.AccountMapper;
 import com.sun.gaia.graphql.mappers.ConfigurationMapper;
 import com.sun.gaia.graphql.mappers.PropertySetMapper;
 import com.sun.gaia.model.AccountEntity;
+import com.sun.gaia.model.IpWhitelistEntryEntity;
 import com.sun.gaia.model.PropertySetEntryEntity;
 import com.sun.gaia.model.enums.AccountStatus;
 import com.sun.gaia.repository.AccountRepository;
 import com.sun.gaia.service.AccountService;
+import com.sun.gaia.graphql.mappers.IpWhitelistMapper;
 import com.sun.gaia.service.ConfigurationReconciler;
 import com.sun.base.util.FilterBuilder;
 import com.sun.base.util.FilterSpec;
@@ -32,6 +35,7 @@ import com.sun.base.util.GraphQLSupport;
 import com.sun.base.util.PageRequests;
 import com.sun.gaia.service.ConfigurationService;
 import com.sun.gaia.service.EmailService;
+import com.sun.gaia.service.IpWhitelistService;
 import com.sun.gaia.service.JwtService;
 import com.sun.gaia.service.PasswordResetService;
 import com.sun.gaia.service.PropertySetService;
@@ -72,6 +76,8 @@ public class GaiaGraphQLService {
   private final ConfigurationReconciler configurationReconciler;
   private final PropertySetMapper propertySetMapper;
   private final ConfigurationMapper configurationMapper;
+  private final IpWhitelistService ipWhitelistService;
+  private final IpWhitelistMapper ipWhitelistMapper;
   private final String appBaseUrl;
 
   public GaiaGraphQLService(AccountService accountService, AccountRepository accountRepository,
@@ -81,6 +87,8 @@ public class GaiaGraphQLService {
       PropertySetService propertySetService, ConfigurationService configurationService,
       ConfigurationReconciler configurationReconciler, PropertySetMapper propertySetMapper,
       ConfigurationMapper configurationMapper,
+      IpWhitelistService ipWhitelistService,
+      IpWhitelistMapper ipWhitelistMapper,
       @Value("${app.base-url:http://localhost:5176}") String appBaseUrl) {
     this.accountService = accountService;
     this.accountRepository = accountRepository;
@@ -94,6 +102,8 @@ public class GaiaGraphQLService {
     this.configurationReconciler = configurationReconciler;
     this.propertySetMapper = propertySetMapper;
     this.configurationMapper = configurationMapper;
+    this.ipWhitelistService = ipWhitelistService;
+    this.ipWhitelistMapper = ipWhitelistMapper;
     this.appBaseUrl = appBaseUrl;
   }
 
@@ -517,6 +527,65 @@ public class GaiaGraphQLService {
   @Transactional
   public Configuration applyConfiguration(String id) {
     return configurationMapper.map(configurationReconciler.reconcileById(UUID.fromString(id)));
+  }
+
+  /**
+   * Lists all IP whitelist entries.
+   *
+   * @return the list of entries
+   */
+  @Transactional(readOnly = true)
+  public List<IpWhitelistEntry> ipWhitelistEntries() {
+    return ipWhitelistMapper.map(ipWhitelistService.listAll());
+  }
+
+  /**
+   * Creates a new IP whitelist entry.
+   *
+   * @param pattern     the IP pattern (CIDR, glob, or exact).
+   * @param description optional description.
+   * @return a success result with the entry id
+   */
+  @Transactional
+  public QueryResult createIpWhitelistEntry(String pattern, String description) {
+    IpWhitelistEntryEntity entity = ipWhitelistService.addEntry(pattern, description);
+    return QuerySuccess.newBuilder()
+        .message("IP whitelist entry created")
+        .id(entity.getId().toString())
+        .build();
+  }
+
+  /**
+   * Updates an existing IP whitelist entry.
+   *
+   * @param id          the entry id
+   * @param pattern     the new pattern
+   * @param description the new description
+   * @param enabled     the new enabled state
+   * @return a success result
+   */
+  @Transactional
+  public QueryResult updateIpWhitelistEntry(String id, String pattern, String description, Boolean enabled) {
+    ipWhitelistService.updateEntry(UUID.fromString(id), pattern, description, enabled);
+    return QuerySuccess.newBuilder()
+        .message("IP whitelist entry updated")
+        .id(id)
+        .build();
+  }
+
+  /**
+   * Deletes an IP whitelist entry.
+   *
+   * @param id the entry id
+   * @return a success result
+   */
+  @Transactional
+  public QueryResult deleteIpWhitelistEntry(String id) {
+    ipWhitelistService.deleteEntry(UUID.fromString(id));
+    return QuerySuccess.newBuilder()
+        .message("IP whitelist entry deleted")
+        .id(id)
+        .build();
   }
 
   /**

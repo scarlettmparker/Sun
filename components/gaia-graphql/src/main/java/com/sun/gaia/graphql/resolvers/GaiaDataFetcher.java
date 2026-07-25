@@ -8,6 +8,7 @@ import com.sun.gaia.codegen.types.AuthResult;
 import com.sun.gaia.codegen.types.Configuration;
 import com.sun.gaia.codegen.types.ConfigurationInput;
 import com.sun.gaia.codegen.types.GaiaMutations;
+import com.sun.gaia.codegen.types.IpWhitelistEntry;
 import com.sun.gaia.codegen.types.GaiaQueries;
 import com.sun.gaia.codegen.types.LoginInput;
 import com.sun.gaia.codegen.types.PagedAccounts;
@@ -144,6 +145,17 @@ public class GaiaDataFetcher {
   @PreAuthorize("permitAll()")
   public PropertySetSchema propertySetSchema(String ownerKey, String name) {
     return gaiaGraphQLService.propertySetSchema(ownerKey, name);
+  }
+
+  /**
+   * Lists all IP whitelist entries.
+   *
+   * @return the entries
+   */
+  @DgsData(parentType = "GaiaQueries", field = "ipWhitelistEntries")
+  @PreAuthorize("@permissions.has('graphql.gaia.ipWhitelist')")
+  public List<IpWhitelistEntry> ipWhitelistEntries() {
+    return gaiaGraphQLService.ipWhitelistEntries();
   }
 
   /**
@@ -367,6 +379,47 @@ public class GaiaDataFetcher {
   @PreAuthorize("@permissions.has('graphql.gaia.applyConfiguration')")
   public Configuration applyConfiguration(String id) {
     return gaiaGraphQLService.applyConfiguration(id);
+  }
+
+  /**
+   * Creates a new IP whitelist entry.
+   *
+   * @param pattern     the IP pattern
+   * @param description optional description
+   * @return a success result
+   */
+  @DgsData(parentType = "GaiaMutations", field = "createIpWhitelistEntry")
+  @PreAuthorize("@permissions.has('graphql.gaia.ipWhitelist')")
+  public QueryResult createIpWhitelistEntry(String pattern, String description) {
+    return gaiaGraphQLService.createIpWhitelistEntry(pattern, description);
+  }
+
+  /**
+   * Updates an existing IP whitelist entry.
+   *
+   * @param id          the entry id
+   * @param pattern     the new pattern
+   * @param description the new description
+   * @param enabled     the new enabled state
+   * @return a success result
+   */
+  @DgsData(parentType = "GaiaMutations", field = "updateIpWhitelistEntry")
+  @PreAuthorize("@permissions.has('graphql.gaia.ipWhitelist')")
+  public QueryResult updateIpWhitelistEntry(String id, String pattern, String description,
+      Boolean enabled) {
+    return gaiaGraphQLService.updateIpWhitelistEntry(id, pattern, description, enabled);
+  }
+
+  /**
+   * Deletes an IP whitelist entry.
+   *
+   * @param id the entry id
+   * @return a success result
+   */
+  @DgsData(parentType = "GaiaMutations", field = "deleteIpWhitelistEntry")
+  @PreAuthorize("@permissions.has('graphql.gaia.ipWhitelist')")
+  public QueryResult deleteIpWhitelistEntry(String id) {
+    return gaiaGraphQLService.deleteIpWhitelistEntry(id);
   }
 
   private void resolveUserFromRequest() {
