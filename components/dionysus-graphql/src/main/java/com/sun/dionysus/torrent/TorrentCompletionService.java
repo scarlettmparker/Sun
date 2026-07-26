@@ -246,7 +246,7 @@ public class TorrentCompletionService {
     if (relative.contains("/")) {
       return job.getTargetKeyPath() + "/" + relative;
     }
-    if (!job.getTargetKeyPath().contains(".") && relative.contains(".")) {
+    if (!job.getTargetKeyPath().contains(".") && !job.getTargetKeyPath().contains("/") && relative.contains(".")) {
       return relative;
     }
     return job.getTargetKeyPath();
