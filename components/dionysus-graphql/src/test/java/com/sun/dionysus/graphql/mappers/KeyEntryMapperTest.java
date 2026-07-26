@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import com.sun.dionysus.codegen.types.KeyEntry;
+import com.sun.dionysus.codegen.types.TorrentJobStatus;
 import software.amazon.awssdk.services.s3.model.CommonPrefix;
 import software.amazon.awssdk.services.s3.model.S3Object;
 import java.time.Instant;
@@ -104,7 +105,7 @@ class KeyEntryMapperTest {
     assertThat(result.getSize()).isEqualTo(500);
     assertThat(result.getName()).isEqualTo("ubuntu.iso");
     assertThat(result.getTorrent()).isNotNull();
-    assertThat(result.getTorrent().getStatus()).isEqualTo("DOWNLOADING");
+    assertThat(result.getTorrent().getStatus()).isEqualTo(TorrentJobStatus.DOWNLOADING);
     assertThat(result.getTorrent().getProgress()).isEqualTo(0.5);
     assertThat(result.getTorrent().getDownloadRateBps()).isEqualTo(1000);
     assertThat(result.getTorrent().getPeersConnected()).isEqualTo(12);
@@ -128,7 +129,7 @@ class KeyEntryMapperTest {
     keyEntryMapper.mergeTorrentJob(entry, job);
 
     assertThat(entry.getTorrent()).isNotNull();
-    assertThat(entry.getTorrent().getStatus()).isEqualTo("UPLOADING");
+    assertThat(entry.getTorrent().getStatus()).isEqualTo(TorrentJobStatus.UPLOADING);
     assertThat(entry.getTorrent().getProgress()).isEqualTo(0.75);
   }
 }
