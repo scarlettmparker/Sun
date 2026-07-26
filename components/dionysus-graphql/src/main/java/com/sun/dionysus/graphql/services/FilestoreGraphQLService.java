@@ -27,6 +27,9 @@ import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequ
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.AbstractMap;
@@ -210,12 +213,32 @@ public class FilestoreGraphQLService {
 
     logger.info("Creating explicit directory placeholder in bucket: {} with key: {}", bucket, dirKey);
 
-    s3Client.putObject(
-        software.amazon.awssdk.services.s3.model.PutObjectRequest.builder()
-            .bucket(bucket)
-            .key(dirKey)
-            .build(),
-        software.amazon.awssdk.core.sync.RequestBody.empty());
+    var putReq = software.amazon.awssdk.services.s3.model.PutObjectRequest.builder()
+        .bucket(bucket)
+        .key(dirKey)
+        .build();
+    var presignReq = PutObjectPresignRequest.builder()
+        .putObjectRequest(putReq)
+        .signatureDuration(Duration.ofHours(1))
+        .build();
+    var url = s3Presigner.presignPutObject(presignReq).url();
+
+    try {
+      var conn = (HttpURLConnection) url.openConnection();
+      conn.setDoOutput(true);
+      conn.setRequestMethod("PUT");
+      conn.setRequestProperty("x-amz-content-sha256", "UNSIGNED-PAYLOAD");
+      conn.setFixedLengthStreamingMode(0);
+      conn.getOutputStream().close();
+      int status = conn.getResponseCode();
+      if (status < 200 || status > 299) {
+        logger.warn("putKey upload failed with status {}", status);
+        return false;
+      }
+    } catch (Exception e) {
+      logger.error("putKey upload failed", e);
+      return false;
+    }
 
     keyDetailService.createOrUpdateDetail(bucket, dirKey, dirKey, null);
 
