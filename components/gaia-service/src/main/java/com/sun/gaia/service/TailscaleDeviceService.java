@@ -48,16 +48,14 @@ public class TailscaleDeviceService {
      * Creates or updates a device record from Headscale node data.
      */
     @Transactional
-    public TailscaleDeviceEntity upsertFromHeadscale(long headscaleId, String name, String ipv4, String lastSeen) {
+    public TailscaleDeviceEntity upsertFromHeadscale(long headscaleId, String name, String ipv4, String lastSeen, boolean online) {
         var existing = repository.findByHeadscaleId(headscaleId);
         if (existing.isPresent()) {
             TailscaleDeviceEntity device = existing.get();
             device.setName(name);
             device.setIpv4(ipv4);
             device.setLastSeen(lastSeen);
-            if (device.getStatus() == DeviceStatus.EXPIRED) {
-                device.setStatus(DeviceStatus.ACTIVE);
-            }
+            device.setOnline(online);
             return repository.save(device);
         }
         TailscaleDeviceEntity device = new TailscaleDeviceEntity();
@@ -65,6 +63,7 @@ public class TailscaleDeviceService {
         device.setName(name);
         device.setIpv4(ipv4);
         device.setLastSeen(lastSeen);
+        device.setOnline(online);
         device.setStatus(DeviceStatus.ACTIVE);
         return repository.save(device);
     }

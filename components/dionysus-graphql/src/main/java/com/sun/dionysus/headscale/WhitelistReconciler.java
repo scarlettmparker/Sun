@@ -63,7 +63,7 @@ public class WhitelistReconciler {
           log.info("Auto-whitelisted Tailscale node {} ({})", node.name(), ip);
         }
 
-        tailscaleDeviceService.upsertFromHeadscale(node.id(), node.name(), node.ipv4(), node.lastSeen());
+        tailscaleDeviceService.upsertFromHeadscale(node.id(), node.name(), node.ipv4(), node.lastSeen(), node.online());
       }
     } catch (Exception e) {
       log.warn("Whitelist reconciliation failed", e);

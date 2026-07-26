@@ -21,7 +21,8 @@ public class TailscaleDeviceMapper {
                 .id(entity.getId().toString())
                 .headscaleId(entity.getHeadscaleId())
                 .name(entity.getName())
-                .status(DeviceStatus.valueOf(entity.getStatus().name()));
+                .status(DeviceStatus.valueOf(entity.getStatus().name()))
+                .online(entity.isOnline());
 
         if (entity.getIpv4() != null) {
             builder.ipv4(entity.getIpv4());

@@ -36,6 +36,9 @@ public class TailscaleDeviceEntity extends BaseEntity {
     @Column(length = 255)
     private String lastSeen;
 
+    @Column(nullable = false)
+    private boolean online = false;
+
     public long getHeadscaleId() {
         return headscaleId;
     }
@@ -82,5 +85,13 @@ public class TailscaleDeviceEntity extends BaseEntity {
 
     public void setLastSeen(String lastSeen) {
         this.lastSeen = lastSeen;
+    }
+
+    public boolean isOnline() {
+        return online;
+    }
+
+    public void setOnline(boolean online) {
+        this.online = online;
     }
 }

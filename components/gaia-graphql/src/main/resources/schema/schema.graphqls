@@ -173,6 +173,7 @@ type TailscaleDevice {
   name: String!
   ipv4: String
   status: DeviceStatus!
+  online: Boolean!
   expiredAt: Date
   lastSeen: String
   createdAt: Date
