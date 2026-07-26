@@ -41,6 +41,18 @@ public class HeadscaleController {
   }
 
   /**
+   * Returns a single Tailscale node by id.
+   */
+  @GetMapping("/nodes/{id}")
+  public ResponseEntity<HeadscaleNode> getNode(@PathVariable long id) {
+    return headscaleService.listNodes().stream()
+        .filter(n -> n.id() == id)
+        .findFirst()
+        .map(ResponseEntity::ok)
+        .orElse(ResponseEntity.notFound().build());
+  }
+
+  /**
    * Expires a node, removing it from the tailnet.
    */
   @PostMapping("/nodes/{id}/expire")
