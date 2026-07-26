@@ -282,8 +282,13 @@ public class TorrentCompletionService {
     if (relative.contains("/")) {
       return job.getTargetKeyPath() + "/" + relative;
     }
-    if (!job.getTargetKeyPath().contains(".") && !job.getTargetKeyPath().contains("/") && relative.contains(".")) {
-      return relative;
+    // If the local file has an extension but the target key path doesn't, use
+    // the local file name to preserve the extension (e.g. .mkv for transcoding).
+    if (relative.contains(".")) {
+      String prefix = job.getTargetKeyPath().contains("/")
+          ? job.getTargetKeyPath().substring(0, job.getTargetKeyPath().lastIndexOf('/') + 1)
+          : "";
+      return prefix + relative;
     }
     return job.getTargetKeyPath();
   }
