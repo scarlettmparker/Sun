@@ -63,6 +63,7 @@ public class HeadscaleController {
     try {
       byte[] png = generateQRCode(key);
       return ResponseEntity.ok()
+          .header("X-Preauth-Key", key)
           .contentType(MediaType.IMAGE_PNG)
           .body(png);
     } catch (Exception e) {
