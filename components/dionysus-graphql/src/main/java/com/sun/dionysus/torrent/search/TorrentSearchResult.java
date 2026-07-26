@@ -9,6 +9,7 @@ public class TorrentSearchResult {
     private int seeders;
     private int leechers;
     private String size;
+    private long sizeBytes;
     private String publishDate;
     private String magnet;
 
@@ -20,15 +21,17 @@ public class TorrentSearchResult {
      * @param seeders     active seeders.
      * @param leechers    active leechers.
      * @param size        human-readable size string.
+     * @param sizeBytes   raw size in bytes.
      * @param publishDate ISO-8601 publish date.
      * @param magnet      magnet URI.
      */
     public TorrentSearchResult(String name, int seeders, int leechers, String size,
-                               String publishDate, String magnet) {
+                               long sizeBytes, String publishDate, String magnet) {
         this.name = name;
         this.seeders = seeders;
         this.leechers = leechers;
         this.size = size;
+        this.sizeBytes = sizeBytes;
         this.publishDate = publishDate;
         this.magnet = magnet;
     }
@@ -63,6 +66,14 @@ public class TorrentSearchResult {
 
     public void setSize(String size) {
         this.size = size;
+    }
+
+    public long getSizeBytes() {
+        return sizeBytes;
+    }
+
+    public void setSizeBytes(long sizeBytes) {
+        this.sizeBytes = sizeBytes;
     }
 
     public String getPublishDate() {

@@ -135,9 +135,10 @@ public class TorrentSearchService {
             return null;
         }
 
+        long rawSize = item.path("Size").asLong(0);
         int seeders = item.path("Seeders").asInt(0);
         int peers = item.path("Peers").asInt(0);
-        String size = formatSize(item.path("Size").asLong(0));
+        String size = formatSize(rawSize);
         String publishDate = item.path("PublishDate").asText("");
 
         return new TorrentSearchResult(
@@ -145,6 +146,7 @@ public class TorrentSearchService {
                 seeders,
                 Math.max(0, peers - seeders),
                 size,
+                rawSize,
                 publishDate,
                 magnet);
     }

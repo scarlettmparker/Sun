@@ -21,6 +21,7 @@ type TorrentSearchResult {
   seeders: Int!
   leechers: Int!
   size: String!
+  sizeBytes: Long!
   publishDate: String
   magnet: String!
 }
