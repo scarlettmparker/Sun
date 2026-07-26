@@ -2,12 +2,15 @@ import React, {
   cloneElement,
   createContext,
   ReactElement,
+  useCallback,
   useContext,
   useEffect,
   useId,
   useLayoutEffect,
   useRef,
   useState,
+  type PointerEvent,
+  type MouseEvent,
 } from "react";
 import { createPortal } from "react-dom";
 import { ChevronRight } from "lucide-react";
@@ -530,6 +533,32 @@ const MenuContent = (
 
   const { handleKeyDown } = useMenuKeyboardNav(contentRef, open, userOnKeyDown);
 
+  /**
+   * Prevents pointer events from passing through the portal to elements
+   * beneath it (fixes mobile dropdown menus).
+   */
+  const handlePointerDown = useCallback(
+    (e: PointerEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      rest.onPointerDown?.(e);
+    },
+    [rest.onPointerDown],
+  );
+
+  /**
+   * Stops click events from propagating through the portal to elements
+   * beneath it.
+   */
+  const handleClick = useCallback(
+    (e: MouseEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      rest.onClick?.(e);
+    },
+    [rest.onClick],
+  );
+
   if (!open) {
     return null;
   }
@@ -549,14 +578,8 @@ const MenuContent = (
       {...{ [dataAttrName]: "true" }}
       className={className}
       onKeyDown={handleKeyDown}
-      onPointerDown={(e) => {
-        e.stopPropagation();
-        rest.onPointerDown?.(e);
-      }}
-      onClick={(e) => {
-        e.stopPropagation();
-        rest.onClick?.(e);
-      }}
+      onPointerDown={handlePointerDown}
+      onClick={handleClick}
     >
       {children}
     </div>

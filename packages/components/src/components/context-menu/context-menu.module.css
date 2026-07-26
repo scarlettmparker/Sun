@@ -14,6 +14,7 @@
   backdrop-filter: blur(var(--sm));
   padding: var(--xs) 0;
   z-index: 201;
+  touch-action: none;
 }
 
 .context_menu_group {
