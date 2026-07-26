@@ -7,6 +7,7 @@ import com.sun.dionysus.service.KeyDetailService;
 import com.sun.dionysus.service.torrent.TorrentJobService;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URLConnection;
@@ -115,6 +116,20 @@ public class TorrentCompletionService {
         String key = targetKeyFor(job, searchDir, file, targetIsFolder);
         putFile(job.getBucket(), key, file);
         uploadedKeys.add(key);
+
+        // Transcode MKV/AVI to MP4 for browser streaming
+        if (key.toLowerCase().endsWith(".mkv") || key.toLowerCase().endsWith(".avi")) {
+          try {
+            Path mp4 = transcodeToMp4(file);
+            String mp4Key = key + ".mp4";
+            putFile(job.getBucket(), mp4Key, mp4);
+            uploadedKeys.add(mp4Key);
+            Files.deleteIfExists(mp4);
+          } catch (Exception e) {
+            logger.warn("Failed to transcode {} to MP4: {}", key, e.getMessage());
+          }
+        }
+
         int idx = key.lastIndexOf('/');
         while (idx > 0) {
           dirs.add(key.substring(0, idx + 1));
@@ -239,5 +254,30 @@ public class TorrentCompletionService {
    */
   private String truncate(String value, int max) {
     return value.length() <= max ? value : value.substring(0, max);
+  }
+
+  /**
+   * Transcodes an MKV/AVI file to MP4 using ffmpeg. Returns the path to the
+   * temporary MP4 file (caller must delete it).
+   */
+  private Path transcodeToMp4(Path input) throws IOException, InterruptedException {
+    Path output = Files.createTempFile("transcode-", ".mp4");
+    var pb = new ProcessBuilder(
+        "ffmpeg", "-i", input.toAbsolutePath().toString(),
+        "-c:v", "libx264", "-preset", "fast",
+        "-c:a", "aac",
+        "-movflags", "+faststart",
+        "-y", output.toAbsolutePath().toString());
+    pb.redirectErrorStream(true);
+    Process p = pb.start();
+    try (var is = p.getInputStream()) {
+      is.transferTo(OutputStream.nullOutputStream());
+    }
+    int exit = p.waitFor();
+    if (exit != 0) {
+      Files.deleteIfExists(output);
+      throw new IOException("ffmpeg exited with code " + exit);
+    }
+    return output;
   }
 }
