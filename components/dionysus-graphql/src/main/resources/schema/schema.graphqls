@@ -1,5 +1,18 @@
 scalar Long
 
+# Lifecycle state of a torrent download job.
+enum TorrentJobStatus {
+  QUEUED
+  METADATA
+  DOWNLOADING
+  PAUSED
+  UPLOADING
+  TRANSCODING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
 # Represents a storage bucket.
 type Bucket {
   id: String!
@@ -41,7 +54,7 @@ type FilestoreQueries {
   # Look up a single torrent download job by id.
   torrentJob(jobId: String!): TorrentJob
   # List torrent download jobs, optionally filtered by bucket and status.
-  torrentJobs(bucket: String, status: String): [TorrentJob!]
+  torrentJobs(bucket: String, status: TorrentJobStatus): [TorrentJob!]
   # Searches Jackett for torrents matching the query.
   searchTorrents(query: String!): [TorrentSearchResult!]!
 }
@@ -61,7 +74,7 @@ type KeyEntry {
 # The live download state attached to a key while a torrent is in progress.
 type TorrentDownload {
   jobId: String!
-  status: String!
+  status: TorrentJobStatus!
   progress: Float!
   magnetDetailId: String
   downloadRateBps: Int
@@ -164,7 +177,7 @@ type TorrentJob {
   bucket: String!
   targetKeyPath: String!
   sourceType: String!
-  status: String!
+  status: TorrentJobStatus!
   infoHash: String!
   totalBytes: Long!
   downloadedBytes: Long!

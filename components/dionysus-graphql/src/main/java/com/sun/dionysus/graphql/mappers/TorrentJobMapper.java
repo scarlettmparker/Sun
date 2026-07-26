@@ -1,6 +1,7 @@
 package com.sun.dionysus.graphql.mappers;
 
 import com.sun.dionysus.codegen.types.TorrentJob;
+import com.sun.dionysus.codegen.types.TorrentJobStatus;
 import com.sun.dionysus.model.TorrentJobEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -28,7 +29,7 @@ public class TorrentJobMapper {
             .bucket(entity.getBucket())
             .targetKeyPath(entity.getTargetKeyPath())
             .sourceType(entity.getSourceType())
-            .status(entity.getStatus().name())
+            .status(TorrentJobStatus.valueOf(entity.getStatus().name()))
             .infoHash(entity.getInfoHash())
             .totalBytes(entity.getTotalBytes())
             .downloadedBytes(entity.getDownloadedBytes())

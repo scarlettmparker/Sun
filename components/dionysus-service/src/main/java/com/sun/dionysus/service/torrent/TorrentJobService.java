@@ -43,7 +43,8 @@ public class TorrentJobService extends BaseService<TorrentJobEntity> {
           TorrentStatus.METADATA,
           TorrentStatus.DOWNLOADING,
           TorrentStatus.PAUSED,
-          TorrentStatus.UPLOADING);
+          TorrentStatus.UPLOADING,
+          TorrentStatus.TRANSCODING);
 
   /**
    * Statuses that can be resumed after a restart.
@@ -85,6 +86,16 @@ public class TorrentJobService extends BaseService<TorrentJobEntity> {
   public boolean hasActiveAt(String bucket, String targetKeyPath) {
     return jobRepository.findByBucketAndStatusIn(bucket, ACTIVE_STATUSES).stream()
         .anyMatch(j -> targetKeyPath.equals(j.getTargetKeyPath()));
+  }
+
+  /**
+   * True when an active job targets the exact key path or any path under the
+   * given prefix (for blocking folder-level operations against active torrents).
+   */
+  public boolean hasActiveAtOrUnder(String bucket, String keyPrefix) {
+    String prefix = keyPrefix.endsWith("/") ? keyPrefix : keyPrefix + "/";
+    return jobRepository.findByBucketAndStatusIn(bucket, ACTIVE_STATUSES).stream()
+        .anyMatch(j -> j.getTargetKeyPath().startsWith(prefix) || j.getTargetKeyPath().equals(keyPrefix));
   }
 
   /**

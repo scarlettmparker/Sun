@@ -9,6 +9,7 @@ public enum TorrentStatus {
   DOWNLOADING,
   PAUSED,
   UPLOADING,
+  TRANSCODING,
   COMPLETED,
   FAILED,
   CANCELLED

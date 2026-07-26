@@ -2,6 +2,7 @@ package com.sun.dionysus.graphql.mappers;
 
 import com.sun.dionysus.codegen.types.KeyEntry;
 import com.sun.dionysus.codegen.types.TorrentDownload;
+import com.sun.dionysus.codegen.types.TorrentJobStatus;
 import com.sun.dionysus.model.KeyDetailEntity;
 import com.sun.dionysus.model.TorrentJobEntity;
 import org.slf4j.Logger;
@@ -124,7 +125,7 @@ public class KeyEntryMapper {
     TorrentDownload download =
         TorrentDownload.newBuilder()
             .jobId(job.getId().toString())
-            .status(job.getStatus().name())
+            .status(TorrentJobStatus.valueOf(job.getStatus().name()))
             .progress(job.getProgress())
             .build();
     if (job.getMagnetDetail() != null && job.getMagnetDetail().getId() != null) {

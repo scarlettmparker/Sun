@@ -265,6 +265,10 @@ public class FilestoreGraphQLService {
    * Deletes a file from the bucket.
    */
   public boolean deleteFile(String bucket, String key) {
+    if (torrentJobService.hasActiveAt(bucket, key)) {
+      logger.warn("Rejecting delete of {} / {}: active torrent job exists", bucket, key);
+      return false;
+    }
     logger.info("Deleting object from bucket: {} with key: {}", bucket, key);
     s3Client.deleteObject(DeleteObjectRequest.builder()
         .bucket(bucket)
@@ -285,6 +289,11 @@ public class FilestoreGraphQLService {
   public boolean deleteKey(String bucket, String key) {
     if (key == null || key.isEmpty()) {
       logger.warn("Key is null or empty, aborting delete operation.");
+      return false;
+    }
+
+    if (hasActiveAtOrChild(bucket, key)) {
+      logger.warn("Rejecting recursive delete of {} / {}: active torrent job exists", bucket, key);
       return false;
     }
 
@@ -432,6 +441,11 @@ public class FilestoreGraphQLService {
       return result;
     }
 
+    if (hasActiveAtOrChild(bucket, sourceKey)) {
+      logger.warn("Rejecting rename of {} / {}: active torrent job exists", bucket, sourceKey);
+      return result;
+    }
+
     logger.info("Initiating rename in bucket '{}': '{}' -> '{}' (merge={})", bucket, sourceKey, targetKey, merge);
 
     try {
@@ -518,5 +532,13 @@ public class FilestoreGraphQLService {
       logger.error("Failed to perform rename migration from '{}' to '{}'", sourceKey, targetKey, e);
       return result;
     }
+  }
+
+  /**
+   * True when an active torrent job targets the given key or a child path
+   * under it (for folder-level operations).
+   */
+  private boolean hasActiveAtOrChild(String bucket, String key) {
+    return torrentJobService.hasActiveAtOrUnder(bucket, key);
   }
 }
