@@ -55,7 +55,7 @@ public class TransmissionGateway {
   private void download(UUID jobId, String source, File saveDir) {
     log.info("Starting download for job {} in {}", jobId, saveDir);
     saveDir.mkdirs();
-    exec("--add", source, "--paused");
+    exec("--add", source);
 
     String infoHash = jobService.findById(jobId).map(TorrentJobEntity::getInfoHash).orElse(null);
     String tid = null;
@@ -68,8 +68,6 @@ public class TransmissionGateway {
       return;
     }
     final String torrentId = tid;
-    exec("-t", torrentId, "--download-dir", saveDir.getAbsolutePath());
-    exec("-t", torrentId, "--start");
 
     while (true) {
       if (isCancelled(jobId)) { removeTransmission(jobId); return; }
@@ -108,6 +106,11 @@ public class TransmissionGateway {
         log.info("Download complete for job {}...", jobId);
         TorrentJobEntity j = jobService.findById(jobId).orElse(null);
         if (j != null && j.getStatus() != TorrentStatus.COMPLETED) {
+          String loc = parseValueStr(details, "  Location:", "  Location:\\s*(.*)");
+          if (loc != null && !loc.isBlank() && !loc.equals(j.getScratchPath())) {
+            j.setScratchPath(loc);
+            jobService.save(j);
+          }
           completionService.complete(jobId);
         }
         return;
@@ -150,7 +153,7 @@ public class TransmissionGateway {
       if (id.matches("\\d+")) {
         String details = exec("-t", id, "-i");
         if (details != null && details.toLowerCase().contains(infoHash.toLowerCase())) {
-          exec("-t", id, "--remove-and-delete");
+          exec("-t", id, "--remove");
           return;
         }
       }

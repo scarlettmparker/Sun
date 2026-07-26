@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * The embedded torrent client: owns the libtorrent session, starts and stops it
@@ -65,6 +66,9 @@ public class TorrentClientService implements SmartLifecycle {
   public synchronized void start() {
     scratchRoot = new File(properties.getScratchDir());
     scratchRoot.mkdirs();
+    scratchRoot.setWritable(true, false);
+    scratchRoot.setReadable(true, false);
+    scratchRoot.setExecutable(true, false);
     try {
       session = new SessionManager();
       session.start();
@@ -192,6 +196,7 @@ public class TorrentClientService implements SmartLifecycle {
   /**
    * Re-adds an existing job to the session on startup, resuming into its scratch dir.
    */
+  @Transactional
   public void resumeExistingJob(TorrentJobEntity job) {
     job.setStatus(TorrentStatus.DOWNLOADING);
     job.setErrorMessage(null);
@@ -199,6 +204,9 @@ public class TorrentClientService implements SmartLifecycle {
     String magnet = job.getMagnetDetail().getSourceUri();
     File saveDir = new File(job.getScratchPath());
     saveDir.mkdirs();
+    saveDir.setWritable(true, false);
+    saveDir.setReadable(true, false);
+    saveDir.setExecutable(true, false);
     transmissionGateway.downloadMagnet(job.getId(), magnet, saveDir);
   }
 
@@ -279,6 +287,9 @@ public class TorrentClientService implements SmartLifecycle {
   private File newFile(UUID jobId) {
     File saveDir = new File(scratchRoot, jobId.toString());
     saveDir.mkdirs();
+    saveDir.setWritable(true, false);
+    saveDir.setReadable(true, false);
+    saveDir.setExecutable(true, false);
     return saveDir;
   }
 
