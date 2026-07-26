@@ -55,7 +55,7 @@ public class TransmissionGateway {
   private void download(UUID jobId, String source, File saveDir) {
     log.info("Starting download for job {} in {}", jobId, saveDir);
     saveDir.mkdirs();
-    exec("--add", source);
+    exec("--add", source, "--paused");
 
     String infoHash = jobService.findById(jobId).map(TorrentJobEntity::getInfoHash).orElse(null);
     String tid = null;
@@ -69,6 +69,7 @@ public class TransmissionGateway {
     }
     final String torrentId = tid;
     exec("-t", torrentId, "--download-dir", saveDir.getAbsolutePath());
+    exec("-t", torrentId, "--start");
 
     while (true) {
       if (isCancelled(jobId)) { removeTransmission(jobId); return; }

@@ -241,7 +241,8 @@ public class TorrentClientService implements SmartLifecycle {
   }
 
   /**
-   * Cancels a job, removes it from the session, and deletes its scratch files.
+   * Cancels a job and removes it from the session. Leaves scratch files in
+   * place so the download can be retried without re-fetching all data.
    */
   public void cancelJob(UUID jobId) {
     jobService
@@ -263,7 +264,6 @@ public class TorrentClientService implements SmartLifecycle {
               registry.forget(jobId, job.getScratchPath());
               job.setStatus(TorrentStatus.CANCELLED);
               jobService.save(job);
-              deleteQuietly(new File(job.getScratchPath()));
             });
   }
 
@@ -272,7 +272,6 @@ public class TorrentClientService implements SmartLifecycle {
       if (TorrentJobService.ACTIVE_STATUSES.contains(existing.getStatus())) {
         logger.info("Cancelling existing active job {} for {}/{}", existing.getId(), bucket, targetKeyPath);
         jobService.updateStatus(existing.getId(), TorrentStatus.CANCELLED);
-        deleteQuietly(new File(existing.getScratchPath()));
       }
     }
   }
@@ -318,20 +317,4 @@ public class TorrentClientService implements SmartLifecycle {
     }
   }
 
-  private void deleteQuietly(File file) {
-    if (file == null || !file.exists()) {
-      return;
-    }
-    try (var paths = Files.walk(file.toPath())) {
-      paths.sorted(java.util.Comparator.reverseOrder())
-          .forEach(
-              p -> {
-                try {
-                  Files.deleteIfExists(p);
-                } catch (IOException ignored) {
-                }
-              });
-    } catch (IOException ignored) {
-    }
-  }
 }
