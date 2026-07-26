@@ -7,6 +7,7 @@ import com.sun.gaia.codegen.types.AuthResult;
 import com.sun.gaia.codegen.types.Configuration;
 import com.sun.gaia.codegen.types.ConfigurationInput;
 import com.sun.gaia.codegen.types.IpWhitelistEntry;
+import com.sun.gaia.codegen.types.IpWhitelistEntryInput;
 import com.sun.gaia.codegen.types.LoginInput;
 import com.sun.gaia.codegen.types.PagedAccounts;
 import com.sun.gaia.codegen.types.PageInfo;
@@ -547,8 +548,10 @@ public class GaiaGraphQLService {
    * @return a success result with the entry id
    */
   @Transactional
-  public QueryResult createIpWhitelistEntry(String pattern, String description, Boolean immutable) {
-    IpWhitelistEntryEntity entity = ipWhitelistService.addEntry(pattern, description, immutable != null && immutable);
+  public QueryResult createIpWhitelistEntry(IpWhitelistEntryInput input) {
+    IpWhitelistEntryEntity entity = ipWhitelistService.addEntry(
+        input.getPattern(), input.getDescription(),
+        input.getImmutable() != null && input.getImmutable());
     return QuerySuccess.newBuilder()
         .message("IP whitelist entry created")
         .id(entity.getId().toString())
@@ -558,15 +561,14 @@ public class GaiaGraphQLService {
   /**
    * Updates an existing IP whitelist entry.
    *
-   * @param id          the entry id
-   * @param pattern     the new pattern
-   * @param description the new description
-   * @param enabled     the new enabled state
+   * @param id    the entry id
+   * @param input the updated fields
    * @return a success result
    */
   @Transactional
-  public QueryResult updateIpWhitelistEntry(String id, String pattern, String description, Boolean enabled) {
-    ipWhitelistService.updateEntry(UUID.fromString(id), pattern, description, enabled);
+  public QueryResult updateIpWhitelistEntry(String id, IpWhitelistEntryInput input) {
+    ipWhitelistService.updateEntry(UUID.fromString(id),
+        input.getPattern(), input.getDescription(), input.getImmutable());
     return QuerySuccess.newBuilder()
         .message("IP whitelist entry updated")
         .id(id)

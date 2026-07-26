@@ -16,8 +16,11 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 @Configuration
 public class S3Config {
 
-  @Value("${S3_ENDPOINT:https://s3.int.scarlettparker.co.uk}")
+  @Value("${S3_ENDPOINT:http://localhost:3900}")
   private String endpoint;
+
+  @Value("${S3_PUBLIC_ENDPOINT:https://s3.int.scarlettparker.co.uk}")
+  private String publicEndpoint;
 
   @Value("${AWS_ACCESS_KEY_ID:}")
   private String accessKey;
@@ -44,7 +47,7 @@ public class S3Config {
   @Bean
   public S3Presigner s3Presigner() {
     return S3Presigner.builder()
-        .endpointOverride(URI.create(endpoint))
+        .endpointOverride(URI.create(publicEndpoint))
         .credentialsProvider(StaticCredentialsProvider.create(
             AwsBasicCredentials.create(accessKey, secretKey)))
         .region(Region.of("garage"))

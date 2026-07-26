@@ -392,8 +392,7 @@ public class GaiaDataFetcher {
   @DgsData(parentType = "GaiaMutations", field = "createIpWhitelistEntry")
   @PreAuthorize("@permissions.has('graphql.gaia.ipWhitelist')")
   public QueryResult createIpWhitelistEntry(IpWhitelistEntryInput input) {
-    return gaiaGraphQLService.createIpWhitelistEntry(
-        input.getPattern(), input.getDescription(), input.getImmutable());
+    return gaiaGraphQLService.createIpWhitelistEntry(input);
   }
 
   /**
@@ -406,8 +405,7 @@ public class GaiaDataFetcher {
   @DgsData(parentType = "GaiaMutations", field = "updateIpWhitelistEntry")
   @PreAuthorize("@permissions.has('graphql.gaia.ipWhitelist')")
   public QueryResult updateIpWhitelistEntry(String id, IpWhitelistEntryInput input) {
-    return gaiaGraphQLService.updateIpWhitelistEntry(
-        id, input.getPattern(), input.getDescription(), input.getImmutable());
+    return gaiaGraphQLService.updateIpWhitelistEntry(id, input);
   }
 
   /**
