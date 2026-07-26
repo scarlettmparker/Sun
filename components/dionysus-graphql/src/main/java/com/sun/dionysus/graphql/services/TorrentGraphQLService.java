@@ -61,11 +61,11 @@ public class TorrentGraphQLService {
       if (MagnetUri.isMagnet(magnet)) {
         job = torrentClient.addFromMagnet(bucket, path, magnet);
       } else if (magnet.startsWith("http://") || magnet.startsWith("https://")) {
-        var resolved = followToMagnet(magnet);
-        if (MagnetUri.isMagnet(resolved)) {
-          job = torrentClient.addFromMagnet(bucket, path, resolved);
+        var src = resolveTorrentLink(magnet);
+        if (src.isMagnet()) {
+          job = torrentClient.addFromMagnet(bucket, path, src.magnet);
         } else {
-          job = torrentClient.addFromTorrentFile(bucket, path, downloadBytes(resolved));
+          job = torrentClient.addFromTorrentFile(bucket, path, src.torrentBytes);
         }
       } else {
         throw new IllegalArgumentException("Not a magnet URI or torrent URL: " + magnet);
@@ -103,54 +103,62 @@ public class TorrentGraphQLService {
   }
 
   /**
-   * Follows HTTP redirects manually. Returns a magnet: URI if the chain ends
-   * at one, otherwise returns the final HTTP URL whose body should be the
-   * .torrent file contents.
+   * The resolved source for a torrent, either a magnet URI or the raw
+   * .torrent file bytes.
+   *
+   * @param magnet the magnet URI when the link redirected to a magnet.
+   * @param torrentBytes the .torrent bytes when the link served a file.
    */
-  private String followToMagnet(String urlString) {
-    try {
-      var url = URI.create(urlString).toURL();
-      var conn = (HttpURLConnection) url.openConnection();
-      conn.setConnectTimeout(10000);
-      conn.setReadTimeout(15000);
-      conn.setInstanceFollowRedirects(false);
-      conn.setRequestMethod("GET");
-      int status = conn.getResponseCode();
-      if (status >= 300 && status < 400) {
-        String location = conn.getHeaderField("Location");
-        conn.disconnect();
-        if (location == null) {
-          throw new RuntimeException("Redirect with no Location header");
+  private record TorrentSource(String magnet, byte[] torrentBytes) {
+    boolean isMagnet() { return magnet != null; }
+  }
+
+  /**
+   * Follows HTTP redirects on a Jackett download URL.
+   */
+  private TorrentSource resolveTorrentLink(String urlString) {
+    int attempts = 0;
+    while (true) {
+      try {
+        return resolveOnce(urlString);
+      } catch (Exception e) {
+        if (++attempts >= 2) {
+          throw new RuntimeException("Failed to resolve torrent URL: " + urlString, e);
         }
-        if (MagnetUri.isMagnet(location)) {
-          return location;
-        }
-        if (location.startsWith("http://") || location.startsWith("https://")) {
-          return followToMagnet(location);
-        }
-        throw new RuntimeException("Unknown redirect target: " + location);
+        try { Thread.sleep(1000); } catch (InterruptedException ignored) { Thread.currentThread().interrupt(); }
       }
-      return urlString;
-    } catch (Exception e) {
-      throw new RuntimeException("Failed to resolve torrent URL: " + urlString, e);
     }
   }
 
   /**
-   * Downloads raw bytes from an HTTP(S) URL (used for .torrent links).
+   * Single attempt at resolving a torrent link.
    */
-  private byte[] downloadBytes(String urlString) {
-    try {
-      var url = URI.create(urlString).toURL();
-      var conn = (HttpURLConnection) url.openConnection();
-      conn.setConnectTimeout(10000);
-      conn.setReadTimeout(30000);
-      conn.setInstanceFollowRedirects(true);
-      try (var in = conn.getInputStream()) {
-        return in.readAllBytes();
+  private TorrentSource resolveOnce(String urlString) throws Exception {
+    var url = URI.create(urlString).toURL();
+    var conn = (HttpURLConnection) url.openConnection();
+    conn.setConnectTimeout(10000);
+    conn.setReadTimeout(15000);
+    conn.setInstanceFollowRedirects(false);
+    conn.setRequestMethod("GET");
+    int status = conn.getResponseCode();
+
+    if (status >= 300 && status < 400) {
+      String location = conn.getHeaderField("Location");
+      conn.disconnect();
+      if (location == null) {
+        throw new RuntimeException("Redirect with no Location");
       }
-    } catch (Exception e) {
-      throw new RuntimeException("Failed to download torrent from " + urlString, e);
+      if (MagnetUri.isMagnet(location)) {
+        return new TorrentSource(location, null);
+      }
+      if (location.startsWith("http://") || location.startsWith("https://")) {
+        return resolveOnce(location);
+      }
+      throw new RuntimeException("Unknown redirect target: " + location);
+    }
+
+    try (var in = conn.getInputStream()) {
+      return new TorrentSource(null, in.readAllBytes());
     }
   }
 }
