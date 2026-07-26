@@ -64,8 +64,19 @@ type GaiaMutations {
   requestPasswordReset(email: String!): QueryResult
   resetPassword(token: String!, newPassword: String!): QueryResult
   changePassword(currentPassword: String!, newPassword: String!): QueryResult
-  upsertPropertyEntry(ownerKey: String!, name: String!, entry: String!, values: JSON!): PropertySetEntry
-  setProperty(ownerKey: String!, name: String!, entry: String!, property: String!, value: JSON!): PropertySetEntry
+  upsertPropertyEntry(
+    ownerKey: String!
+    name: String!
+    entry: String!
+    values: JSON!
+  ): PropertySetEntry
+  setProperty(
+    ownerKey: String!
+    name: String!
+    entry: String!
+    property: String!
+    value: JSON!
+  ): PropertySetEntry
   registerPropertySetSchema(input: PropertySetSchemaInput!): PropertySetSchema
   createConfiguration(input: ConfigurationInput!): Configuration
   updateConfiguration(id: ID!, input: ConfigurationInput!): Configuration
@@ -84,9 +95,6 @@ extend type Query {
 extend type Mutation {
   gaiaMutations: GaiaMutations!
 }
-
-scalar JSON
-scalar Long
 
 enum EntryStatus {
   ACTIVE

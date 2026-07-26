@@ -1,5 +1,3 @@
-scalar Long
-
 # Lifecycle state of a torrent download job.
 enum TorrentJobStatus {
   QUEUED

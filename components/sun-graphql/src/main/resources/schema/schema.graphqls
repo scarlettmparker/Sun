@@ -1,4 +1,6 @@
 scalar Date
+scalar Long
+scalar JSON
 
 type Query {
   # Base Query type for schema extensions
