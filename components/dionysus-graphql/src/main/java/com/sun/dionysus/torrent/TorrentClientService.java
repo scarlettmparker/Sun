@@ -197,7 +197,9 @@ public class TorrentClientService implements SmartLifecycle {
    * Re-adds an existing job to the session on startup, resuming into its scratch dir.
    */
   @Transactional
-  public void resumeExistingJob(TorrentJobEntity job) {
+  public void resumeExistingJob(UUID jobId) {
+    TorrentJobEntity job = jobService.findById(jobId)
+        .orElseThrow(() -> new IllegalArgumentException("Job not found: " + jobId));
     job.setStatus(TorrentStatus.DOWNLOADING);
     job.setErrorMessage(null);
     jobService.save(job);

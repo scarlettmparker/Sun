@@ -33,7 +33,7 @@ public class TorrentResumeRunner implements ApplicationRunner {
     logger.info("Resuming {} torrent job(s) after restart", resumable.size());
     for (TorrentJobEntity job : resumable) {
       try {
-        client.resumeExistingJob(job);
+        client.resumeExistingJob(job.getId());
       } catch (Exception e) {
         logger.warn("Failed to resume torrent job {}", job.getId(), e);
       }
