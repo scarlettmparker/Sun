@@ -32,6 +32,7 @@ public class TorrentJobService extends BaseService<TorrentJobEntity> {
           TorrentStatus.DOWNLOADING,
           TorrentStatus.PAUSED,
           TorrentStatus.UPLOADING,
+          TorrentStatus.TRANSCODING,
           TorrentStatus.FAILED);
 
   /**

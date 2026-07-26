@@ -84,10 +84,16 @@ public class IpWhitelistFilter extends OncePerRequestFilter {
     }
 
     /**
-     * Resolves the client IP, preferring the first hop of X-Forwarded-For
-     * over the raw remote address.
+     * Resolves the client IP. Checks CF-Connecting-IP first (set by
+     * Cloudflare), then X-Forwarded-For, then the raw remote address.
      */
     private static String clientIp(HttpServletRequest request) {
+        String cf = request.getHeader("CF-Connecting-IP");
+        if (cf != null && !cf.isBlank()) {
+            return cf.trim();
+        }
+
+        // Standard proxy header
         String forwarded = request.getHeader("X-Forwarded-For");
         if (forwarded != null && !forwarded.isBlank()) {
             int comma = forwarded.indexOf(',');
