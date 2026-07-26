@@ -56,7 +56,6 @@ public class TorrentCompletionService {
         job.setStatus(TorrentStatus.FAILED);
         job.setErrorMessage("No files found to upload after download completed");
         jobService.save(job);
-        deleteRecursively(scratch);
         return;
       }
 
@@ -73,7 +72,6 @@ public class TorrentCompletionService {
 
       registry.forget(job.getId(), job.getScratchPath());
       transmissionGateway.removeTransmission(jobId);
-      deleteRecursively(scratch);
       logger.info("Torrent job {} completed into {}/{}", jobId, job.getBucket(), job.getTargetKeyPath());
     } catch (Exception e) {
       logger.error("Completion failed for job {}", jobId, e);
