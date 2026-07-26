@@ -15,6 +15,16 @@ type File {
   lastModified: String
 }
 
+# A torrent search result from Jackett.
+type TorrentSearchResult {
+  name: String!
+  seeders: Int!
+  leechers: Int!
+  size: String!
+  publishDate: String
+  magnet: String!
+}
+
 # Queries for filestore operations.
 type FilestoreQueries {
   health: String
@@ -31,6 +41,8 @@ type FilestoreQueries {
   torrentJob(jobId: String!): TorrentJob
   # List torrent download jobs, optionally filtered by bucket and status.
   torrentJobs(bucket: String, status: String): [TorrentJob!]
+  # Searches Jackett for torrents matching the query.
+  searchTorrents(query: String!): [TorrentSearchResult!]!
 }
 
 # Directory-like entry for a bucket key.

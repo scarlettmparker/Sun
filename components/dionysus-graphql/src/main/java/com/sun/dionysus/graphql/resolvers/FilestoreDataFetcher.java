@@ -12,6 +12,8 @@ import com.sun.dionysus.codegen.types.KeyEntry;
 import com.sun.dionysus.codegen.types.KeyDetail;
 import com.sun.dionysus.codegen.types.TorrentJob;
 import com.sun.dionysus.graphql.services.TorrentGraphQLService;
+import com.sun.dionysus.torrent.search.TorrentSearchResult;
+import com.sun.dionysus.torrent.search.TorrentSearchService;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,6 +26,9 @@ public class FilestoreDataFetcher {
 
   @Autowired
   private TorrentGraphQLService torrentGraphQLService;
+
+  @Autowired
+  private TorrentSearchService torrentSearchService;
 
   @DgsData(parentType = "Query", field = "filestoreQueries")
   public FilestoreQueries getFilestoreQueries() {
@@ -75,6 +80,12 @@ public class FilestoreDataFetcher {
   @PreAuthorize("@permissions.has('graphql.dionysus.torrent.view')")
   public List<TorrentJob> torrentJobs(String bucket, String status) {
     return torrentGraphQLService.list(bucket, status);
+  }
+
+  @DgsData(parentType = "FilestoreQueries", field = "searchTorrents")
+  @PreAuthorize("@permissions.has('graphql.dionysus.searchTorrents')")
+  public List<TorrentSearchResult> searchTorrents(String query) {
+    return torrentSearchService.search(query);
   }
 
   @DgsData(parentType = "FilestoreMutations", field = "addTorrent")
