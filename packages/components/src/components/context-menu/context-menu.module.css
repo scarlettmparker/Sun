@@ -13,7 +13,7 @@
   background-color: rgb(from var(--secondary) r g b / var(--visible));
   backdrop-filter: blur(var(--sm));
   padding: var(--xs) 0;
-  z-index: 201;
+  z-index: 1100;
   touch-action: none;
 }
 

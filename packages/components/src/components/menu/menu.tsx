@@ -407,7 +407,7 @@ const useDropdownPositioning = (
       contentEl.style.position = "fixed";
       contentEl.style.top = `${top}px`;
       contentEl.style.left = `${left}px`;
-      contentEl.style.zIndex = "201";
+      contentEl.style.zIndex = "1100";
     };
 
     updatePosition();

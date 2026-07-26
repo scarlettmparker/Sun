@@ -7,6 +7,7 @@ import TextArea from "../textarea";
 import MarkdownEditor from "../markdown-editor";
 import Select from "../select";
 import Checkbox from "../checkbox";
+import DropdownMenu from "../dropdown-menu";
 
 const FormItemContext = createContext<{ name?: string }>({});
 
@@ -59,7 +60,9 @@ type FormItemChildProps =
   | React.ComponentProps<typeof Input>
   | React.ComponentProps<typeof TextArea>
   | React.ComponentProps<typeof MarkdownEditor>
-  | React.ComponentProps<typeof Select>;
+  | React.ComponentProps<typeof Select>
+  | React.ComponentProps<typeof Checkbox>
+  | React.ComponentProps<typeof DropdownMenu>;
 
 type FormItemProps = {
   children: React.ReactElement<FormItemChildProps>;
@@ -71,19 +74,6 @@ type FormItemProps = {
 const FormItem = (props: FormItemProps) => {
   const { children } = props;
   const { name } = useContext(FormItemContext);
-
-  // Tighten typing
-  if (
-    children.type !== Input &&
-    children.type !== TextArea &&
-    children.type !== MarkdownEditor &&
-    children.type !== Select &&
-    children.type !== Checkbox
-  ) {
-    throw new Error(
-      "FormItem only accepts Input, TextArea, MarkdownEditor, Select, or Checkbox as children",
-    );
-  }
 
   return React.cloneElement(children, {
     name,
