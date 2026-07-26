@@ -76,6 +76,21 @@ public class IpWhitelistService {
      */
     @Transactional
     public IpWhitelistEntryEntity addEntry(String pattern, String description, boolean immutable) {
+        // Check for existing entry with the same pattern
+        Optional<IpWhitelistEntryEntity> existing = repository.findByPattern(pattern.trim());
+        if (existing.isPresent()) {
+            IpWhitelistEntryEntity entry = existing.get();
+            if (entry.isEnabled()) {
+                throw new IllegalArgumentException("Entry already exists for pattern: " + pattern);
+            }
+            // Re-enable a suspended entry
+            entry.setEnabled(true);
+            if (description != null) {
+                entry.setDescription(description.trim());
+            }
+            entry.setImmutable(immutable);
+            return repository.save(entry);
+        }
         IpWhitelistEntryEntity entity = new IpWhitelistEntryEntity();
         entity.setPattern(pattern.trim());
         entity.setDescription(description != null ? description.trim() : null);

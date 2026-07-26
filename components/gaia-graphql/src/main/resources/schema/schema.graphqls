@@ -146,6 +146,7 @@ input IpWhitelistEntryInput {
   pattern: String!
   description: String
   immutable: Boolean
+  enabled: Boolean
 }
 
 input ConfigurationInput {

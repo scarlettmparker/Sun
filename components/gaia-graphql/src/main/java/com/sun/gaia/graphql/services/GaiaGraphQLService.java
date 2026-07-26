@@ -568,7 +568,7 @@ public class GaiaGraphQLService {
   @Transactional
   public QueryResult updateIpWhitelistEntry(String id, IpWhitelistEntryInput input) {
     ipWhitelistService.updateEntry(UUID.fromString(id),
-        input.getPattern(), input.getDescription(), input.getImmutable());
+        input.getPattern(), input.getDescription(), input.getEnabled());
     return QuerySuccess.newBuilder()
         .message("IP whitelist entry updated")
         .id(id)
