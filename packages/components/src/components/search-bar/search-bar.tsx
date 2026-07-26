@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import Input from "../input";
 import Button from "../button";
 import { Search, X } from "lucide-react";
@@ -34,6 +34,14 @@ const SearchBar = ({
   ...rest
 }: SearchBarProps) => {
   const lastSearched = useRef(value);
+
+  // Reset the search tracker when the value is cleared externally
+  // (e.g. user backspaces instead of clicking the clear button).
+  useEffect(() => {
+    if (value === "") {
+      lastSearched.current = "";
+    }
+  }, [value]);
 
   const fire = () => {
     if (value !== lastSearched.current) {
