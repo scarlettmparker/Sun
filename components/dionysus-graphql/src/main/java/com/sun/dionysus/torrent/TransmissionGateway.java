@@ -68,6 +68,7 @@ public class TransmissionGateway {
       return;
     }
     final String torrentId = tid;
+    exec("-t", torrentId, "--download-dir", saveDir.getAbsolutePath());
 
     while (true) {
       if (isCancelled(jobId)) { removeTransmission(jobId); return; }

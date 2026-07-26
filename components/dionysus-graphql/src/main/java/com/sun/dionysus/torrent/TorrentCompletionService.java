@@ -51,13 +51,18 @@ public class TorrentCompletionService {
     try {
       java.util.List<String> uploadedKeys = upload(job, scratch);
 
+      if (uploadedKeys.isEmpty()) {
+        logger.warn("No files uploaded for job {} — marking FAILED", jobId);
+        job.setStatus(TorrentStatus.FAILED);
+        job.setErrorMessage("No files found to upload after download completed");
+        jobService.save(job);
+        deleteRecursively(scratch);
+        return;
+      }
+
       for (String key : uploadedKeys) {
         keyDetailService.createOrUpdateDetail(
             job.getBucket(), key, extractName(key), contentTypeFor(key));
-      }
-      if (uploadedKeys.isEmpty()) {
-        keyDetailService.createOrUpdateDetail(
-            job.getBucket(), job.getTargetKeyPath(), extractName(job.getTargetKeyPath()), contentTypeFor(job.getTargetKeyPath()));
       }
 
       job.setStatus(TorrentStatus.COMPLETED);
@@ -91,25 +96,16 @@ public class TorrentCompletionService {
     Path searchDir = scratch;
     if (!Files.isDirectory(searchDir) || Files.list(searchDir).findAny().isEmpty()) {
       Path txBase = Path.of("/var/lib/transmission-daemon/downloads");
-      if (Files.isDirectory(txBase)) {
-        try (Stream<Path> listing = Files.list(txBase)) {
-          searchDir = listing
-              .filter(Files::isDirectory)
-              .filter(d -> !d.getFileName().toString().startsWith("."))
-              .max(java.util.Comparator.comparingLong(d -> {
-                try { return Files.walk(d).filter(Files::isRegularFile).count(); } catch (Exception e) { return 0L; }
-              }))
-              .orElse(searchDir);
-        } catch (Exception e) {
-          logger.warn("Failed to scan {} for download dirs", txBase, e);
-        }
+      Path txSpecific = txBase.resolve(scratch.getFileName());
+      if (Files.isDirectory(txSpecific)) {
+        searchDir = txSpecific;
       }
     }
 
     try (Stream<Path> paths = Files.walk(searchDir)) {
       var files = paths.filter(Files::isRegularFile).filter(this::isRealFile).toList();
       if (files.isEmpty()) {
-        logger.warn("No files found to upload in {} or {}", scratch, "/var/lib/transmission-daemon/downloads/" + scratch.getFileName());
+        logger.warn("No files found to upload in {} (tx download dir: {})", scratch, Path.of("/var/lib/transmission-daemon/downloads").resolve(scratch.getFileName()));
       }
       for (Path file : files) {
         String key = targetKeyFor(job, searchDir, file, targetIsFolder);
