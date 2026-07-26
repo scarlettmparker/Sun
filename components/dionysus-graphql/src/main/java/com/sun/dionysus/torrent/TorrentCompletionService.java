@@ -75,16 +75,27 @@ public class TorrentCompletionService {
       // Transcode MKV/AVI files to MP4 with progress reporting
       boolean transcodeStarted = false;
       for (String key : uploadedKeys) {
-        if (!key.toLowerCase().endsWith(".mkv") && !key.toLowerCase().endsWith(".avi")) continue;
+        Path localFile = findFileByKey(scratch, key);
+        if (localFile == null) continue;
+        String fileName = localFile.getFileName().toString().toLowerCase();
+        String mimeType = Files.probeContentType(localFile);
+
+        // Check if mkv for transcoding
+        boolean isMkv = fileName.endsWith(".mkv") || (mimeType != null && (mimeType.equals("video/x-matroska") || mimeType.equals("application/x-matroska")));
+        boolean isAvi = fileName.endsWith(".avi") || (mimeType != null && mimeType.equals("video/avi"));
+
+        if (!isMkv && !isAvi) {
+          // Don't transcode
+          continue;
+        }
+        
         if (!transcodeStarted) {
           job.setStatus(TorrentStatus.TRANSCODING);
           job.setProgress(0.0);
           jobService.save(job);
           transcodeStarted = true;
         }
-        Path localFile = findFileByKey(scratch, key);
-        if (localFile != null) {
-          try {
+        try {
             Path mp4 = transcodeWithProgress(job, localFile, key);
             String mp4Key = key + ".mp4";
             putFile(job.getBucket(), mp4Key, mp4);
@@ -100,7 +111,6 @@ public class TorrentCompletionService {
             logger.warn("Failed to transcode {} to MP4: {}", key, e.getMessage());
           }
         }
-      }
 
       for (String key : uploadedKeys) {
         keyDetailService.createOrUpdateDetail(
