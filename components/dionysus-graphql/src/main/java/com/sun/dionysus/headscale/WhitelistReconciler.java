@@ -31,10 +31,10 @@ public class WhitelistReconciler {
   private TailscaleDeviceService tailscaleDeviceService;
 
   /**
-   * Runs every 5 minutes. Adds any Tailscale node IPs that are not yet in
-   * the whitelist. Skips entries that were explicitly disabled by an admin.
+   * Runs 15s after boot and every 5 minutes thereafter. Adds any Tailscale
+   * node IPs that are not yet in the whitelist and upserts Gaia device records.
    */
-  @Scheduled(fixedDelay = 300_000)
+  @Scheduled(fixedDelay = 300_000, initialDelay = 15_000)
   public void reconcile() {
     try {
       List<HeadscaleService.HeadscaleNode> nodes = headscaleService.listNodes();
@@ -54,14 +54,14 @@ public class WhitelistReconciler {
           }
         }
 
-        if (found && !suspended) continue;
-        if (suspended) {
+        if (found && !suspended) {
+          log.debug("Skipping existing IP {}", ip);
+        } else if (suspended) {
           log.debug("Skipping suspended IP {}", ip);
-          continue;
+        } else {
+          ipWhitelistService.addEntry(ip, TAILSCALE_PREFIX + node.name(), false);
+          log.info("Auto-whitelisted Tailscale node {} ({})", node.name(), ip);
         }
-
-        ipWhitelistService.addEntry(ip, TAILSCALE_PREFIX + node.name(), false);
-        log.info("Auto-whitelisted Tailscale node {} ({})", node.name(), ip);
 
         tailscaleDeviceService.upsertFromHeadscale(node.id(), node.name(), node.ipv4(), node.lastSeen());
       }
