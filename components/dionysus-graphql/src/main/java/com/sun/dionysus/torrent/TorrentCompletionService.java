@@ -74,43 +74,43 @@ public class TorrentCompletionService {
 
       // Transcode MKV/AVI files to MP4 with progress reporting
       boolean transcodeStarted = false;
-      for (String key : uploadedKeys) {
-        Path localFile = findFileByKey(scratch, key);
-        if (localFile == null) continue;
-        String fileName = localFile.getFileName().toString().toLowerCase();
-        String mimeType = Files.probeContentType(localFile);
+      try (Stream<Path> allFiles = Files.walk(scratch)) {
+        var videoFiles = allFiles.filter(Files::isRegularFile).filter(this::isVideoFile).toList();
+        for (Path localFile : videoFiles) {
+          String fileName = localFile.getFileName().toString();
+          // Match by checking if any uploaded key ends with or starts with the filename
+          String matchedKey = null;
+          for (String uk : uploadedKeys) {
+            String ukName = uk.contains("/") ? uk.substring(uk.lastIndexOf('/') + 1) : uk;
+            if (ukName.equals(fileName) || fileName.startsWith(ukName) || ukName.startsWith(fileName)) {
+              matchedKey = uk;
+              break;
+            }
+          }
 
-        // Check if mkv for transcoding
-        boolean isMkv = fileName.endsWith(".mkv") || (mimeType != null && (mimeType.equals("video/x-matroska") || mimeType.equals("application/x-matroska")));
-        boolean isAvi = fileName.endsWith(".avi") || (mimeType != null && mimeType.equals("video/avi"));
-
-        if (!isMkv && !isAvi) {
-          // Don't transcode
-          continue;
-        }
-        
-        if (!transcodeStarted) {
-          job.setStatus(TorrentStatus.TRANSCODING);
-          job.setProgress(0.0);
-          jobService.save(job);
-          transcodeStarted = true;
-        }
-        try {
-            Path mp4 = transcodeWithProgress(job, localFile, key);
-            String mp4Key = key + ".mp4";
+          if (matchedKey == null) continue;
+          
+          if (!transcodeStarted) {
+            job.setStatus(TorrentStatus.TRANSCODING);
+            job.setProgress(0.0);
+            jobService.save(job);
+            transcodeStarted = true;
+          }
+          try {
+            Path mp4 = transcodeWithProgress(job, localFile, matchedKey);
+            String mp4Key = matchedKey + ".mp4";
             putFile(job.getBucket(), mp4Key, mp4);
-            // Replace the MKV key with the MP4 key in the list
-            uploadedKeys.remove(key);
+            uploadedKeys.remove(matchedKey);
             uploadedKeys.add(mp4Key);
             Files.deleteIfExists(mp4);
-            // Remove the original MKV from S3 now that we have the MP4
             s3Client.deleteObject(DeleteObjectRequest.builder()
-                .bucket(job.getBucket()).key(key).build());
-            logger.info("Transcoded and cleaned up original MKV: {}", key);
+                .bucket(job.getBucket()).key(matchedKey).build());
+            logger.info("Transcoded and cleaned up: {}", matchedKey);
           } catch (Exception e) {
-            logger.warn("Failed to transcode {} to MP4: {}", key, e.getMessage());
+            logger.warn("Failed to transcode {} to MP4: {}", matchedKey, e.getMessage());
           }
         }
+      }
 
       for (String key : uploadedKeys) {
         keyDetailService.createOrUpdateDetail(
@@ -181,8 +181,15 @@ public class TorrentCompletionService {
    * content-SHA256 signing (Garage doesn't handle it correctly).
    */
   private void putFile(String bucket, String key, Path file) throws IOException {
+    String contentType = contentTypeFor(key);
+    if (contentType.equals("application/octet-stream")) {
+      String detected = probeContentType(file);
+      if (detected != null) {
+        contentType = detected;
+      }
+    }
     var putReq = PutObjectRequest.builder()
-        .bucket(bucket).key(key).contentType(contentTypeFor(key)).build();
+        .bucket(bucket).key(key).contentType(contentType).build();
     var presignReq = PutObjectPresignRequest.builder()
         .putObjectRequest(putReq)
         .signatureDuration(Duration.ofHours(1))
@@ -192,7 +199,7 @@ public class TorrentCompletionService {
     var conn = (HttpURLConnection) url.openConnection();
     conn.setDoOutput(true);
     conn.setRequestMethod("PUT");
-    conn.setRequestProperty("Content-Type", contentTypeFor(key));
+    conn.setRequestProperty("Content-Type", contentType);
     conn.setRequestProperty("x-amz-content-sha256", "UNSIGNED-PAYLOAD");
     conn.setConnectTimeout(30000);
     conn.setReadTimeout(600000);
@@ -243,6 +250,25 @@ public class TorrentCompletionService {
   private boolean isRealFile(Path file) {
     String name = file.getFileName().toString();
     return !name.endsWith(".parts") && !name.startsWith(".") && !name.contains(".pad");
+  }
+
+  /**
+   * True when the file is an MKV or AVI that should be transcoded to MP4.
+   */
+  private boolean isVideoFile(Path file) {
+    String name = file.getFileName().toString().toLowerCase();
+    String mime = null;
+    try { mime = Files.probeContentType(file); } catch (IOException ignored) {}
+    return name.endsWith(".mkv") || name.endsWith(".avi")
+        || (mime != null && (mime.equals("video/x-matroska")
+            || mime.equals("application/x-matroska") || mime.equals("video/avi")));
+  }
+
+  /**
+   * Probes the MIME type of a file, returning null on failure.
+   */
+  private String probeContentType(Path file) {
+    try { return Files.probeContentType(file); } catch (IOException e) { return null; }
   }
 
   /**
