@@ -44,6 +44,7 @@ public class TorrentCompletionService {
 
   @Autowired private TorrentJobService jobService;
   @Autowired private KeyDetailService keyDetailService;
+  @Autowired private S3Client s3Client;
   @Autowired private S3Presigner s3Presigner;
   @Autowired private TorrentJobRegistry registry;
   @Autowired @Lazy private TransmissionGateway transmissionGateway;
@@ -87,8 +88,14 @@ public class TorrentCompletionService {
             Path mp4 = transcodeWithProgress(job, localFile, key);
             String mp4Key = key + ".mp4";
             putFile(job.getBucket(), mp4Key, mp4);
+            // Replace the MKV key with the MP4 key in the list
+            uploadedKeys.remove(key);
             uploadedKeys.add(mp4Key);
             Files.deleteIfExists(mp4);
+            // Remove the original MKV from S3 now that we have the MP4
+            s3Client.deleteObject(DeleteObjectRequest.builder()
+                .bucket(job.getBucket()).key(key).build());
+            logger.info("Transcoded and cleaned up original MKV: {}", key);
           } catch (Exception e) {
             logger.warn("Failed to transcode {} to MP4: {}", key, e.getMessage());
           }
