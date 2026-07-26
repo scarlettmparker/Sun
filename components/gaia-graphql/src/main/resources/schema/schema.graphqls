@@ -53,6 +53,7 @@ type GaiaQueries {
   configuration(id: ID!): Configuration
   ipWhitelistEntries: [IpWhitelistEntry!]!
   tailscaleDevices: [TailscaleDevice!]!
+  tailscaleDevice(id: ID!): TailscaleDevice
 }
 
 type GaiaMutations {

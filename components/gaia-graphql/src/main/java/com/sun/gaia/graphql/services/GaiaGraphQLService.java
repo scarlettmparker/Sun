@@ -654,6 +654,21 @@ public class GaiaGraphQLService {
   }
 
   /**
+   * Returns a single Tailscale device by id.
+   *
+   * @param id the Gaia device record id.
+   * @return the device, or null if not found.
+   */
+  @Transactional(readOnly = true)
+  public TailscaleDevice tailscaleDevice(String id) {
+    try {
+      return tailscaleDeviceMapper.map(tailscaleDeviceService.findById(UUID.fromString(id)));
+    } catch (IllegalArgumentException e) {
+      return null;
+    }
+  }
+
+  /**
    * Marks a Tailscale device as expired.
    *
    * @param id the Gaia device record id.

@@ -427,6 +427,12 @@ public class GaiaDataFetcher {
     return gaiaGraphQLService.tailscaleDevices();
   }
 
+  @DgsData(parentType = "GaiaQueries", field = "tailscaleDevice")
+  @PreAuthorize("@permissions.has('graphql.gaia.tailscale')")
+  public TailscaleDevice tailscaleDevice(String id) {
+    return gaiaGraphQLService.tailscaleDevice(id);
+  }
+
   @DgsData(parentType = "GaiaMutations", field = "expireTailscaleDevice")
   @PreAuthorize("@permissions.has('graphql.gaia.tailscale')")
   public QueryResult expireTailscaleDevice(String id) {
