@@ -7,6 +7,8 @@ import com.sun.dionysus.model.enums.TorrentStatus;
 import com.sun.dionysus.service.torrent.TorrentJobService;
 import com.sun.dionysus.torrent.MagnetUri;
 import com.sun.dionysus.torrent.TorrentClientService;
+import java.net.HttpURLConnection;
+import java.net.URI;
 import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
@@ -56,10 +58,14 @@ public class TorrentGraphQLService {
   public TorrentJob addTorrent(String bucket, String path, String magnet, String torrentFileBase64) {
     TorrentJobEntity job;
     if (magnet != null && !magnet.isBlank()) {
-      if (!MagnetUri.isMagnet(magnet)) {
-        throw new IllegalArgumentException("Not a magnet URI: " + magnet);
+      if (MagnetUri.isMagnet(magnet)) {
+        job = torrentClient.addFromMagnet(bucket, path, magnet);
+      } else if (magnet.startsWith("http://") || magnet.startsWith("https://")) {
+        byte[] bytes = downloadBytes(magnet);
+        job = torrentClient.addFromTorrentFile(bucket, path, bytes);
+      } else {
+        throw new IllegalArgumentException("Not a magnet URI or torrent URL: " + magnet);
       }
-      job = torrentClient.addFromMagnet(bucket, path, magnet);
     } else if (torrentFileBase64 != null && !torrentFileBase64.isBlank()) {
       job = torrentClient.addFromTorrentFile(bucket, path, Base64.getDecoder().decode(torrentFileBase64));
     } else {
@@ -90,6 +96,24 @@ public class TorrentGraphQLService {
   public TorrentJob cancelTorrent(String jobId) {
     torrentClient.cancelJob(UUID.fromString(jobId));
     return torrentJobService.findById(UUID.fromString(jobId)).map(torrentJobMapper::map).orElse(null);
+  }
+
+  /**
+   * Downloads raw bytes from an HTTP(S) URL (used for .torrent links).
+   */
+  private byte[] downloadBytes(String urlString) {
+    try {
+      var url = URI.create(urlString).toURL();
+      var conn = (HttpURLConnection) url.openConnection();
+      conn.setConnectTimeout(10000);
+      conn.setReadTimeout(30000);
+      conn.setInstanceFollowRedirects(true);
+      try (var in = conn.getInputStream()) {
+        return in.readAllBytes();
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("Failed to download torrent from " + urlString, e);
+    }
   }
 }
 
