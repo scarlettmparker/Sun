@@ -46,6 +46,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         accountRepository.findById(accountId)
             .filter(a -> a.getStatus() != AccountStatus.SUSPENDED)
             .ifPresent(a -> UserContextHolder.setUserId(accountId));
+      } else {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.getWriter().write("{\"error\":\"Invalid or expired token\"}");
+        return;
       }
     }
     try {
