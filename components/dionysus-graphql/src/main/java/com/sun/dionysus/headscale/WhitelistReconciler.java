@@ -2,6 +2,7 @@ package com.sun.dionysus.headscale;
 
 import com.sun.gaia.model.IpWhitelistEntryEntity;
 import com.sun.gaia.service.IpWhitelistService;
+import com.sun.gaia.service.TailscaleDeviceService;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +26,9 @@ public class WhitelistReconciler {
 
   @Autowired
   private IpWhitelistService ipWhitelistService;
+
+  @Autowired
+  private TailscaleDeviceService tailscaleDeviceService;
 
   /**
    * Runs every 5 minutes. Adds any Tailscale node IPs that are not yet in
@@ -58,6 +62,8 @@ public class WhitelistReconciler {
 
         ipWhitelistService.addEntry(ip, TAILSCALE_PREFIX + node.name(), false);
         log.info("Auto-whitelisted Tailscale node {} ({})", node.name(), ip);
+
+        tailscaleDeviceService.upsertFromHeadscale(node.id(), node.name(), node.ipv4(), node.lastSeen());
       }
     } catch (Exception e) {
       log.warn("Whitelist reconciliation failed", e);

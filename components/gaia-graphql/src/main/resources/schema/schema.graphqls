@@ -52,6 +52,7 @@ type GaiaQueries {
   configurations: [Configuration!]!
   configuration(id: ID!): Configuration
   ipWhitelistEntries: [IpWhitelistEntry!]!
+  tailscaleDevices: [TailscaleDevice!]!
 }
 
 type GaiaMutations {
@@ -73,6 +74,7 @@ type GaiaMutations {
   createIpWhitelistEntry(input: IpWhitelistEntryInput!): QueryResult
   updateIpWhitelistEntry(id: ID!, input: IpWhitelistEntryInput!): QueryResult
   deleteIpWhitelistEntry(id: ID!): QueryResult
+  expireTailscaleDevice(id: ID!): QueryResult
 }
 
 extend type Query {
@@ -84,6 +86,7 @@ extend type Mutation {
 }
 
 scalar JSON
+scalar Long
 
 enum EntryStatus {
   ACTIVE
@@ -147,6 +150,24 @@ input IpWhitelistEntryInput {
   description: String
   immutable: Boolean
   enabled: Boolean
+}
+
+enum DeviceStatus {
+  ACTIVE
+  EXPIRED
+  SUSPENDED
+}
+
+type TailscaleDevice {
+  id: ID!
+  headscaleId: Long!
+  name: String!
+  ipv4: String
+  status: DeviceStatus!
+  expiredAt: Date
+  lastSeen: String
+  createdAt: Date
+  updatedAt: Date
 }
 
 input ConfigurationInput {

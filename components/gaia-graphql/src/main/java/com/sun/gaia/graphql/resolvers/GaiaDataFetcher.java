@@ -10,6 +10,7 @@ import com.sun.gaia.codegen.types.ConfigurationInput;
 import com.sun.gaia.codegen.types.GaiaMutations;
 import com.sun.gaia.codegen.types.IpWhitelistEntry;
 import com.sun.gaia.codegen.types.IpWhitelistEntryInput;
+import com.sun.gaia.codegen.types.TailscaleDevice;
 import com.sun.gaia.codegen.types.GaiaQueries;
 import com.sun.gaia.codegen.types.LoginInput;
 import com.sun.gaia.codegen.types.PagedAccounts;
@@ -418,6 +419,18 @@ public class GaiaDataFetcher {
   @PreAuthorize("@permissions.has('graphql.gaia.ipWhitelist')")
   public QueryResult deleteIpWhitelistEntry(String id) {
     return gaiaGraphQLService.deleteIpWhitelistEntry(id);
+  }
+
+  @DgsData(parentType = "GaiaQueries", field = "tailscaleDevices")
+  @PreAuthorize("@permissions.has('graphql.gaia.tailscale')")
+  public List<TailscaleDevice> tailscaleDevices() {
+    return gaiaGraphQLService.tailscaleDevices();
+  }
+
+  @DgsData(parentType = "GaiaMutations", field = "expireTailscaleDevice")
+  @PreAuthorize("@permissions.has('graphql.gaia.tailscale')")
+  public QueryResult expireTailscaleDevice(String id) {
+    return gaiaGraphQLService.expireTailscaleDevice(id);
   }
 
   private void resolveUserFromRequest() {

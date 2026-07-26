@@ -8,6 +8,7 @@ import com.sun.gaia.codegen.types.Configuration;
 import com.sun.gaia.codegen.types.ConfigurationInput;
 import com.sun.gaia.codegen.types.IpWhitelistEntry;
 import com.sun.gaia.codegen.types.IpWhitelistEntryInput;
+import com.sun.gaia.codegen.types.TailscaleDevice;
 import com.sun.gaia.codegen.types.LoginInput;
 import com.sun.gaia.codegen.types.PagedAccounts;
 import com.sun.gaia.codegen.types.PageInfo;
@@ -29,6 +30,7 @@ import com.sun.gaia.model.enums.AccountStatus;
 import com.sun.gaia.repository.AccountRepository;
 import com.sun.gaia.service.AccountService;
 import com.sun.gaia.graphql.mappers.IpWhitelistMapper;
+import com.sun.gaia.graphql.mappers.TailscaleDeviceMapper;
 import com.sun.gaia.service.ConfigurationReconciler;
 import com.sun.base.util.FilterBuilder;
 import com.sun.base.util.FilterSpec;
@@ -37,6 +39,7 @@ import com.sun.base.util.PageRequests;
 import com.sun.gaia.service.ConfigurationService;
 import com.sun.gaia.service.EmailService;
 import com.sun.gaia.service.IpWhitelistService;
+import com.sun.gaia.service.TailscaleDeviceService;
 import com.sun.gaia.service.JwtService;
 import com.sun.gaia.service.PasswordResetService;
 import com.sun.gaia.service.PropertySetService;
@@ -79,6 +82,8 @@ public class GaiaGraphQLService {
   private final ConfigurationMapper configurationMapper;
   private final IpWhitelistService ipWhitelistService;
   private final IpWhitelistMapper ipWhitelistMapper;
+  private final TailscaleDeviceService tailscaleDeviceService;
+  private final TailscaleDeviceMapper tailscaleDeviceMapper;
   private final String appBaseUrl;
 
   public GaiaGraphQLService(AccountService accountService, AccountRepository accountRepository,
@@ -90,6 +95,8 @@ public class GaiaGraphQLService {
       ConfigurationMapper configurationMapper,
       IpWhitelistService ipWhitelistService,
       IpWhitelistMapper ipWhitelistMapper,
+      TailscaleDeviceService tailscaleDeviceService,
+      TailscaleDeviceMapper tailscaleDeviceMapper,
       @Value("${app.base-url:http://localhost:5176}") String appBaseUrl) {
     this.accountService = accountService;
     this.accountRepository = accountRepository;
@@ -105,6 +112,8 @@ public class GaiaGraphQLService {
     this.configurationMapper = configurationMapper;
     this.ipWhitelistService = ipWhitelistService;
     this.ipWhitelistMapper = ipWhitelistMapper;
+    this.tailscaleDeviceService = tailscaleDeviceService;
+    this.tailscaleDeviceMapper = tailscaleDeviceMapper;
     this.appBaseUrl = appBaseUrl;
   }
 
@@ -634,5 +643,28 @@ public class GaiaGraphQLService {
       return result;
     }
     throw new IllegalArgumentException("Expected a JSON object");
+  }
+
+  /**
+   * Returns all tracked Tailscale devices.
+   */
+  @Transactional(readOnly = true)
+  public List<TailscaleDevice> tailscaleDevices() {
+    return tailscaleDeviceMapper.map(tailscaleDeviceService.listAll());
+  }
+
+  /**
+   * Marks a Tailscale device as expired.
+   *
+   * @param id the Gaia device record id.
+   * @return a success result.
+   */
+  @Transactional
+  public QueryResult expireTailscaleDevice(String id) {
+    tailscaleDeviceService.markExpired(UUID.fromString(id));
+    return QuerySuccess.newBuilder()
+        .message("Tailscale device expired")
+        .id(id)
+        .build();
   }
 }
