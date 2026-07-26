@@ -30,7 +30,7 @@ public class TailscaleDeviceEntity extends BaseEntity {
     @Column(nullable = false)
     private DeviceStatus status = DeviceStatus.ACTIVE;
 
-    @Column
+    @Column(columnDefinition = "timestamp(6)")
     private LocalDateTime expiredAt;
 
     @Column(length = 255)
