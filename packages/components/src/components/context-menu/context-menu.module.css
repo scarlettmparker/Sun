@@ -4,6 +4,8 @@
 
 .context_menu_trigger {
   cursor: context-menu;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .context_menu_content {
@@ -15,6 +17,8 @@
   padding: var(--xs) 0;
   z-index: 1100;
   touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .context_menu_group {
@@ -41,6 +45,7 @@
   cursor: pointer;
   font: inherit;
   box-shadow: none;
+  user-select: none;
 }
 
 .context_menu_item:hover,

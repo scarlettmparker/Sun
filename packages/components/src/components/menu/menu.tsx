@@ -242,6 +242,7 @@ const MenuSubTrigger = (props: MenuSubTriggerProps) => {
       return;
     }
     event.stopPropagation();
+    triggerRef.current = event.currentTarget;
     setOpen(!open);
     onClick?.(event);
   };
@@ -558,7 +559,6 @@ const MenuContent = (
    */
   const handlePointerDown = useCallback(
     (e: PointerEvent<HTMLDivElement>) => {
-      e.preventDefault();
       e.stopPropagation();
       rest.onPointerDown?.(e);
     },
