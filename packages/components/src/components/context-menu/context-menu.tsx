@@ -171,13 +171,35 @@ type ContextMenuTriggerProps = React.HTMLAttributes<HTMLDivElement> & {
 };
 
 /**
- * ContextMenuTrigger wraps target elements to capture right-click cursor locations,
- * intercepts native browser window behaviors, and maps semantic interaction states.
+ * ContextMenuTrigger wraps target elements to capture right-click and
+ * long-press cursor locations, intercepts native browser window behaviors,
+ * and maps semantic interaction states.
  */
 const ContextMenuTrigger = (props: ContextMenuTriggerProps) => {
-  const { children, className, onContextMenu, onClick, asChild, ...rest } =
-    props;
+  const {
+    children,
+    className,
+    onContextMenu,
+    onClick,
+    onTouchStart,
+    onTouchEnd,
+    onTouchMove,
+    onTouchCancel,
+    asChild,
+    ...rest
+  } = props;
   const { open, setOpen, setPosition, triggerId, contentId } = useContextMenu();
+  const touchTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+  const LONG_PRESS_MS = 500;
+
+  const clearTouchTimer = () => {
+    if (touchTimer.current !== undefined) {
+      clearTimeout(touchTimer.current);
+      touchTimer.current = undefined;
+    }
+  };
 
   const handleContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -193,6 +215,35 @@ const ContextMenuTrigger = (props: ContextMenuTriggerProps) => {
     onClick?.(event);
   };
 
+  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    clearTouchTimer();
+    const touch = event.touches[0];
+    if (!touch) {
+      return;
+    }
+    touchTimer.current = setTimeout(() => {
+      event.preventDefault();
+      setPosition({ x: touch.clientX, y: touch.clientY });
+      setOpen(true);
+    }, LONG_PRESS_MS);
+    onTouchStart?.(event);
+  };
+
+  const handleTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
+    clearTouchTimer();
+    onTouchEnd?.(event);
+  };
+
+  const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
+    clearTouchTimer();
+    onTouchMove?.(event);
+  };
+
+  const handleTouchCancel = (event: React.TouchEvent<HTMLDivElement>) => {
+    clearTouchTimer();
+    onTouchCancel?.(event);
+  };
+
   return (
     <MenuTrigger
       asChild={asChild}
@@ -204,6 +255,10 @@ const ContextMenuTrigger = (props: ContextMenuTriggerProps) => {
       className={cn(styles.context_menu_trigger, className)}
       onContextMenu={handleContextMenu}
       onClick={handleClick}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onTouchMove={handleTouchMove}
+      onTouchCancel={handleTouchCancel}
       {...rest}
     >
       {children}
@@ -276,7 +331,11 @@ const ContextMenuItem = (props: ContextMenuItemProps) => {
 const ContextMenuGroup = (props: React.HTMLAttributes<HTMLDivElement>) => {
   const { className, children, ...rest } = props;
   return (
-    <div className={cn(styles.context_menu_group, className)} role="group" {...rest}>
+    <div
+      className={cn(styles.context_menu_group, className)}
+      role="group"
+      {...rest}
+    >
       {children}
     </div>
   );
@@ -309,7 +368,8 @@ const ContextMenuSubTrigger = (props: ContextMenuSubTriggerProps) => (
   <MenuSubTrigger
     {...props}
     className={cn(styles.context_menu_subtrigger, props.className)}
-    arrowClassName={styles.context_menu_subarrow}   />
+    arrowClassName={styles.context_menu_subarrow}
+  />
 );
 
 type ContextMenuSubContentProps = React.HTMLAttributes<HTMLDivElement>;
