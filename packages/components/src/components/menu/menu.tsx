@@ -214,6 +214,7 @@ const MenuSubTrigger = (props: MenuSubTriggerProps) => {
     className,
     onPointerEnter,
     onPointerLeave,
+    onClick,
     disabled,
     arrowClassName,
     variant,
@@ -222,16 +223,27 @@ const MenuSubTrigger = (props: MenuSubTriggerProps) => {
   const { open, setOpen, triggerRef } = useMenuSub();
 
   const handlePointerEnter = (event: React.PointerEvent<HTMLButtonElement>) => {
-    if (disabled) return;
+    if (disabled || event.pointerType === "touch") return;
     triggerRef.current = event.currentTarget;
     setOpen(true);
     onPointerEnter?.(event);
   };
 
   const handlePointerLeave = (event: React.PointerEvent<HTMLButtonElement>) => {
-    if (disabled) return;
+    if (disabled || event.pointerType === "touch") {
+      return;
+    }
     setOpen(false);
     onPointerLeave?.(event);
+  };
+
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    if (disabled) {
+      return;
+    }
+    event.stopPropagation();
+    setOpen(!open);
+    onClick?.(event);
   };
 
   return (
@@ -248,6 +260,7 @@ const MenuSubTrigger = (props: MenuSubTriggerProps) => {
       className={className}
       onPointerEnter={handlePointerEnter}
       onPointerLeave={handlePointerLeave}
+      onClick={handleClick}
     >
       {children}
       <ChevronRight size={16} className={arrowClassName} />
@@ -305,9 +318,12 @@ const MenuSubContent = (props: MenuSubContentProps) => {
   }, [open]);
 
   /**
-   * Handles pointer enter/leave to control submenu visibility.
+   * Handles pointer enter to control submenu visibility.
    */
   const handlePointerEnter = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === "touch") {
+      return;
+    }
     setOpen(true);
     onPointerEnter?.(event);
   };
@@ -316,6 +332,9 @@ const MenuSubContent = (props: MenuSubContentProps) => {
    * Handles pointer leave to control submenu visibility.
    */
   const handlePointerLeave = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === "touch") {
+      return;
+    }
     setOpen(false);
     onPointerLeave?.(event);
   };
