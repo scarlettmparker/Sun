@@ -108,6 +108,7 @@ type DiscordLoginResult {
   token: String!
   accountId: ID!
   readerAccountId: ID!
+  requiresReactivation: Boolean!
 }
 
 type ReaderObjectReference {

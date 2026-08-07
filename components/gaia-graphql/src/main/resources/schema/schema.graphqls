@@ -13,6 +13,7 @@ enum AccountStatus {
   ACTIVE
   SUSPENDED
   PENDING
+  DEACTIVATED
 }
 
 type AuthResult {
@@ -62,6 +63,9 @@ type GaiaMutations {
   logout: QueryResult
   suspendAccount(id: ID!): QueryResult
   unsuspendAccount(id: ID!): QueryResult
+  deactivateAccount: QueryResult
+  requestAccountReactivation(email: String!): QueryResult
+  confirmAccountReactivation(token: String!): QueryResult
   requestPasswordReset(email: String!): QueryResult
   resetPassword(token: String!, newPassword: String!): QueryResult
   changePassword(currentPassword: String!, newPassword: String!): QueryResult

@@ -53,7 +53,40 @@ public class EmailService {
     this.fromAddress = fromAddress;
   }
 
+  /**
+   * Sends a password-reset link by email.
+   *
+   * @param toEmail the recipient address
+   * @param resetLink the reset link to include
+   */
   public void sendPasswordResetEmail(String toEmail, String resetLink) {
+    String body =
+        "Click the link below to reset your password:\n\n" + resetLink +
+        "\n\nThis link expires in 15 minutes.";
+    sendEmail(toEmail, "Password Reset", body);
+  }
+
+  /**
+   * Sends an account-reactivation link by email.
+   *
+   * @param toEmail the recipient address
+   * @param reactivationLink the reactivation link to include
+   */
+  public void sendReactivationEmail(String toEmail, String reactivationLink) {
+    String body =
+        "Click the link below to reactivate your account:\n\n" + reactivationLink +
+        "\n\nThis link expires in 15 minutes.";
+    sendEmail(toEmail, "Account Reactivation", body);
+  }
+
+  /**
+   * Sends a plain-text email via Gmail XOAUTH2.
+   *
+   * @param toEmail the recipient address
+   * @param subject the message subject
+   * @param body the message body
+   */
+  private void sendEmail(String toEmail, String subject, String body) {
     try {
       String accessToken = getAccessToken();
 
@@ -74,15 +107,13 @@ public class EmailService {
       Message message = new MimeMessage(session);
       message.setFrom(new InternetAddress(fromAddress));
       message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail));
-      message.setSubject("Password Reset");
-      message.setText(
-          "Click the link below to reset your password:\n\n" + resetLink +
-          "\n\nThis link expires in 15 minutes.");
+      message.setSubject(subject);
+      message.setText(body);
 
       Transport.send(message);
-      logger.info("Password reset email sent to {}", toEmail);
+      logger.info("Email '{}' sent to {}", subject, toEmail);
     } catch (Exception e) {
-      logger.error("Failed to send password reset email to {}", toEmail, e);
+      logger.error("Failed to send email '{}' to {}", subject, toEmail, e);
       throw new RuntimeException("Failed to send email", e);
     }
   }

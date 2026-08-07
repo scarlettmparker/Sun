@@ -29,6 +29,14 @@ export {
   ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from "./components/context-menu";
+export {
+  default as CookieBanner,
+  CookieBannerContent,
+  CookieBannerTitle,
+  CookieBannerDescription,
+  CookieBannerActions,
+  useCookieBanner,
+} from "./components/cookie-banner";
 export { default as Figure } from "./components/figure";
 export {
   Dialog,

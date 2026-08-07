@@ -70,6 +70,7 @@ public class DiscordOAuthService {
         (String) user.get("username"),
         (String) user.get("global_name"),
         (String) user.get("avatar"),
+        (String) user.get("email"),
         level,
         roles);
   }
@@ -134,7 +135,7 @@ public class DiscordOAuthService {
    * Verified Discord identity for a member.
    */
   public record DiscordProfile(
-      String discordId, String username, String globalName, String avatar, CefrLevel cefrLevel,
-      List<String> roles) {
+      String discordId, String username, String globalName, String avatar, String email,
+      CefrLevel cefrLevel, List<String> roles) {
   }
 }

@@ -17,9 +17,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
- * Stamps the caller's account id into {@link UserContextHolder} from a bearer JWT.
- * Skips accounts with {@link AccountStatus#SUSPENDED} status so their sessions
- * are immediately revoked — every downstream check sees an unauthenticated user.
+ * Puts the authenticated caller's account id in the user context from a
+ * bearer JWT, ignoring non-active accounts so their sessions no longer work.
  */
 @Component
 @Profile("!test")
@@ -44,7 +43,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
       if (jwtService.isValid(token)) {
         UUID accountId = jwtService.extractAccountId(token);
         accountRepository.findById(accountId)
-            .filter(a -> a.getStatus() != AccountStatus.SUSPENDED)
+            .filter(a -> a.getStatus() == AccountStatus.ACTIVE)
             .ifPresent(a -> UserContextHolder.setUserId(accountId));
       } else {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

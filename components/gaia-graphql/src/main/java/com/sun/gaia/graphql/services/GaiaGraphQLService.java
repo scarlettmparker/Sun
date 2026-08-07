@@ -42,6 +42,7 @@ import com.sun.gaia.service.IpWhitelistService;
 import com.sun.gaia.service.TailscaleDeviceService;
 import com.sun.gaia.service.JwtService;
 import com.sun.gaia.service.PasswordResetService;
+import com.sun.gaia.service.ReactivationService;
 import com.sun.gaia.service.PropertySetService;
 import com.sun.gaia.service.UserContextHolder;
 import java.util.LinkedHashMap;
@@ -74,6 +75,7 @@ public class GaiaGraphQLService {
   private final JwtService jwtService;
   private final EmailService emailService;
   private final PasswordResetService passwordResetService;
+  private final ReactivationService reactivationService;
   private final AccountMapper accountMapper;
   private final PropertySetService propertySetService;
   private final ConfigurationService configurationService;
@@ -89,7 +91,8 @@ public class GaiaGraphQLService {
   public GaiaGraphQLService(AccountService accountService, AccountRepository accountRepository,
       PersonService personService,
       JwtService jwtService, EmailService emailService,
-      PasswordResetService passwordResetService, AccountMapper accountMapper,
+      PasswordResetService passwordResetService, ReactivationService reactivationService,
+      AccountMapper accountMapper,
       PropertySetService propertySetService, ConfigurationService configurationService,
       ConfigurationReconciler configurationReconciler, PropertySetMapper propertySetMapper,
       ConfigurationMapper configurationMapper,
@@ -104,6 +107,7 @@ public class GaiaGraphQLService {
     this.jwtService = jwtService;
     this.emailService = emailService;
     this.passwordResetService = passwordResetService;
+    this.reactivationService = reactivationService;
     this.accountMapper = accountMapper;
     this.propertySetService = propertySetService;
     this.configurationService = configurationService;
@@ -214,6 +218,83 @@ public class GaiaGraphQLService {
     accountService.save(account);
     logger.info("Unsuspended account {}", id);
     return QuerySuccess.newBuilder().message("Account unsuspended").id(id).build();
+  }
+
+  /**
+   * Deactivates the calling account, revoking its sessions.
+   *
+   * @return a QuerySuccess result
+   */
+  @Transactional
+  public QueryResult deactivateAccount() {
+    UUID userId = UserContextHolder.getUserId();
+    if (userId == null) {
+      return StandardError.newBuilder()
+          .message("Not authenticated")
+          .build();
+    }
+    accountService.deactivateAccount(userId);
+    logger.info("Deactivated account {}", userId);
+    return QuerySuccess.newBuilder()
+        .message("Account deactivated")
+        .id(userId.toString())
+        .build();
+  }
+
+  /**
+   * Emails a reactivation link to a deactivated account's address.
+   *
+   * <p>Always reports success to avoid email enumeration.
+   *
+   * @param email the account's email address
+   * @return a QuerySuccess result
+   */
+  @Transactional
+  public QueryResult requestAccountReactivation(String email) {
+    return accountService.findByPersonEmail(email)
+        .filter(account -> account.getStatus() == AccountStatus.DEACTIVATED)
+        .map(account -> {
+          var token = reactivationService.createToken(account.getId());
+          String reactivationLink = appBaseUrl + "/reactivate?token=" + token.getToken();
+          emailService.sendReactivationEmail(email, reactivationLink);
+          logger.info("Reactivation email sent for account {}", account.getId());
+          return QuerySuccess.newBuilder()
+              .message("Reactivation email sent")
+              .id(account.getId().toString())
+              .build();
+        })
+        .orElseGet(() -> {
+          logger.warn("Reactivation requested for unknown or active email");
+          return QuerySuccess.newBuilder()
+              .message("Reactivation email sent")
+              .build();
+        });
+  }
+
+  /**
+   * Reactivates an account using a confirmation token.
+   *
+   * @param token the reactivation token
+   * @return the result of the reactivation
+   */
+  @Transactional
+  public QueryResult confirmAccountReactivation(String token) {
+    try {
+      UUID accountId = reactivationService.useToken(token);
+      AccountEntity account = accountService.findById(accountId)
+          .orElseThrow(() -> new IllegalArgumentException("Account not found"));
+      account.setStatus(AccountStatus.ACTIVE);
+      accountService.save(account);
+      logger.info("Reactivated account {}", accountId);
+      return QuerySuccess.newBuilder()
+          .message("Account reactivated")
+          .id(accountId.toString())
+          .build();
+    } catch (Exception e) {
+      return StandardError.newBuilder()
+          .message(e.getMessage())
+          .build();
+    }
   }
 
   /**

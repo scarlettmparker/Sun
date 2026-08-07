@@ -290,6 +290,35 @@ public class GaiaDataFetcher {
   }
 
   /**
+   * Deactivates the calling account.
+   */
+  @DgsData(parentType = "GaiaMutations", field = "deactivateAccount")
+  @PreAuthorize("@permissions.isAuthenticated()")
+  public QueryResult deactivateAccount() {
+    return gaiaGraphQLService.deactivateAccount();
+  }
+
+  /**
+   * Emails a reactivation link to a deactivated account's address.
+   */
+  @DgsData(parentType = "GaiaMutations", field = "requestAccountReactivation")
+  @PreAuthorize("permitAll()")
+  @DgsEnableDataFetcherInstrumentation(false)
+  public QueryResult requestAccountReactivation(String email) {
+    return gaiaGraphQLService.requestAccountReactivation(email);
+  }
+
+  /**
+   * Reactivates an account using a confirmation token.
+   */
+  @DgsData(parentType = "GaiaMutations", field = "confirmAccountReactivation")
+  @PreAuthorize("permitAll()")
+  @DgsEnableDataFetcherInstrumentation(false)
+  public QueryResult confirmAccountReactivation(String token) {
+    return gaiaGraphQLService.confirmAccountReactivation(token);
+  }
+
+  /**
    * Creates or replaces a property-set entry.
    *
    * @param ownerKey the owner key
@@ -453,7 +482,7 @@ public class GaiaDataFetcher {
         if (jwtService.isValid(token)) {
           UUID accountId = jwtService.extractAccountId(token);
           accountRepository.findById(accountId)
-              .filter(a -> a.getStatus() != com.sun.gaia.model.enums.AccountStatus.SUSPENDED)
+              .filter(a -> a.getStatus() == com.sun.gaia.model.enums.AccountStatus.ACTIVE)
               .ifPresent(a -> UserContextHolder.setUserId(accountId));
         }
       }

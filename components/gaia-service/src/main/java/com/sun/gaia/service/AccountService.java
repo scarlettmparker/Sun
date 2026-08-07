@@ -87,18 +87,38 @@ public class AccountService extends BaseService<AccountEntity> {
   }
 
   /**
-   * Finds or creates an account for an OAuth provider identity.
+   * Marks an account deactivated by its owner, revoking all sessions.
    */
-  public AccountEntity upsertProviderAccount(String provider, String providerId, String username) {
+  public AccountEntity deactivateAccount(UUID accountId) {
+    AccountEntity account = findById(accountId)
+        .orElseThrow(() -> new IllegalArgumentException("Account not found: " + accountId));
+    account.setStatus(AccountStatus.DEACTIVATED);
+    return save(account);
+  }
+
+  /**
+   * Finds or creates an account for an OAuth provider identity.
+   *
+   * @param provider the provider key (e.g. "discord")
+   * @param providerId the provider's user id
+   * @param username the display username
+   * @param email the provider-reported email, or null when absent
+   * @return the account, with the person email synced
+   */
+  public AccountEntity upsertProviderAccount(
+      String provider, String providerId, String username, String email) {
     Optional<AccountEntity> existing =
         accountRepository.findByProviderAndProviderId(provider, providerId);
     if (existing.isPresent()) {
-      return existing.get();
+      AccountEntity account = existing.get();
+      syncEmail(account, email);
+      return account;
     }
     PersonEntity person = new PersonEntity();
     person.setFirstName(username);
     person.setLastName("");
     person.setDisplayName(username);
+    person.setEmail(email);
     person = personService.save(person);
 
     AccountEntity account = new AccountEntity();
@@ -109,5 +129,18 @@ public class AccountService extends BaseService<AccountEntity> {
     account.setProvider(provider);
     account.setProviderId(providerId);
     return save(account);
+  }
+
+  /**
+   * Writes the provider email onto the account's person when one is now known.
+   */
+  private void syncEmail(AccountEntity account, String email) {
+    if (email == null || email.isBlank()) {
+      return;
+    }
+    personService.findById(account.getPersonId()).ifPresent(person -> {
+      person.setEmail(email);
+      personService.save(person);
+    });
   }
 }

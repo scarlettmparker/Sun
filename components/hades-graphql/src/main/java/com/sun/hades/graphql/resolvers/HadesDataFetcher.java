@@ -2,6 +2,7 @@ package com.sun.hades.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
+import com.sun.base.ratelimit.RateLimit;
 import com.sun.hades.codegen.types.AnnotationInput;
 import com.sun.hades.codegen.types.CommentInput;
 import com.sun.hades.codegen.types.DiscordLoginResult;
@@ -237,6 +238,7 @@ public class HadesDataFetcher {
    */
   @DgsData(parentType = "HadesMutations", field = "createAnnotation")
   @PreAuthorize("@permissions.has('graphql.hades.createAnnotation')")
+  @RateLimit(capacity = 1, refillPerSecond = 0.0667)
   public QueryResult createAnnotation(AnnotationInput input) {
     return hadesGraphQLService.createAnnotation(
         input.getTextId(), input.getStartOffset(), input.getEndOffset(), input.getBody());

@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -18,12 +20,14 @@ import com.sun.gaia.codegen.types.RegisterInput;
 import com.sun.gaia.codegen.types.StandardError;
 import com.sun.gaia.graphql.mappers.AccountMapper;
 import com.sun.gaia.model.AccountEntity;
+import com.sun.gaia.model.ReactivationTokenEntity;
 import com.sun.gaia.model.enums.AccountStatus;
 import com.sun.gaia.repository.AccountRepository;
 import com.sun.gaia.service.AccountService;
 import com.sun.gaia.service.EmailService;
 import com.sun.gaia.service.JwtService;
 import com.sun.gaia.service.PasswordResetService;
+import com.sun.gaia.service.ReactivationService;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -42,6 +46,7 @@ class GaiaGraphQLServiceTest {
   @Mock private JwtService jwtService;
   @Mock private EmailService emailService;
   @Mock private PasswordResetService passwordResetService;
+  @Mock private ReactivationService reactivationService;
   @Mock private AccountMapper accountMapper;
 
   @InjectMocks private GaiaGraphQLService service;
@@ -207,5 +212,88 @@ class GaiaGraphQLServiceTest {
     assertThat(result).isInstanceOf(QuerySuccess.class);
     assertThat(account.getStatus()).isEqualTo(AccountStatus.ACTIVE);
     verify(accountService).save(account);
+  }
+
+  @Test
+  void deactivateAccount_marksAccountDeactivated() {
+    UUID userId = UUID.randomUUID();
+    com.sun.gaia.service.UserContextHolder.setUserId(userId);
+    try {
+      AccountEntity account = new AccountEntity();
+      account.setId(userId);
+      when(accountService.deactivateAccount(userId)).thenReturn(account);
+
+      QueryResult result = service.deactivateAccount();
+
+      assertThat(result).isInstanceOf(QuerySuccess.class);
+      assertThat(((QuerySuccess) result).getId()).isEqualTo(userId.toString());
+      verify(accountService).deactivateAccount(userId);
+    } finally {
+      com.sun.gaia.service.UserContextHolder.clear();
+    }
+  }
+
+  @Test
+  void deactivateAccount_returnsErrorWhenNotAuthenticated() {
+    QueryResult result = service.deactivateAccount();
+
+    assertThat(result).isInstanceOf(StandardError.class);
+    assertThat(((StandardError) result).getMessage()).isEqualTo("Not authenticated");
+  }
+
+  @Test
+  void requestAccountReactivation_sendsEmailForDeactivatedAccount() {
+    UUID accountId = UUID.randomUUID();
+    AccountEntity account = new AccountEntity();
+    account.setId(accountId);
+    account.setStatus(AccountStatus.DEACTIVATED);
+    when(accountService.findByPersonEmail("user@test.com")).thenReturn(Optional.of(account));
+    ReactivationTokenEntity token = new ReactivationTokenEntity();
+    token.setToken("reactivation-token");
+    when(reactivationService.createToken(accountId)).thenReturn(token);
+
+    QueryResult result = service.requestAccountReactivation("user@test.com");
+
+    assertThat(result).isInstanceOf(QuerySuccess.class);
+    verify(emailService).sendReactivationEmail(eq("user@test.com"), contains("reactivation-token"));
+  }
+
+  @Test
+  void requestAccountReactivation_doesNotEmailActiveAccount() {
+    AccountEntity account = new AccountEntity();
+    account.setStatus(AccountStatus.ACTIVE);
+    when(accountService.findByPersonEmail("active@test.com")).thenReturn(Optional.of(account));
+
+    QueryResult result = service.requestAccountReactivation("active@test.com");
+
+    assertThat(result).isInstanceOf(QuerySuccess.class);
+    verify(emailService, never()).sendReactivationEmail(anyString(), anyString());
+    verify(reactivationService, never()).createToken(any());
+  }
+
+  @Test
+  void confirmAccountReactivation_reactivatesAccount() {
+    UUID accountId = UUID.randomUUID();
+    when(reactivationService.useToken("reactivation-token")).thenReturn(accountId);
+    AccountEntity account = new AccountEntity();
+    account.setId(accountId);
+    account.setStatus(AccountStatus.DEACTIVATED);
+    when(accountService.findById(accountId)).thenReturn(Optional.of(account));
+
+    QueryResult result = service.confirmAccountReactivation("reactivation-token");
+
+    assertThat(result).isInstanceOf(QuerySuccess.class);
+    assertThat(account.getStatus()).isEqualTo(AccountStatus.ACTIVE);
+    verify(accountService).save(account);
+  }
+
+  @Test
+  void confirmAccountReactivation_returnsErrorWhenTokenInvalid() {
+    when(reactivationService.useToken("bad-token"))
+        .thenThrow(new IllegalArgumentException("Invalid reactivation token"));
+
+    QueryResult result = service.confirmAccountReactivation("bad-token");
+
+    assertThat(result).isInstanceOf(StandardError.class);
   }
 }

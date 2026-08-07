@@ -4,6 +4,7 @@ import com.sun.base.util.GraphQLSupport;
 import com.sun.base.util.PageRequests;
 import com.sun.base.util.FilterSpec;
 import com.sun.gaia.model.AccountEntity;
+import com.sun.gaia.model.enums.AccountStatus;
 import com.sun.gaia.service.AccountService;
 import com.sun.gaia.service.JwtService;
 import com.sun.gaia.service.UserContextHolder;
@@ -500,6 +501,9 @@ public class HadesGraphQLService {
    * Exchanges a Discord authorization code for a JWT, upserting the gaia account
    * and reader profile.
    *
+   * <p>Deactivated accounts get no token; the result flags that a reactivation
+   * email is required before the member can sign back in.
+   *
    * @param code the authorization code
    * @param state the OAuth state token
    * @return the login result with the JWT
@@ -508,15 +512,26 @@ public class HadesGraphQLService {
   public DiscordLoginResult discordLogin(String code, String state) {
     DiscordOAuthService.DiscordProfile profile = discordOAuthService.exchange(code);
     AccountEntity account = gaiaAccountService.upsertProviderAccount(
-        "discord", profile.discordId(), profile.username());
-    String token = jwtService.generateToken(account.getId(), account.getPersonId());
+        "discord", profile.discordId(), profile.username(), profile.email());
     UUID readerAccountId = accountService.upsertFromDiscord(
         account.getId(), profile.discordId(), profile.username(),
         profile.globalName(), profile.avatar(), profile.cefrLevel(), profile.roles());
+    boolean requiresReactivation = account.getStatus() == AccountStatus.DEACTIVATED;
+    if (requiresReactivation) {
+      logger.info("Discord login for deactivated account {}", account.getId());
+      return DiscordLoginResult.newBuilder()
+          .token("")
+          .accountId(account.getId().toString())
+          .readerAccountId(readerAccountId.toString())
+          .requiresReactivation(true)
+          .build();
+    }
+    String token = jwtService.generateToken(account.getId(), account.getPersonId());
     return DiscordLoginResult.newBuilder()
         .token(token)
         .accountId(account.getId().toString())
         .readerAccountId(readerAccountId.toString())
+        .requiresReactivation(false)
         .build();
   }
 
