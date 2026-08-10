@@ -135,12 +135,12 @@ public class HadesDataFetcher {
   }
 
   /**
-   * Returns the current member's reader account.
+   * Returns the current member's reader account, or null when unauthenticated.
    *
    * @return the reader account
    */
   @DgsData(parentType = "HadesQueries", field = "readerAccount")
-  @PreAuthorize("@permissions.has('graphql.hades.readerAccount')")
+  @PreAuthorize("permitAll()")
   public com.sun.hades.codegen.types.ReaderAccount readerAccount() {
     return hadesGraphQLService.readerAccount();
   }

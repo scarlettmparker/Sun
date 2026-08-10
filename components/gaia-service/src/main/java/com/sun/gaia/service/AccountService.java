@@ -7,6 +7,7 @@ import com.sun.gaia.model.AccountEntity;
 import com.sun.gaia.model.enums.AccountStatus;
 import com.sun.gaia.model.enums.AccountType;
 import com.sun.gaia.repository.AccountRepository;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -58,12 +59,16 @@ public class AccountService extends BaseService<AccountEntity> {
     save(account);
   }
 
-  public Optional<AccountEntity> findByPersonEmail(String email) {
-    Optional<PersonEntity> person = personService.findByEmail(email);
-    if (person.isEmpty()) {
-      return Optional.empty();
-    }
-    return accountRepository.findByPersonId(person.get().getId());
+  /**
+   * Returns every account linked to a person with the given email.
+   *
+   * @param email the person email
+   * @return the accounts, or empty when no person matches
+   */
+  public List<AccountEntity> findByPersonEmail(String email) {
+    return personService.findByEmail(email)
+        .map(person -> accountRepository.findAllByPersonId(person.getId()))
+        .orElseGet(List::of);
   }
 
   /**
@@ -97,27 +102,29 @@ public class AccountService extends BaseService<AccountEntity> {
   }
 
   /**
-   * Finds or creates an account for an OAuth provider identity.
+   * Finds or creates an account for an OAuth provider identity, re-syncing the
+   * person's display name and email whenever they differ.
    *
    * @param provider the provider key (e.g. "discord")
    * @param providerId the provider's user id
-   * @param username the display username
+   * @param username the provider username
+   * @param displayName the provider display name, or null when absent
    * @param email the provider-reported email, or null when absent
-   * @return the account, with the person email synced
+   * @return the account, with the person identity synced
    */
   public AccountEntity upsertProviderAccount(
-      String provider, String providerId, String username, String email) {
+      String provider, String providerId, String username, String displayName, String email) {
     Optional<AccountEntity> existing =
         accountRepository.findByProviderAndProviderId(provider, providerId);
     if (existing.isPresent()) {
       AccountEntity account = existing.get();
-      syncEmail(account, email);
+      syncPerson(account, username, displayName, email);
       return account;
     }
     PersonEntity person = new PersonEntity();
     person.setFirstName(username);
     person.setLastName("");
-    person.setDisplayName(username);
+    person.setDisplayName(displayName == null || displayName.isBlank() ? username : displayName);
     person.setEmail(email);
     person = personService.save(person);
 
@@ -132,15 +139,29 @@ public class AccountService extends BaseService<AccountEntity> {
   }
 
   /**
-   * Writes the provider email onto the account's person when one is now known.
+   * Writes the provider's identity onto the account's person when it differs.
    */
-  private void syncEmail(AccountEntity account, String email) {
-    if (email == null || email.isBlank()) {
-      return;
-    }
+  private void syncPerson(AccountEntity account, String username, String displayName,
+      String email) {
     personService.findById(account.getPersonId()).ifPresent(person -> {
-      person.setEmail(email);
-      personService.save(person);
+      boolean changed = false;
+      if (username != null && !username.equals(person.getFirstName())) {
+        person.setFirstName(username);
+        changed = true;
+      }
+      String resolvedDisplay =
+          displayName == null || displayName.isBlank() ? username : displayName;
+      if (resolvedDisplay != null && !resolvedDisplay.equals(person.getDisplayName())) {
+        person.setDisplayName(resolvedDisplay);
+        changed = true;
+      }
+      if (email != null && !email.isBlank() && !email.equals(person.getEmail())) {
+        person.setEmail(email);
+        changed = true;
+      }
+      if (changed) {
+        personService.save(person);
+      }
     });
   }
 }

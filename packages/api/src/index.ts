@@ -11,6 +11,7 @@ export type ApiResponse<T> = {
 let authCookieName: string | undefined;
 let clientSecret: string | undefined;
 let clientId: string | undefined;
+let appBaseUrl: string | undefined;
 
 /**
  * Sets the auth cookie name and per-app backend credentials. Server-only: call
@@ -20,10 +21,12 @@ export function configureApi(config: {
   authCookie?: string;
   clientSecret?: string;
   clientId?: string;
+  appBaseUrl?: string;
 }): void {
   authCookieName = config.authCookie;
   clientSecret = config.clientSecret;
   clientId = config.clientId;
+  appBaseUrl = config.appBaseUrl;
 }
 
 /**
@@ -103,6 +106,9 @@ export async function executeDocument<T, V = Record<string, unknown>>(
   const clientIp = getRequestIp();
   if (clientIp) {
     headers["X-Forwarded-For"] = clientIp;
+  }
+  if (appBaseUrl) {
+    headers["X-App-Base-Url"] = appBaseUrl;
   }
 
   try {

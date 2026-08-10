@@ -512,7 +512,8 @@ public class HadesGraphQLService {
   public DiscordLoginResult discordLogin(String code, String state) {
     DiscordOAuthService.DiscordProfile profile = discordOAuthService.exchange(code);
     AccountEntity account = gaiaAccountService.upsertProviderAccount(
-        "discord", profile.discordId(), profile.username(), profile.email());
+        "discord", profile.discordId(), profile.username(), profile.globalName(),
+        profile.email());
     UUID readerAccountId = accountService.upsertFromDiscord(
         account.getId(), profile.discordId(), profile.username(),
         profile.globalName(), profile.avatar(), profile.cefrLevel(), profile.roles());

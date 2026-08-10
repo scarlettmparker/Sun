@@ -1,5 +1,7 @@
 package com.sun.gaia.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.mail.Authenticator;
 import jakarta.mail.Message;
 import jakarta.mail.PasswordAuthentication;
@@ -24,6 +26,7 @@ import org.springframework.stereotype.Service;
 public class EmailService {
 
   private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
+  private static final ObjectMapper MAPPER = new ObjectMapper();
 
   private final String host;
   private final int port;
@@ -140,18 +143,18 @@ public class EmailService {
       os.write(body.getBytes(StandardCharsets.UTF_8));
     }
 
-    StringBuilder response = new StringBuilder();
-    try (BufferedReader reader = new BufferedReader(
-        new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
-      String line;
-      while ((line = reader.readLine()) != null) {
-        response.append(line);
-      }
+    int status = conn.getResponseCode();
+    if (status >= 400) {
+      throw new RuntimeException("OAuth token refresh failed (" + status + "): " + readErrorBody(conn));
     }
 
-    String responseBody = response.toString();
-    String token = extractJsonField(responseBody, "access_token");
-    int expiresIn = Integer.parseInt(extractJsonField(responseBody, "expires_in"));
+    JsonNode json = MAPPER.readTree(conn.getInputStream());
+    JsonNode tokenNode = json.get("access_token");
+    if (tokenNode == null) {
+      throw new RuntimeException("OAuth token refresh response had no access_token: " + json);
+    }
+    String token = tokenNode.asText();
+    int expiresIn = json.get("expires_in").asInt();
 
     cachedAccessToken = token;
     tokenExpiresAt = now + (expiresIn * 1000L);
@@ -160,14 +163,23 @@ public class EmailService {
     return cachedAccessToken;
   }
 
-  private String extractJsonField(String json, String field) {
-    String search = "\"" + field + "\":\"";
-    int start = json.indexOf(search);
-    if (start == -1) {
-      throw new RuntimeException("Field not found in JSON: " + field);
+  /**
+   * Reads the error stream of a failed token request.
+   *
+   * @param conn the failed connection
+   * @return the Google error body, or the status line when unreadable
+   */
+  private static String readErrorBody(HttpURLConnection conn) {
+    try (BufferedReader reader = new BufferedReader(
+        new InputStreamReader(conn.getErrorStream(), StandardCharsets.UTF_8))) {
+      StringBuilder body = new StringBuilder();
+      String line;
+      while ((line = reader.readLine()) != null) {
+        body.append(line);
+      }
+      return body.toString();
+    } catch (Exception e) {
+      return "no error body";
     }
-    start += search.length();
-    int end = json.indexOf("\"", start);
-    return json.substring(start, end);
   }
 }

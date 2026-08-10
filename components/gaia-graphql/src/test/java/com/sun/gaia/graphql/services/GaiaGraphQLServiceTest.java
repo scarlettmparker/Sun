@@ -246,13 +246,14 @@ class GaiaGraphQLServiceTest {
     UUID accountId = UUID.randomUUID();
     AccountEntity account = new AccountEntity();
     account.setId(accountId);
+    account.setProvider("discord");
     account.setStatus(AccountStatus.DEACTIVATED);
-    when(accountService.findByPersonEmail("user@test.com")).thenReturn(Optional.of(account));
+    when(accountService.findByPersonEmail("user@test.com")).thenReturn(List.of(account));
     ReactivationTokenEntity token = new ReactivationTokenEntity();
     token.setToken("reactivation-token");
     when(reactivationService.createToken(accountId)).thenReturn(token);
 
-    QueryResult result = service.requestAccountReactivation("user@test.com");
+    QueryResult result = service.requestAccountReactivation("user@test.com", "discord");
 
     assertThat(result).isInstanceOf(QuerySuccess.class);
     verify(emailService).sendReactivationEmail(eq("user@test.com"), contains("reactivation-token"));
@@ -261,10 +262,50 @@ class GaiaGraphQLServiceTest {
   @Test
   void requestAccountReactivation_doesNotEmailActiveAccount() {
     AccountEntity account = new AccountEntity();
+    account.setProvider("discord");
     account.setStatus(AccountStatus.ACTIVE);
-    when(accountService.findByPersonEmail("active@test.com")).thenReturn(Optional.of(account));
+    when(accountService.findByPersonEmail("active@test.com")).thenReturn(List.of(account));
 
-    QueryResult result = service.requestAccountReactivation("active@test.com");
+    QueryResult result = service.requestAccountReactivation("active@test.com", "discord");
+
+    assertThat(result).isInstanceOf(QuerySuccess.class);
+    verify(emailService, never()).sendReactivationEmail(anyString(), anyString());
+    verify(reactivationService, never()).createToken(any());
+  }
+
+  @Test
+  void requestAccountReactivation_picksDeactivatedDiscordAccount() {
+    AccountEntity local = new AccountEntity();
+    local.setId(UUID.randomUUID());
+    local.setProvider("local");
+    local.setStatus(AccountStatus.DEACTIVATED);
+    UUID discordId = UUID.randomUUID();
+    AccountEntity discord = new AccountEntity();
+    discord.setId(discordId);
+    discord.setProvider("discord");
+    discord.setStatus(AccountStatus.DEACTIVATED);
+    when(accountService.findByPersonEmail("shared@test.com"))
+        .thenReturn(List.of(local, discord));
+    ReactivationTokenEntity token = new ReactivationTokenEntity();
+    token.setToken("reactivation-token");
+    when(reactivationService.createToken(discordId)).thenReturn(token);
+
+    QueryResult result = service.requestAccountReactivation("shared@test.com", "discord");
+
+    assertThat(result).isInstanceOf(QuerySuccess.class);
+    verify(reactivationService).createToken(discordId);
+    verify(emailService).sendReactivationEmail(eq("shared@test.com"), contains("reactivation-token"));
+  }
+
+  @Test
+  void requestAccountReactivation_ignoresNonMatchingProvider() {
+    AccountEntity local = new AccountEntity();
+    local.setId(UUID.randomUUID());
+    local.setProvider("local");
+    local.setStatus(AccountStatus.DEACTIVATED);
+    when(accountService.findByPersonEmail("local@test.com")).thenReturn(List.of(local));
+
+    QueryResult result = service.requestAccountReactivation("local@test.com", "discord");
 
     assertThat(result).isInstanceOf(QuerySuccess.class);
     verify(emailService, never()).sendReactivationEmail(anyString(), anyString());

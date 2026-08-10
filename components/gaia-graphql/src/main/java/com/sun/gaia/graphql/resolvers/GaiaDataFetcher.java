@@ -92,10 +92,10 @@ public class GaiaDataFetcher {
   }
 
   /**
-   * Returns the caller's role key strings.
+   * Returns the caller's role key strings, or empty when unauthenticated.
    */
   @DgsData(parentType = "GaiaQueries", field = "myRoles")
-  @PreAuthorize("@permissions.isAuthenticated()")
+  @PreAuthorize("permitAll()")
   public List<String> myRoles() {
     return gaiaGraphQLService.myRoles();
   }
@@ -299,13 +299,13 @@ public class GaiaDataFetcher {
   }
 
   /**
-   * Emails a reactivation link to a deactivated account's address.
+   * Emails a reactivation link to a deactivated account of the given provider.
    */
   @DgsData(parentType = "GaiaMutations", field = "requestAccountReactivation")
   @PreAuthorize("permitAll()")
   @DgsEnableDataFetcherInstrumentation(false)
-  public QueryResult requestAccountReactivation(String email) {
-    return gaiaGraphQLService.requestAccountReactivation(email);
+  public QueryResult requestAccountReactivation(String email, String provider) {
+    return gaiaGraphQLService.requestAccountReactivation(email, provider);
   }
 
   /**

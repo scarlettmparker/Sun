@@ -20,6 +20,8 @@ public interface AccountRepository extends BaseRepository<AccountEntity>, JpaSpe
 
   Optional<AccountEntity> findByPersonId(UUID personId);
 
+  List<AccountEntity> findAllByPersonId(UUID personId);
+
   Optional<AccountEntity> findByProviderAndProviderId(String provider, String providerId);
 
   /**

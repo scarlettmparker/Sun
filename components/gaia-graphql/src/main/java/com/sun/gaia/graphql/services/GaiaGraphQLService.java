@@ -60,6 +60,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 /**
  * GraphQL business logic for accounts and authentication.
@@ -250,18 +252,27 @@ public class GaiaGraphQLService {
    * @return a QuerySuccess result
    */
   @Transactional
-  public QueryResult requestAccountReactivation(String email) {
-    return accountService.findByPersonEmail(email)
+  public QueryResult requestAccountReactivation(String email, String provider) {
+    return accountService.findByPersonEmail(email).stream()
         .filter(account -> account.getStatus() == AccountStatus.DEACTIVATED)
+        .filter(account -> provider.equals(account.getProvider()))
+        .findFirst()
         .map(account -> {
-          var token = reactivationService.createToken(account.getId());
-          String reactivationLink = appBaseUrl + "/reactivate?token=" + token.getToken();
-          emailService.sendReactivationEmail(email, reactivationLink);
-          logger.info("Reactivation email sent for account {}", account.getId());
-          return QuerySuccess.newBuilder()
-              .message("Reactivation email sent")
-              .id(account.getId().toString())
-              .build();
+          try {
+            var token = reactivationService.createToken(account.getId());
+            String reactivationLink = resolveBaseUrl() + "/reactivate?token=" + token.getToken();
+            emailService.sendReactivationEmail(email, reactivationLink);
+            logger.info("Reactivation email sent for account {}", account.getId());
+            return QuerySuccess.newBuilder()
+                .message("Reactivation email sent")
+                .id(account.getId().toString())
+                .build();
+          } catch (Exception e) {
+            logger.error("Failed to send reactivation email for account {}", account.getId(), e);
+            return StandardError.newBuilder()
+                .message("Failed to send reactivation email")
+                .build();
+          }
         })
         .orElseGet(() -> {
           logger.warn("Reactivation requested for unknown or active email");
@@ -372,10 +383,12 @@ public class GaiaGraphQLService {
    */
   @Transactional
   public QueryResult requestPasswordReset(String email) {
-    return accountService.findByPersonEmail(email)
+    return accountService.findByPersonEmail(email).stream()
+        .filter(a -> a.getProvider() == null || "local".equals(a.getProvider()))
+        .findFirst()
         .map(account -> {
           var token = passwordResetService.createToken(account.getId());
-          String resetLink = appBaseUrl + "/reset-password?token=" + token.getToken();
+          String resetLink = resolveBaseUrl() + "/reset-password?token=" + token.getToken();
           emailService.sendPasswordResetEmail(email, resetLink);
           return QuerySuccess.newBuilder()
               .message("Password reset email sent")
@@ -678,6 +691,27 @@ public class GaiaGraphQLService {
         .message("IP whitelist entry deleted")
         .id(id)
         .build();
+  }
+
+  /**
+   * Returns the calling app's base URL for emailed links, or the fallback.
+   *
+   * @return the app base URL
+   */
+  private String resolveBaseUrl() {
+    try {
+      ServletRequestAttributes attrs =
+          (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+      if (attrs != null) {
+        String forwarded = attrs.getRequest().getHeader("X-App-Base-Url");
+        if (forwarded != null && !forwarded.isBlank()) {
+          return forwarded;
+        }
+      }
+    } catch (Exception e) {
+      // No servlet context available (e.g. test)
+    }
+    return appBaseUrl;
   }
 
   /**
