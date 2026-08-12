@@ -7,9 +7,13 @@ import Layout from "./components/layout";
 import NotFound from "./routes/not-found";
 import { matchRoutes } from "react-router-dom";
 import { inlineCss, generateCssTag } from "./utils/css-inlining";
+import { configureApi } from "@sun/api";
+import { clientId, clientSecret, appBaseUrl } from "../config.js";
 import "./utils/register-loaders";
 import { suspenseCache, makeCacheKey } from "@sun/ssr";
 import { MutationResult } from "@sun/ssr";
+
+configureApi({ clientId, clientSecret, appBaseUrl });
 
 type i18n = {
   /**

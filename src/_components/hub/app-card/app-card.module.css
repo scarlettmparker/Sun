@@ -1,0 +1,23 @@
+.card {
+  position: relative;
+}
+
+.meta {
+  display: flex;
+  gap: var(--md);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.link {
+  margin-left: auto;
+}
+
+.actions {
+  display: flex;
+  gap: var(--md);
+  flex-wrap: wrap;
+  position: relative;
+  bottom: 0;
+  margin-top: var(--lg);
+}

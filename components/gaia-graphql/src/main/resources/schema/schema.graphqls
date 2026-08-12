@@ -41,6 +41,45 @@ type PagedAccounts {
   pageInfo: PageInfo!
 }
 
+enum HubMode {
+  dev
+  serve
+}
+
+type HubApp {
+  key: String!
+  name: String!
+  dir: String!
+  devPort: Int!
+  prodPort: Int!
+  url: String!
+  description: String!
+  enabled: Boolean!
+  self: Boolean!
+}
+
+type HubRegistry {
+  mode: HubMode!
+  apps: [HubApp!]!
+}
+
+input HubAppInput {
+  key: String!
+  name: String!
+  dir: String!
+  devPort: Int!
+  prodPort: Int!
+  url: String!
+  description: String!
+  enabled: Boolean!
+  self: Boolean!
+}
+
+input HubRegistryInput {
+  mode: HubMode!
+  apps: [HubAppInput!]!
+}
+
 type GaiaQueries {
   me: Account
   account(id: ID!): Account
@@ -55,6 +94,7 @@ type GaiaQueries {
   ipWhitelistEntries: [IpWhitelistEntry!]!
   tailscaleDevices: [TailscaleDevice!]!
   tailscaleDevice(id: ID!): TailscaleDevice
+  hubRegistry: HubRegistry
 }
 
 type GaiaMutations {
@@ -91,6 +131,7 @@ type GaiaMutations {
   updateIpWhitelistEntry(id: ID!, input: IpWhitelistEntryInput!): QueryResult
   deleteIpWhitelistEntry(id: ID!): QueryResult
   expireTailscaleDevice(id: ID!): QueryResult
+  saveRegistry(input: HubRegistryInput!): HubRegistry
 }
 
 extend type Query {

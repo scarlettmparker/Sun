@@ -1,0 +1,18 @@
+query hubRegistry {
+  gaiaQueries {
+    hubRegistry {
+      mode
+      apps {
+        key
+        name
+        dir
+        devPort
+        prodPort
+        url
+        description
+        enabled
+        self
+      }
+    }
+  }
+}

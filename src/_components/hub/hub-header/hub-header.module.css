@@ -1,0 +1,20 @@
+.card {
+  width: fit-content;
+  position: relative;
+  margin: 0 auto;
+  margin-top: calc(var(--lg) * 2);
+}
+.token_field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sm);
+  margin-top: var(--lg);
+}
+
+.token_input {
+  max-width: 24rem;
+}
+
+.error {
+  margin: var(--md) 0 0;
+}

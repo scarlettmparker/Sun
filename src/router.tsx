@@ -10,6 +10,7 @@ const StemPlayerDetailsPage = lazy(() => import("~/routes/stem-player/[id]"));
 const BlogPage = lazy(() => import("~/routes/blog"));
 const BlogPostPage = lazy(() => import("~/routes/blog/[id]"));
 const CreateBlogPostPage = lazy(() => import("~/routes/blog/create"));
+const HubPage = lazy(() => import("~/routes/hub"));
 
 /**
  * List of routes.
@@ -48,6 +49,14 @@ export const routes: RouteObject[] = [
         element: <StemPlayerDetailsPage />,
       },
     ],
+  },
+  {
+    path: "hub",
+    element: (
+      <Suspense fallback={null}>
+        <HubPage />
+      </Suspense>
+    ),
   },
   {
     path: "*",

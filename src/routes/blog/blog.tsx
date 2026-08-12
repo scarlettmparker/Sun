@@ -1,6 +1,5 @@
 import { ListBlogPostsQuery } from "~/generated/graphql";
-import { fetchListBlogPosts } from "~/utils/api";
-import { pageDataRegistry, getPageData } from "@sun/ssr";
+import { usePageData } from "@sun/ssr/react";
 import { useTranslation } from "react-i18next";
 import styles from "./blog.module.css";
 import { groupPostsByMonthYear } from "./group-posts-by-month-year";
@@ -10,15 +9,11 @@ import { Card, CardBody } from "@sun/components";
 const BlogPage = () => {
   const { t } = useTranslation("blog");
 
-  const { data: initialData } = getPageData<
+  const { data: initialData } = usePageData<
     ListBlogPostsQuery["blogQueries"]["listBlogPosts"]
   >("blogPosts", "blog");
 
-  if (!initialData) {
-    return null;
-  }
-
-  const groupedPosts = groupPostsByMonthYear(initialData);
+  const groupedPosts = groupPostsByMonthYear(initialData ?? []);
 
   return (
     <div className={styles.blog_wrapper}>
@@ -40,32 +35,5 @@ const BlogPage = () => {
     </div>
   );
 };
-
-/**
- * Server-side data fetching function for Blogsite.
- */
-async function getBlogData(): Promise<Record<string, unknown> | null> {
-  try {
-    const result = await fetchListBlogPosts();
-    if (result?.data && result.success) {
-      const blogPosts = (result.data as ListBlogPostsQuery).blogQueries
-        .listBlogPosts;
-      if (blogPosts) {
-        return { blogPosts: blogPosts };
-      }
-    }
-    return null;
-  } catch (error) {
-    console.error("Failed to fetch blog posts:", error);
-    return null;
-  }
-}
-
-/**
- * Register the data loader for this page.
- */
-export function registerBlogDataLoader(): void {
-  pageDataRegistry.registerPageDataLoader("blog", getBlogData);
-}
 
 export default BlogPage;

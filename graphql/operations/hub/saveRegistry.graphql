@@ -1,0 +1,18 @@
+mutation saveRegistry($input: HubRegistryInput!) {
+  gaiaMutations {
+    saveRegistry(input: $input) {
+      mode
+      apps {
+        key
+        name
+        dir
+        devPort
+        prodPort
+        url
+        description
+        enabled
+        self
+      }
+    }
+  }
+}

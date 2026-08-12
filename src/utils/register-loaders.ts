@@ -1,18 +1,10 @@
 /**
- * Registers all page data loaders.
- * TODO: Have this as a point of registering data loaders and have specific
- * stem-player etc. data loaders registered here.
+ * Registers all page data loaders via their colocated data modules.
  */
 
-import { registerGalleryDataLoader } from "~/routes/gallery/gallery";
-import { registerBlogPageDataLoader } from "../routes/blog/[id]/blog-post";
-import { registerBlogDataLoader } from "../routes/blog/blog";
-import { registerStemPlayerDetailsDataLoader } from "../routes/stem-player/[id]/stem-player-details";
-import { registerStemPlayerDataLoader } from "../routes/stem-player/stem-player";
-
-// Register all loaders
-registerBlogDataLoader();
-registerBlogPageDataLoader();
-registerGalleryDataLoader();
-registerStemPlayerDataLoader();
-registerStemPlayerDetailsDataLoader();
+import "~/routes/blog/blog-data";
+import "~/routes/blog/[id]/blog-post-data";
+import "~/routes/gallery/gallery-data";
+import "~/routes/stem-player/stem-player-data";
+import "~/routes/stem-player/[id]/stem-player-details-data";
+import "~/server/hub/hub-registrations";

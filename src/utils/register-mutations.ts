@@ -1,8 +1,6 @@
 /**
- * Registers all mutation handlers.
+ * Registers all mutation handlers via their server modules.
  */
 
-import { registerBlogCreateMutation } from "~/routes/blog/create/create-blog-post";
-
-// Register all mutation handlers
-registerBlogCreateMutation();
+import "~/server/blog-mutations";
+import "~/server/hub/hub-registrations";

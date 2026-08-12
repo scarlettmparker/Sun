@@ -16,6 +16,9 @@ const menu: MenuType = {
   gallery: {
     name: "Gallery",
   },
+  hub: {
+    name: "Hub",
+  },
   // "stem-player": {
   //   name: "Stem Player",
   // },

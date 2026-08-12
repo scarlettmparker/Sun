@@ -1,80 +1,23 @@
-import { fetchLocateSong } from "~/utils/api";
-import {
-  // ListGalleryItemsByRemoteObjectsQuery,
-  LocateSongQuery,
-  Song,
-} from "~/generated/graphql";
+import { LocateSongQuery, Song } from "~/generated/graphql";
 import StemPlayer from "~/_components/stem-player";
-import { pageDataRegistry, getPageData } from "@sun/ssr";
+import { usePageData } from "@sun/ssr/react";
 import { useParams } from "react-router-dom";
 import styles from "./stem-player-details.module.css";
-import { getStemPlayerData } from "../stem-player";
-import { getGalleryItemsByRemoteObjects } from "~/routes/utils";
-
-const PAGE = "stem-player/:id";
 
 /**
  * Stem Player Details Page.
  */
 const StemPlayerDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
-  const { data: song } = getPageData<
+  const { data: song } = usePageData<
     LocateSongQuery["stemPlayerQueries"]["locate"]
-  >("song", PAGE, { id });
-  // const { data: galleryItems } = getPageData<
-  //   ListGalleryItemsByRemoteObjectsQuery["galleryQueries"]["listByRemoteObjects"]
-  // >("galleryItems", PAGE, { ids: [id] });
+  >("song", "stem-player/:id", { id });
 
-  if (!song) {
-    return <div>Loading...</div>;
+  if (!song?.path) {
+    return null;
   }
 
   return <StemPlayer className={styles.stemPlayer} song={song as Song} />;
 };
-
-/**
- * Data fetching function for StemPlayerDetailsPage.
- * @param id The song ID from the route.
- * @returns Promise resolving to page data or null if no data.
- */
-export async function getStemPlayerDetailsData(
-  id: string,
-): Promise<Record<string, unknown> | null> {
-  try {
-    const result = await fetchLocateSong(id);
-    if (result.success && result.data) {
-      return {
-        song: (result.data as LocateSongQuery).stemPlayerQueries.locate,
-      };
-    }
-    return {
-      error: result.error || "Failed to fetch song data",
-    };
-  } catch (error) {
-    console.error("Failed to fetch stem player details data:", error);
-    return {
-      error: "An error occurred while fetching data",
-    };
-  }
-}
-
-/**
- * Register the data loader.
- */
-export function registerStemPlayerDetailsDataLoader(): void {
-  pageDataRegistry.registerPageDataLoader(PAGE, getStemPlayerData);
-  pageDataRegistry.registerPageDataLoader(PAGE, async (params) => {
-    const id = params?.id as string;
-    if (!id) return null;
-    return getStemPlayerDetailsData(id);
-  });
-
-  // Gallery items
-  pageDataRegistry.registerPageDataLoader(PAGE, async (params) => {
-    const ids = params?.ids as string[];
-    if (!ids) return null;
-    return getGalleryItemsByRemoteObjects(ids);
-  });
-}
 
 export default StemPlayerDetailsPage;

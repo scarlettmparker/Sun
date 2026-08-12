@@ -4,16 +4,15 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  MarkdownViewer,
 } from "@sun/components";
 
 import styles from "./gallery.module.css";
-import { getPageData, pageDataRegistry } from "@sun/ssr";
+import { usePageData } from "@sun/ssr/react";
 import { ListGalleryItemsQuery } from "~/generated/graphql";
-import { fetchListGalleryItems } from "~/utils/api";
-import { MarkdownViewer } from "@sun/components";
 
 const Gallery = () => {
-  const { data: galleryItems } = getPageData<
+  const { data: galleryItems } = usePageData<
     ListGalleryItemsQuery["galleryQueries"]["list"]
   >("galleryItems", "gallery");
 
@@ -54,43 +53,8 @@ const Gallery = () => {
           </CardBody>
         </Card>
       ))}
-      {/* <Card className={styles.gallery_card}>
-        <CardHeader>
-          <CardTitle>Card Title</CardTitle>
-          <CardDescription>Card Description</CardDescription>
-        </CardHeader>
-        <CardBody>Card Body</CardBody>
-        <CardFooter>Card Footer</CardFooter>
-      </Card> */}
     </div>
   );
 };
 
 export default Gallery;
-
-/**
- * Server-side data fetching function for Gallery page.
- */
-async function getGalleryData(): Promise<Record<string, unknown> | null> {
-  try {
-    const result = await fetchListGalleryItems();
-    if (result?.data && result.success) {
-      const galleryItems = (result.data as ListGalleryItemsQuery).galleryQueries
-        .list;
-      if (galleryItems) {
-        return { galleryItems: galleryItems };
-      }
-    }
-    return null;
-  } catch (error) {
-    console.error("Failed to fetch gallery items:", error);
-    return null;
-  }
-}
-
-/**
- * Register the data loader for this page.
- */
-export function registerGalleryDataLoader(): void {
-  pageDataRegistry.registerPageDataLoader("gallery", getGalleryData);
-}

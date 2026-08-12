@@ -1,6 +1,5 @@
 /**
- * Generic API helper for making GraphQL requests.
- * Handles fetching data from the GraphQL server with error handling.
+ * GraphQL API helpers, all server-side via executeDocument.
  */
 
 import {
@@ -13,245 +12,57 @@ import {
   CreateBlogPostMutation,
   ListGalleryItemsDocument,
   ListGalleryItemsByRemoteObjectsDocument,
-  LocateGalleryItemDocument,
+  HubRegistryDocument,
+  SaveRegistryDocument,
+  type HubRegistryInput,
+  type HubRegistryQuery,
+  type SaveRegistryMutation,
 } from "../generated/graphql";
-import { print, DocumentNode } from "graphql";
+import { executeDocument } from "@sun/api";
 
-export type ApiResponse<T> = {
-  success: boolean;
-  data?: T;
-  error?: string;
-  statusCode?: number;
-};
-
-/**
- * Type definition for the operation registry with strong typing.
- */
-type OperationRegistry = {
-  blogQueries: {
-    listBlogPosts: DocumentNode;
-    locateBlogPost: DocumentNode;
-  };
-  blogMutations: {
-    createBlogPost: DocumentNode;
-  };
-  galleryQueries: {
-    listGalleryItems: DocumentNode;
-    listGalleryItemsByRemoteObjects: DocumentNode;
-    locateGalleryItem: DocumentNode;
-  };
-  songQueries: {
-    list: DocumentNode;
-    locate: DocumentNode;
-  };
-};
-
-/**
- * Registry of GraphQL operations mapped to their query documents.
- */
-const operationRegistry: OperationRegistry = {
-  blogQueries: {
-    listBlogPosts: ListBlogPostsDocument,
-    locateBlogPost: LocateBlogPostDocument,
-  },
-  blogMutations: {
-    createBlogPost: CreateBlogPostDocument,
-  },
-  galleryQueries: {
-    listGalleryItems: ListGalleryItemsDocument,
-    listGalleryItemsByRemoteObjects: ListGalleryItemsByRemoteObjectsDocument,
-    locateGalleryItem: LocateGalleryItemDocument,
-  },
-  songQueries: {
-    list: ListSongsDocument,
-    locate: LocateSongDocument,
-  },
-};
-
-/**
- * Retrieves a GraphQL operation document by its namespaced path.
- *
- * @param path The dot-separated path to the operation
- * @returns The DocumentNode if found, otherwise undefined.
- */
-function getOperation(path: string): DocumentNode | undefined {
-  const parts = path.split(".");
-  let current: unknown = operationRegistry;
-  for (const part of parts) {
-    if (
-      current &&
-      typeof current === "object" &&
-      current !== null &&
-      part in current
-    ) {
-      current = (current as Record<string, unknown>)[part];
-    } else {
-      return undefined;
-    }
-  }
-  return current as DocumentNode;
-}
-
-/**
- * Registers a new GraphQL operation with its query document.
- *
- * @param operationName The name of the operation.
- * @param queryDocument The GraphQL query document.
- */
-export function registerGraphQLOperation(
-  operationName: string,
-  queryDocument: DocumentNode,
-): void {
-  (operationRegistry as Record<string, unknown>)[operationName] = queryDocument;
-}
-
-/**
- * Retry with backoff function.
- */
-const retryWithBackoff = async <T>(
-  fn: () => Promise<T>,
-  delays: number[],
-): Promise<T> => {
-  let lastError: unknown;
-  for (let i = 0; i <= delays.length; i++) {
-    try {
-      return await fn();
-    } catch (error) {
-      lastError = error;
-      if (i < delays.length) {
-        await new Promise((resolve) => setTimeout(resolve, delays[i]));
-      }
-    }
-  }
-  throw lastError;
-};
-
-/**
- * Generic function to fetch data from GraphQL server.
- *
- * @param operationName The name of the GraphQL operation to execute.
- * @param variables Variables for the operation (if any).
- * @returns Promise resolving to ApiResponse.
- */
-export async function fetchGraphQLData<T>(
-  operationName: string,
-  variables?: Record<string, unknown>,
-): Promise<ApiResponse<T>> {
-  const endpoint =
-    process.env.GRAPHQL_ENDPOINT || "http://localhost:8083/graphql";
-
-  const query = getOperation(operationName);
-  if (!query) {
-    return {
-      success: false,
-      error: "Unknown operation",
-      statusCode: 400,
-    };
-  }
-
-  try {
-    return await retryWithBackoff(async () => {
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          query: print(query),
-          variables,
-        }),
-      });
-
-      if (!response.ok) {
-        throw {
-          message: `HTTP ${response.status}: ${response.statusText}`,
-          statusCode: response.status,
-        };
-      }
-
-      const result = await response.json();
-
-      if (result.errors) {
-        throw {
-          message: result.errors
-            .map((e: { message: string }) => e.message)
-            .join(", "),
-          statusCode: 400,
-        };
-      }
-
-      if (!result.data) {
-        throw { message: "No data returned", statusCode: 400 };
-      }
-
-      return {
-        success: true,
-        data: result.data,
-      };
-    }, [500, 2000, 4000, 6000]);
-  } catch (error) {
-    if (
-      error &&
-      typeof error === "object" &&
-      "message" in error &&
-      "statusCode" in error
-    ) {
-      return {
-        success: false,
-        error: error.message as string,
-        statusCode: error.statusCode as number,
-      };
-    }
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-      statusCode: 500,
-    };
-  }
-}
+export { executeDocument } from "@sun/api";
+export type { ApiResponse } from "@sun/api";
 
 /**
  * List operation for blog posts.
  */
 export async function fetchListBlogPosts() {
-  return fetchGraphQLData("blogQueries.listBlogPosts");
+  return executeDocument(ListBlogPostsDocument);
 }
 
 /**
  * Locate operation for blog posts.
  */
 export async function fetchLocateBlogPost(id: string) {
-  return fetchGraphQLData("blogQueries.locateBlogPost", { id });
+  return executeDocument(LocateBlogPostDocument, { id });
 }
 
 /**
  * List operation.
  */
 export async function fetchListSongs() {
-  return fetchGraphQLData("songQueries.list");
+  return executeDocument(ListSongsDocument);
 }
 
 /**
  * Locate operation for songs.
  */
 export async function fetchLocateSong(id: string) {
-  return fetchGraphQLData("songQueries.locate", { id });
+  return executeDocument(LocateSongDocument, { id });
 }
 
 /**
  * List gallery items.
  */
 export async function fetchListGalleryItems() {
-  return fetchGraphQLData("galleryQueries.listGalleryItems");
+  return executeDocument(ListGalleryItemsDocument);
 }
 
 /**
  * List gallery items by foreign objects.
  */
 export async function fetchListGalleryItemsByRemoteObjects(ids: string[]) {
-  return fetchGraphQLData("galleryQueries.listGalleryItemsByRemoteObjects", {
-    ids,
-  });
+  return executeDocument(ListGalleryItemsByRemoteObjectsDocument, { ids });
 }
 
 /**
@@ -261,8 +72,22 @@ export async function mutateCreateBlogPost(
   title: string,
   input: BlogPostInput,
 ) {
-  return fetchGraphQLData<CreateBlogPostMutation>(
-    "blogMutations.createBlogPost",
-    { title, input },
-  );
+  return executeDocument<CreateBlogPostMutation>(CreateBlogPostDocument, {
+    title,
+    input,
+  });
+}
+
+/**
+ * Fetches the hub registry.
+ */
+export async function fetchHubRegistry() {
+  return executeDocument<HubRegistryQuery>(HubRegistryDocument);
+}
+
+/**
+ * Persists the hub registry.
+ */
+export async function saveHubRegistry(input: HubRegistryInput) {
+  return executeDocument<SaveRegistryMutation>(SaveRegistryDocument, { input });
 }

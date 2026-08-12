@@ -8,6 +8,8 @@ import com.sun.gaia.codegen.types.AuthResult;
 import com.sun.gaia.codegen.types.Configuration;
 import com.sun.gaia.codegen.types.ConfigurationInput;
 import com.sun.gaia.codegen.types.GaiaMutations;
+import com.sun.gaia.codegen.types.HubRegistry;
+import com.sun.gaia.codegen.types.HubRegistryInput;
 import com.sun.gaia.codegen.types.IpWhitelistEntry;
 import com.sun.gaia.codegen.types.IpWhitelistEntryInput;
 import com.sun.gaia.codegen.types.TailscaleDevice;
@@ -361,6 +363,29 @@ public class GaiaDataFetcher {
   @PreAuthorize("@permissions.has('graphql.gaia.registerPropertySetSchema')")
   public PropertySetSchema registerPropertySetSchema(PropertySetSchemaInput input) {
     return gaiaGraphQLService.registerPropertySetSchema(input);
+  }
+
+  /**
+   * Returns the hub registry.
+   *
+   * @return the hub registry
+   */
+  @DgsData(parentType = "GaiaQueries", field = "hubRegistry")
+  @PreAuthorize("permitAll()")
+  public HubRegistry hubRegistry() {
+    return gaiaGraphQLService.hubRegistry();
+  }
+
+  /**
+   * Validates and persists the hub registry.
+   *
+   * @param input the hub registry input
+   * @return the saved hub registry
+   */
+  @DgsData(parentType = "GaiaMutations", field = "saveRegistry")
+  @PreAuthorize("@permissions.has('graphql.gaia.hubRegistry')")
+  public HubRegistry saveRegistry(HubRegistryInput input) {
+    return gaiaGraphQLService.saveRegistry(input);
   }
 
   /**

@@ -1,5 +1,4 @@
-import { fetchListSongs } from "~/utils/api";
-import { pageDataRegistry, getPageData } from "@sun/ssr";
+import { usePageData } from "@sun/ssr/react";
 import { ListSongsQuery } from "~/generated/graphql";
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "@sun/components";
@@ -11,13 +10,9 @@ import { Music } from "lucide-react";
  * Stem Player Page component.
  */
 const StemPlayerPage = () => {
-  const { data: songs } = getPageData<
+  const { data: songs } = usePageData<
     ListSongsQuery["stemPlayerQueries"]["list"]
   >("songs", "stem-player");
-
-  if (!songs) {
-    return <>Loading...</>;
-  }
 
   return (
     <>
@@ -40,34 +35,5 @@ const StemPlayerPage = () => {
     </>
   );
 };
-
-/**
- * Server-side data fetching function for StemPlayerPage.
- */
-export async function getStemPlayerData(): Promise<Record<
-  string,
-  unknown
-> | null> {
-  try {
-    const result = await fetchListSongs();
-    if (result?.data && result?.success) {
-      const songs = (result.data as ListSongsQuery).stemPlayerQueries.list;
-      if (songs) {
-        return { songs: songs };
-      }
-    }
-    return null;
-  } catch (error) {
-    console.error("Failed to fetch stem player details data:", error);
-    return null;
-  }
-}
-
-/**
- * Register the data loader for this page.
- */
-export function registerStemPlayerDataLoader(): void {
-  pageDataRegistry.registerPageDataLoader("stem-player", getStemPlayerData);
-}
 
 export default StemPlayerPage;
