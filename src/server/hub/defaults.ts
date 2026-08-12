@@ -57,5 +57,15 @@ export const DEFAULT_REGISTRY: HubRegistry = {
       description: "Browser MAME emulator",
       enabled: true,
     },
+    {
+      key: "filestore",
+      name: "Filestore",
+      dir: "../Filestore",
+      devPort: 5174,
+      prodPort: 5174,
+      url: "https://filestore.int.scarlettparker.co.uk",
+      description: "File storage and sharing",
+      enabled: true,
+    },
   ],
 };

@@ -9,15 +9,17 @@
 }
 
 .header {
-  height: 12rem;
+  width: 30rem;
+  height: 10rem;
+  margin: calc(var(--lg) * 2) auto 0;
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
   gap: var(--lg);
 }
 
 .card {
-  height: 14rem;
+  height: 8rem;
 }

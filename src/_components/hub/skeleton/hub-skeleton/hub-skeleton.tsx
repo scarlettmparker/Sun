@@ -5,7 +5,7 @@ const HubSkeleton = () => (
   <div className={styles.hub_skeleton}>
     <Skeleton className={styles.header} />
     <div className={styles.grid}>
-      {Array.from({ length: 4 }, (_, i) => (
+      {Array.from({ length: 5 }, (_, i) => (
         <Skeleton key={i} className={styles.card} />
       ))}
     </div>
