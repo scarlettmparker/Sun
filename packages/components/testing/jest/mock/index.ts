@@ -4,9 +4,15 @@ export * from "./audio-api-mock";
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 class ResizeObserverMock {
-  observe() { /* noop */ }
-  unobserve() { /* noop */ }
-  disconnect() { /* noop */ }
+  observe() {
+    /* noop */
+  }
+  unobserve() {
+    /* noop */
+  }
+  disconnect() {
+    /* noop */
+  }
 }
 
 global.ResizeObserver = ResizeObserverMock as unknown as typeof ResizeObserver;

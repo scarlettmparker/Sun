@@ -106,10 +106,7 @@ export interface MutationDefinition<TBody> {
   /**
    * Handler that receives the typed request body and returns the result.
    */
-  handler: (
-    body: TBody,
-    context: MutationContext,
-  ) => Promise<MutationResult>;
+  handler: (body: TBody, context: MutationContext) => Promise<MutationResult>;
 }
 
 /**

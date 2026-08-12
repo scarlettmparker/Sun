@@ -26,6 +26,15 @@ const AppForm = () => {
   const [saving, setSaving] = useState(false);
   const open = creating || Boolean(editing);
 
+  let submitLabel: string;
+  if (saving) {
+    submitLabel = t("form.saving");
+  } else if (editing) {
+    submitLabel = t("form.update");
+  } else {
+    submitLabel = t("form.create");
+  }
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (saving) {
@@ -50,7 +59,9 @@ const AppForm = () => {
   return (
     <Dialog open={open} onOpenChange={(o: boolean) => !o && closeForm()}>
       <DialogHeader>
-        <DialogTitle>{editing ? t("form.update") : t("form.create")}</DialogTitle>
+        <DialogTitle>
+          {editing ? t("form.update") : t("form.create")}
+        </DialogTitle>
       </DialogHeader>
       <DialogBody>
         <Form onSubmit={handleSubmit}>
@@ -115,7 +126,7 @@ const AppForm = () => {
               {t("cancel")}
             </Button>
             <Button type="submit" disabled={saving}>
-              {saving ? t("form.saving") : editing ? t("form.update") : t("form.create")}
+              {submitLabel}
             </Button>
           </FormFooter>
         </Form>

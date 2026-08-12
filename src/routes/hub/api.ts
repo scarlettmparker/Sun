@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import type { AppRuntimeStatus } from "~/server/hub/types";
 
 const TOKEN_KEY = "hubAdminToken";
@@ -20,12 +21,33 @@ export function setHubToken(token: string): void {
 }
 
 /**
- * Fetches the live per-app statuses.
+ * Subscribes to the status stream, filling in each app as it resolves.
  */
-export async function fetchHubStatuses(): Promise<AppRuntimeStatus[]> {
-  const response = await fetch("/hub/api/status");
-  if (!response.ok) {
-    return [];
-  }
-  return (await response.json()) as AppRuntimeStatus[];
+export function useHubStatusStream(): Record<string, AppRuntimeStatus> {
+  const [statuses, setStatuses] = useState<Record<string, AppRuntimeStatus>>(
+    {},
+  );
+
+  useEffect(() => {
+    const source = new EventSource("/hub/api/status/stream");
+    source.onopen = () => setStatuses({});
+
+    source.addEventListener("status", (event) => {
+      const status = JSON.parse(event.data) as AppRuntimeStatus;
+      setStatuses((previous) => ({ ...previous, [status.key]: status }));
+    });
+
+    source.addEventListener("remove", (event) => {
+      const key = (JSON.parse(event.data) as { key: string }).key;
+      setStatuses((previous) => {
+        const next = { ...previous };
+        delete next[key];
+        return next;
+      });
+    });
+
+    return () => source.close();
+  }, []);
+
+  return statuses;
 }

@@ -19,7 +19,9 @@ const Figure = ({ src, caption, className, ...rest }: FigureProps) => {
   return (
     <figure className={cn(styles.figure, className)}>
       <img className={styles.figure_image} src={src} {...rest} />
-      {caption && <figcaption className={styles.figure_caption}>{caption}</figcaption>}
+      {caption && (
+        <figcaption className={styles.figure_caption}>{caption}</figcaption>
+      )}
     </figure>
   );
 };

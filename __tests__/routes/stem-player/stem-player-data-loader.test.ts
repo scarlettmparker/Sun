@@ -47,7 +47,10 @@ describe("Stem Player Data Loader", () => {
   });
 
   it("returns an empty song list when the fetch fails", async () => {
-    mockFetchListSongs.mockResolvedValue({ success: false, error: "API Error" });
+    mockFetchListSongs.mockResolvedValue({
+      success: false,
+      error: "API Error",
+    });
 
     await expect(loadSongs()).resolves.toEqual({ songs: [] });
     expect(mockFetchListSongs).toHaveBeenCalledTimes(1);

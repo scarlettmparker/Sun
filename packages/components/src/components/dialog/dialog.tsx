@@ -83,7 +83,9 @@ const Dialog = (props: DialogProps) => {
   const dialogRef = useRef<HTMLElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<{ w: number; h: number } | null>(null);
-  const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(null);
+  const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(
+    null,
+  );
   const [dragPos, setDragPos] = useState(position ?? { top: 100, left: 100 });
 
   useEffect(() => {
@@ -251,7 +253,10 @@ const Dialog = (props: DialogProps) => {
     >
       <div
         ref={wrapperRef}
-        className={cn(styles.dialog_wrapper, isModal && styles.dialog_modal_active)}
+        className={cn(
+          styles.dialog_wrapper,
+          isModal && styles.dialog_modal_active,
+        )}
       >
         {isModal && (
           <div
@@ -272,10 +277,14 @@ const Dialog = (props: DialogProps) => {
           onKeyDown={handleKeyDown}
           tabIndex={-1}
           onMouseDown={draggable ? handleDragStart : undefined}
-          style={draggable ? {
-            top: `${dragPos.top}px`,
-            left: `${dragPos.left}px`,
-          } : undefined}
+          style={
+            draggable
+              ? {
+                  top: `${dragPos.top}px`,
+                  left: `${dragPos.left}px`,
+                }
+              : undefined
+          }
           {...rest}
         >
           <button

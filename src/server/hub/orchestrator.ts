@@ -17,6 +17,12 @@ const LOG_DIR = path.join(DATA_DIR, "logs");
 const GRACE_MS = 5_000;
 
 /**
+ * Hard-coded suffix wildcard allowing Vite dev servers to accept the
+ * reverse-proxied int hosts. TODO: decide whether this should be configurable.
+ */
+const HUB_ALLOWED_HOSTS = ".int.scarlettparker.co.uk";
+
+/**
  * Reads the persisted process state, defaulting to empty.
  */
 function readState(): HubState {
@@ -58,7 +64,7 @@ function isPortOpen(port: number): Promise<boolean> {
       socket.destroy();
       resolve(open);
     };
-    socket.setTimeout(400);
+    socket.setTimeout(200);
     socket.once("connect", () => done(true));
     socket.once("timeout", () => done(false));
     socket.once("error", () => done(false));
@@ -106,6 +112,11 @@ function spawnProcess(app: HubAppConfig, mode: HubMode): number | null {
   }
   fs.mkdirSync(LOG_DIR, { recursive: true });
   const logFd = fs.openSync(path.join(LOG_DIR, `${app.key}.log`), "a");
+  const inheritedHosts = (process.env.ALLOWED_HOSTS ?? "")
+    .split(",")
+    .map((host) => host.trim())
+    .filter(Boolean);
+  const allowedHosts = [...new Set([...inheritedHosts, HUB_ALLOWED_HOSTS])];
   const child = spawn("npm", ["run", script], {
     cwd: dir,
     detached: true,
@@ -114,6 +125,7 @@ function spawnProcess(app: HubAppConfig, mode: HubMode): number | null {
       ...process.env,
       SERVER_PORT: String(port),
       VITE_SERVER_BASE: app.url,
+      ALLOWED_HOSTS: allowedHosts.join(","),
     },
   });
   child.on("error", () => undefined);
@@ -200,6 +212,20 @@ export function restartApp(app: HubAppConfig, mode: HubMode) {
 }
 
 /**
+ * Status of the Sun app itself, which always reports up.
+ */
+function selfStatus(app: HubAppConfig): AppRuntimeStatus {
+  return {
+    key: app.key,
+    port: app.devPort,
+    up: true,
+    managed: true,
+    external: false,
+    pid: null,
+  };
+}
+
+/**
  * Live status of a single app.
  */
 export async function statusOf(
@@ -211,17 +237,22 @@ export async function statusOf(
   const candidates = [record?.port, app.devPort, app.prodPort].filter(
     (port): port is number => typeof port === "number",
   );
-  for (const port of [...new Set(candidates)]) {
-    if (await isPortOpen(port)) {
-      return {
-        key: app.key,
-        port,
-        up: true,
-        managed,
-        external: !managed,
-        pid: managed ? (record?.pid ?? null) : null,
-      };
-    }
+  const probes = await Promise.all(
+    [...new Set(candidates)].map(async (port) => ({
+      port,
+      open: await isPortOpen(port),
+    })),
+  );
+  const open = probes.find((probe) => probe.open);
+  if (open) {
+    return {
+      key: app.key,
+      port: open.port,
+      up: true,
+      managed,
+      external: !managed,
+      pid: managed ? (record?.pid ?? null) : null,
+    };
   }
   return {
     key: app.key,
@@ -234,28 +265,22 @@ export async function statusOf(
 }
 
 /**
- * Live status of every app in the registry.
+ * Probes every app concurrently, reporting each status as it resolves.
+ *
+ * @returns The statuses in registry order.
  */
-export async function allStatuses(
+export async function probeStatuses(
   registry: HubRegistry,
+  onStatus: (status: AppRuntimeStatus) => void,
 ): Promise<AppRuntimeStatus[]> {
   const state = readState();
-  const statuses: AppRuntimeStatus[] = [];
-  for (const app of registry.apps) {
-    if (app.self) {
-      statuses.push({
-        key: app.key,
-        port: app.devPort,
-        up: true,
-        managed: true,
-        external: false,
-        pid: null,
-      });
-      continue;
-    }
-    statuses.push(await statusOf(app, state));
-  }
-  return statuses;
+  return Promise.all(
+    registry.apps.map(async (app) => {
+      const status = app.self ? selfStatus(app) : await statusOf(app, state);
+      onStatus(status);
+      return status;
+    }),
+  );
 }
 
 /**

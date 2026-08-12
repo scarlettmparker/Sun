@@ -81,7 +81,9 @@ describe("inlineCss", () => {
   it("should handle errors gracefully", async () => {
     mockedPath.resolve.mockImplementation(() => "src/styles");
     mockedFs.readdir.mockRejectedValue(new Error("Read error"));
-    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const consoleWarnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => {});
 
     const result = await inlineCss(true, []);
 

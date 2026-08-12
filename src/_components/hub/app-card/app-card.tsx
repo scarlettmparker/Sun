@@ -13,6 +13,25 @@ import { useHub } from "~/routes/hub/hub-context";
 import styles from "./app-card.module.css";
 import type { AppRuntimeStatus, HubAppConfig } from "~/server/hub/types";
 
+type StatusKey = "self" | "up" | "down" | "external";
+
+/**
+ * Resolves the status message key for an app.
+ */
+function statusKeyFor(
+  isSelf: boolean,
+  up: boolean,
+  external: boolean,
+): StatusKey {
+  if (isSelf) {
+    return "self";
+  }
+  if (!up) {
+    return "down";
+  }
+  return external ? "external" : "up";
+}
+
 type AppCardProps = {
   /**
    * App to display.
@@ -34,13 +53,7 @@ const AppCard = ({ app, status }: AppCardProps) => {
   const up = status?.up ?? false;
   const external = status?.external ?? false;
   const isSelf = app.self === true;
-  const statusKey = isSelf
-    ? "self"
-    : up
-      ? external
-        ? "external"
-        : "up"
-      : "down";
+  const statusKey = statusKeyFor(isSelf, up, external);
 
   return (
     <Card className={styles.card}>

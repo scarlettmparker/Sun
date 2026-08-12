@@ -16,9 +16,8 @@ type CookieBannerContextValue = {
 /**
  * Consent actions for the nearest banner.
  */
-export const CookieBannerContext = createContext<CookieBannerContextValue | null>(
-  null,
-);
+export const CookieBannerContext =
+  createContext<CookieBannerContextValue | null>(null);
 
 const COOKIE_LIFETIME_SECONDS = 60 * 60 * 24 * 365;
 
@@ -97,7 +96,11 @@ type CookieBannerContentProps = React.HTMLAttributes<HTMLDivElement>;
 /**
  * Groups the banner's text content.
  */
-const CookieBannerContent = ({ className, children, ...rest }: CookieBannerContentProps) => {
+const CookieBannerContent = ({
+  className,
+  children,
+  ...rest
+}: CookieBannerContentProps) => {
   return (
     <div {...rest} className={cn(styles.content, className)}>
       {children}
@@ -110,7 +113,11 @@ type CookieBannerTitleProps = React.HTMLAttributes<HTMLElement>;
 /**
  * Banner title.
  */
-const CookieBannerTitle = ({ className, children, ...rest }: CookieBannerTitleProps) => {
+const CookieBannerTitle = ({
+  className,
+  children,
+  ...rest
+}: CookieBannerTitleProps) => {
   return (
     <strong {...rest} className={cn(styles.title, className)}>
       {children}
@@ -140,7 +147,11 @@ type CookieBannerActionsProps = React.HTMLAttributes<HTMLDivElement>;
 /**
  * Groups the banner's action buttons.
  */
-const CookieBannerActions = ({ className, children, ...rest }: CookieBannerActionsProps) => {
+const CookieBannerActions = ({
+  className,
+  children,
+  ...rest
+}: CookieBannerActionsProps) => {
   return (
     <div {...rest} className={cn(styles.actions, className)}>
       {children}

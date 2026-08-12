@@ -9,7 +9,11 @@ import { mutationRegistry } from "./mutations";
 import { ServerRedirectError } from "./server-redirect";
 import { registerSecurity } from "./security";
 import { registerIpWhitelist, type IpWhitelistConfig } from "./ip-whitelist";
-import { setRequestCacheProvider, setRequestCookieProvider, setRequestIpProvider } from "./page-data";
+import {
+  setRequestCacheProvider,
+  setRequestCookieProvider,
+  setRequestIpProvider,
+} from "./page-data";
 import type { CacheRecord } from "./page-data";
 
 export { handleQuery } from "./query";

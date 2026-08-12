@@ -192,7 +192,9 @@ const BreadcrumbItem = (props: BreadcrumbItemProps) => {
   return (
     <>
       {renderContent()}
-      {!active && <span className={styles.breadcrumb_separator}>{separator}</span>}
+      {!active && (
+        <span className={styles.breadcrumb_separator}>{separator}</span>
+      )}
     </>
   );
 };

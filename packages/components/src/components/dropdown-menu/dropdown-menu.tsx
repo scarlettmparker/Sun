@@ -252,7 +252,11 @@ type DropdownMenuItemProps = React.ComponentProps<typeof Button> & {
 const DropdownMenuItem = (props: DropdownMenuItemProps) => {
   const { close } = useDropdownMenu();
   return (
-    <MenuItem {...props} className={styles.dropdown_menu_item} closeMenu={close} />
+    <MenuItem
+      {...props}
+      className={styles.dropdown_menu_item}
+      closeMenu={close}
+    />
   );
 };
 
@@ -281,7 +285,11 @@ type DropdownMenuSubProps = React.HTMLAttributes<HTMLDivElement>;
 const DropdownMenuSub = (props: DropdownMenuSubProps) => {
   const { resetNonce } = useDropdownMenu();
   return (
-    <MenuSub {...props} className={styles.dropdown_menu_sub} resetNonce={resetNonce} />
+    <MenuSub
+      {...props}
+      className={styles.dropdown_menu_sub}
+      resetNonce={resetNonce}
+    />
   );
 };
 
@@ -295,7 +303,8 @@ const DropdownMenuSubTrigger = (props: DropdownMenuSubTriggerProps) => (
   <MenuSubTrigger
     {...props}
     className={styles.dropdown_menu_subtrigger}
-    arrowClassName={styles.dropdown_menu_subarrow}   />
+    arrowClassName={styles.dropdown_menu_subarrow}
+  />
 );
 
 type DropdownMenuSubContentProps = React.HTMLAttributes<HTMLDivElement>;

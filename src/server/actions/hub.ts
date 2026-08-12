@@ -57,8 +57,6 @@ export async function setHubMode(
 /**
  * Spawns every enabled app whose port is free.
  */
-export async function reconcileHubApps(
-  token: string,
-): Promise<MutationResult> {
+export async function reconcileHubApps(token: string): Promise<MutationResult> {
   return executeMutation("hub/reconcile", { token });
 }

@@ -59,17 +59,20 @@ export function registerIpWhitelist(
   fetch();
   setInterval(fetch, config.refreshIntervalMs ?? 60000);
 
-  app.addHook("onRequest", async (request: FastifyRequest, reply: FastifyReply) => {
-    if (bypass) return;
-    if (!patterns.length) return;
+  app.addHook(
+    "onRequest",
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      if (bypass) return;
+      if (!patterns.length) return;
 
-    const path = request.url.split("?")[0];
-    if (config.exemptPaths?.some((p) => path.startsWith(p))) return;
+      const path = request.url.split("?")[0];
+      if (config.exemptPaths?.some((p) => path.startsWith(p))) return;
 
-    const ip = request.ip;
-    const allowed = patterns.some((p) => ipMatchesCidr(ip, p));
-    if (!allowed) {
-      reply.code(404).send();
-    }
-  });
+      const ip = request.ip;
+      const allowed = patterns.some((p) => ipMatchesCidr(ip, p));
+      if (!allowed) {
+        reply.code(404).send();
+      }
+    },
+  );
 }

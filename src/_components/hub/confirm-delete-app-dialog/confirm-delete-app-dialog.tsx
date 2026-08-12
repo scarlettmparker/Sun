@@ -17,7 +17,10 @@ const ConfirmDeleteAppDialog = () => {
   const { deleting, confirmDelete, closeDelete } = useHub();
 
   return (
-    <Dialog open={Boolean(deleting)} onOpenChange={(o: boolean) => !o && closeDelete()}>
+    <Dialog
+      open={Boolean(deleting)}
+      onOpenChange={(o: boolean) => !o && closeDelete()}
+    >
       <DialogHeader>
         <DialogTitle>
           {t("delete-title", { app: deleting?.name ?? "" })}

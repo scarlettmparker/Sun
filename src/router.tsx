@@ -1,6 +1,7 @@
 import { RouteObject, useRoutes } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import BlogSkeleton from "./_components/blog/skeleton/blog-skeleton";
+import HubSkeleton from "./_components/hub/skeleton/hub-skeleton";
 import Gallery from "./routes/gallery";
 
 const Index = lazy(() => import("~/routes/index"));
@@ -53,7 +54,7 @@ export const routes: RouteObject[] = [
   {
     path: "hub",
     element: (
-      <Suspense fallback={null}>
+      <Suspense fallback={<HubSkeleton />}>
         <HubPage />
       </Suspense>
     ),

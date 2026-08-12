@@ -52,7 +52,9 @@ describe("applyTheme", () => {
   it("persists the applied theme to localStorage", () => {
     applyTheme(greekTheme);
 
-    expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe(JSON.stringify(greekTheme));
+    expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe(
+      JSON.stringify(greekTheme),
+    );
   });
 
   it("only overrides the properties present in a partial payload", () => {
@@ -70,7 +72,9 @@ describe("applyTheme", () => {
 
     expect(cssVar("primary")).toBe("#d90429");
     expect(cssVar("tertiary")).toBe("#d03991");
-    expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe(JSON.stringify(defaultTheme));
+    expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe(
+      JSON.stringify(defaultTheme),
+    );
   });
 
   it("passes through arbitrary keys the gaia schema allows", () => {

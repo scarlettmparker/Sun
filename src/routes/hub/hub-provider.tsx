@@ -8,7 +8,7 @@ import {
 import { usePageData } from "@sun/ssr/react";
 import type { MutationResult } from "@sun/ssr";
 import { HubContext } from "./hub-context";
-import { fetchHubStatuses, getHubToken, setHubToken } from "./api";
+import { getHubToken, setHubToken, useHubStatusStream } from "./api";
 import {
   controlHubApp,
   createHubApp,
@@ -18,7 +18,6 @@ import {
   updateHubApp,
 } from "~/server/actions/hub";
 import type {
-  AppRuntimeStatus,
   ControlAction,
   HubAppConfig,
   HubMode,
@@ -37,35 +36,21 @@ type HubProviderProps = {
  */
 const HubProvider = ({ children }: HubProviderProps) => {
   const { data: registry } = usePageData<HubRegistry>("hubRegistry", "hub");
-  const [statuses, setStatuses] = useState<Record<string, AppRuntimeStatus>>({});
+  const statuses = useHubStatusStream();
   const [token, setToken] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<HubAppConfig | null>(null);
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState<HubAppConfig | null>(null);
 
-  const refreshStatuses = useCallback(async () => {
-    const stats = await fetchHubStatuses();
-    setStatuses(
-      Object.fromEntries(stats.map((status) => [status.key, status])),
-    );
-  }, []);
-
   useEffect(() => {
     setToken(getHubToken());
-    void refreshStatuses();
-    const interval = setInterval(() => void refreshStatuses(), 5_000);
-    return () => clearInterval(interval);
-  }, [refreshStatuses]);
+  }, []);
 
-  const run = useCallback(
-    async (action: () => Promise<MutationResult>) => {
-      const result = await action();
-      setError(result.__typename === "StandardError" ? result.message : null);
-      void refreshStatuses();
-    },
-    [refreshStatuses],
-  );
+  const run = useCallback(async (action: () => Promise<MutationResult>) => {
+    const result = await action();
+    setError(result.__typename === "StandardError" ? result.message : null);
+  }, []);
 
   const handleTokenChange = useCallback((value: string) => {
     setToken(value);
@@ -81,7 +66,9 @@ const HubProvider = ({ children }: HubProviderProps) => {
 
   const handleToggleEnabled = useCallback(
     (app: HubAppConfig) => {
-      void run(() => updateHubApp(app.key, { ...app, enabled: !app.enabled }, token));
+      void run(() =>
+        updateHubApp(app.key, { ...app, enabled: !app.enabled }, token),
+      );
     },
     [run, token],
   );

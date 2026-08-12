@@ -1,8 +1,4 @@
-import {
-  defineMutation,
-  makeCacheKey,
-  ServerRedirectError,
-} from "@sun/ssr";
+import { defineMutation, makeCacheKey, ServerRedirectError } from "@sun/ssr";
 import type { MutationResult } from "@sun/ssr";
 import { mutateCreateBlogPost } from "~/utils/api";
 import type { BlogPostInput } from "~/generated/graphql";

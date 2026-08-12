@@ -45,6 +45,13 @@ const StemPlayer = (props: StemPlayerProps) => {
     setMasterVolume,
   } = useStemPlayer(song);
 
+  let playKind: "stop" | "restart" | "play" = "play";
+  if (playing) {
+    playKind = "stop";
+  } else if (ended) {
+    playKind = "restart";
+  }
+
   /**
    * Handle seek by setting the audio time to the slider level.
    *
@@ -124,27 +131,11 @@ const StemPlayer = (props: StemPlayerProps) => {
       <div className={styles.controls}>
         <Button
           onClick={playing ? stop : play}
-          aria-label={
-            playing
-              ? t("controls.aria.stop")
-              : ended
-                ? t("controls.aria.restart")
-                : t("controls.aria.play")
-          }
-          title={
-            playing
-              ? t("controls.title.stop")
-              : ended
-                ? t("controls.title.restart")
-                : t("controls.title.play")
-          }
+          aria-label={t(`controls.aria.${playKind}`)}
+          title={t(`controls.title.${playKind}`)}
           aria-pressed={playing}
         >
-          {playing
-            ? t("controls.stop")
-            : ended
-              ? t("controls.restart")
-              : t("controls.play")}
+          {t(`controls.${playKind}`)}
         </Button>
         {/* Time/seeking */}
         <Button

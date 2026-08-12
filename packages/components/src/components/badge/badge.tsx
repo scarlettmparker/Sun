@@ -13,10 +13,7 @@ type BadgeProps = {
  */
 const Badge = ({ variant = "default", className, ...rest }: BadgeProps) => {
   return (
-    <span
-      {...rest}
-      className={cn(styles.badge, styles[variant], className)}
-    />
+    <span {...rest} className={cn(styles.badge, styles[variant], className)} />
   );
 };
 

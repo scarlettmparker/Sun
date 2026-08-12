@@ -1,9 +1,5 @@
 import { timingSafeEqual } from "node:crypto";
-import {
-  defineLoader,
-  defineMutation,
-  makeCacheKey,
-} from "@sun/ssr";
+import { defineLoader, defineMutation, makeCacheKey } from "@sun/ssr";
 import type { MutationResult } from "@sun/ssr";
 import type { HubAppConfig, HubMode, HubRegistry } from "./types";
 import { getRegistry, saveRegistry } from "./store";
@@ -14,15 +10,17 @@ import {
   reconcile,
   applyMode,
 } from "./orchestrator";
+import { emitStatusRescan } from "./status-events";
 
 const MODES: HubMode[] = ["dev", "serve"];
 
 const REGISTRY_CACHE_KEY = makeCacheKey("hub:hubRegistry", {});
 
 /**
- * Successful mutation result.
+ * Successful mutation result, requesting a status rescan.
  */
 function ok(message: string): MutationResult {
+  emitStatusRescan();
   return {
     __typename: "QuerySuccess",
     message,
@@ -48,10 +46,7 @@ function authorized(body: Record<string, unknown>): boolean {
   const submitted = typeof body.token === "string" ? body.token : "";
   const expected = Buffer.from(expectedToken);
   const actual = Buffer.from(submitted);
-  return (
-    expected.length === actual.length &&
-    timingSafeEqual(expected, actual)
-  );
+  return expected.length === actual.length && timingSafeEqual(expected, actual);
 }
 
 /**

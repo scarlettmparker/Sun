@@ -97,9 +97,7 @@ export async function getRegistry(): Promise<HubRegistry> {
     return cache.registry;
   }
   const result = await withTimeout(fetchHubRegistry(), 2_500);
-  const stored = result?.success
-    ? result.data?.gaiaQueries?.hubRegistry
-    : null;
+  const stored = result?.success ? result.data?.gaiaQueries?.hubRegistry : null;
   const registry = stored ? fromGqlRegistry(stored) : DEFAULT_REGISTRY;
   cache = { registry, at: Date.now() };
   return registry;

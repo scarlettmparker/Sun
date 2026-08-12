@@ -111,9 +111,7 @@ export function getRequestCookie(): string | undefined {
 
 let requestIpProvider: (() => string | undefined) | null = null;
 
-export function setRequestIpProvider(
-  provider: () => string | undefined,
-): void {
+export function setRequestIpProvider(provider: () => string | undefined): void {
   requestIpProvider = provider;
 }
 
