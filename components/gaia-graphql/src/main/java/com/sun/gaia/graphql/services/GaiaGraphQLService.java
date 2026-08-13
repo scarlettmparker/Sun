@@ -3,6 +3,7 @@ package com.sun.gaia.graphql.services;
 import com.sun.fates.model.PersonEntity;
 import com.sun.fates.service.PersonService;
 import com.sun.gaia.codegen.types.Account;
+import com.sun.gaia.codegen.types.ApiKey;
 import com.sun.gaia.codegen.types.AuthResult;
 import com.sun.gaia.codegen.types.Configuration;
 import com.sun.gaia.codegen.types.ConfigurationInput;
@@ -13,6 +14,7 @@ import com.sun.gaia.codegen.types.HubRegistry;
 import com.sun.gaia.codegen.types.HubRegistryInput;
 import com.sun.gaia.codegen.types.IpWhitelistEntry;
 import com.sun.gaia.codegen.types.IpWhitelistEntryInput;
+import com.sun.gaia.codegen.types.IssuedApiKey;
 import com.sun.gaia.codegen.types.TailscaleDevice;
 import com.sun.gaia.codegen.types.LoginInput;
 import com.sun.gaia.codegen.types.PagedAccounts;
@@ -26,6 +28,7 @@ import com.sun.gaia.codegen.types.QuerySuccess;
 import com.sun.gaia.codegen.types.RegisterInput;
 import com.sun.gaia.codegen.types.StandardError;
 import com.sun.gaia.graphql.mappers.AccountMapper;
+import com.sun.gaia.graphql.mappers.ApiKeyMapper;
 import com.sun.gaia.graphql.mappers.ConfigurationMapper;
 import com.sun.gaia.graphql.mappers.PropertySetMapper;
 import com.sun.gaia.model.AccountEntity;
@@ -34,6 +37,7 @@ import com.sun.gaia.model.PropertySetEntryEntity;
 import com.sun.gaia.model.enums.AccountStatus;
 import com.sun.gaia.repository.AccountRepository;
 import com.sun.gaia.service.AccountService;
+import com.sun.gaia.service.ApiKeyService;
 import com.sun.gaia.graphql.mappers.IpWhitelistMapper;
 import com.sun.gaia.graphql.mappers.TailscaleDeviceMapper;
 import com.sun.gaia.service.ConfigurationReconciler;
@@ -85,6 +89,7 @@ public class GaiaGraphQLService {
   private static final String HUB_ENTRY_NAME = "apps";
 
   private final AccountService accountService;
+  private final ApiKeyService apiKeyService;
   private final AccountRepository accountRepository;
   private final PersonService personService;
   private final JwtService jwtService;
@@ -92,6 +97,7 @@ public class GaiaGraphQLService {
   private final PasswordResetService passwordResetService;
   private final ReactivationService reactivationService;
   private final AccountMapper accountMapper;
+  private final ApiKeyMapper apiKeyMapper;
   private final PropertySetService propertySetService;
   private final ConfigurationService configurationService;
   private final ConfigurationReconciler configurationReconciler;
@@ -103,20 +109,30 @@ public class GaiaGraphQLService {
   private final TailscaleDeviceMapper tailscaleDeviceMapper;
   private final String appBaseUrl;
 
-  public GaiaGraphQLService(AccountService accountService, AccountRepository accountRepository,
-      PersonService personService,
-      JwtService jwtService, EmailService emailService,
-      PasswordResetService passwordResetService, ReactivationService reactivationService,
-      AccountMapper accountMapper,
-      PropertySetService propertySetService, ConfigurationService configurationService,
-      ConfigurationReconciler configurationReconciler, PropertySetMapper propertySetMapper,
-      ConfigurationMapper configurationMapper,
-      IpWhitelistService ipWhitelistService,
-      IpWhitelistMapper ipWhitelistMapper,
-      TailscaleDeviceService tailscaleDeviceService,
-      TailscaleDeviceMapper tailscaleDeviceMapper,
-      @Value("${app.base-url:http://localhost:5176}") String appBaseUrl) {
+  public GaiaGraphQLService(
+    AccountService accountService,
+    ApiKeyService apiKeyService,
+    AccountRepository accountRepository,
+    PersonService personService,
+    JwtService jwtService,
+    EmailService emailService,
+    PasswordResetService passwordResetService,
+    ReactivationService reactivationService,
+    AccountMapper accountMapper,
+    ApiKeyMapper apiKeyMapper,
+    PropertySetService propertySetService,
+    ConfigurationService configurationService,
+    ConfigurationReconciler configurationReconciler,
+    PropertySetMapper propertySetMapper,
+    ConfigurationMapper configurationMapper,
+    IpWhitelistService ipWhitelistService,
+    IpWhitelistMapper ipWhitelistMapper,
+    TailscaleDeviceService tailscaleDeviceService,
+    TailscaleDeviceMapper tailscaleDeviceMapper,
+    @Value("${app.base-url}") String appBaseUrl
+  ) {
     this.accountService = accountService;
+    this.apiKeyService = apiKeyService;
     this.accountRepository = accountRepository;
     this.personService = personService;
     this.jwtService = jwtService;
@@ -124,6 +140,7 @@ public class GaiaGraphQLService {
     this.passwordResetService = passwordResetService;
     this.reactivationService = reactivationService;
     this.accountMapper = accountMapper;
+    this.apiKeyMapper = apiKeyMapper;
     this.propertySetService = propertySetService;
     this.configurationService = configurationService;
     this.configurationReconciler = configurationReconciler;
@@ -591,6 +608,54 @@ public class GaiaGraphQLService {
         input.getOwnerKey(), input.getName(),
         input.getConfigurable() != null && input.getConfigurable(),
         asMap(input.getProperties())));
+  }
+
+  /**
+   * Issues a new API key for an account.
+   *
+   * @param accountUsername the account username
+   * @param name            the key label
+   * @return the issued key and its one-time plaintext
+   */
+  @Transactional
+  public IssuedApiKey issueApiKey(String accountUsername, String name) {
+    AccountEntity account = accountService.findByUsername(accountUsername)
+        .orElseThrow(() -> new IllegalArgumentException("Account not found: " + accountUsername));
+    ApiKeyService.ApiKeyIssue issue = apiKeyService.issueKey(account.getId(), name);
+    logger.info("Issued API key {} for account {}", issue.apiKey().getId(), account.getId());
+    return IssuedApiKey.newBuilder()
+        .apiKey(apiKeyMapper.map(issue.apiKey()))
+        .plaintextKey(issue.plaintextKey())
+        .build();
+  }
+
+  /**
+   * Disables an API key.
+   *
+   * @param id the key id
+   * @return a success result
+   */
+  @Transactional
+  public QueryResult revokeApiKey(String id) {
+    apiKeyService.revoke(UUID.fromString(id));
+    logger.info("Revoked API key {}", id);
+    return QuerySuccess.newBuilder().message("API key revoked").id(id).build();
+  }
+
+  /**
+   * Issues a fresh plaintext for an existing API key.
+   *
+   * @param id the key id
+   * @return the rotated key and its one-time plaintext
+   */
+  @Transactional
+  public IssuedApiKey rotateApiKey(String id) {
+    ApiKeyService.ApiKeyIssue issue = apiKeyService.rotate(UUID.fromString(id));
+    logger.info("Rotated API key {}", id);
+    return IssuedApiKey.newBuilder()
+        .apiKey(apiKeyMapper.map(issue.apiKey()))
+        .plaintextKey(issue.plaintextKey())
+        .build();
   }
 
   /**

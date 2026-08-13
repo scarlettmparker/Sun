@@ -22,6 +22,21 @@ type AuthResult {
   token: String!
 }
 
+type ApiKey {
+  id: ID!
+  name: String!
+  keyPrefix: String!
+  enabled: Boolean!
+  lastUsedAt: Date
+  createdAt: Date
+  updatedAt: Date
+}
+
+type IssuedApiKey {
+  apiKey: ApiKey!
+  plaintextKey: String!
+}
+
 input RegisterInput {
   username: String!
   password: String!
@@ -123,6 +138,9 @@ type GaiaMutations {
     value: JSON!
   ): PropertySetEntry
   registerPropertySetSchema(input: PropertySetSchemaInput!): PropertySetSchema
+  issueApiKey(accountUsername: String!, name: String!): IssuedApiKey
+  revokeApiKey(id: ID!): QueryResult
+  rotateApiKey(id: ID!): IssuedApiKey
   createConfiguration(input: ConfigurationInput!): Configuration
   updateConfiguration(id: ID!, input: ConfigurationInput!): Configuration
   deleteConfiguration(id: ID!): QueryResult

@@ -3,6 +3,8 @@ package com.sun.gaia.graphql.resolvers;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import com.sun.gaia.codegen.types.ApiKey;
+import com.sun.gaia.codegen.types.IssuedApiKey;
 import com.sun.gaia.codegen.types.QueryResult;
 import com.sun.gaia.codegen.types.QuerySuccess;
 import com.sun.gaia.graphql.services.GaiaGraphQLService;
@@ -49,6 +51,43 @@ class GaiaDataFetcherTest {
     when(service.unsuspendAccount("id")).thenReturn(mockResult);
 
     QueryResult result = fetcher.unsuspendAccount("id");
+
+    assertThat(result).isEqualTo(mockResult);
+  }
+
+  @Test
+  void issueApiKey_shouldDelegateToService() {
+    IssuedApiKey mockResult = IssuedApiKey.newBuilder()
+        .apiKey(ApiKey.newBuilder().id("id").name("bot").build())
+        .plaintextKey("ns_plaintext")
+        .build();
+    when(service.issueApiKey("niece-scarlett", "bot")).thenReturn(mockResult);
+
+    IssuedApiKey result = fetcher.issueApiKey("niece-scarlett", "bot");
+
+    assertThat(result).isEqualTo(mockResult);
+  }
+
+  @Test
+  void revokeApiKey_shouldDelegateToService() {
+    QueryResult mockResult = QuerySuccess.newBuilder()
+        .message("API key revoked").id("id").build();
+    when(service.revokeApiKey("id")).thenReturn(mockResult);
+
+    QueryResult result = fetcher.revokeApiKey("id");
+
+    assertThat(result).isEqualTo(mockResult);
+  }
+
+  @Test
+  void rotateApiKey_shouldDelegateToService() {
+    IssuedApiKey mockResult = IssuedApiKey.newBuilder()
+        .apiKey(ApiKey.newBuilder().id("id").name("bot").build())
+        .plaintextKey("ns_rotated")
+        .build();
+    when(service.rotateApiKey("id")).thenReturn(mockResult);
+
+    IssuedApiKey result = fetcher.rotateApiKey("id");
 
     assertThat(result).isEqualTo(mockResult);
   }

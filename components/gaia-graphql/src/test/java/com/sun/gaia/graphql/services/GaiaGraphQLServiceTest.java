@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -13,17 +14,22 @@ import static org.mockito.Mockito.when;
 import com.sun.fates.model.PersonEntity;
 import com.sun.fates.service.PersonService;
 import com.sun.gaia.codegen.types.AuthResult;
+import com.sun.gaia.codegen.types.ApiKey;
+import com.sun.gaia.codegen.types.IssuedApiKey;
 import com.sun.gaia.codegen.types.LoginInput;
 import com.sun.gaia.codegen.types.QueryResult;
 import com.sun.gaia.codegen.types.QuerySuccess;
 import com.sun.gaia.codegen.types.RegisterInput;
 import com.sun.gaia.codegen.types.StandardError;
 import com.sun.gaia.graphql.mappers.AccountMapper;
+import com.sun.gaia.graphql.mappers.ApiKeyMapper;
 import com.sun.gaia.model.AccountEntity;
+import com.sun.gaia.model.ApiKeyEntity;
 import com.sun.gaia.model.ReactivationTokenEntity;
 import com.sun.gaia.model.enums.AccountStatus;
 import com.sun.gaia.repository.AccountRepository;
 import com.sun.gaia.service.AccountService;
+import com.sun.gaia.service.ApiKeyService;
 import com.sun.gaia.service.EmailService;
 import com.sun.gaia.service.JwtService;
 import com.sun.gaia.service.PasswordResetService;
@@ -41,6 +47,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class GaiaGraphQLServiceTest {
 
   @Mock private AccountService accountService;
+  @Mock private ApiKeyService apiKeyService;
   @Mock private AccountRepository accountRepository;
   @Mock private PersonService personService;
   @Mock private JwtService jwtService;
@@ -48,6 +55,7 @@ class GaiaGraphQLServiceTest {
   @Mock private PasswordResetService passwordResetService;
   @Mock private ReactivationService reactivationService;
   @Mock private AccountMapper accountMapper;
+  @Mock private ApiKeyMapper apiKeyMapper;
 
   @InjectMocks private GaiaGraphQLService service;
 
@@ -336,5 +344,70 @@ class GaiaGraphQLServiceTest {
     QueryResult result = service.confirmAccountReactivation("bad-token");
 
     assertThat(result).isInstanceOf(StandardError.class);
+  }
+
+  @Test
+  void issueApiKey_returnsIssuedKeyWithPlaintext() {
+    UUID accountId = UUID.randomUUID();
+    AccountEntity account = new AccountEntity();
+    account.setId(accountId);
+    when(accountService.findByUsername("niece-scarlett")).thenReturn(Optional.of(account));
+    ApiKeyEntity key = new ApiKeyEntity();
+    key.setId(UUID.randomUUID());
+    when(apiKeyService.issueKey(accountId, "bot")).thenReturn(
+        new ApiKeyService.ApiKeyIssue(key, "ns_plaintext"));
+    ApiKey mapped = ApiKey.newBuilder().id(key.getId().toString()).name("bot").build();
+    when(apiKeyMapper.map(key)).thenReturn(mapped);
+
+    IssuedApiKey result = service.issueApiKey("niece-scarlett", "bot");
+
+    assertThat(result.getPlaintextKey()).isEqualTo("ns_plaintext");
+    assertThat(result.getApiKey()).isEqualTo(mapped);
+    verify(apiKeyService).issueKey(accountId, "bot");
+  }
+
+  @Test
+  void issueApiKey_throwsWhenAccountNotFound() {
+    when(accountService.findByUsername("missing")).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> service.issueApiKey("missing", "bot"))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void revokeApiKey_returnsQuerySuccess() {
+    UUID id = UUID.randomUUID();
+
+    QueryResult result = service.revokeApiKey(id.toString());
+
+    assertThat(result).isInstanceOf(QuerySuccess.class);
+    assertThat(((QuerySuccess) result).getId()).isEqualTo(id.toString());
+    verify(apiKeyService).revoke(id);
+  }
+
+  @Test
+  void revokeApiKey_throwsWhenKeyNotFound() {
+    UUID id = UUID.randomUUID();
+    doThrow(new IllegalArgumentException("API key not found: " + id)).when(apiKeyService).revoke(id);
+
+    assertThatThrownBy(() -> service.revokeApiKey(id.toString()))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void rotateApiKey_returnsRotatedPlaintext() {
+    UUID id = UUID.randomUUID();
+    ApiKeyEntity key = new ApiKeyEntity();
+    key.setId(id);
+    when(apiKeyService.rotate(id)).thenReturn(
+        new ApiKeyService.ApiKeyIssue(key, "ns_rotated"));
+    ApiKey mapped = ApiKey.newBuilder().id(key.getId().toString()).name("bot").build();
+    when(apiKeyMapper.map(key)).thenReturn(mapped);
+
+    IssuedApiKey result = service.rotateApiKey(id.toString());
+
+    assertThat(result.getPlaintextKey()).isEqualTo("ns_rotated");
+    assertThat(result.getApiKey()).isEqualTo(mapped);
+    verify(apiKeyService).rotate(id);
   }
 }

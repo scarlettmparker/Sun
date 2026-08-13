@@ -35,7 +35,7 @@ export function registerIpWhitelist(
   let patterns: string[] = [];
   let bypass = false;
 
-  const fetch = async () => {
+  const refreshWhitelist = async () => {
     try {
       const url = `${config.backendUrl}/api/public/ip-whitelist`;
       const headers: Record<string, string> = {};
@@ -56,8 +56,8 @@ export function registerIpWhitelist(
     }
   };
 
-  fetch();
-  setInterval(fetch, config.refreshIntervalMs ?? 60000);
+  refreshWhitelist();
+  setInterval(refreshWhitelist, config.refreshIntervalMs ?? 60000);
 
   app.addHook(
     "onRequest",

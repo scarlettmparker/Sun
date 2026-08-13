@@ -11,6 +11,7 @@ export type ApiResponse<T> = {
 let authCookieName: string | undefined;
 let clientSecret: string | undefined;
 let clientId: string | undefined;
+let apiKey: string | undefined;
 let appBaseUrl: string | undefined;
 
 /**
@@ -21,11 +22,13 @@ export function configureApi(config: {
   authCookie?: string;
   clientSecret?: string;
   clientId?: string;
+  apiKey?: string;
   appBaseUrl?: string;
 }): void {
   authCookieName = config.authCookie;
   clientSecret = config.clientSecret;
   clientId = config.clientId;
+  apiKey = config.apiKey;
   appBaseUrl = config.appBaseUrl;
 }
 
@@ -102,6 +105,9 @@ export async function executeDocument<T, V = Record<string, unknown>>(
     if (clientId) {
       headers["X-Client-Id"] = clientId;
     }
+  }
+  if (apiKey) {
+    headers["X-Api-Key"] = apiKey;
   }
   const clientIp = getRequestIp();
   if (clientIp) {
