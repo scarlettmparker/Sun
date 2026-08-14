@@ -48,7 +48,7 @@ type RoleCheckProps = {
    */
   roles: string[];
   /**
-   * `"all"` — user needs every role. `"any"` — user needs at least one.
+   * `"all"` - user needs every role. `"any"` - user needs at least one.
    *
    * @default "all"
    */

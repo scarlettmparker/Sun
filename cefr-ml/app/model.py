@@ -51,16 +51,18 @@ class CefrClassifier:
         )
         self.input_names = [i.name for i in self.session.get_inputs()]
 
-    def _bert_weight(self, word_count: int) -> float:
+    def _bert_weight(self, word_count: int, rare_ratio: float) -> float:
         """
-        Returns how much the BERT contributes for a given word count.
+        Returns how much the BERT contributes for a given text.
 
-        The feature probe is more reliable than the BERT on short inputs,
-        which the BERT struggles to judge, so it gains weight on longer text.
+        The feature probe is more reliable than the BERT on short inputs and on
+        long rare-vocabulary text, so it gains weight in those cases.
         """
         if word_count <= 50:
             return 0.4
         if word_count <= 120:
+            return 0.6
+        if rare_ratio > 0.4:
             return 0.6
         return 0.85
 
@@ -112,7 +114,7 @@ class CefrClassifier:
         features = extract_features(text, self.frequency)
         probe_probs = self._probe_probs(features)
         word_count = len(text.split())
-        bert_weight = self._bert_weight(word_count)
+        bert_weight = self._bert_weight(word_count, features["rareWordRatio"])
         model_probs = bert_weight * bert_probs + (1 - bert_weight) * probe_probs
 
         if word_count < self.tiny_words:

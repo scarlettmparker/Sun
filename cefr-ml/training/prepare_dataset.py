@@ -46,6 +46,7 @@ def main():
     parser.add_argument("--texts", default="data/reader_texts.jsonl")
     parser.add_argument("--paidika", default="data/paidika.jsonl")
     parser.add_argument("--lenguia", default="data/lenguia.jsonl")
+    parser.add_argument("--curated", default="data/curated.jsonl")
     parser.add_argument("--out", default="data/dataset.jsonl")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--max-per-level", type=int, default=300)
@@ -71,6 +72,8 @@ def main():
         add_source(args.paidika, "paidika")
     if Path(args.lenguia).exists():
         add_source(args.lenguia, "lenguia")
+    if Path(args.curated).exists():
+        add_source(args.curated, "curated")
 
     by_level = Counter(s["level"] for s in samples)
     print("samples per level (raw):", dict(sorted(by_level.items())))

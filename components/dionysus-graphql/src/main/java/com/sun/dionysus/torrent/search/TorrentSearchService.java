@@ -108,7 +108,7 @@ public class TorrentSearchService {
             }
 
             if (out.isEmpty()) {
-                log.info("Jackett returned no results — ensure at least one indexer "
+                log.info("Jackett returned no results - ensure at least one indexer "
                         + "is configured in the Jackett web UI (http://localhost:9117) "
                         + "and that it supports the selected categories");
             }

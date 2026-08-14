@@ -77,7 +77,7 @@ public class TorrentClientService implements SmartLifecycle {
       running = true;
       logger.info("Torrent client started, scratch dir {}", scratchRoot.getAbsolutePath());
     } catch (LinkageError e) {
-      logger.warn("libtorrent4j native library not available — torrent client disabled: {}", e.getMessage());
+      logger.warn("libtorrent4j native library not available - torrent client disabled: {}", e.getMessage());
     }
   }
 

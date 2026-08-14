@@ -68,7 +68,7 @@ public class TorrentCompletionService {
       List<String> uploadedKeys = upload(job, scratch);
 
       if (uploadedKeys.isEmpty()) {
-        logger.warn("No files uploaded for job {} — marking FAILED", jobId);
+        logger.warn("No files uploaded for job {} - marking FAILED", jobId);
         job.setStatus(TorrentStatus.FAILED);
         job.setErrorMessage("No files found to upload after download completed");
         jobService.save(job);

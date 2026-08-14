@@ -35,7 +35,7 @@ public class TorrentDownloadGateway {
   @Async("torrentTaskExecutor")
   public void downloadMagnet(UUID jobId, SessionManager session, String magnet, File saveDir) {
     if (session == null) {
-      logger.info("Torrent in dev mode — simulating download for job {}", jobId);
+      logger.info("Torrent in dev mode - simulating download for job {}", jobId);
       simulateDownload(jobId, 100_000_000L + RNG.nextInt(400_000_000));
       return;
     }
@@ -53,7 +53,7 @@ public class TorrentDownloadGateway {
   @Async("torrentTaskExecutor")
   public void downloadTorrentFile(UUID jobId, SessionManager session, byte[] torrentBytes, File saveDir) {
     if (session == null) {
-      logger.info("Torrent in dev mode — simulating download for job {}", jobId);
+      logger.info("Torrent in dev mode - simulating download for job {}", jobId);
       long totalBytes = 0L;
       try {
         TorrentInfo info = new TorrentInfo(torrentBytes);

@@ -22,10 +22,10 @@ import org.springframework.transaction.annotation.Transactional;
  *
  * <p>Pattern formats supported:
  * <ul>
- *   <li><b>CIDR</b> — e.g. {@code 192.168.0.0/24}. Proper subnet bitwise match.</li>
- *   <li><b>Glob</b> — e.g. {@code 192.168.0.*} or {@code 5.*}. {@code *} matches
+ *   <li><b>CIDR</b> - e.g. {@code 192.168.0.0/24}. Proper subnet bitwise match.</li>
+ *   <li><b>Glob</b> - e.g. {@code 192.168.0.*} or {@code 5.*}. {@code *} matches
  *       any sequence of characters.</li>
- *   <li><b>Exact</b> — a bare IP like {@code 10.0.0.1}. String equality.</li>
+ *   <li><b>Exact</b> - a bare IP like {@code 10.0.0.1}. String equality.</li>
  * </ul>
  *
  * <p>When {@code app.bypass-permissions=true} the check always passes (returns

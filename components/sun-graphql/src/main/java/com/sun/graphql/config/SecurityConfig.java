@@ -9,7 +9,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
- * Method-level authorization for GraphQL operations — active when permissions are
+ * Method-level authorization for GraphQL operations - active when permissions are
  * enforced (default). Disabled when {@code app.bypass-permissions=true}.
  */
 @Configuration
@@ -32,7 +32,7 @@ public class SecurityConfig {
 }
 
 /**
- * Replaces SecurityConfig when permissions are bypassed — no method-security
+ * Replaces SecurityConfig when permissions are bypassed - no method-security
  * annotations are evaluated, and the HTTP layer is wide open.
  */
 @Configuration
