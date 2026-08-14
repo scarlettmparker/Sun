@@ -50,9 +50,13 @@ class CefrDataset(Dataset):
                 sample["text"],
                 truncation=True,
                 max_length=max_len,
-                padding="max_length",
+                padding=False,
             )
-            self.encodings.append(enc)
+            self.encodings.append({
+                "input_ids": torch.tensor(enc["input_ids"]),
+                "attention_mask": torch.tensor(enc["attention_mask"]),
+                "token_type_ids": torch.tensor(enc.get("token_type_ids", [0] * len(enc["input_ids"]))),
+            })
             self.labels.append(LEVEL_INDEX[sample["level"]])
             self.text_ids.append(sample["textId"])
 
@@ -66,14 +70,46 @@ class CefrDataset(Dataset):
         """
         Returns the tensors for the sample at the given index.
         """
-        enc = self.encodings[i]
         return {
-            "input_ids": torch.tensor(enc["input_ids"]),
-            "attention_mask": torch.tensor(enc["attention_mask"]),
-            "token_type_ids": torch.tensor(enc.get("token_type_ids", [0] * len(enc["input_ids"]))),
+            **self.encodings[i],
             "labels": torch.tensor(self.labels[i]),
             "text_ids": self.text_ids[i],
         }
+
+
+def collate_batch(batch):
+    """
+    Pads a batch to its longest sample.
+    """
+    input_ids = [b["input_ids"] for b in batch]
+    labels = torch.stack([b["labels"] for b in batch])
+    text_ids = [b["text_ids"] for b in batch]
+    max_len = max(len(ids) for ids in input_ids)
+    padded = torch.zeros((len(batch), max_len), dtype=torch.long)
+    mask = torch.zeros_like(padded)
+    for i, ids in enumerate(input_ids):
+        padded[i, : len(ids)] = ids
+        mask[i, : len(ids)] = 1
+    return {
+        "input_ids": padded,
+        "attention_mask": mask,
+        "token_type_ids": torch.zeros_like(padded),
+        "labels": labels,
+        "text_ids": text_ids,
+    }
+
+
+def make_loader(dataset, batch_size, shuffle, device):
+    """
+    Builds a dataloader with dynamic padding and pinned transfers.
+    """
+    return DataLoader(
+        dataset,
+        batch_size=batch_size,
+        shuffle=shuffle,
+        collate_fn=collate_batch,
+        pin_memory=device.type == "cuda",
+    )
 
 
 def load_samples(path):
@@ -191,9 +227,9 @@ def main():
     weights = weights / weights.sum() * len(LEVELS)
     criterion = nn.CrossEntropyLoss(weight=weights)
 
-    train_loader = DataLoader(CefrDataset(train, tokenizer, args.max_len), batch_size=args.batch_size, shuffle=True)
-    val_loader = DataLoader(CefrDataset(val, tokenizer, args.max_len), batch_size=args.batch_size)
-    test_loader = DataLoader(CefrDataset(test, tokenizer, args.max_len), batch_size=args.batch_size)
+    train_loader = make_loader(CefrDataset(train, tokenizer, args.max_len), args.batch_size, shuffle=True, device=device)
+    val_loader = make_loader(CefrDataset(val, tokenizer, args.max_len), args.batch_size, shuffle=False, device=device)
+    test_loader = make_loader(CefrDataset(test, tokenizer, args.max_len), args.batch_size, shuffle=False, device=device)
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=0.01)
     steps = args.epochs * len(train_loader)

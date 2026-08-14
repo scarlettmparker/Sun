@@ -4,6 +4,7 @@ ONNX CEFR classifier with chunked prediction and a feature-factor breakdown.
 
 import gzip
 import json
+import os
 import re
 from pathlib import Path
 
@@ -12,6 +13,7 @@ import onnxruntime as ort
 from tokenizers import Tokenizer
 
 from features import extract_features
+from nvidia import preload_nvidia_libs
 
 LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"]
 MODEL_DIR = Path(__file__).resolve().parent / "model"
@@ -27,9 +29,8 @@ class CefrClassifier:
 
     def __init__(self, model_dir=MODEL_DIR):
         self.model_dir = Path(model_dir)
-        self.session = ort.InferenceSession(
-            str(self.model_dir / "model.onnx"), providers=["CPUExecutionProvider"]
-        )
+        self.session = self._build_session()
+        self.input_names = [i.name for i in self.session.get_inputs()]
         self.tokenizer = Tokenizer.from_file(str(self.model_dir / "tokenizer.json"))
         self.pad_id = self.tokenizer.token_to_id("[PAD]")
         probe = json.loads((self.model_dir / "features.json").read_text(encoding="utf-8"))
@@ -48,7 +49,31 @@ class CefrClassifier:
         # rather than letting the model pick a near-random high level.
         self.tiny_words = 30
         self.tiny_prior = np.array([0.2, 0.3, 0.3, 0.15, 0.03, 0.02], dtype=np.float32)
-        self.input_names = [i.name for i in self.session.get_inputs()]
+
+    def _build_session(self):
+        """
+        Builds the ONNX session on GPU, falling back to CPU when unavailable.
+        """
+        preload_nvidia_libs()
+        options = ort.SessionOptions()
+        options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+        options.intra_op_num_threads = min(16, os.cpu_count() or 1)
+        available = set(ort.get_available_providers())
+        providers = [p for p in ("CUDAExecutionProvider", "CPUExecutionProvider") if p in available]
+        if not providers:
+            providers = ["CPUExecutionProvider"]
+        try:
+            return ort.InferenceSession(
+                str(self.model_dir / "model.onnx"),
+                sess_options=options,
+                providers=providers,
+            )
+        except Exception:
+            return ort.InferenceSession(
+                str(self.model_dir / "model.onnx"),
+                sess_options=options,
+                providers=["CPUExecutionProvider"],
+            )
 
     def _bert_weight(self, word_count: int, rare_ratio: float) -> float:
         """
@@ -70,18 +95,82 @@ class CefrClassifier:
         Splits text into sentence-packed chunks that fit the token limit.
         """
         sentences = [s.strip() for s in SENTENCE_SPLIT.split(text) if s.strip()]
-        chunks, current = [], []
-        for sentence in sentences:
-            candidate = current + [sentence]
-            token_count = len(self.tokenizer.encode(" ".join(candidate)).ids)
-            if token_count + 2 > MAX_TOKENS and current:
+        if not sentences:
+            return [text]
+        lengths = [self._token_length(sentence) for sentence in sentences]
+        chunks, current, budget = [], [], 0
+        for sentence, length in zip(sentences, lengths):
+            if current and budget + length > MAX_TOKENS:
                 chunks.append(" ".join(current))
-                current = [sentence]
+                current, budget = [sentence], length
             else:
-                current = candidate
+                current.append(sentence)
+                budget += length
         if current:
             chunks.append(" ".join(current))
-        return chunks or [text]
+        return chunks
+
+    def _token_length(self, text: str) -> int:
+        """
+        Counts real tokens, ignoring the tokenizer's baked-in padding.
+        """
+        ids = self.tokenizer.encode(text, add_special_tokens=True).ids
+        return len(ids) - self._trailing_pads(ids)
+
+    def _encode(self, texts):
+        """
+        Encodes texts and strips trailing padding, returning ids and lengths.
+        """
+        encoded = []
+        for text in texts:
+            ids = self.tokenizer.encode(text, add_special_tokens=True).ids
+            length = len(ids) - self._trailing_pads(ids)
+            encoded.append((ids[:length], length))
+        return encoded
+
+    def _trailing_pads(self, ids):
+        """
+        Returns how many padding tokens close out an encoded sequence.
+        """
+        count = 0
+        for token in reversed(ids):
+            if token != self.pad_id:
+                break
+            count += 1
+        return count
+
+    def _run_batch(self, encoded):
+        """
+        Runs one ONNX pass over all chunks, padded to the longest in the batch.
+        """
+        if not encoded:
+            return np.zeros((0, len(LEVELS)), dtype=np.float32)
+        max_len = max(length for _, length in encoded)
+        input_ids = np.full((len(encoded), max_len), self.pad_id, dtype=np.int64)
+        mask = np.zeros((len(encoded), max_len), dtype=np.int64)
+        for row, (ids, length) in enumerate(encoded):
+            input_ids[row, :length] = ids
+            mask[row, :length] = 1
+        feeds = {
+            "input_ids": input_ids,
+            "attention_mask": mask,
+            "token_type_ids": np.zeros_like(input_ids),
+        }
+        if "token_type_ids" not in self.input_names:
+            feeds.pop("token_type_ids")
+        return self.session.run(None, feeds)[0]
+
+    def _bert_probs(self, chunks):
+        """
+        Predicts level probabilities, averaged over all chunks.
+        """
+        if not chunks:
+            return np.zeros(len(LEVELS))
+        logits = self._run_batch(self._encode(chunks))
+        scaled = logits / self.temperature
+        exp = np.exp(scaled - scaled.max(axis=1, keepdims=True))
+        probs = exp / exp.sum(axis=1, keepdims=True)
+        return probs.mean(axis=0)
 
     def classify(self, text: str):
         """
@@ -90,26 +179,7 @@ class CefrClassifier:
         The temperature-calibrated BERT and the feature probe are blended, and
         very short inputs are pulled toward a word-count level prior.
         """
-        chunks = self._chunks(text)
-        bert_probs = np.zeros(len(LEVELS))
-        for chunk in chunks:
-            enc = self.tokenizer.encode(chunk, add_special_tokens=True)
-            input_ids = np.array([enc.ids], dtype=np.int64)
-            attention = np.ones_like(input_ids)
-            type_ids = np.zeros_like(input_ids)
-            feeds = {
-                "input_ids": input_ids,
-                "attention_mask": attention,
-                "token_type_ids": type_ids,
-            }
-            if "token_type_ids" not in self.input_names:
-                feeds.pop("token_type_ids")
-            logits = self.session.run(None, feeds)[0]
-            logits = logits / self.temperature
-            exp = np.exp(logits[0] - logits[0].max())
-            bert_probs += exp / exp.sum()
-        bert_probs = bert_probs / bert_probs.sum()
-
+        bert_probs = self._bert_probs(self._chunks(text))
         features = extract_features(text, self.frequency)
         probe_probs = self._probe_probs(features)
         word_count = len(text.split())
@@ -117,10 +187,8 @@ class CefrClassifier:
         model_probs = bert_weight * bert_probs + (1 - bert_weight) * probe_probs
 
         if word_count < self.tiny_words:
-            probs = 0.3 * model_probs + 0.7 * self.tiny_prior
-        else:
-            probs = model_probs
-        probs = probs / probs.sum()
+            model_probs = 0.3 * model_probs + 0.7 * self.tiny_prior
+        probs = model_probs / model_probs.sum()
 
         level_idx = int(np.argmax(probs))
         return {

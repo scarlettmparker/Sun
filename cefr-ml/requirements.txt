@@ -1,6 +1,6 @@
 fastapi
 uvicorn
-onnxruntime
+onnxruntime-gpu==1.21.0
 tokenizers
 numpy
 scikit-learn
