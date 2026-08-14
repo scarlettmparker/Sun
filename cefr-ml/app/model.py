@@ -42,13 +42,12 @@ class CefrClassifier:
         self.weight = probe["weight"]
         self.coef = np.array(probe["coef"], dtype=np.float32)
         self.intercept = np.array(probe["intercept"], dtype=np.float32)
-        # BERT only ever sharpens; never flattens overconfident outputs.
+        # BERT only ever sharpens, never flattens overconfident outputs.
         self.temperature = min(float(probe.get("temperature", 1.0)), 1.0)
-        length_prior = probe.get("lengthPrior", {})
-        self.tiny_words = int(length_prior.get("tinyWords", 12))
-        self.tiny_prior = np.array(
-            length_prior.get("tinyPrior", [0.35, 0.25, 0.2, 0.1, 0.05, 0.05]), dtype=np.float32
-        )
+        # Tiny fragments are underdetermined, so nudge them toward the low-mid range
+        # rather than letting the model pick a near-random high level.
+        self.tiny_words = 30
+        self.tiny_prior = np.array([0.2, 0.3, 0.3, 0.15, 0.03, 0.02], dtype=np.float32)
         self.input_names = [i.name for i in self.session.get_inputs()]
 
     def _bert_weight(self, word_count: int, rare_ratio: float) -> float:
@@ -118,8 +117,7 @@ class CefrClassifier:
         model_probs = bert_weight * bert_probs + (1 - bert_weight) * probe_probs
 
         if word_count < self.tiny_words:
-            prior_weight = (self.tiny_words - word_count) / self.tiny_words * 0.5
-            probs = (1 - prior_weight) * model_probs + prior_weight * self.tiny_prior
+            probs = 0.3 * model_probs + 0.7 * self.tiny_prior
         else:
             probs = model_probs
         probs = probs / probs.sum()

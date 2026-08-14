@@ -165,9 +165,8 @@ def main():
         probe_path = Path(args.out_dir) / "features.json"
         existing = json.loads(probe_path.read_text(encoding="utf-8")) if probe_path.exists() else {}
         temperature = existing.get("temperature", 1.0)
-        length_prior = build_length_prior([s for s in samples if s["split"] == "train"])
         export_onnx(args.out_dir, args.model_name)
-        train_feature_probe(samples, args.out_dir, temperature=temperature, length_prior=length_prior)
+        train_feature_probe(samples, args.out_dir, temperature=temperature)
         return
 
     random.seed(args.seed)
@@ -233,10 +232,9 @@ def main():
 
     temperature = fit_temperature(model, val_loader, device)
     print(f"temperature={temperature:.2f}")
-    length_prior = build_length_prior(train)
 
     export_onnx(args.out_dir, args.model_name)
-    train_feature_probe(samples, args.out_dir, temperature=temperature, length_prior=length_prior)
+    train_feature_probe(samples, args.out_dir, temperature=temperature)
 
 
 def export_onnx(model_dir, base_model_name):
@@ -269,7 +267,7 @@ def export_onnx(model_dir, base_model_name):
     print("ONNX exported to", out)
 
 
-def train_feature_probe(samples, out_dir, temperature=1.0, length_prior=None):
+def train_feature_probe(samples, out_dir, temperature=1.0):
     """
     Trains a multinomial logistic regression on the linguistic features.
     """
@@ -315,7 +313,6 @@ def train_feature_probe(samples, out_dir, temperature=1.0, length_prior=None):
         "intercept": probe.intercept_.tolist(),
         "blendAlpha": 0.85,
         "temperature": temperature,
-        "lengthPrior": length_prior,
     }
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
@@ -352,11 +349,6 @@ def fit_temperature(model, loader, device):
     return best_t
 
 
-def build_length_prior(samples):
-    """
-    Returns a gentle prior for very short inputs, which are hard to judge.
-    """
-    return {"tinyWords": 12, "tinyPrior": [0.35, 0.25, 0.2, 0.1, 0.05, 0.05]}
 
 
 if __name__ == "__main__":

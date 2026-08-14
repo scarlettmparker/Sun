@@ -44,13 +44,14 @@ def main():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument("--texts", default="data/reader_texts.jsonl")
-    parser.add_argument("--paidika", default="data/paidika.jsonl")
+    parser.add_argument("--paidika", default="data/paidika_valid.jsonl")
     parser.add_argument("--lenguia", default="data/lenguia.jsonl")
     parser.add_argument("--curated", default="data/curated.jsonl")
     parser.add_argument("--out", default="data/dataset.jsonl")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--max-per-level", type=int, default=300)
     parser.add_argument("--min-words", type=int, default=8)
+    parser.add_argument("--paidika-sample", type=float, default=1.0)
     args = parser.parse_args()
 
     random.seed(args.seed)
@@ -69,7 +70,19 @@ def main():
 
     add_source(args.texts, "reader")
     if Path(args.paidika).exists():
-        add_source(args.paidika, "paidika")
+        paidika_samples = []
+        for line in Path(args.paidika).read_text(encoding="utf-8").splitlines():
+            row = json.loads(line)
+            level = row["level"].upper()
+            if level not in LEVELS or not row["content"]:
+                continue
+            text_id = f"paidika:{len(paidika_samples)}"
+            for chunk in chunk_text(row["content"]):
+                if len(chunk.split()) >= args.min_words:
+                    paidika_samples.append({"level": level, "source": "paidika", "text": chunk, "textId": text_id})
+        random.shuffle(paidika_samples)
+        keep = int(len(paidika_samples) * args.paidika_sample)
+        samples += paidika_samples[:keep]
     if Path(args.lenguia).exists():
         add_source(args.lenguia, "lenguia")
     if Path(args.curated).exists():

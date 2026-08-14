@@ -34,7 +34,6 @@ def extract_features(text: str, frequency):
 
     if total_words == 0:
         return {
-            "textLength": float(len(text)),
             "avgSentenceLength": 0.0,
             "longSentenceRatio": 0.0,
             "avgWordLength": 0.0,
@@ -53,7 +52,6 @@ def extract_features(text: str, frequency):
     out_of_lexicon = sum(1 for w in words if w not in frequency)
 
     return {
-        "textLength": float(len(text)),
         "avgSentenceLength": (sum(sentence_lengths) / n_sentences) if n_sentences else 0.0,
         "longSentenceRatio": (long_sentences / n_sentences) if n_sentences else 0.0,
         "avgWordLength": sum(len(w) for w in words) / total_words,
