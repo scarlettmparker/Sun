@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
 class IpWhitelistServiceTest {
@@ -107,7 +108,7 @@ class IpWhitelistServiceTest {
     entry.setPattern("10.0.0.0/24");
     entry.setEnabled(true);
 
-    when(repository.findByEnabledTrue()).thenReturn(java.util.List.of(entry));
+    when(repository.findByEnabledTrue()).thenReturn(List.of(entry));
 
     assertThat(service.isAllowed("10.0.1.1")).isFalse();
   }
@@ -118,7 +119,7 @@ class IpWhitelistServiceTest {
     entry.setPattern("10.0.0.0/24");
     entry.setEnabled(true);
 
-    when(repository.findByEnabledTrue()).thenReturn(java.util.List.of(entry));
+    when(repository.findByEnabledTrue()).thenReturn(List.of(entry));
 
     assertThat(service.isAllowed("10.0.0.50")).isTrue();
   }
@@ -129,7 +130,7 @@ class IpWhitelistServiceTest {
     entry.setPattern("192.168.0.*");
     entry.setEnabled(true);
 
-    when(repository.findByEnabledTrue()).thenReturn(java.util.List.of(entry));
+    when(repository.findByEnabledTrue()).thenReturn(List.of(entry));
 
     assertThat(service.isAllowed("192.168.0.5")).isTrue();
   }
@@ -144,7 +145,7 @@ class IpWhitelistServiceTest {
     disabled.setPattern("192.168.0.1");
     disabled.setEnabled(false);
 
-    when(repository.findByEnabledTrue()).thenReturn(java.util.List.of(enabled));
+    when(repository.findByEnabledTrue()).thenReturn(List.of(enabled));
 
     assertThat(service.isAllowed("192.168.0.1")).isFalse();
     assertThat(service.isAllowed("10.0.0.5")).isTrue();

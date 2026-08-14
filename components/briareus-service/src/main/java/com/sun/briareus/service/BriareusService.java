@@ -3,15 +3,18 @@ package com.sun.briareus.service;
 import com.sun.briareus.model.PostEntity;
 import com.sun.briareus.repository.PostRepository;
 import com.sun.base.service.BaseService;
+import com.sun.base.util.FilterBuilder;
+import com.sun.base.util.FilterSpec;
 import org.springframework.stereotype.Service;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
-import java.util.Optional;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -34,13 +37,15 @@ public class BriareusService extends BaseService<PostEntity> {
   }
 
   /**
-   * Retrieves all posts with a Pageable input.
-   * 
-   * @param pageable Pageable.
-   * @return a list of Paged PostEntity objects.
+   * Retrieves a page of posts matching the filters.
+   *
+   * @param filters the filter criteria
+   * @param pageable the pagination and sort
+   * @return the matching page
    */
-  public Page<PostEntity> listPostsPaged(Pageable pageable) {
-    return findAllPaged(pageable);
+  public Page<PostEntity> listPostsPaged(List<FilterSpec> filters, Pageable pageable) {
+    Specification<PostEntity> spec = FilterBuilder.buildFilters(filters);
+    return spec == null ? findAllPaged(pageable) : postRepository.findAll(spec, pageable);
   }
 
   /**

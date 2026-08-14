@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import jakarta.annotation.PostConstruct;
+import java.util.Optional;
 
 @Service
 public class FilestoreGraphQLService {
@@ -105,7 +106,7 @@ public class FilestoreGraphQLService {
         .retrieve()
         .body(Bucket[].class);
         
-    List<Bucket> result = buckets != null ? Arrays.asList(buckets) : List.of();
+    List<Bucket> result = buckets == null ? List.of() : Arrays.asList(buckets);
     logger.info("Retrieved {} buckets", result.size());
     return result;
   }
@@ -171,7 +172,7 @@ public class FilestoreGraphQLService {
    */
   public KeyDetail locate(String bucket, String keyPath) {
     logger.info("Locating key detail for bucket: {} at path: {}", bucket, keyPath);
-    java.util.Optional<KeyDetailEntity> entity =
+    Optional<KeyDetailEntity> entity =
         keyDetailService.locateByBucketAndKeyPath(bucket, keyPath);
     return entity.map(keyDetailMapper::map).orElse(null);
   }
@@ -422,7 +423,7 @@ public class FilestoreGraphQLService {
         .putObjectRequest(b -> b
             .bucket(bucket)
             .key(key)
-            .contentType(contentType != null ? contentType : "application/octet-stream"))
+            .contentType(contentType == null ? "application/octet-stream" : contentType))
         .build();
 
     keyDetailService.createOrUpdateDetail(bucket, key, key, contentType);

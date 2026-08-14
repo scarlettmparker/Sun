@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.HashMap;
 
 /**
  * Materialises a configuration's desired state into live data.
@@ -123,7 +124,7 @@ public class ConfigurationReconciler {
     if (content.schemas() == null) {
       return;
     }
-    Map<String, Set<String>> declaredByOwner = new java.util.HashMap<>();
+    Map<String, Set<String>> declaredByOwner = new HashMap<>();
     for (Schema schema : content.schemas()) {
       PropertySetSchemaEntity entity = schemaRepository
           .findByOwnerKeyAndName(schema.ownerKey(), schema.name())

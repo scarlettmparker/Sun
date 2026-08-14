@@ -17,6 +17,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.time.LocalDateTime;
+import java.util.HexFormat;
 
 @ExtendWith(MockitoExtension.class)
 class ApiKeyServiceTest {
@@ -129,7 +133,7 @@ class ApiKeyServiceTest {
     entity.setId(UUID.randomUUID());
     entity.setKeyPrefix("ns_oldprefix");
     entity.setKeyHash("old-hash");
-    entity.setLastUsedAt(java.time.LocalDateTime.now());
+    entity.setLastUsedAt(LocalDateTime.now());
     when(repository.findById(entity.getId())).thenReturn(Optional.of(entity));
     when(repository.save(any(ApiKeyEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -154,14 +158,14 @@ class ApiKeyServiceTest {
 
   private static byte[] sha256(String value) {
     try {
-      return java.security.MessageDigest.getInstance("SHA-256")
-          .digest(value.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+      return MessageDigest.getInstance("SHA-256")
+          .digest(value.getBytes(StandardCharsets.UTF_8));
     } catch (Exception e) {
       throw new IllegalStateException(e);
     }
   }
 
   private static String hex(byte[] bytes) {
-    return java.util.HexFormat.of().formatHex(bytes);
+    return HexFormat.of().formatHex(bytes);
   }
 }

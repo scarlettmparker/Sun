@@ -16,6 +16,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 
 /**
  * Downloads torrents via transmission-daemon. Spawns transmission-remote to add
@@ -124,13 +126,13 @@ public class TransmissionGateway {
   private void moveFiles(File from, File to) {
     if (!from.isDirectory()) return;
     log.info("Moving files from {} to {}", from, to);
-    try (var paths = java.nio.file.Files.walk(from.toPath())) {
-      paths.filter(java.nio.file.Files::isRegularFile).forEach(f -> {
+    try (var paths = Files.walk(from.toPath())) {
+      paths.filter(Files::isRegularFile).forEach(f -> {
         try {
           Path rel = from.toPath().relativize(f);
-          Path dest = new java.io.File(to, rel.toString()).toPath();
+          Path dest = new File(to, rel.toString()).toPath();
           dest.getParent().toFile().mkdirs();
-          java.nio.file.Files.move(f, dest, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+          Files.move(f, dest, StandardCopyOption.REPLACE_EXISTING);
         } catch (Exception e) {
           log.warn("Failed to move {}: {}", f.getFileName(), e.getMessage());
         }

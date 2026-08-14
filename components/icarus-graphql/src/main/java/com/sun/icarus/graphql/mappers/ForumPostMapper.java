@@ -30,7 +30,7 @@ public class ForumPostMapper {
     ForumPost post = ForumPost.newBuilder()
         .id(entity.getId().toString())
         .threadId(entity.getThreadId().toString())
-        .parentId(entity.getParentId() != null ? entity.getParentId().toString() : null)
+        .parentId(entity.getParentId() == null ? null : entity.getParentId().toString())
         .body(entity.getBody())
         .status(entity.getStatus())
         .upvotes(entity.getUpvotes())

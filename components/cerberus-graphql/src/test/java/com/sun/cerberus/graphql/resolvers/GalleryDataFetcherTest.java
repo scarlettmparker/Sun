@@ -122,7 +122,7 @@ class GalleryDataFetcherTest {
         .remoteObject(Arrays.asList("new", "ids"))
         .build();
 
-    QueryResult mockResult = QuerySuccess.newBuilder().success(true).build();
+    QueryResult mockResult = QuerySuccess.newBuilder().message("ok").build();
 
     when(galleryGraphQLService.create(input)).thenReturn(mockResult);
 

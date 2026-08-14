@@ -10,6 +10,9 @@ import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.Collection;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Service for casting, toggling, and removing votes on forum posts.
@@ -100,13 +103,13 @@ public class ForumVoteService {
    * @param postIds the post ids
    * @return a map of post id to the caller's vote value
    */
-  public java.util.Map<UUID, VoteValue> myVotes(java.util.Collection<UUID> postIds) {
+  public Map<UUID, VoteValue> myVotes(Collection<UUID> postIds) {
     UUID accountId = UserContextHolder.getUserId();
     if (accountId == null || postIds == null || postIds.isEmpty()) {
-      return java.util.Map.of();
+      return Map.of();
     }
     return voteRepository.findByAccountIdAndPostIdIn(accountId, postIds).stream()
-        .collect(java.util.stream.Collectors.toMap(ForumVoteEntity::getPostId, ForumVoteEntity::getValue));
+        .collect(Collectors.toMap(ForumVoteEntity::getPostId, ForumVoteEntity::getValue));
   }
 
   private void adjust(ForumPostEntity post, VoteValue value, int delta) {

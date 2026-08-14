@@ -42,6 +42,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import com.sun.gaia.service.UserContextHolder;
 
 @ExtendWith(MockitoExtension.class)
 class GaiaGraphQLServiceTest {
@@ -148,7 +149,7 @@ class GaiaGraphQLServiceTest {
     UUID userId = UUID.randomUUID();
     AccountEntity account = new AccountEntity();
     account.setId(userId);
-    com.sun.gaia.service.UserContextHolder.setUserId(userId);
+    UserContextHolder.setUserId(userId);
     try {
       when(accountService.findById(userId)).thenReturn(Optional.of(account));
       when(accountService.verifyPassword(account, "wrong")).thenReturn(false);
@@ -158,14 +159,14 @@ class GaiaGraphQLServiceTest {
       assertThat(result).isInstanceOf(StandardError.class);
       assertThat(((StandardError) result).getMessage()).isEqualTo("Current password incorrect");
     } finally {
-      com.sun.gaia.service.UserContextHolder.clear();
+      UserContextHolder.clear();
     }
   }
 
   @Test
   void myRoles_returnsRoleKeysWhenAuthenticated() {
     UUID userId = UUID.randomUUID();
-    com.sun.gaia.service.UserContextHolder.setUserId(userId);
+    UserContextHolder.setUserId(userId);
     try {
       when(accountRepository.findEffectiveRoleNames(userId)).thenReturn(List.of("admin"));
 
@@ -173,7 +174,7 @@ class GaiaGraphQLServiceTest {
 
       assertThat(roles).containsExactly("admin");
     } finally {
-      com.sun.gaia.service.UserContextHolder.clear();
+      UserContextHolder.clear();
     }
   }
 
@@ -225,7 +226,7 @@ class GaiaGraphQLServiceTest {
   @Test
   void deactivateAccount_marksAccountDeactivated() {
     UUID userId = UUID.randomUUID();
-    com.sun.gaia.service.UserContextHolder.setUserId(userId);
+    UserContextHolder.setUserId(userId);
     try {
       AccountEntity account = new AccountEntity();
       account.setId(userId);
@@ -237,7 +238,7 @@ class GaiaGraphQLServiceTest {
       assertThat(((QuerySuccess) result).getId()).isEqualTo(userId.toString());
       verify(accountService).deactivateAccount(userId);
     } finally {
-      com.sun.gaia.service.UserContextHolder.clear();
+      UserContextHolder.clear();
     }
   }
 

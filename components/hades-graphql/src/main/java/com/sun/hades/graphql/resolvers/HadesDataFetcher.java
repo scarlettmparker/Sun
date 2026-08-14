@@ -25,6 +25,7 @@ import com.sun.hades.model.enums.VoteValue;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import com.sun.hades.codegen.types.ReaderAccount;
 
 /**
  * Data fetchers for the reader queries and mutations.
@@ -141,7 +142,7 @@ public class HadesDataFetcher {
    */
   @DgsData(parentType = "HadesQueries", field = "readerAccount")
   @PreAuthorize("permitAll()")
-  public com.sun.hades.codegen.types.ReaderAccount readerAccount() {
+  public ReaderAccount readerAccount() {
     return hadesGraphQLService.readerAccount();
   }
 
@@ -153,7 +154,7 @@ public class HadesDataFetcher {
    */
   @DgsData(parentType = "HadesQueries", field = "readerAccounts")
   @PreAuthorize("@permissions.has('graphql.hades.readerAccounts')")
-  public List<com.sun.hades.codegen.types.ReaderAccount> readerAccounts(
+  public List<ReaderAccount> readerAccounts(
       List<RemoteUserInput> remoteUsers) {
     return hadesGraphQLService.readerAccounts(remoteUsers);
   }

@@ -13,6 +13,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.Ordered;
 import org.springframework.stereotype.Component;
+import java.util.Comparator;
 
 /**
  * Removes scratch directories left behind by deleted or lost jobs, so restarts
@@ -52,7 +53,7 @@ public class TorrentScratchSweeper implements ApplicationRunner {
 
   private void deleteRecursively(File file) {
     try (var paths = Files.walk(file.toPath())) {
-      paths.sorted(java.util.Comparator.reverseOrder())
+      paths.sorted(Comparator.reverseOrder())
           .forEach(
               p -> {
                 try {

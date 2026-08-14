@@ -18,7 +18,7 @@ public class FileMapper {
     logger.debug("Mapping S3 object to File: {}", object.key());
     File entry = new File();
     entry.setKey(object.key());
-    entry.setSize(object.size() != null ? object.size().intValue() : 0);
+    entry.setSize(object.size() == null ? 0 : object.size().intValue());
     if (object.lastModified() != null) {
       entry.setLastModified(object.lastModified().toString());
     }

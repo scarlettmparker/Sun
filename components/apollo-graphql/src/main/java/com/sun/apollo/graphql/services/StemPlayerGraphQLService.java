@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 import com.sun.apollo.model.SongEntity;
+import java.util.UUID;
 
 /**
  * Service for handling GraphQL-specific business logic for the Stem Player.
@@ -56,7 +57,7 @@ public class StemPlayerGraphQLService {
   public Song locate(String id) {
     logger.info("Retrieving song by ID: {}", id);
 
-    SongEntity songEntity = apolloService.locateSong(java.util.UUID.fromString(id))
+    SongEntity songEntity = apolloService.locateSong(UUID.fromString(id))
         .orElseThrow(() -> new RuntimeException("Song not found with id: " + id));
 
     Song song = songMapper.map(songEntity);

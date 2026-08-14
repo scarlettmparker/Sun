@@ -25,6 +25,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import jakarta.servlet.ReadListener;
 
 /**
  * Token-bucket rate limiting over POST /graphql, returning HTTP 429 when a
@@ -76,8 +77,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
     String operation = operationName(bodyText);
 
     RateLimitBinding binding = registry.forOperation(operation).orElse(null);
-    String bucketName = binding != null ? binding.bucket() : DEFAULT_BUCKET;
-    RateLimitConfig config = binding != null ? binding.config() : defaultConfig();
+    String bucketName = binding == null ? DEFAULT_BUCKET : binding.bucket();
+    RateLimitConfig config = binding == null ? defaultConfig() : binding.config();
     String key = key(request, bucketName);
 
     TokenBucket bucket = buckets.computeIfAbsent(key, k -> new TokenBucket(
@@ -237,7 +238,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
         }
 
         @Override
-        public void setReadListener(jakarta.servlet.ReadListener readListener) {
+        public void setReadListener(ReadListener readListener) {
           throw new UnsupportedOperationException();
         }
       };

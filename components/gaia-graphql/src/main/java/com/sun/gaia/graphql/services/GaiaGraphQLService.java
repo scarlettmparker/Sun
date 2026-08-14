@@ -211,7 +211,7 @@ public class GaiaGraphQLService {
   public PagedAccounts accounts(PaginationInput pagination) {
     Pageable pageable = toPageable(pagination, "username", Sort.Direction.ASC);
     List<FilterSpec> filters = GraphQLSupport.toFilterSpecs(
-        pagination != null ? pagination.getFilters() : null,
+        pagination == null ? null : pagination.getFilters(),
         f -> new FilterSpec(f.getField(), f.getOperator().name(), f.getValue()));
     Specification<AccountEntity> spec = FilterBuilder.buildFilters(filters);
     Page<AccountEntity> result = spec != null
@@ -991,7 +991,7 @@ public class GaiaGraphQLService {
     return PageRequests.of(
         pagination.getPage(), pagination.getSize(),
         pagination.getSortBy(),
-        pagination.getSortDir() != null ? pagination.getSortDir().name() : null,
+        pagination.getSortDir() == null ? null : pagination.getSortDir().name(),
         defaultSortBy, defaultDir);
   }
 

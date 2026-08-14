@@ -64,7 +64,7 @@ public class ChecklistEntryItemService extends BaseService<ChecklistEntryItemEnt
     ChecklistEntryItemEntity entity = new ChecklistEntryItemEntity();
     entity.setEntryId(entryId);
     entity.setItemId(itemId);
-    int pos = position != null ? position : entryItemRepository.findMaxPositionByEntryId(entryId) + 1;
+    int pos = position == null ? entryItemRepository.findMaxPositionByEntryId(entryId) + 1 : position;
     entity.setPosition(pos);
     entity.setStatus(ItemStatus.NOT_STARTED);
     return entryItemRepository.save(entity);

@@ -11,8 +11,7 @@ defineLoader({
     try {
       const result = await fetchListBlogPosts();
       const blogPosts = result.success
-        ? (result.data as ListBlogPostsQuery | undefined)?.blogQueries
-            ?.listBlogPosts
+        ? (result.data as ListBlogPostsQuery | undefined)?.blogQueries?.listBlogPosts?.items
         : null;
       return { blogPosts: blogPosts ?? [] };
     } catch {

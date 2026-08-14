@@ -67,6 +67,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.sun.hades.model.enums.ReaderStatus;
 
 /**
  * GraphQL business logic for the reader.
@@ -138,7 +139,7 @@ public class HadesGraphQLService {
   public PagedReaderTexts texts(PaginationInput pagination) {
     Pageable pageable = toPageable(pagination, "level", Sort.Direction.ASC);
     List<FilterSpec> filters = GraphQLSupport.toFilterSpecs(
-        pagination != null ? pagination.getFilters() : null,
+        pagination == null ? null : pagination.getFilters(),
         f -> new FilterSpec(f.getField(), f.getOperator().name(), f.getValue()));
     Page<ReaderTextEntity> result = textService.list(filters, pageable);
     List<ReaderText> items = result.getContent().stream().map(textMapper::map).toList();
@@ -248,7 +249,7 @@ public class HadesGraphQLService {
     Page<ReaderCommentEntity> result =
         commentService.listForAnnotation(UUID.fromString(annotationId), pageable);
     List<ReaderCommentEntity> visible = result.getContent().stream()
-        .filter(c -> Boolean.TRUE.equals(includeHidden) || c.getStatus() == com.sun.hades.model.enums.ReaderStatus.ACTIVE)
+        .filter(c -> Boolean.TRUE.equals(includeHidden) || c.getStatus() == ReaderStatus.ACTIVE)
         .toList();
     Map<UUID, RemoteUser> authors = new HashMap<>();
     visible.stream()
@@ -272,7 +273,7 @@ public class HadesGraphQLService {
    * @return the reader account, or null
    */
   @Transactional(readOnly = true)
-  public com.sun.hades.codegen.types.ReaderAccount readerAccount() {
+  public ReaderAccount readerAccount() {
     UUID userId = UserContextHolder.getUserId();
     if (userId == null) {
       return null;
@@ -426,7 +427,7 @@ public class HadesGraphQLService {
   public QueryResult addComment(CommentInput input) {
     return mutate("addComment", () -> commentService.addComment(
         UUID.fromString(input.getAnnotationId()),
-        input.getParentId() != null ? UUID.fromString(input.getParentId()) : null,
+        input.getParentId() == null ? null : UUID.fromString(input.getParentId()),
         input.getBody()));
   }
 
@@ -549,7 +550,7 @@ public class HadesGraphQLService {
       return PageRequests.of(null, null, null, null, defaultSortBy, defaultDir);
     }
     return PageRequests.of(pagination.getPage(), pagination.getSize(), pagination.getSortBy(),
-        pagination.getSortDir() != null ? pagination.getSortDir().name() : null,
+        pagination.getSortDir() == null ? null : pagination.getSortDir().name(),
         defaultSortBy, defaultDir);
   }
 
@@ -584,7 +585,7 @@ public class HadesGraphQLService {
       logger.info("{} succeeded for id {}", op, id);
       return QuerySuccess.newBuilder()
           .message(op + " succeeded")
-          .id(id != null ? id.toString() : null)
+          .id(id == null ? null : id.toString())
           .build();
     } catch (Exception e) {
       logger.error("{} failed", op, e);

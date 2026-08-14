@@ -6,6 +6,7 @@ import jakarta.persistence.criteria.Root;
 import java.util.Arrays;
 import java.util.List;
 import org.springframework.data.jpa.domain.Specification;
+import jakarta.persistence.criteria.CriteriaQuery;
 
 /**
  * Converts a list of {@link FilterSpec} into a JPA {@link Specification}.
@@ -42,7 +43,7 @@ public final class FilterBuilder {
    * @param <T> the entity type
    */
   private static <T> Specification<T> toSpecification(FilterSpec filter) {
-    return (Root<T> root, jakarta.persistence.criteria.CriteriaQuery<?> query, CriteriaBuilder cb) -> {
+    return (Root<T> root, CriteriaQuery<?> query, CriteriaBuilder cb) -> {
       Path<?> path = resolvePath(root, filter.field());
       String value = filter.value();
       switch (filter.operator()) {

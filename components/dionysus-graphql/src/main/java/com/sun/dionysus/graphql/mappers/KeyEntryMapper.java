@@ -66,7 +66,7 @@ public class KeyEntryMapper {
     KeyEntry entry = new KeyEntry();
     entry.setKey(object.key());
     entry.setIsDirectory(false);
-    entry.setSize(object.size() != null ? object.size().intValue() : 0);
+    entry.setSize(object.size() == null ? 0 : object.size().intValue());
     if (object.lastModified() != null) {
       entry.setLastModified(object.lastModified().toString());
     }
@@ -85,7 +85,7 @@ public class KeyEntryMapper {
     KeyEntry entry = new KeyEntry();
     entry.setKey(object.key());
     entry.setIsDirectory(false);
-    entry.setSize(object.size() != null ? object.size().intValue() : 0);
+    entry.setSize(object.size() == null ? 0 : object.size().intValue());
     if (object.lastModified() != null) {
       entry.setLastModified(object.lastModified().toString());
     }

@@ -6,6 +6,9 @@ import com.netflix.graphql.dgs.DgsDataFetchingEnvironment;
 import com.sun.hades.codegen.types.ReaderAccount;
 import java.util.concurrent.CompletableFuture;
 import org.dataloader.DataLoader;
+import com.sun.hades.codegen.types.ReaderAnnotation;
+import com.sun.hades.codegen.types.ReaderComment;
+import com.sun.icarus.codegen.types.ForumPost;
 
 /**
  * Gateway field resolvers that attach a reader-account profile to each
@@ -17,20 +20,20 @@ public class AuthorProfileFetcher {
   @DgsData(parentType = "ReaderAnnotation", field = "authorProfile")
   public CompletableFuture<ReaderAccount> annotationProfile(
       DgsDataFetchingEnvironment env) {
-    com.sun.hades.codegen.types.ReaderAnnotation source = env.getSource();
-    return loadById(env, source.getAuthor() != null ? source.getAuthor().getId() : null);
+    ReaderAnnotation source = env.getSource();
+    return loadById(env, source.getAuthor() == null ? null : source.getAuthor().getId());
   }
 
   @DgsData(parentType = "ReaderComment", field = "authorProfile")
   public CompletableFuture<ReaderAccount> commentProfile(DgsDataFetchingEnvironment env) {
-    com.sun.hades.codegen.types.ReaderComment source = env.getSource();
-    return loadById(env, source.getAuthor() != null ? source.getAuthor().getId() : null);
+    ReaderComment source = env.getSource();
+    return loadById(env, source.getAuthor() == null ? null : source.getAuthor().getId());
   }
 
   @DgsData(parentType = "ForumPost", field = "authorProfile")
   public CompletableFuture<ReaderAccount> postProfile(DgsDataFetchingEnvironment env) {
-    com.sun.icarus.codegen.types.ForumPost source = env.getSource();
-    return loadById(env, source.getAuthor() != null ? source.getAuthor().getId() : null);
+    ForumPost source = env.getSource();
+    return loadById(env, source.getAuthor() == null ? null : source.getAuthor().getId());
   }
 
   private CompletableFuture<ReaderAccount> loadById(

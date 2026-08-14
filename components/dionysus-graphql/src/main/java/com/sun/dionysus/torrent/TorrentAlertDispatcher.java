@@ -125,7 +125,7 @@ public class TorrentAlertDispatcher implements AlertListener {
         alert.handle(),
         job -> {
           job.setStatus(TorrentStatus.FAILED);
-          job.setErrorMessage(alert.error() != null ? alert.error().getMessage() : "torrent error");
+          job.setErrorMessage(alert.error() == null ? "torrent error" : alert.error().getMessage());
           jobService.save(job);
         });
   }

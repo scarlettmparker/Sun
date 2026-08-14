@@ -23,7 +23,7 @@ public class ChecklistTemplateMapper {
         .id(entity.getId().toString())
         .name(entity.getName())
         .description(entity.getDescription())
-        .status(entity.getStatus() != null ? entity.getStatus().name() : null)
+        .status(entity.getStatus() == null ? null : entity.getStatus().name())
         .createdAt(entity.getCreatedAt())
         .updatedAt(entity.getLastUpdatedAt())
         .build();

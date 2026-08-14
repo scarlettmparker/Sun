@@ -93,7 +93,7 @@ public class IpWhitelistService {
         }
         IpWhitelistEntryEntity entity = new IpWhitelistEntryEntity();
         entity.setPattern(pattern.trim());
-        entity.setDescription(description != null ? description.trim() : null);
+        entity.setDescription(description == null ? null : description.trim());
         entity.setImmutable(immutable);
         return repository.save(entity);
     }

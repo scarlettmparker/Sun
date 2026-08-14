@@ -33,6 +33,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import com.sun.gaia.model.enums.AccountStatus;
+import com.sun.gaia.repository.AccountRepository;
 
 /**
  * Data fetchers for the access queries and mutations.
@@ -47,7 +49,7 @@ public class GaiaDataFetcher {
   private JwtService jwtService;
 
   @Autowired
-  private com.sun.gaia.repository.AccountRepository accountRepository;
+  private AccountRepository accountRepository;
 
   /**
    * Provides the access queries object.
@@ -545,7 +547,7 @@ public class GaiaDataFetcher {
         if (jwtService.isValid(token)) {
           UUID accountId = jwtService.extractAccountId(token);
           accountRepository.findById(accountId)
-              .filter(a -> a.getStatus() == com.sun.gaia.model.enums.AccountStatus.ACTIVE)
+              .filter(a -> a.getStatus() == AccountStatus.ACTIVE)
               .ifPresent(a -> UserContextHolder.setUserId(accountId));
         }
       }

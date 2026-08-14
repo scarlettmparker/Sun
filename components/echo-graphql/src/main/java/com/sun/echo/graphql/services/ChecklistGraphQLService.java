@@ -577,7 +577,7 @@ public class ChecklistGraphQLService {
   @Transactional
   public QueryResult attachObject(String source, String target, RemoteObjectType ownerType) {
     return mutate("attachObject", () -> detailService
-        .attach(UUID.fromString(source), target, ownerType != null ? ownerType.name() : null));
+        .attach(UUID.fromString(source), target, ownerType == null ? null : ownerType.name()));
   }
 
   /**
@@ -586,7 +586,7 @@ public class ChecklistGraphQLService {
   @Transactional
   public QueryResult detachObject(String source, String target, RemoteObjectType ownerType) {
     return mutate("detachObject", () -> detailService
-        .detach(UUID.fromString(source), target, ownerType != null ? ownerType.name() : null));
+        .detach(UUID.fromString(source), target, ownerType == null ? null : ownerType.name()));
   }
 
   /**
@@ -602,7 +602,7 @@ public class ChecklistGraphQLService {
       return PageRequests.of(null, null, null, null, defaultSortBy, defaultDir);
     }
     return PageRequests.of(pagination.getPage(), pagination.getSize(), pagination.getSortBy(),
-        pagination.getSortDir() != null ? pagination.getSortDir().name() : null,
+        pagination.getSortDir() == null ? null : pagination.getSortDir().name(),
         defaultSortBy, defaultDir);
   }
 
@@ -693,7 +693,7 @@ public class ChecklistGraphQLService {
       logger.info("{} succeeded for id {}", op, id);
       return QuerySuccess.newBuilder()
           .message(op + " succeeded")
-          .id(id != null ? id.toString() : null)
+          .id(id == null ? null : id.toString())
           .build();
     } catch (Exception e) {
       logger.error("{} failed", op, e);

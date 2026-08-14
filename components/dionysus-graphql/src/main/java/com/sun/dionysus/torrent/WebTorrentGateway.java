@@ -16,6 +16,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Downloads torrents via the webtorrent-cli Node.js process.
@@ -163,8 +165,8 @@ public class WebTorrentGateway {
   private void parseAndUpdate(UUID jobId, String jsonLine) {
     if (jsonLine == null || jsonLine.isEmpty() || !jsonLine.startsWith("{")) return;
     try {
-      com.fasterxml.jackson.databind.JsonNode node =
-          new com.fasterxml.jackson.databind.ObjectMapper().readTree(jsonLine);
+      JsonNode node =
+          new ObjectMapper().readTree(jsonLine);
 
       double progress = node.has("progress") ? node.get("progress").asDouble(0.0) : 0.0;
       long downloaded = node.has("downloaded") ? node.get("downloaded").asLong(0) : 0;

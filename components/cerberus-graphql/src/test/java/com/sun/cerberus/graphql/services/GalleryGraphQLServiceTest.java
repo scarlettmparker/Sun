@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.ArgumentMatchers.any;
+import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
 class GalleryGraphQLServiceTest {
@@ -109,7 +110,7 @@ class GalleryGraphQLServiceTest {
   @Test
   void locate() {
     when(cerberusService.locate(galleryItemEntity1.getId()))
-        .thenReturn(java.util.Optional.of(galleryItemEntity1));
+        .thenReturn(Optional.of(galleryItemEntity1));
     when(galleryItemMapper.map(galleryItemEntity1)).thenReturn(galleryItem1);
     GalleryItem result = galleryGraphQLService.locate(galleryItemEntity1.getId().toString());
     assertThat(result.getTitle()).isEqualTo("Test Gallery Item 1");
@@ -121,7 +122,7 @@ class GalleryGraphQLServiceTest {
 
   @Test
   void locate_shouldThrowExceptionWhenItemNotFound() {
-    when(cerberusService.locate(galleryItemEntity1.getId())).thenReturn(java.util.Optional.empty());
+    when(cerberusService.locate(galleryItemEntity1.getId())).thenReturn(Optional.empty());
     assertThatThrownBy(() -> galleryGraphQLService.locate(galleryItemEntity1.getId().toString()))
         .isInstanceOf(RuntimeException.class)
         .hasMessage("Gallery item not found with id: " + galleryItemEntity1.getId().toString());
@@ -159,7 +160,7 @@ class GalleryGraphQLServiceTest {
 
     assertThat(result).isInstanceOf(QuerySuccess.class);
     QuerySuccess success = (QuerySuccess) result;
-    assertThat(success.getSuccess()).isTrue();
+    assertThat(success.getId()).isEqualTo(savedEntity.getId().toString());
   }
 
   @Test
@@ -214,6 +215,5 @@ class GalleryGraphQLServiceTest {
     assertThat(result).isInstanceOf(StandardError.class);
     StandardError error = (StandardError) result;
     assertThat(error.getMessage()).contains("Failed to create gallery item: Database error");
-    assertThat(error.getId()).isNull();
   }
 }

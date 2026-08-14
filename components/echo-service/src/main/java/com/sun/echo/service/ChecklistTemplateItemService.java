@@ -56,7 +56,7 @@ public class ChecklistTemplateItemService extends BaseService<ChecklistTemplateI
     ChecklistTemplateItemEntity entity = new ChecklistTemplateItemEntity();
     entity.setTemplateId(templateId);
     entity.setItemId(itemId);
-    int pos = position != null ? position : templateItemRepository.findMaxPositionByTemplateId(templateId) + 1;
+    int pos = position == null ? templateItemRepository.findMaxPositionByTemplateId(templateId) + 1 : position;
     entity.setPosition(pos);
     return templateItemRepository.save(entity);
   }

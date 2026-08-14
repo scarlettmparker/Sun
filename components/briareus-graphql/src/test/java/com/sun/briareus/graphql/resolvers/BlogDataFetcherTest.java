@@ -16,6 +16,10 @@ import static org.mockito.Mockito.when;
 import com.sun.briareus.graphql.services.BlogGraphQLService;
 import com.sun.briareus.codegen.types.BlogPost;
 import com.sun.briareus.codegen.types.BlogPostInput;
+import com.sun.briareus.codegen.types.BlogPostType;
+import com.sun.briareus.codegen.types.PagedBlogPosts;
+import com.sun.briareus.codegen.types.PageInfo;
+import com.sun.briareus.codegen.types.PaginationInput;
 import com.sun.briareus.codegen.types.QueryResult;
 import com.sun.briareus.codegen.types.QuerySuccess;
 
@@ -50,21 +54,20 @@ class BlogDataFetcherTest {
   }
 
   @Test
-  void listBlogPosts_shouldReturnBlogPostsFromService() {
-    when(blogGraphQLService.listBlogPosts()).thenReturn(mockBlogPosts);
-    List<BlogPost> result = blogDataFetcher.listBlogPosts();
-    assertThat(result).isEqualTo(mockBlogPosts);
-    assertThat(result).hasSize(2);
+  void listBlogPosts_shouldReturnPageFromService() {
+    PagedBlogPosts mockPage = PagedBlogPosts.newBuilder()
+        .items(mockBlogPosts)
+        .pageInfo(PageInfo.newBuilder()
+            .page(0).size(10).totalPages(1).totalCount(2)
+            .hasNextPage(false).hasPreviousPage(false).build())
+        .build();
+    PaginationInput pagination = PaginationInput.newBuilder().build();
+    when(blogGraphQLService.listBlogPosts(pagination)).thenReturn(mockPage);
 
-    // First blog post
-    assertThat(result.get(0).getTitle()).isEqualTo("Test Blog 1");
-    assertThat(result.get(0).getContent()).isEqualTo("Test Content 1");
-    assertThat(result.get(0).getTags()).containsExactly("Tag1", "Tag2");
+    PagedBlogPosts result = blogDataFetcher.listBlogPosts(pagination);
 
-    // Second blog post
-    assertThat(result.get(1).getTitle()).isEqualTo("Test Blog 2");
-    assertThat(result.get(1).getContent()).isEqualTo("Test Content 2");
-    assertThat(result.get(1).getTags()).containsExactly("Tag3", "Tag4");
+    assertThat(result).isEqualTo(mockPage);
+    assertThat(result.getItems()).hasSize(2);
   }
 
   @Test
@@ -79,10 +82,15 @@ class BlogDataFetcherTest {
     when(blogGraphQLService.locateBlogPost("1")).thenReturn(mockBlog);
     BlogPost result = blogDataFetcher.locateBlogPost("1");
     assertThat(result).isEqualTo(mockBlog);
+  }
 
-    assertThat(result.getTitle()).isEqualTo("Test Blog 1");
-    assertThat(result.getContent()).isEqualTo("Test Content 1");
-    assertThat(result.getTags()).containsExactly("Tag1", "Tag2");
+  @Test
+  void blogPostTypes_shouldReturnTypesFromService() {
+    List<BlogPostType> types = Arrays.asList(
+        BlogPostType.newBuilder().id("1").name("BOT_FAQ").build());
+    when(blogGraphQLService.blogPostTypes()).thenReturn(types);
+
+    assertThat(blogDataFetcher.blogPostTypes()).isEqualTo(types);
   }
 
   @Test
@@ -92,11 +100,21 @@ class BlogDataFetcherTest {
         .tags(Arrays.asList("new", "tag"))
         .build();
 
-    QueryResult mockResult = QuerySuccess.newBuilder().success(true).build();
+    QueryResult mockResult = QuerySuccess.newBuilder().message("ok").build();
 
     when(blogGraphQLService.createBlogPost("New Title", input)).thenReturn(mockResult);
 
     QueryResult result = blogDataFetcher.createBlogPost("New Title", input);
+
+    assertThat(result).isEqualTo(mockResult);
+  }
+
+  @Test
+  void createBlogPostType_shouldReturnQueryResultFromService() {
+    QueryResult mockResult = QuerySuccess.newBuilder().message("ok").build();
+    when(blogGraphQLService.createBlogPostType("BOT_FAQ", null)).thenReturn(mockResult);
+
+    QueryResult result = blogDataFetcher.createBlogPostType("BOT_FAQ", null);
 
     assertThat(result).isEqualTo(mockResult);
   }

@@ -32,6 +32,9 @@ import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.regex.Pattern;
 
 /**
  * Uploads a finished torrent's files into the bucket, activates the matching
@@ -210,7 +213,7 @@ public class TorrentCompletionService {
     int status = conn.getResponseCode();
     if (status < 200 || status > 299) {
       try (var err = conn.getErrorStream()) {
-        String body = err != null ? new String(err.readAllBytes()) : "";
+        String body = err == null ? "" : new String(err.readAllBytes());
         throw new IOException("Upload failed (" + status + "): " + body);
       }
     }
@@ -238,7 +241,7 @@ public class TorrentCompletionService {
     int status = conn.getResponseCode();
     if (status < 200 || status > 299) {
       try (var err = conn.getErrorStream()) {
-        String body = err != null ? new String(err.readAllBytes()) : "";
+        String body = err == null ? "" : new String(err.readAllBytes());
         throw new IOException("Empty upload failed (" + status + "): " + body);
       }
     }
@@ -307,7 +310,7 @@ public class TorrentCompletionService {
    */
   private String contentTypeFor(String keyPath) {
     String guess = URLConnection.guessContentTypeFromName(keyPath);
-    return guess != null ? guess : "application/octet-stream";
+    return guess == null ? "application/octet-stream" : guess;
   }
 
   /**
@@ -362,9 +365,9 @@ public class TorrentCompletionService {
     pb.redirectErrorStream(true);
     Process p = pb.start();
 
-    var timePattern = java.util.regex.Pattern.compile("time=(\\d+):(\\d+):(\\d+)\\.(\\d+)");
+    var timePattern = Pattern.compile("time=(\\d+):(\\d+):(\\d+)\\.(\\d+)");
     int lineCount = 0;
-    try (var reader = new java.io.BufferedReader(new java.io.InputStreamReader(p.getInputStream()))) {
+    try (var reader = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
       String line;
       while ((line = reader.readLine()) != null) {
         var m = timePattern.matcher(line);

@@ -1,29 +1,37 @@
 package com.sun.briareus.graphql.services;
 
-import com.sun.briareus.service.BriareusService;
+import com.sun.base.util.FilterSpec;
+import com.sun.base.util.GraphQLSupport;
+import com.sun.base.util.PageRequests;
 import com.sun.briareus.graphql.mappers.BlogPostMapper;
+import com.sun.briareus.graphql.mappers.BlogPostTypeMapper;
+import com.sun.briareus.model.BlogPostTypeEntity;
+import com.sun.briareus.model.PostEntity;
+import com.sun.briareus.service.BlogPostTypeService;
+import com.sun.briareus.service.BriareusService;
 import com.sun.briareus.codegen.types.BlogPost;
 import com.sun.briareus.codegen.types.BlogPostInput;
+import com.sun.briareus.codegen.types.BlogPostType;
+import com.sun.briareus.codegen.types.PagedBlogPosts;
+import com.sun.briareus.codegen.types.PageInfo;
+import com.sun.briareus.codegen.types.PaginationInput;
 import com.sun.briareus.codegen.types.QueryResult;
 import com.sun.briareus.codegen.types.QuerySuccess;
 import com.sun.briareus.codegen.types.StandardError;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.List;
-import java.util.stream.Collectors;
-import com.sun.briareus.model.PostEntity;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Sort;
 
 /**
- * Service for handling GraphQL-specific business logic for the Blogsite.
- * This service acts as an intermediary between the GraphQL layer and the domain
- * services.
+ * GraphQL business logic for the blogsite.
  */
 @Service
 public class BlogGraphQLService {
@@ -34,26 +42,33 @@ public class BlogGraphQLService {
   private BriareusService briareusService;
 
   @Autowired
+  private BlogPostTypeService blogPostTypeService;
+
+  @Autowired
   private BlogPostMapper blogPostMapper;
 
+  @Autowired
+  private BlogPostTypeMapper blogPostTypeMapper;
+
   /**
-   * Retrieves all blog posts.
-   * 
-   * @return a list of GraphQL BlgoPost objects
+   * Retrieves a page of blog posts matching the filters.
+   *
+   * @param pagination the pagination and filter input
+   * @return the matching page
    */
-  @Transactional
-  public List<BlogPost> listBlogPosts() {
+  @Transactional(readOnly = true)
+  public PagedBlogPosts listBlogPosts(PaginationInput pagination) {
     logger.info("Retrieving blog posts");
 
-    // TODO: pass in pagination object and map through some sun-graphql nonsense
-    Pageable sort = Pageable.unpaged(Sort.by("title").ascending());
-    Page<PostEntity> postEntities = briareusService.listPostsPaged(sort);
-    List<BlogPost> blogPosts = postEntities.stream()
-        .map(blogPostMapper::map)
-        .collect(Collectors.toList());
+    Pageable pageable = toPageable(pagination, "createdAt", Sort.Direction.DESC);
+    List<FilterSpec> filters = GraphQLSupport.toFilterSpecs(
+        pagination == null ? null : pagination.getFilters(),
+        f -> new FilterSpec(f.getField(), f.getOperator().name(), f.getValue()));
+    Page<PostEntity> result = briareusService.listPostsPaged(filters, pageable);
+    List<BlogPost> items = result.getContent().stream().map(blogPostMapper::map).toList();
 
-    logger.info("Retrieved {} blog posts", blogPosts.size());
-    return blogPosts;
+    logger.info("Retrieved {} blog posts", items.size());
+    return PagedBlogPosts.newBuilder().items(items).pageInfo(pageInfo(result)).build();
   }
 
   /**
@@ -62,11 +77,11 @@ public class BlogGraphQLService {
    * @param id the blog post ID as string
    * @return the GraphQL BlogPost object
    */
-  @Transactional
+  @Transactional(readOnly = true)
   public BlogPost locateBlogPost(String id) {
     logger.info("Retrieving blog post by ID: {}", id);
 
-    PostEntity postEntity = briareusService.locatePost(java.util.UUID.fromString(id))
+    PostEntity postEntity = briareusService.locatePost(UUID.fromString(id))
         .orElseThrow(() -> new RuntimeException("Blog post not found with id: " + id));
 
     BlogPost blogPost = blogPostMapper.map(postEntity);
@@ -81,7 +96,7 @@ public class BlogGraphQLService {
    * @param ids the remote-object ids to match
    * @return a list of GraphQL BlogPost objects
    */
-  @Transactional
+  @Transactional(readOnly = true)
   public List<BlogPost> listByRemoteObjects(List<String> ids) {
     logger.info("Retrieving blog posts by remote object ids: {}", ids);
 
@@ -92,6 +107,47 @@ public class BlogGraphQLService {
 
     logger.info("Retrieved {} blog posts matching remote object ids", blogPosts.size());
     return blogPosts;
+  }
+
+  /**
+   * Lists every blog post type.
+   *
+   * @return the post types
+   */
+  @Transactional(readOnly = true)
+  public List<BlogPostType> blogPostTypes() {
+    logger.info("Retrieving blog post types");
+    return blogPostTypeMapper.map(blogPostTypeService.findAll());
+  }
+
+  /**
+   * Creates a blog post type with a unique name.
+   *
+   * @param name the type name
+   * @param description an optional description
+   * @return the outcome of the creation
+   */
+  @Transactional
+  public QueryResult createBlogPostType(String name, String description) {
+    logger.info("Creating blog post type: {}", name);
+
+    if (name == null || name.isBlank()) {
+      return StandardError.newBuilder().message("Blog post type name is required").build();
+    }
+    if (blogPostTypeService.findByName(name).isPresent()) {
+      return StandardError.newBuilder().message("Blog post type already exists: " + name).build();
+    }
+
+    BlogPostTypeEntity entity = new BlogPostTypeEntity();
+    entity.setName(name);
+    entity.setDescription(description);
+    BlogPostTypeEntity saved = blogPostTypeService.save(entity);
+
+    logger.info("Created blog post type {} with id {}", name, saved.getId());
+    return QuerySuccess.newBuilder()
+        .message("Blog post type created")
+        .id(saved.getId().toString())
+        .build();
   }
 
   /**
@@ -120,5 +176,40 @@ public class BlogGraphQLService {
           .message("Failed to create blog post: " + e.getMessage())
           .build();
     }
+  }
+
+  /**
+   * Builds a pageable from the pagination input.
+   *
+   * @param pagination the pagination input
+   * @param defaultSortBy the fallback sort property
+   * @param defaultDir the fallback sort direction
+   * @return the pageable
+   */
+  private Pageable toPageable(PaginationInput pagination, String defaultSortBy,
+      Sort.Direction defaultDir) {
+    if (pagination == null) {
+      return PageRequests.of(null, null, null, null, defaultSortBy, defaultDir);
+    }
+    return PageRequests.of(pagination.getPage(), pagination.getSize(), pagination.getSortBy(),
+        pagination.getSortDir() == null ? null : pagination.getSortDir().name(),
+        defaultSortBy, defaultDir);
+  }
+
+  /**
+   * Builds page metadata from a Spring data page.
+   *
+   * @param result the data page
+   * @return the GraphQL PageInfo
+   */
+  private PageInfo pageInfo(Page<?> result) {
+    return PageInfo.newBuilder()
+        .page(result.getNumber())
+        .size(result.getSize())
+        .totalPages(result.getTotalPages())
+        .totalCount((int) result.getTotalElements())
+        .hasNextPage(result.hasNext())
+        .hasPreviousPage(result.hasPrevious())
+        .build();
   }
 }

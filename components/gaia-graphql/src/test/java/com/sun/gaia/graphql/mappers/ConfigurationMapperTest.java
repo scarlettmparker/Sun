@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import java.util.List;
 
 class ConfigurationMapperTest {
 
@@ -22,7 +23,7 @@ class ConfigurationMapperTest {
     entity.setDescription("Default themes");
     entity.setEnabled(true);
     Map<String, Object> content = new LinkedHashMap<>();
-    content.put("users", java.util.List.of());
+    content.put("users", List.of());
     entity.setContent(content);
     entity.setLastAppliedAt(LocalDateTime.now());
     entity.setLastApplyError(null);

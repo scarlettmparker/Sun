@@ -35,6 +35,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.sun.gaia.service.AccountService;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * GraphQL business logic for discussion forums.
@@ -49,11 +53,11 @@ public class IcarusGraphQLService {
   private final ForumVoteService voteService;
   private final ForumThreadMapper threadMapper;
   private final ForumPostMapper postMapper;
-  private final com.sun.gaia.service.AccountService accountService;
+  private final AccountService accountService;
 
   public IcarusGraphQLService(ForumThreadService threadService, ForumPostService postService,
       ForumVoteService voteService, ForumThreadMapper threadMapper, ForumPostMapper postMapper,
-      com.sun.gaia.service.AccountService accountService) {
+      AccountService accountService) {
     this.threadService = threadService;
     this.postService = postService;
     this.voteService = voteService;
@@ -111,17 +115,17 @@ public class IcarusGraphQLService {
     List<ForumPostEntity> visible = result.getContent().stream()
         .filter(p -> Boolean.TRUE.equals(includeHidden) || p.getStatus() == PostStatus.ACTIVE)
         .toList();
-    java.util.Map<UUID, RemoteUser> authors = new java.util.HashMap<>();
+    Map<UUID, RemoteUser> authors = new HashMap<>();
     visible.stream()
         .map(ForumPostEntity::getCreatedBy)
-        .filter(java.util.Objects::nonNull)
+        .filter(Objects::nonNull)
         .distinct()
         .forEach(gaiaAccountId -> accountService.findById(gaiaAccountId).ifPresent(acc -> {
           if ("discord".equals(acc.getProvider()) && acc.getProviderId() != null) {
             authors.put(gaiaAccountId, remoteUser(acc.getProviderId()));
           }
         }));
-    java.util.Map<UUID, VoteValue> myVotes = voteService.myVotes(
+    Map<UUID, VoteValue> myVotes = voteService.myVotes(
         visible.stream().map(ForumPostEntity::getId).toList());
     List<ForumPost> items = visible.stream()
         .map(p -> postMapper.map(p, authors.get(p.getCreatedBy()), myVotes.get(p.getId())))
@@ -216,7 +220,7 @@ public class IcarusGraphQLService {
   public QueryResult createPost(CreatePostInput input) {
     return mutate("createPost", () -> postService.addPost(
         UUID.fromString(input.getThreadId()),
-        input.getParentId() != null ? UUID.fromString(input.getParentId()) : null,
+        input.getParentId() == null ? null : UUID.fromString(input.getParentId()),
         input.getBody()));
   }
 
@@ -292,7 +296,7 @@ public class IcarusGraphQLService {
       return PageRequests.of(null, null, null, null, defaultSortBy, defaultDir);
     }
     return PageRequests.of(pagination.getPage(), pagination.getSize(), pagination.getSortBy(),
-        pagination.getSortDir() != null ? pagination.getSortDir().name() : null,
+        pagination.getSortDir() == null ? null : pagination.getSortDir().name(),
         defaultSortBy, defaultDir);
   }
 
@@ -327,7 +331,7 @@ public class IcarusGraphQLService {
       logger.info("{} succeeded for id {}", op, id);
       return QuerySuccess.newBuilder()
           .message(op + " succeeded")
-          .id(id != null ? id.toString() : null)
+          .id(id == null ? null : id.toString())
           .build();
     } catch (Exception e) {
       logger.error("{} failed", op, e);

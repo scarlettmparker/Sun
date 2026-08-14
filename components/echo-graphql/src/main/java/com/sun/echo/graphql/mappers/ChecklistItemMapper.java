@@ -25,8 +25,8 @@ public class ChecklistItemMapper {
         .name(entity.getName())
         .description(entity.getDescription())
         .icon(entity.getIcon())
-        .categoryId(entity.getCategoryId() != null ? entity.getCategoryId().toString() : null)
-        .lifecycleStatus(entity.getLifecycleStatus() != null ? entity.getLifecycleStatus().name() : null)
+        .categoryId(entity.getCategoryId() == null ? null : entity.getCategoryId().toString())
+        .lifecycleStatus(entity.getLifecycleStatus() == null ? null : entity.getLifecycleStatus().name())
         .createdAt(entity.getCreatedAt())
         .updatedAt(entity.getLastUpdatedAt())
         .build();

@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import com.sun.hades.model.enums.CefrLevel;
 
 /**
  * Mapper for reader text entities.
@@ -31,8 +32,8 @@ public class ReaderTextMapper {
         .content(entity.getContent())
         .language(entity.getLanguage())
         .level(entity.getLevel())
-        .ownerId(entity.getOwnerId() != null ? entity.getOwnerId().toString() : null)
-        .sourceId(entity.getSourceId() != null ? entity.getSourceId().toString() : null)
+        .ownerId(entity.getOwnerId() == null ? null : entity.getOwnerId().toString())
+        .sourceId(entity.getSourceId() == null ? null : entity.getSourceId().toString())
         .status(entity.getStatus())
         .createdAt(entity.getCreatedAt())
         .updatedAt(entity.getLastUpdatedAt())
@@ -53,9 +54,9 @@ public class ReaderTextMapper {
     entity.setTitle(input.getTitle());
     entity.setContent(input.getContent());
     entity.setLanguage(input.getLanguage());
-    entity.setLevel(input.getLevel() != null ? input.getLevel() : com.sun.hades.model.enums.CefrLevel.A1);
+    entity.setLevel(input.getLevel() == null ? CefrLevel.A1 : input.getLevel());
     UUID ownerId =
-        input.getOwnerId() != null ? UUID.fromString(input.getOwnerId()) : UserContextHolder.getUserId();
+        input.getOwnerId() == null ? UserContextHolder.getUserId() : UUID.fromString(input.getOwnerId());
     entity.setOwnerId(ownerId);
     if (input.getSourceId() != null) {
       entity.setSourceId(UUID.fromString(input.getSourceId()));

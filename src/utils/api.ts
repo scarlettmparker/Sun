@@ -27,7 +27,9 @@ export type { ApiResponse } from "@sun/api";
  * List operation for blog posts.
  */
 export async function fetchListBlogPosts() {
-  return executeDocument(ListBlogPostsDocument);
+  return executeDocument(ListBlogPostsDocument, {
+    pagination: { page: 0, size: 100 },
+  });
 }
 
 /**

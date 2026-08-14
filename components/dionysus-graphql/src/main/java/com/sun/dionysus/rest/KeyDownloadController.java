@@ -111,7 +111,7 @@ public class KeyDownloadController {
     return ResponseEntity.ok()
         .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition)
         .contentType(mediaType)
-        .contentLength(headResponse.contentLength() != null ? headResponse.contentLength() : -1)
+        .contentLength(headResponse.contentLength() == null ? -1 : headResponse.contentLength())
         .body(resource);
   }
 

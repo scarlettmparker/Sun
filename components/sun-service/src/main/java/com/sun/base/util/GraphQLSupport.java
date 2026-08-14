@@ -71,7 +71,7 @@ public final class GraphQLSupport {
   public static MutationOutcome mutate(Callable<UUID> action) {
     try {
       UUID id = action.call();
-      return new MutationOutcome(true, id != null ? id.toString() : null, "OK");
+      return new MutationOutcome(true, id == null ? null : id.toString(), "OK");
     } catch (IllegalArgumentException e) {
       return new MutationOutcome(false, null, e.getMessage());
     } catch (Exception e) {

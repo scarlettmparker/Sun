@@ -25,6 +25,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.SmartLifecycle;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.List;
 
 /**
  * The embedded torrent client: owns the libtorrent session, starts and stops it
@@ -117,7 +118,7 @@ public class TorrentClientService implements SmartLifecycle {
    */
   public TorrentJobEntity addFromMagnet(String bucket, String parentPath, String magnet) {
     MagnetUri parsed = MagnetUri.parse(magnet);
-    String name = parsed.displayName() != null ? parsed.displayName() : parsed.infoHash();
+    String name = parsed.displayName() == null ? parsed.infoHash() : parsed.displayName();
     String targetKeyPath = targetKeyPath(parentPath, name, false);
     guardUnique(bucket, targetKeyPath);
 
@@ -159,7 +160,7 @@ public class TorrentClientService implements SmartLifecycle {
     magnetDetail.setDisplayName(name);
     magnetDetail.setSourceUri("magnet:?xt=urn:btih:" + info.infoHash() + "&dn=" + encode(name));
     magnetDetail.setPrivate(false);
-    java.util.List<TorrentFileEntity> files = new ArrayList<>();
+    List<TorrentFileEntity> files = new ArrayList<>();
     for (int index = 0; index < storage.numFiles(); index++) {
       long size = storage.fileSize(index);
       total += size;

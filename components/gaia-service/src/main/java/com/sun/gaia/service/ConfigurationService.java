@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
+import java.util.UUID;
 
 /**
  * CRUD operations for stored configurations.
@@ -36,7 +37,7 @@ public class ConfigurationService extends BaseService<ConfigurationEntity> {
    * @param id the configuration id
    * @return the configuration if present
    */
-  public Optional<ConfigurationEntity> locate(java.util.UUID id) {
+  public Optional<ConfigurationEntity> locate(UUID id) {
     return findById(id);
   }
 
@@ -69,7 +70,7 @@ public class ConfigurationService extends BaseService<ConfigurationEntity> {
    * @param content the desired-state document
    * @return the saved configuration
    */
-  public ConfigurationEntity update(java.util.UUID id, String name, String description,
+  public ConfigurationEntity update(UUID id, String name, String description,
       boolean enabled, Map<String, Object> content) {
     ConfigurationEntity entity = findById(id)
         .orElseThrow(() -> new IllegalArgumentException("Configuration not found: " + id));

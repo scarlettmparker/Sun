@@ -24,7 +24,7 @@ public class ChecklistEntryMapper {
         .name(entity.getName())
         .dueAt(entity.getDueAt())
         .completedAt(entity.getCompletedAt())
-        .status(entity.getStatus() != null ? entity.getStatus().name() : null)
+        .status(entity.getStatus() == null ? null : entity.getStatus().name())
         .createdAt(entity.getCreatedAt())
         .updatedAt(entity.getLastUpdatedAt())
         .build();

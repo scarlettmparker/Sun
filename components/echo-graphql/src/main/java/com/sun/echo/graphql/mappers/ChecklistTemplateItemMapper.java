@@ -58,8 +58,8 @@ public class ChecklistTemplateItemMapper {
         .id(entity.getId().toString())
         .templateId(entity.getTemplateId().toString())
         .itemId(entity.getItemId().toString())
-        .name(item != null ? item.getName() : null)
-        .icon(item != null ? item.getIcon() : null)
+        .name(item == null ? null : item.getName())
+        .icon(item == null ? null : item.getIcon())
         .position(entity.getPosition());
   }
 }

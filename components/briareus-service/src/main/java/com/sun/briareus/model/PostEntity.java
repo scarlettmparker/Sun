@@ -24,6 +24,13 @@ public class PostEntity extends BaseEntity {
   @Column(name = "remote_object", columnDefinition = "jsonb")
   private List<String> remoteObject;
 
+  @ManyToOne
+  @JoinColumn(name = "type_id")
+  private BlogPostTypeEntity type;
+
+  @Column(name = "language")
+  private String language;
+
   // Getters and setters
   public String getTitle() {
     return title;
@@ -55,5 +62,21 @@ public class PostEntity extends BaseEntity {
 
   public void setRemoteObject(List<String> remoteObject) {
     this.remoteObject = remoteObject;
+  }
+
+  public BlogPostTypeEntity getType() {
+    return type;
+  }
+
+  public void setType(BlogPostTypeEntity type) {
+    this.type = type;
+  }
+
+  public String getLanguage() {
+    return language;
+  }
+
+  public void setLanguage(String language) {
+    this.language = language;
   }
 }

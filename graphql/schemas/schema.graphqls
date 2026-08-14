@@ -8,3 +8,44 @@ type QuerySuccess {
 }
 
 union QueryResult = QuerySuccess | StandardError
+
+input PaginationInput {
+  page: Int
+  size: Int
+  sortBy: String
+  sortDir: SortDirection
+  filters: [FilterInput!]
+}
+
+enum SortDirection {
+  ASC
+  DESC
+}
+
+input FilterInput {
+  field: String!
+  operator: FilterOperator!
+  value: String!
+}
+
+enum FilterOperator {
+  EQUALS
+  NOT_EQUALS
+  MATCHES
+  STARTS_WITH
+  ENDS_WITH
+  GREATER_THAN
+  LESS_THAN
+  GREATER_THAN_OR_EQUAL
+  LESS_THAN_OR_EQUAL
+  IN
+}
+
+type PageInfo {
+  page: Int!
+  size: Int!
+  totalPages: Int!
+  totalCount: Int!
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+}

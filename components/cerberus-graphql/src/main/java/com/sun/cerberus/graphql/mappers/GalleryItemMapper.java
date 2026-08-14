@@ -34,7 +34,7 @@ public class GalleryItemMapper {
         .content(galleryItemEntity.getContent())
         .imagePath(galleryItemEntity.getImagePath())
         .remoteObject(galleryItemEntity.getRemoteObject())
-        .keyDetailId(galleryItemEntity.getKeyDetailId() != null ? galleryItemEntity.getKeyDetailId().toString() : null)
+        .keyDetailId(galleryItemEntity.getKeyDetailId() == null ? null : galleryItemEntity.getKeyDetailId().toString())
         .createdAt(galleryItemEntity.getCreatedAt())
         .updatedAt(galleryItemEntity.getLastUpdatedAt())
         .build();

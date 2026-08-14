@@ -30,7 +30,7 @@ public class ReaderCommentMapper {
     ReaderComment comment = ReaderComment.newBuilder()
         .id(entity.getId().toString())
         .annotationId(entity.getAnnotationId().toString())
-        .parentId(entity.getParentId() != null ? entity.getParentId().toString() : null)
+        .parentId(entity.getParentId() == null ? null : entity.getParentId().toString())
         .body(entity.getBody())
         .status(entity.getStatus())
         .upvotes(entity.getUpvotes())

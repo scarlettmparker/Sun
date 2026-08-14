@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 import com.sun.cerberus.model.GalleryItemEntity;
+import java.util.UUID;
 
 /**
  * Service for handling GraphQL-specific business logic for the Gallery.
@@ -60,7 +61,7 @@ public class GalleryGraphQLService {
   public GalleryItem locate(String id) {
     logger.info("Retrieving gallery item by ID: {}", id);
 
-    GalleryItemEntity galleryItemEntity = cerberusService.locate(java.util.UUID.fromString(id))
+    GalleryItemEntity galleryItemEntity = cerberusService.locate(UUID.fromString(id))
         .orElseThrow(() -> new RuntimeException("Gallery item not found with id: " + id));
 
     GalleryItem galleryItem = galleryItemMapper.map(galleryItemEntity);
@@ -98,8 +99,8 @@ public class GalleryGraphQLService {
   public List<GalleryItem> locateGalleryItems(List<String> ids) {
     logger.info("Retrieving gallery items by ids: {}", ids);
 
-    List<java.util.UUID> uuids = ids.stream()
-        .map(java.util.UUID::fromString)
+    List<UUID> uuids = ids.stream()
+        .map(UUID::fromString)
         .collect(Collectors.toList());
     List<GalleryItemEntity> galleryItemEntities = cerberusService.locateByIds(uuids);
     return galleryItemEntities.stream()

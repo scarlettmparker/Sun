@@ -9,9 +9,12 @@ import com.sun.briareus.graphql.services.BlogGraphQLService;
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
 import com.sun.briareus.codegen.types.BlogPost;
+import com.sun.briareus.codegen.types.BlogPostType;
 import com.sun.briareus.codegen.types.BlogQueries;
 import com.sun.briareus.codegen.types.BlogMutations;
 import com.sun.briareus.codegen.types.BlogPostInput;
+import com.sun.briareus.codegen.types.PagedBlogPosts;
+import com.sun.briareus.codegen.types.PaginationInput;
 import com.sun.briareus.codegen.types.QueryResult;
 
 @DgsComponent
@@ -31,14 +34,15 @@ public class BlogDataFetcher {
   }
 
   /**
-   * Retrieves all blog posts for the blogsite.
+   * Retrieves a page of blog posts for the blogsite.
    *
-   * @return a list of BlogPost objects
+   * @param pagination the pagination and filter input
+   * @return the matching page of BlogPost objects
    */
   @DgsData(parentType = "BlogQueries", field = "listBlogPosts")
   @PreAuthorize("@permissions.has('graphql.briareus.listBlogPosts')")
-  public List<BlogPost> listBlogPosts() {
-    return blogGraphQLService.listBlogPosts();
+  public PagedBlogPosts listBlogPosts(PaginationInput pagination) {
+    return blogGraphQLService.listBlogPosts(pagination);
   }
 
   /**
@@ -66,6 +70,17 @@ public class BlogDataFetcher {
   }
 
   /**
+   * Lists every blog post type.
+   *
+   * @return the post types
+   */
+  @DgsData(parentType = "BlogQueries", field = "blogPostTypes")
+  @PreAuthorize("@permissions.has('graphql.briareus.blogPostTypes')")
+  public List<BlogPostType> blogPostTypes() {
+    return blogGraphQLService.blogPostTypes();
+  }
+
+  /**
    * Provides the blog mutations object.
    *
    * @return a new BlogMutations instance
@@ -86,5 +101,18 @@ public class BlogDataFetcher {
   @PreAuthorize("@permissions.has('graphql.briareus.createBlogPost')")
   public QueryResult createBlogPost(String title, BlogPostInput input) {
     return blogGraphQLService.createBlogPost(title, input);
+  }
+
+  /**
+   * Creates a blog post type with a unique name.
+   *
+   * @param name the type name
+   * @param description an optional description
+   * @return QueryResult indicating success or error
+   */
+  @DgsData(parentType = "BlogMutations", field = "createBlogPostType")
+  @PreAuthorize("@permissions.has('graphql.briareus.createBlogPostType')")
+  public QueryResult createBlogPostType(String name, String description) {
+    return blogGraphQLService.createBlogPostType(name, description);
   }
 }

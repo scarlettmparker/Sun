@@ -2,41 +2,52 @@ package com.sun.briareus.graphql.mappers;
 
 import com.sun.briareus.codegen.types.BlogPost;
 import com.sun.briareus.codegen.types.BlogPostInput;
+import com.sun.briareus.model.BlogPostTypeEntity;
+import com.sun.briareus.model.PostEntity;
+import com.sun.briareus.service.BlogPostTypeService;
+import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import com.sun.briareus.model.PostEntity;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
- * Mapper for converting domain Post entities to GraphQL BlogPost types.
+ * Converts between blog post entities and their GraphQL representation.
  */
 @Component
 public class BlogPostMapper {
 
   private static final Logger logger = LoggerFactory.getLogger(BlogPostMapper.class);
 
+  @Autowired
+  private BlogPostTypeMapper blogPostTypeMapper;
+
+  @Autowired
+  private BlogPostTypeService blogPostTypeService;
+
   /**
    * Maps a domain PostEntity to a GraphQL BlogPost type.
-   * 
+   *
    * @param postEntity the domain PostEntity to map
-   * @return the mapped GraphQL BlogPost type.
+   * @return the mapped GraphQL BlogPost type
    */
   public BlogPost map(PostEntity postEntity) {
     logger.debug("Mapping post {}", postEntity.getTitle());
 
-    BlogPost blogPost = BlogPost.newBuilder()
+    BlogPost.Builder builder = BlogPost.newBuilder()
         .id(postEntity.getId().toString())
         .title(postEntity.getTitle())
         .content(postEntity.getContent())
         .tags(postEntity.getTags())
         .remoteObject(postEntity.getRemoteObject())
+        .language(postEntity.getLanguage())
         .createdAt(postEntity.getCreatedAt())
-        .updatedAt(postEntity.getLastUpdatedAt())
-        .build();
+        .updatedAt(postEntity.getLastUpdatedAt());
+    if (postEntity.getType() != null) {
+      builder.type(blogPostTypeMapper.map(postEntity.getType()));
+    }
 
+    BlogPost blogPost = builder.build();
     logger.debug("Mapped blog post {} with id {}", postEntity.getTitle(), postEntity.getId());
     return blogPost;
   }
@@ -56,9 +67,23 @@ public class BlogPostMapper {
     postEntity.setContent(input.getContent());
     postEntity.setTags(input.getTags());
     postEntity.setRemoteObject(input.getRemoteObject());
+    postEntity.setLanguage(input.getLanguage());
+    if (input.getTypeId() != null) {
+      postEntity.setType(resolveType(UUID.fromString(input.getTypeId())));
+    }
 
     logger.debug("Mapped input to post entity with title: {}", title);
     return postEntity;
   }
 
+  /**
+   * Loads a post type by id.
+   *
+   * @param id the post type id
+   * @return the post type
+   */
+  private BlogPostTypeEntity resolveType(UUID id) {
+    return blogPostTypeService.findById(id)
+        .orElseThrow(() -> new IllegalArgumentException("Blog post type not found: " + id));
+  }
 }

@@ -64,7 +64,7 @@ public class FileViewController {
     var head = headObject(bucket, key);
     if (head == null) return ResponseEntity.notFound().build();
 
-    long contentLength = head.contentLength() != null ? head.contentLength() : -1;
+    long contentLength = head.contentLength() == null ? -1 : head.contentLength();
     MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
     if (head.contentType() != null) {
       try { mediaType = MediaType.parseMediaType(head.contentType()); } catch (Exception ignored) {}
@@ -221,7 +221,7 @@ public class FileViewController {
     int status = conn.getResponseCode();
     if (status < 200 || status > 299) {
       try (var err = conn.getErrorStream()) {
-        String body = err != null ? new String(err.readAllBytes()) : "";
+        String body = err == null ? "" : new String(err.readAllBytes());
         throw new IOException("Upload failed (" + status + "): " + body);
       }
     }

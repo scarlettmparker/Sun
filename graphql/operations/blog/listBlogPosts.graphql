@@ -1,10 +1,20 @@
-query listBlogPosts {
+query listBlogPosts($pagination: PaginationInput) {
   blogQueries {
-    listBlogPosts {
-      id
-      title
-      createdAt
-      tags
+    listBlogPosts(pagination: $pagination) {
+      items {
+        id
+        title
+        createdAt
+        tags
+      }
+      pageInfo {
+        page
+        size
+        totalPages
+        totalCount
+        hasNextPage
+        hasPreviousPage
+      }
     }
   }
 }

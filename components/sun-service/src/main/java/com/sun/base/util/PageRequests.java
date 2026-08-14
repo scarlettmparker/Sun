@@ -25,9 +25,9 @@ public final class PageRequests {
    */
   public static Pageable of(Integer page, Integer size, String sortBy, String sortDir,
       String defaultSortBy, Sort.Direction defaultDir) {
-    int p = page != null ? page : 0;
-    int s = size != null ? size : Integer.MAX_VALUE;
-    String property = sortBy != null ? sortBy : defaultSortBy;
+    int p = page == null ? 0 : page;
+    int s = size == null ? Integer.MAX_VALUE : size;
+    String property = sortBy == null ? defaultSortBy : sortBy;
     Sort.Direction direction = (sortDir != null && sortDir.equalsIgnoreCase("DESC"))
         ? Sort.Direction.DESC
         : (sortDir != null && sortDir.equalsIgnoreCase("ASC") ? Sort.Direction.ASC : defaultDir);

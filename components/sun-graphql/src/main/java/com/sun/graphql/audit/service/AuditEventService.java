@@ -21,6 +21,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.Base64;
 
 /**
  * Builds audit rows from a request snapshot and saves them on a separate thread,
@@ -189,7 +190,7 @@ public class AuditEventService {
       return null;
     }
     try {
-      return java.util.Base64.getDecoder().decode(base64);
+      return Base64.getDecoder().decode(base64);
     } catch (IllegalArgumentException e) {
       logger.warn("audit.chain.key is not valid base64; falling back to unkeyed digest");
       return null;

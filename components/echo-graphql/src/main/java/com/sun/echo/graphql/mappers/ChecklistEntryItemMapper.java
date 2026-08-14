@@ -57,8 +57,8 @@ public class ChecklistEntryItemMapper {
         .id(entity.getId().toString())
         .entryId(entity.getEntryId().toString())
         .itemId(entity.getItemId().toString())
-        .name(item != null ? item.getName() : null)
-        .icon(item != null ? item.getIcon() : null)
+        .name(item == null ? null : item.getName())
+        .icon(item == null ? null : item.getIcon())
         .status(entity.getStatus())
         .position(entity.getPosition());
   }

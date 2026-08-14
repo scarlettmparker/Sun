@@ -10,7 +10,7 @@ const BlogPage = () => {
   const { t } = useTranslation("blog");
 
   const { data: initialData } = usePageData<
-    ListBlogPostsQuery["blogQueries"]["listBlogPosts"]
+    ListBlogPostsQuery["blogQueries"]["listBlogPosts"]["items"]
   >("blogPosts", "blog");
 
   const groupedPosts = groupPostsByMonthYear(initialData ?? []);

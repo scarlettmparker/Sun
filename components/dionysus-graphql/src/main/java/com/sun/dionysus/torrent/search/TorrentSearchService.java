@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import java.net.URI;
 
 /**
  * Searches Jackett's internal JSON API for torrent results.
@@ -56,7 +57,7 @@ public class TorrentSearchService {
         try {
             String url = buildUrl(query);
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(java.net.URI.create(url))
+                    .uri(URI.create(url))
                     .timeout(Duration.ofSeconds(15))
                     .GET()
                     .build();

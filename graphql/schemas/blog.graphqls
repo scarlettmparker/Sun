@@ -1,10 +1,19 @@
 scalar Date
 
+type BlogPostType {
+  id: ID!
+  name: String!
+  description: String
+}
+
 type BlogPost {
   id: String!
   title: String!
   content: String
   tags: [String!]
+  remoteObject: [String!]
+  type: BlogPostType
+  language: String
   createdAt: Date
   updatedAt: Date
 }
@@ -12,15 +21,26 @@ type BlogPost {
 input BlogPostInput {
   content: String
   tags: [String!]
+  remoteObject: [String!]
+  typeId: ID
+  language: String
+}
+
+type PagedBlogPosts {
+  items: [BlogPost!]!
+  pageInfo: PageInfo!
 }
 
 type BlogQueries {
-  listBlogPosts: [BlogPost]
+  listBlogPosts(pagination: PaginationInput): PagedBlogPosts!
   locateBlogPost(id: ID!): BlogPost
+  listByRemoteObjects(ids: [String!]!): [BlogPost]
+  blogPostTypes: [BlogPostType!]!
 }
 
 type BlogMutations {
   createBlogPost(title: String!, input: BlogPostInput): QueryResult
+  createBlogPostType(name: String!, description: String): QueryResult
 }
 
 extend type Query {

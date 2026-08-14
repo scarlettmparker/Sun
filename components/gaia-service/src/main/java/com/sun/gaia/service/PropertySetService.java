@@ -145,7 +145,7 @@ public class PropertySetService extends BaseService<PropertySetEntryEntity> {
           return created;
         });
     Map<String, Object> values = new LinkedHashMap<>(
-        entry.getValues() != null ? entry.getValues() : Map.of());
+        entry.getValues() == null ? Map.of() : entry.getValues());
     values.put(property, value);
     validateAgainstSchema(ownerKey, propertySet, values);
     entry.setValues(values);

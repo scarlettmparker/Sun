@@ -189,7 +189,7 @@ public class FatesGraphQLService {
       logger.info("{} succeeded for id {}", op, id);
       return QuerySuccess.newBuilder()
           .message(op + " succeeded")
-          .id(id != null ? id.toString() : null)
+          .id(id == null ? null : id.toString())
           .build();
     } catch (Exception e) {
       logger.error("{} failed", op, e);
