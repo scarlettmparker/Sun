@@ -31,6 +31,7 @@ import com.sun.hades.model.ReaderAccountEntity;
 import com.sun.hades.model.ReaderAnnotationEntity;
 import com.sun.hades.model.ReaderPositionEntity;
 import com.sun.hades.model.ReaderTextEntity;
+import com.sun.hades.codegen.types.TextLevelAssessment;
 import com.sun.hades.model.enums.CefrLevel;
 import com.sun.hades.model.enums.ReaderStatus;
 import com.sun.hades.model.enums.ReaderVoteTarget;
@@ -78,6 +79,7 @@ class HadesGraphQLServiceTest {
   @Mock private ReaderPositionMapper positionMapper;
   @Mock private ReaderObjectReferenceMapper objectReferenceMapper;
   @Mock private RemoteUserMapper remoteUserMapper;
+  @Mock private com.sun.hades.graphql.inference.InferenceClient inferenceClient;
 
   @InjectMocks private HadesGraphQLService service;
 
@@ -281,5 +283,24 @@ class HadesGraphQLServiceTest {
     assertThat(result).hasSize(1);
     assertThat(result.get(0).getOwnerType()).isEqualTo("ANNOTATION");
     verify(objectReferenceMapper).map(reference);
+  }
+
+  @Test
+  void classifyTextLevel_delegatesToInferenceClient() {
+    TextLevelAssessment assessment =
+        TextLevelAssessment.newBuilder()
+            .level(CefrLevel.B2)
+            .confidence(0.62f)
+            .build();
+    when(inferenceClient.classify("some text")).thenReturn(Optional.of(assessment));
+
+    assertThat(service.classifyTextLevel("some text")).isSameAs(assessment);
+  }
+
+  @Test
+  void classifyTextLevel_returnsNullWhenServiceUnavailable() {
+    when(inferenceClient.classify("some text")).thenReturn(Optional.empty());
+
+    assertThat(service.classifyTextLevel("some text")).isNull();
   }
 }

@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+onnxruntime
+tokenizers
+numpy
+scikit-learn
+requests
+beautifulsoup4
+pytest

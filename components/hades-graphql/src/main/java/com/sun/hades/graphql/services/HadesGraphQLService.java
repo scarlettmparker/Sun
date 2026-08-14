@@ -13,6 +13,8 @@ import com.sun.hades.codegen.types.DiscordLoginResult;
 import com.sun.hades.codegen.types.PageInfo;
 import com.sun.hades.codegen.types.PagedReaderComments;
 import com.sun.hades.codegen.types.PagedReaderTexts;
+import com.sun.hades.codegen.types.TextLevelAssessment;
+import com.sun.hades.graphql.inference.InferenceClient;
 import com.sun.hades.codegen.types.PaginationInput;
 import com.sun.hades.codegen.types.QueryResult;
 import com.sun.hades.codegen.types.QuerySuccess;
@@ -96,6 +98,7 @@ public class HadesGraphQLService {
   private final ReaderPositionMapper positionMapper;
   private final ReaderObjectReferenceMapper objectReferenceMapper;
   private final RemoteUserMapper remoteUserMapper;
+  private final InferenceClient inferenceClient;
 
   public HadesGraphQLService(ReaderTextService textService, ReaderSourceService sourceService,
       ReaderAnnotationService annotationService, ReaderCommentService commentService,
@@ -105,7 +108,7 @@ public class HadesGraphQLService {
       ReaderSourceMapper sourceMapper, ReaderAnnotationMapper annotationMapper,
       ReaderCommentMapper commentMapper, ReaderAccountMapper accountMapper,
       ReaderPositionMapper positionMapper, ReaderObjectReferenceMapper objectReferenceMapper,
-      RemoteUserMapper remoteUserMapper) {
+      RemoteUserMapper remoteUserMapper, InferenceClient inferenceClient) {
     this.textService = textService;
     this.sourceService = sourceService;
     this.annotationService = annotationService;
@@ -124,6 +127,7 @@ public class HadesGraphQLService {
     this.positionMapper = positionMapper;
     this.objectReferenceMapper = objectReferenceMapper;
     this.remoteUserMapper = remoteUserMapper;
+    this.inferenceClient = inferenceClient;
   }
 
   /**
@@ -155,6 +159,17 @@ public class HadesGraphQLService {
   @Transactional(readOnly = true)
   public ReaderText text(String id) {
     return textService.findById(UUID.fromString(id)).map(textMapper::map).orElse(null);
+  }
+
+  /**
+   * Predicts the CEFR level of a text via the inference service.
+   *
+   * @param text the text to classify
+   * @return the assessment, or null when the service is unavailable
+   */
+  @Transactional(readOnly = true)
+  public TextLevelAssessment classifyTextLevel(String text) {
+    return inferenceClient.classify(text).orElse(null);
   }
 
   /**

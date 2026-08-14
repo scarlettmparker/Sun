@@ -15,6 +15,7 @@ import com.sun.hades.codegen.types.QueryResult;
 import com.sun.hades.codegen.types.ReaderAnnotation;
 import com.sun.hades.codegen.types.ReaderSource;
 import com.sun.hades.codegen.types.ReaderText;
+import com.sun.hades.codegen.types.TextLevelAssessment;
 import com.sun.hades.codegen.types.ReaderTextInput;
 import com.sun.hades.codegen.types.ReaderObjectReference;
 import com.sun.hades.codegen.types.RemoteUserInput;
@@ -71,6 +72,18 @@ public class HadesDataFetcher {
   @PreAuthorize("@permissions.has('graphql.hades.text')")
   public ReaderText text(String id) {
     return hadesGraphQLService.text(id);
+  }
+
+  /**
+   * Predicts the CEFR level of a text.
+   *
+   * @param text the text to classify
+   * @return the assessment
+   */
+  @DgsData(parentType = "HadesQueries", field = "classifyTextLevel")
+  @PreAuthorize("@permissions.has('graphql.hades.classifyTextLevel')")
+  public TextLevelAssessment classifyTextLevel(String text) {
+    return hadesGraphQLService.classifyTextLevel(text);
   }
 
   /**

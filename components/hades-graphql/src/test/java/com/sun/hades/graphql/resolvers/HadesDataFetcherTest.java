@@ -7,6 +7,7 @@ import com.sun.hades.codegen.types.AnnotationInput;
 import com.sun.hades.codegen.types.QueryResult;
 import com.sun.hades.codegen.types.QuerySuccess;
 import com.sun.hades.codegen.types.ReaderText;
+import com.sun.hades.codegen.types.TextLevelAssessment;
 import com.sun.hades.codegen.types.ReaderTextInput;
 import com.sun.hades.graphql.services.HadesGraphQLService;
 import com.sun.hades.model.enums.CefrLevel;
@@ -67,5 +68,13 @@ class HadesDataFetcherTest {
     QueryResult result = fetcher.createText(input);
 
     assertThat(result).isEqualTo(mockResult);
+  }
+
+  @Test
+  void classifyTextLevel_delegatesToService() {
+    TextLevelAssessment assessment = TextLevelAssessment.newBuilder().build();
+    when(service.classifyTextLevel("some text")).thenReturn(assessment);
+
+    assertThat(fetcher.classifyTextLevel("some text")).isSameAs(assessment);
   }
 }

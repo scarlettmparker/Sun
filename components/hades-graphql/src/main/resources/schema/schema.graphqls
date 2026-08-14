@@ -174,6 +174,7 @@ type HadesQueries {
   source(id: ID!): ReaderSource
   sources: [ReaderSource!]
   texts(pagination: PaginationInput): PagedReaderTexts!
+  classifyTextLevel(text: String!): TextLevelAssessment
   annotations(textId: ID!, includeHidden: Boolean): [ReaderAnnotation!]!
   annotation(id: ID!): ReaderAnnotation
   comments(
@@ -216,4 +217,32 @@ extend type Query {
 
 extend type Mutation {
   hadesMutations: HadesMutations!
+}
+
+"""
+Predicted probability for a single CEFR level.
+"""
+type LevelProbability {
+  level: CefrLevel!
+  probability: Float!
+}
+
+"""
+A contributing complexity factor with a direction (up/down).
+"""
+type ComplexityFactor {
+  name: String!
+  value: Float!
+  direction: String!
+  weight: Float!
+}
+
+"""
+Predicted CEFR level with confidence and contributing factors.
+"""
+type TextLevelAssessment {
+  level: CefrLevel!
+  confidence: Float!
+  probabilities: [LevelProbability!]!
+  factors: [ComplexityFactor!]!
 }
