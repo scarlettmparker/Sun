@@ -45,77 +45,89 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--texts", default="data/reader_texts.jsonl")
     parser.add_argument("--paidika", default="data/paidika.jsonl")
+    parser.add_argument("--lenguia", default="data/lenguia.jsonl")
     parser.add_argument("--out", default="data/dataset.jsonl")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--max-per-level", type=int, default=300)
+    parser.add_argument("--min-words", type=int, default=8)
     args = parser.parse_args()
 
     random.seed(args.seed)
     samples = []
 
-    for line in Path(args.texts).read_text(encoding="utf-8").splitlines():
-        row = json.loads(line)
-        level = row["level"].upper()
-        if level not in LEVELS or not row["content"]:
-            continue
-        for chunk in chunk_text(row["content"]):
-            samples.append({"level": level, "source": "reader", "text": chunk})
-
-    paidika = Path(args.paidika)
-    if paidika.exists():
-        for line in paidika.read_text(encoding="utf-8").splitlines():
+    def add_source(path, source):
+        for idx, line in enumerate(Path(path).read_text(encoding="utf-8").splitlines()):
             row = json.loads(line)
             level = row["level"].upper()
             if level not in LEVELS or not row["content"]:
                 continue
+            text_id = f"{source}:{idx}"
             for chunk in chunk_text(row["content"]):
-                samples.append({"level": level, "source": "paidika", "text": chunk})
+                if len(chunk.split()) >= args.min_words:
+                    samples.append({"level": level, "source": source, "text": chunk, "textId": text_id})
+
+    add_source(args.texts, "reader")
+    if Path(args.paidika).exists():
+        add_source(args.paidika, "paidika")
+    if Path(args.lenguia).exists():
+        add_source(args.lenguia, "lenguia")
 
     by_level = Counter(s["level"] for s in samples)
     print("samples per level (raw):", dict(sorted(by_level.items())))
 
-    # Cap each level, keeping trusted reader chunks ahead of paidika chunks.
+    # Cap each level, keeping trusted reader/lenguia chunks ahead of paidika chunks.
     capped = []
     for level in LEVELS:
         pool = [s for s in samples if s["level"] == level]
-        reader = [s for s in pool if s["source"] == "reader"]
+        trusted = [s for s in pool if s["source"] in ("reader", "lenguia")]
         paidika = [s for s in pool if s["source"] == "paidika"]
         random.shuffle(paidika)
-        if len(reader) >= args.max_per_level:
-            random.shuffle(reader)
-            capped += reader[: args.max_per_level]
+        if len(trusted) >= args.max_per_level:
+            random.shuffle(trusted)
+            capped += trusted[: args.max_per_level]
         else:
-            remaining = args.max_per_level - len(reader)
-            capped += reader + paidika[:remaining]
+            remaining = args.max_per_level - len(trusted)
+            capped += trusted + paidika[:remaining]
     samples = capped
     print("samples per level (capped):", dict(sorted(Counter(s["level"] for s in samples).items())))
 
     # Stratified split.
     random.shuffle(samples)
-    split_map = {}
+    # Split whole texts, never chunks, so no text spans train and test.
+    texts_by_level = {level: [] for level in LEVELS}
     for sample in samples:
-        split_map.setdefault(sample["level"], []).append(sample)
-    train, val, test = [], [], []
+        if sample["textId"] not in texts_by_level[sample["level"]]:
+            texts_by_level[sample["level"]].append(sample["textId"])
+
+    train_ids, val_ids, test_ids = [], [], []
     for level in LEVELS:
-        pool = split_map.get(level, [])
-        n = len(pool)
+        text_ids = texts_by_level[level]
+        random.shuffle(text_ids)
+        n = len(text_ids)
         n_val = max(1, round(n * 0.1))
         n_test = max(1, round(n * 0.1))
-        train += pool[: n - n_val - n_test]
-        val += pool[n - n_val - n_test : n - n_test]
-        test += pool[n - n_test :]
+        train_ids += text_ids[: n - n_val - n_test]
+        val_ids += text_ids[n - n_val - n_test : n - n_test]
+        test_ids += text_ids[n - n_test :]
+    train_set, val_set = set(train_ids), set(val_ids)
 
-    def tag(samples_, split):
-        for s in samples_:
-            s["split"] = split
-        return samples_
+    def split_of(sample):
+        if sample["textId"] in train_set:
+            return "train"
+        if sample["textId"] in val_set:
+            return "val"
+        return "test"
 
-    all_samples = tag(train, "train") + tag(val, "val") + tag(test, "test")
+    for sample in samples:
+        sample["split"] = split_of(sample)
+
+    counts = Counter(s["split"] for s in samples)
+    print("chunks train/val/test:", counts["train"], counts["val"], counts["test"])
+    print("texts train/val/test:", len(train_set), len(val_set), len(test_ids))
+
     with open(args.out, "w", encoding="utf-8") as f:
-        for s in all_samples:
+        for s in samples:
             f.write(json.dumps(s, ensure_ascii=False) + "\n")
-
-    print("train/val/test:", len(train), len(val), len(test))
 
 
 if __name__ == "__main__":

@@ -44,6 +44,7 @@ class CefrDataset(Dataset):
         """
         self.encodings = []
         self.labels = []
+        self.text_ids = []
         for sample in samples:
             enc = tokenizer(
                 sample["text"],
@@ -53,6 +54,7 @@ class CefrDataset(Dataset):
             )
             self.encodings.append(enc)
             self.labels.append(LEVEL_INDEX[sample["level"]])
+            self.text_ids.append(sample["textId"])
 
     def __len__(self):
         """
@@ -70,6 +72,7 @@ class CefrDataset(Dataset):
             "attention_mask": torch.tensor(enc["attention_mask"]),
             "token_type_ids": torch.tensor(enc.get("token_type_ids", [0] * len(enc["input_ids"]))),
             "labels": torch.tensor(self.labels[i]),
+            "text_ids": self.text_ids[i],
         }
 
 
@@ -85,10 +88,10 @@ def load_samples(path):
 
 def evaluate(model, loader, device):
     """
-    Predicts on the loader and returns the true and predicted labels.
+    Predicts on the loader and returns true labels, predictions, and text ids.
     """
     model.eval()
-    preds, labels = [], []
+    preds, labels, text_ids = [], [], []
     with torch.no_grad():
         for batch in loader:
             out = model(
@@ -98,7 +101,24 @@ def evaluate(model, loader, device):
             )
             preds.extend(out.logits.argmax(dim=-1).cpu().tolist())
             labels.extend(batch["labels"].tolist())
-    return labels, preds
+            text_ids.extend(batch["text_ids"])
+    return labels, preds, text_ids
+
+
+def text_level(labels, preds, text_ids):
+    """
+    Majority-votes per-chunk predictions by text and returns the text labels.
+    """
+    votes = {}
+    for label, pred, text_id in zip(labels, preds, text_ids):
+        entry = votes.setdefault(text_id, [[0] * len(LEVELS), [0] * len(LEVELS)])
+        entry[0][label] += 1
+        entry[1][pred] += 1
+    true_labels, pred_labels = [], []
+    for _, (label_counts, pred_counts) in votes.items():
+        true_labels.append(label_counts.index(max(label_counts)))
+        pred_labels.append(pred_counts.index(max(pred_counts)))
+    return true_labels, pred_labels
 
 
 def train_epoch(model, loader, optimizer, scheduler, criterion, device):
@@ -131,7 +151,7 @@ def main():
     parser.add_argument("--dataset", default="data/dataset.jsonl")
     parser.add_argument("--out-dir", default="app/model")
     parser.add_argument("--model-name", default="nlpaueb/bert-base-greek-uncased-v1")
-    parser.add_argument("--epochs", type=int, default=3)
+    parser.add_argument("--epochs", type=int, default=8)
     parser.add_argument("--batch-size", type=int, default=8)
     parser.add_argument("--max-len", type=int, default=384)
     parser.add_argument("--lr", type=float, default=2e-5)
@@ -142,8 +162,12 @@ def main():
 
     if args.export_only:
         samples = load_samples(args.dataset)
+        probe_path = Path(args.out_dir) / "features.json"
+        existing = json.loads(probe_path.read_text(encoding="utf-8")) if probe_path.exists() else {}
+        temperature = existing.get("temperature", 1.0)
+        length_prior = build_length_prior([s for s in samples if s["split"] == "train"])
         export_onnx(args.out_dir, args.model_name)
-        train_feature_probe(samples, args.out_dir)
+        train_feature_probe(samples, args.out_dir, temperature=temperature, length_prior=length_prior)
         return
 
     random.seed(args.seed)
@@ -172,30 +196,47 @@ def main():
     val_loader = DataLoader(CefrDataset(val, tokenizer, args.max_len), batch_size=args.batch_size)
     test_loader = DataLoader(CefrDataset(test, tokenizer, args.max_len), batch_size=args.batch_size)
 
-    optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=0.01)
     steps = args.epochs * len(train_loader)
     scheduler = get_linear_schedule_with_warmup(optimizer, int(0.1 * steps), steps)
 
     best_f1 = 0.0
+    epochs_without_gain = 0
     for epoch in range(1, args.epochs + 1):
         loss = train_epoch(model, train_loader, optimizer, scheduler, criterion, device)
-        labels, preds = evaluate(model, val_loader, device)
-        macro = f1_score(labels, preds, average="macro")
-        print(f"epoch {epoch}: train_loss={loss:.4f} val_macro_f1={macro:.4f}")
-        if macro > best_f1:
-            best_f1 = macro
+        labels, preds, text_ids = evaluate(model, val_loader, device)
+        chunk_f1 = f1_score(labels, preds, average="macro")
+        true_t, pred_t = text_level(labels, preds, text_ids)
+        text_f1 = f1_score(true_t, pred_t, average="macro")
+        print(f"epoch {epoch}: loss={loss:.4f} chunk_f1={chunk_f1:.4f} text_f1={text_f1:.4f}")
+        if text_f1 > best_f1:
+            best_f1 = text_f1
+            epochs_without_gain = 0
             model.save_pretrained(args.out_dir)
             tokenizer.save_pretrained(args.out_dir)
+        else:
+            epochs_without_gain += 1
+            if epochs_without_gain >= 3:
+                print("early stopping")
+                break
 
     model = BertForSequenceClassification.from_pretrained(args.out_dir)
     model.to(device)
-    labels, preds = evaluate(model, test_loader, device)
-    print("=== test ===")
+    labels, preds, text_ids = evaluate(model, test_loader, device)
+    print("=== test (chunk) ===")
     print(classification_report(labels, preds, target_names=LEVELS, digits=3))
-    print(f"macro_f1={f1_score(labels, preds, average='macro'):.4f}")
+    true_t, pred_t = text_level(labels, preds, text_ids)
+    print("=== test (text) ===")
+    print(classification_report(true_t, pred_t, target_names=LEVELS, digits=3))
+    print(f"chunk_macro_f1={f1_score(labels, preds, average='macro'):.4f} "
+          f"text_macro_f1={f1_score(true_t, pred_t, average='macro'):.4f}")
+
+    temperature = fit_temperature(model, val_loader, device)
+    print(f"temperature={temperature:.2f}")
+    length_prior = build_length_prior(train)
 
     export_onnx(args.out_dir, args.model_name)
-    train_feature_probe(samples, args.out_dir)
+    train_feature_probe(samples, args.out_dir, temperature=temperature, length_prior=length_prior)
 
 
 def export_onnx(model_dir, base_model_name):
@@ -228,7 +269,7 @@ def export_onnx(model_dir, base_model_name):
     print("ONNX exported to", out)
 
 
-def train_feature_probe(samples, out_dir):
+def train_feature_probe(samples, out_dir, temperature=1.0, length_prior=None):
     """
     Trains a multinomial logistic regression on the linguistic features.
     """
@@ -272,7 +313,9 @@ def train_feature_probe(samples, out_dir):
         "weight": {name: weights[name] / max_weight for name in feature_names},
         "coef": probe.coef_.tolist(),
         "intercept": probe.intercept_.tolist(),
-        "blendAlpha": 0.7,
+        "blendAlpha": 0.85,
+        "temperature": temperature,
+        "lengthPrior": length_prior,
     }
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
@@ -280,6 +323,40 @@ def train_feature_probe(samples, out_dir):
         json.dumps(features_json, ensure_ascii=False, indent=2), encoding="utf-8"
     )
     print("feature probe written to", out / "features.json")
+
+
+def fit_temperature(model, loader, device):
+    """
+    Fits a softmax temperature on the validation set to calibrate confidence.
+    """
+    model.eval()
+    all_logits, all_labels = [], []
+    with torch.no_grad():
+        for batch in loader:
+            out = model(
+                input_ids=batch["input_ids"].to(device),
+                attention_mask=batch["attention_mask"].to(device),
+                token_type_ids=batch["token_type_ids"].to(device),
+            )
+            all_logits.append(out.logits)
+            all_labels.append(batch["labels"])
+    logits = torch.cat(all_logits).float()
+    labels = torch.cat(all_labels).to(device)
+
+    best_t, best_nll = 1.0, float("inf")
+    for candidate in [x / 10 for x in range(5, 31)]:
+        scaled = torch.log_softmax(logits / candidate, dim=-1)
+        nll = -scaled.gather(1, labels.unsqueeze(1)).mean().item()
+        if nll < best_nll:
+            best_nll, best_t = nll, candidate
+    return best_t
+
+
+def build_length_prior(samples):
+    """
+    Returns a gentle prior for very short inputs, which are hard to judge.
+    """
+    return {"tinyWords": 12, "tinyPrior": [0.35, 0.25, 0.2, 0.1, 0.05, 0.05]}
 
 
 if __name__ == "__main__":

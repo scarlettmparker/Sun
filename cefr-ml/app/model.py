@@ -42,8 +42,27 @@ class CefrClassifier:
         self.weight = probe["weight"]
         self.coef = np.array(probe["coef"], dtype=np.float32)
         self.intercept = np.array(probe["intercept"], dtype=np.float32)
-        self.blend_alpha = float(probe.get("blendAlpha", 0.7))
+        # BERT only ever sharpens; never flattens overconfident outputs.
+        self.temperature = min(float(probe.get("temperature", 1.0)), 1.0)
+        length_prior = probe.get("lengthPrior", {})
+        self.tiny_words = int(length_prior.get("tinyWords", 12))
+        self.tiny_prior = np.array(
+            length_prior.get("tinyPrior", [0.35, 0.25, 0.2, 0.1, 0.05, 0.05]), dtype=np.float32
+        )
         self.input_names = [i.name for i in self.session.get_inputs()]
+
+    def _bert_weight(self, word_count: int) -> float:
+        """
+        Returns how much the BERT contributes for a given word count.
+
+        The feature probe is more reliable than the BERT on short inputs,
+        which the BERT struggles to judge, so it gains weight on longer text.
+        """
+        if word_count <= 50:
+            return 0.4
+        if word_count <= 120:
+            return 0.6
+        return 0.85
 
     def _chunks(self, text: str):
         """
@@ -67,8 +86,8 @@ class CefrClassifier:
         """
         Returns level, confidence, probabilities, and factor breakdown.
 
-        The BERT probabilities are blended with the feature-probe probabilities,
-        so the frequency lexicon contributes to the final decision.
+        The temperature-calibrated BERT and the feature probe are blended, and
+        very short inputs are pulled toward a word-count level prior.
         """
         chunks = self._chunks(text)
         bert_probs = np.zeros(len(LEVELS))
@@ -85,13 +104,22 @@ class CefrClassifier:
             if "token_type_ids" not in self.input_names:
                 feeds.pop("token_type_ids")
             logits = self.session.run(None, feeds)[0]
+            logits = logits / self.temperature
             exp = np.exp(logits[0] - logits[0].max())
             bert_probs += exp / exp.sum()
         bert_probs = bert_probs / bert_probs.sum()
 
         features = extract_features(text, self.frequency)
         probe_probs = self._probe_probs(features)
-        probs = self.blend_alpha * bert_probs + (1 - self.blend_alpha) * probe_probs
+        word_count = len(text.split())
+        bert_weight = self._bert_weight(word_count)
+        model_probs = bert_weight * bert_probs + (1 - bert_weight) * probe_probs
+
+        if word_count < self.tiny_words:
+            prior_weight = (self.tiny_words - word_count) / self.tiny_words * 0.5
+            probs = (1 - prior_weight) * model_probs + prior_weight * self.tiny_prior
+        else:
+            probs = model_probs
         probs = probs / probs.sum()
 
         level_idx = int(np.argmax(probs))

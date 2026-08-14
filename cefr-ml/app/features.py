@@ -9,7 +9,7 @@ PUNCTUATION = re.compile(r"[.,;:!?—–…\"'()\[\]{}<>«»]")
 WORD = re.compile(r"[^\W\d_]+")
 
 # Words with a per-million frequency below this count rare vocabulary.
-RARE_FREQ_THRESHOLD = 10.0
+RARE_FREQ_THRESHOLD = 1.0
 
 
 def split_sentences(text: str):
