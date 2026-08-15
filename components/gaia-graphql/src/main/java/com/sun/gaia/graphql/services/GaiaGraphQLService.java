@@ -34,6 +34,7 @@ import com.sun.gaia.graphql.mappers.PropertySetMapper;
 import com.sun.gaia.model.AccountEntity;
 import com.sun.gaia.model.IpWhitelistEntryEntity;
 import com.sun.gaia.model.PropertySetEntryEntity;
+import com.sun.gaia.codegen.types.RemoteUserType;
 import com.sun.gaia.model.enums.AccountStatus;
 import com.sun.gaia.repository.AccountRepository;
 import com.sun.gaia.service.AccountService;
@@ -202,6 +203,24 @@ public class GaiaGraphQLService {
     UUID userId = UserContextHolder.getUserId();
     if (userId == null) return List.of();
     return accountRepository.findEffectiveRoleNames(userId);
+  }
+
+  /**
+   * Returns an active remote account's effective permission patterns.
+   *
+   * @param remoteUserType the remote identity type
+   * @param remoteUserId the remote identity id
+   * @return the permission patterns, or empty when the account does not exist
+   */
+  @Transactional(readOnly = true)
+  public List<String> effectivePermissions(RemoteUserType remoteUserType, String remoteUserId) {
+    if (remoteUserType != RemoteUserType.DISCORD || remoteUserId == null || remoteUserId.isBlank()) {
+      return List.of();
+    }
+    return accountRepository
+        .findByProviderAndProviderIdAndStatus("discord", remoteUserId, AccountStatus.ACTIVE)
+        .map(account -> accountRepository.findEffectivePermissions(account.getId()))
+        .orElseGet(List::of);
   }
 
   /**

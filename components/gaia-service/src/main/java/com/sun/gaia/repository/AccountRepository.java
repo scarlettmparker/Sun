@@ -2,6 +2,7 @@ package com.sun.gaia.repository;
 
 import com.sun.base.repository.BaseRepository;
 import com.sun.gaia.model.AccountEntity;
+import com.sun.gaia.model.enums.AccountStatus;
 import com.sun.gaia.model.enums.AccountType;
 import java.util.List;
 import java.util.Optional;
@@ -23,6 +24,9 @@ public interface AccountRepository extends BaseRepository<AccountEntity>, JpaSpe
   List<AccountEntity> findAllByPersonId(UUID personId);
 
   Optional<AccountEntity> findByProviderAndProviderId(String provider, String providerId);
+
+  Optional<AccountEntity> findByProviderAndProviderIdAndStatus(
+      String provider, String providerId, AccountStatus status);
 
   /**
    * Permission patterns granted to the caller's person (any of that person's

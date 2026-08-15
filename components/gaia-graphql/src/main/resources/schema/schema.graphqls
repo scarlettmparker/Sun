@@ -110,6 +110,7 @@ type GaiaQueries {
   tailscaleDevices: [TailscaleDevice!]!
   tailscaleDevice(id: ID!): TailscaleDevice
   hubRegistry: HubRegistry
+  effectivePermissions(remoteUserType: RemoteUserType!, remoteUserId: String!): [String!]!
 }
 
 type GaiaMutations {

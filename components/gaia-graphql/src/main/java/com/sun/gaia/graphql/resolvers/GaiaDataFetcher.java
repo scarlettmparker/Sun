@@ -17,6 +17,7 @@ import com.sun.gaia.codegen.types.TailscaleDevice;
 import com.sun.gaia.codegen.types.GaiaQueries;
 import com.sun.gaia.codegen.types.LoginInput;
 import com.sun.gaia.codegen.types.PagedAccounts;
+import com.sun.gaia.codegen.types.RemoteUserType;
 import com.sun.gaia.codegen.types.PaginationInput;
 import com.sun.gaia.codegen.types.PropertySetEntry;
 import com.sun.gaia.codegen.types.PropertySetSchema;
@@ -103,6 +104,16 @@ public class GaiaDataFetcher {
   @PreAuthorize("permitAll()")
   public List<String> myRoles() {
     return gaiaGraphQLService.myRoles();
+  }
+
+  /**
+   * Returns a remote account's effective permission patterns.
+   */
+  @DgsData(parentType = "GaiaQueries", field = "effectivePermissions")
+  @PreAuthorize("@permissions.has('graphql.gaia.permissions')")
+  public List<String> effectivePermissions(
+      RemoteUserType remoteUserType, String remoteUserId) {
+    return gaiaGraphQLService.effectivePermissions(remoteUserType, remoteUserId);
   }
 
   /**
