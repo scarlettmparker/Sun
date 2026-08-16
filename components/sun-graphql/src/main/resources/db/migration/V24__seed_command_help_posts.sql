@@ -104,7 +104,7 @@ VALUES (
   'b9f70000-0000-4000-8000-000000000015',
   'text',
   E'**Locate and read a text**\n\n' ||
-  E'`ns text <id or title search>` opens a view for the matching text.\n\n' ||
+  E'`ns text <id or title search>` opens a view for the matching text.',
   '["bot-help"]',
   '["niece-scarlett:command_help:text"]',
   'b9f70000-0000-4000-8000-000000000002',
