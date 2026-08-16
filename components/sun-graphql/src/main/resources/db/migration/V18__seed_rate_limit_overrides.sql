@@ -3,12 +3,15 @@
 
 -- define: global 1/min, three channels 1/10s
 UPDATE gaia_property_set_entries
-SET values = values::jsonb || '{
-  "rateLimit": { "capacity": 1, "refillPerSecond": 0.0167 },
-  "channelRateLimits": {
-    "354924532479295498": { "capacity": 1, "refillPerSecond": 0.1 },
-    "477473581626949642": { "capacity": 1, "refillPerSecond": 0.1 },
-    "798363574358769684": { "capacity": 1, "refillPerSecond": 0.1 }
+SET values = (values::jsonb - 'channelRateLimits') || '{
+  "rateLimit": {
+    "capacity": 1,
+    "refillPerSecond": 0.0167,
+    "channels": {
+      "354924532479295498": { "capacity": 1, "refillPerSecond": 0.1 },
+      "477473581626949642": { "capacity": 1, "refillPerSecond": 0.1 },
+      "798363574358769684": { "capacity": 1, "refillPerSecond": 0.1 }
+    }
   }
 }'::jsonb,
     lastupdatedat = CURRENT_TIMESTAMP
@@ -18,10 +21,13 @@ WHERE owner_key = 'NieceScarlett'
 
 -- classify: capacity 0 globally (disabled), 1/min only in one channel
 UPDATE gaia_property_set_entries
-SET values = values::jsonb || '{
-  "rateLimit": { "capacity": 0, "refillPerSecond": 0.0167 },
-  "channelRateLimits": {
-    "354924532479295498": { "capacity": 1, "refillPerSecond": 0.0167 }
+SET values = (values::jsonb - 'channelRateLimits') || '{
+  "rateLimit": {
+    "capacity": 0,
+    "refillPerSecond": 0.0167,
+    "channels": {
+      "354924532479295498": { "capacity": 1, "refillPerSecond": 0.0167 }
+    }
   }
 }'::jsonb,
     lastupdatedat = CURRENT_TIMESTAMP
