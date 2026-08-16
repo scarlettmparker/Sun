@@ -124,7 +124,7 @@ export function getRequestIp(): string | undefined {
 }
 
 function activeCache(): Map<string, CacheRecord> {
-  // Server inside a request → that request's map; otherwise the client/session map.
+  // Server inside a request -> that request's map; otherwise the client/session map.
   if (typeof window === "undefined" && requestCacheProvider) {
     const store = requestCacheProvider();
     if (store) return store;

@@ -33,6 +33,7 @@ dependencies {
     implementation 'com.netflix.graphql.dgs:graphql-dgs-spring-graphql-starter'
     compileOnly 'org.springframework.security:spring-security-core'
     implementation 'io.github.cdimascio:dotenv-java:3.0.0'
+    implementation 'org.jsoup:jsoup:1.18.1'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'com.netflix.graphql.dgs:graphql-dgs-spring-graphql-starter-test'
     testImplementation 'com.h2database:h2'

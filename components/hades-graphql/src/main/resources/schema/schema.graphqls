@@ -186,6 +186,7 @@ type HadesQueries {
   readerAccounts(remoteUsers: [RemoteUserInput!]!): [ReaderAccount!]!
   myVote(targetType: ReaderVoteTarget!, targetId: ID!): VoteValue
   locateRemoteObjects(ids: [String!]!): [ReaderObjectReference!]!
+  defineWord(word: String!, scope: [WordScope!]): Word
 }
 
 """
@@ -245,4 +246,49 @@ type TextLevelAssessment {
   confidence: Float!
   probabilities: [LevelProbability!]!
   factors: [ComplexityFactor!]!
+}
+
+"""
+Which parts of a WordReference word page to include.
+"""
+enum WordScope {
+  ALL_TRANSLATIONS
+  EXAMPLES
+  COMPOUNDS
+  RELATED_WORDS
+}
+
+"""
+A dictionary word with its translations, compounds, and related words.
+"""
+type Word {
+  id: ID!
+  term: String!
+  wordType: String
+  entries: [WordEntry!]!
+  compounds: [WordEntry!]!
+  relatedWords: [Word!]!
+  sourceUrl: String!
+}
+
+"""
+A single dictionary entry for a headword.
+"""
+type WordEntry {
+  id: ID!
+  term: String!
+  wordType: String!
+  sense: String
+  translations: [WordTranslation!]!
+  examples: [String!]!
+  note: String
+}
+
+"""
+A translated term under a word entry.
+"""
+type WordTranslation {
+  term: String!
+  wordType: String
+  usageNotes: [String!]!
 }

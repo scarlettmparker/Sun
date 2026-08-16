@@ -16,11 +16,14 @@ import com.sun.hades.codegen.types.ReaderAnnotation;
 import com.sun.hades.codegen.types.ReaderSource;
 import com.sun.hades.codegen.types.ReaderText;
 import com.sun.hades.codegen.types.TextLevelAssessment;
+import com.sun.hades.codegen.types.Word;
+import com.sun.hades.codegen.types.WordScope;
 import com.sun.hades.codegen.types.ReaderTextInput;
 import com.sun.hades.codegen.types.ReaderObjectReference;
 import com.sun.hades.codegen.types.RemoteUserInput;
 import com.sun.hades.codegen.types.VoteInput;
 import com.sun.hades.graphql.services.HadesGraphQLService;
+import com.sun.hades.graphql.services.WordReferenceService;
 import com.sun.hades.model.enums.ReaderVoteTarget;
 import com.sun.hades.model.enums.VoteValue;
 import java.util.List;
@@ -36,6 +39,9 @@ public class HadesDataFetcher {
 
   @Autowired
   private HadesGraphQLService hadesGraphQLService;
+
+  @Autowired
+  private WordReferenceService wordReferenceService;
 
   /**
    * Provides the reader queries object.
@@ -84,6 +90,19 @@ public class HadesDataFetcher {
   @PreAuthorize("@permissions.has('graphql.hades.classifyTextLevel')")
   public TextLevelAssessment classifyTextLevel(String text) {
     return hadesGraphQLService.classifyTextLevel(text);
+  }
+
+  /**
+   * Defines a word from WordReference, honoring the requested scopes.
+   *
+   * @param word the headword to look up
+   * @param scope the parts of the page to include
+   * @return the word, or null when the entry does not exist
+   */
+  @DgsData(parentType = "HadesQueries", field = "defineWord")
+  @PreAuthorize("@permissions.has('graphql.hades.defineWord')")
+  public Word defineWord(String word, List<WordScope> scope) {
+    return wordReferenceService.defineWord(word, scope);
   }
 
   /**
