@@ -81,7 +81,7 @@ public class TorrentDownloadGateway {
 
     long start = System.currentTimeMillis();
     long simulatedBytes = 0L;
-    int rateBps = 2_500_000 + RNG.nextInt(5_000_000); // 2.5–7.5 MB/s
+    int rateBps = 2_500_000 + RNG.nextInt(5_000_000); // 2.57.5 MB/s
 
     while (simulatedBytes < totalBytes) {
       try {

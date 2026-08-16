@@ -224,6 +224,29 @@ public class GaiaGraphQLService {
   }
 
   /**
+   * Property-set entries the remote user may execute.
+   *
+   * @param remoteUserType the remote identity type
+   * @param remoteUserId the remote identity id
+   * @param ownerKey the property-set owner
+   * @param propertySet the property-set name
+   * @return the accessible entries
+   */
+  @Transactional(readOnly = true)
+  public List<PropertySetEntry> accessibleCommandIntents(
+      RemoteUserType remoteUserType, String remoteUserId,
+      String ownerKey, String propertySet) {
+    if (remoteUserType != RemoteUserType.DISCORD || remoteUserId == null || remoteUserId.isBlank()) {
+      return List.of();
+    }
+    return propertySetService
+        .listAccessibleEntries(remoteUserId, ownerKey, propertySet)
+        .stream()
+        .map(propertySetMapper::map)
+        .collect(Collectors.toList());
+  }
+
+  /**
    * Looks up every account across the system, paginated.
    */
   @Transactional(readOnly = true)

@@ -111,6 +111,12 @@ type GaiaQueries {
   tailscaleDevice(id: ID!): TailscaleDevice
   hubRegistry: HubRegistry
   effectivePermissions(remoteUserType: RemoteUserType!, remoteUserId: String!): [String!]!
+  accessibleCommandIntents(
+    remoteUserType: RemoteUserType!
+    remoteUserId: String!
+    ownerKey: String!
+    propertySet: String!
+  ): [PropertySetEntry!]!
 }
 
 type GaiaMutations {

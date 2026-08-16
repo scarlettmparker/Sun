@@ -5,8 +5,10 @@ import static org.mockito.Mockito.when;
 
 import com.sun.gaia.codegen.types.ApiKey;
 import com.sun.gaia.codegen.types.IssuedApiKey;
+import com.sun.gaia.codegen.types.PropertySetEntry;
 import com.sun.gaia.codegen.types.QueryResult;
 import com.sun.gaia.codegen.types.QuerySuccess;
+import com.sun.gaia.codegen.types.RemoteUserType;
 import com.sun.gaia.graphql.services.GaiaGraphQLService;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -90,5 +92,22 @@ class GaiaDataFetcherTest {
     IssuedApiKey result = fetcher.rotateApiKey("id");
 
     assertThat(result).isEqualTo(mockResult);
+  }
+
+  @Test
+  void accessibleCommandIntents_shouldDelegateToService() {
+    PropertySetEntry entry = PropertySetEntry.newBuilder()
+        .entryName("texts")
+        .values(java.util.Map.of("command", "texts"))
+        .build();
+    when(service.accessibleCommandIntents(
+        RemoteUserType.DISCORD, "12345", "NieceScarlett", "command-intents"))
+        .thenReturn(List.of(entry));
+
+    List<PropertySetEntry> result = fetcher.accessibleCommandIntents(
+        RemoteUserType.DISCORD, "12345", "NieceScarlett", "command-intents");
+
+    assertThat(result).hasSize(1);
+    assertThat(result.get(0).getEntryName()).isEqualTo("texts");
   }
 }

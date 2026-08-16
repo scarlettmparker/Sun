@@ -23,8 +23,10 @@ import com.sun.gaia.codegen.types.RegisterInput;
 import com.sun.gaia.codegen.types.StandardError;
 import com.sun.gaia.graphql.mappers.AccountMapper;
 import com.sun.gaia.graphql.mappers.ApiKeyMapper;
+import com.sun.gaia.graphql.mappers.PropertySetMapper;
 import com.sun.gaia.model.AccountEntity;
 import com.sun.gaia.model.ApiKeyEntity;
+import com.sun.gaia.model.PropertySetEntryEntity;
 import com.sun.gaia.model.ReactivationTokenEntity;
 import com.sun.gaia.model.enums.AccountStatus;
 import com.sun.gaia.repository.AccountRepository;
@@ -33,7 +35,10 @@ import com.sun.gaia.service.ApiKeyService;
 import com.sun.gaia.service.EmailService;
 import com.sun.gaia.service.JwtService;
 import com.sun.gaia.service.PasswordResetService;
+import com.sun.gaia.service.PropertySetService;
 import com.sun.gaia.service.ReactivationService;
+import com.sun.gaia.codegen.types.PropertySetEntry;
+import com.sun.gaia.codegen.types.RemoteUserType;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -57,6 +62,8 @@ class GaiaGraphQLServiceTest {
   @Mock private ReactivationService reactivationService;
   @Mock private AccountMapper accountMapper;
   @Mock private ApiKeyMapper apiKeyMapper;
+  @Mock private PropertySetService propertySetService;
+  @Mock private PropertySetMapper propertySetMapper;
 
   @InjectMocks private GaiaGraphQLService service;
 
@@ -410,5 +417,76 @@ class GaiaGraphQLServiceTest {
     assertThat(result.getPlaintextKey()).isEqualTo("ns_rotated");
     assertThat(result.getApiKey()).isEqualTo(mapped);
     verify(apiKeyService).rotate(id);
+  }
+
+  @Test
+  void effectivePermissions_returnsPatternsForActiveDiscordAccount() {
+    UUID accountId = UUID.randomUUID();
+    AccountEntity account = new AccountEntity();
+    account.setId(accountId);
+    when(accountRepository.findByProviderAndProviderIdAndStatus(
+        "discord", "12345", AccountStatus.ACTIVE))
+        .thenReturn(Optional.of(account));
+    when(accountRepository.findEffectivePermissions(accountId))
+        .thenReturn(List.of("bot.commands.*"));
+
+    List<String> result = service.effectivePermissions(RemoteUserType.DISCORD, "12345");
+
+    assertThat(result).containsExactly("bot.commands.*");
+  }
+
+  @Test
+  void effectivePermissions_returnsEmptyForUnknownUser() {
+    when(accountRepository.findByProviderAndProviderIdAndStatus(
+        "discord", "unknown", AccountStatus.ACTIVE))
+        .thenReturn(Optional.empty());
+
+    List<String> result = service.effectivePermissions(RemoteUserType.DISCORD, "unknown");
+
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void effectivePermissions_returnsEmptyForNonDiscordType() {
+    List<String> result = service.effectivePermissions(RemoteUserType.DISCORD, null);
+
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void accessibleCommandIntents_returnsAccessibleEntries() {
+    PropertySetEntryEntity entry = new PropertySetEntryEntity();
+    entry.setEntryName("texts");
+    entry.setValues(java.util.Map.of("command", "texts", "description", "List reader texts"));
+    when(propertySetService.listAccessibleEntries("12345", "NieceScarlett", "command-intents"))
+        .thenReturn(List.of(entry));
+
+    PropertySetEntry mapped = PropertySetEntry.newBuilder()
+        .entryName("texts")
+        .values(java.util.Map.of("command", "texts", "description", "List reader texts"))
+        .build();
+    when(propertySetMapper.map(entry)).thenReturn(mapped);
+
+    List<PropertySetEntry> result = service.accessibleCommandIntents(
+        RemoteUserType.DISCORD, "12345", "NieceScarlett", "command-intents");
+
+    assertThat(result).hasSize(1);
+    assertThat(result.get(0).getEntryName()).isEqualTo("texts");
+  }
+
+  @Test
+  void accessibleCommandIntents_returnsEmptyForUnknownUser() {
+    List<PropertySetEntry> result = service.accessibleCommandIntents(
+        RemoteUserType.DISCORD, "unknown", "NieceScarlett", "command-intents");
+
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void accessibleCommandIntents_returnsEmptyForBlankUserId() {
+    List<PropertySetEntry> result = service.accessibleCommandIntents(
+        RemoteUserType.DISCORD, "  ", "NieceScarlett", "command-intents");
+
+    assertThat(result).isEmpty();
   }
 }

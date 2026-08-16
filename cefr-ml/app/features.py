@@ -5,7 +5,7 @@ Interpretable linguistic features used for the CEFR factor breakdown.
 import math
 import re
 
-PUNCTUATION = re.compile(r"[.,;:!?—–…\"'()\[\]{}<>«»]")
+PUNCTUATION = re.compile(r"[.,;:!?-–…\"'()\[\]{}<>«»]")
 WORD = re.compile(r"[^\W\d_]+")
 
 # Words with a per-million frequency below this count rare vocabulary.

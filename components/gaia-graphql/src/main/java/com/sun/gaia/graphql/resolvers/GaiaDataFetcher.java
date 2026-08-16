@@ -117,6 +117,18 @@ public class GaiaDataFetcher {
   }
 
   /**
+   * Property-set entries the remote user may execute.
+   */
+  @DgsData(parentType = "GaiaQueries", field = "accessibleCommandIntents")
+  @PreAuthorize("@permissions.has('graphql.gaia.permissions')")
+  public List<PropertySetEntry> accessibleCommandIntents(
+      RemoteUserType remoteUserType, String remoteUserId,
+      String ownerKey, String propertySet) {
+    return gaiaGraphQLService.accessibleCommandIntents(
+        remoteUserType, remoteUserId, ownerKey, propertySet);
+  }
+
+  /**
    * Looks up every account across the system, paginated.
    */
   @DgsData(parentType = "GaiaQueries", field = "accounts")

@@ -154,6 +154,19 @@ public class PropertySetService extends BaseService<PropertySetEntryEntity> {
   }
 
   /**
+   * Active entries accessible to a remote user by permission.
+   *
+   * @param remoteUserId the Discord snowflake
+   * @param ownerKey the property-set owner
+   * @param propertySet the property-set name
+   * @return the accessible entries
+   */
+  public List<PropertySetEntryEntity> listAccessibleEntries(
+      String remoteUserId, String ownerKey, String propertySet) {
+    return entryRepository.findAccessibleEntries(remoteUserId, ownerKey, propertySet);
+  }
+
+  /**
    * Validates values against the schema for a property set, if a schema exists.
    *
    * @param ownerKey the owner key
