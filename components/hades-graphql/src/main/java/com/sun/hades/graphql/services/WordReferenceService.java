@@ -27,7 +27,9 @@ public class WordReferenceService {
           + " (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36";
   private static final int DEFAULT_ENTRY_LIMIT = 2;
   private static final String MAIN_TABLE_ID = "regular";
+  private static final String REVERSE_TABLE_ID = "othersideregular";
   private static final String COMPOUND_TABLE_ID = "compounds";
+  private static final String REVERSE_COMPOUND_TABLE_ID = "othersidecompound";
 
   private final RestClient restClient;
 
@@ -82,14 +84,22 @@ public class WordReferenceService {
     boolean includeRelated = scopes.contains(WordScope.RELATED_WORDS);
 
     int limit = allTranslations ? -1 : DEFAULT_ENTRY_LIMIT;
+    List<WordEntry> entries = parseTable(section(doc, MAIN_TABLE_ID), limit, includeExamples);
+    if (entries.isEmpty()) {
+      entries = parseTable(section(doc, REVERSE_TABLE_ID), limit, includeExamples);
+    }
+    List<WordEntry> compounds = List.of();
+    if (includeCompounds) {
+      compounds = parseTable(section(doc, COMPOUND_TABLE_ID), -1, includeExamples);
+      if (compounds.isEmpty()) {
+        compounds = parseTable(section(doc, REVERSE_COMPOUND_TABLE_ID), -1, includeExamples);
+      }
+    }
     return Word.newBuilder()
         .id(word)
         .term(word)
-        .entries(parseTable(section(doc, MAIN_TABLE_ID), limit, includeExamples))
-        .compounds(
-            includeCompounds
-                ? parseTable(section(doc, COMPOUND_TABLE_ID), -1, includeExamples)
-                : List.of())
+        .entries(entries)
+        .compounds(compounds)
         .relatedWords(includeRelated ? relatedWords(doc) : List.of())
         .sourceUrl(String.format(WORD_URL, encode(word)))
         .build();

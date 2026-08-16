@@ -60,6 +60,20 @@ class WordReferenceServiceTest {
         .isNull();
   }
 
+  @Test
+  void defineWord_fallsBackToTheReverseTableWhenOnlyItExists() throws Exception {
+    Word word = service.parseWord(
+        fixture("wordreference/oualia.html"),
+        "ουαλία",
+        List.of(WordScope.ALL_TRANSLATIONS));
+
+    assertThat(word.getEntries()).isNotEmpty();
+    assertThat(word.getEntries().get(0).getTerm()).isEqualTo("Wales");
+    assertThat(word.getEntries().get(0).getTranslations())
+        .extracting(com.sun.hades.codegen.types.WordTranslation::getTerm)
+        .contains("Ουαλία");
+  }
+
   private static String fixture(String path) throws Exception {
     return new String(
         new ClassPathResource(path).getInputStream().readAllBytes(), StandardCharsets.UTF_8);
