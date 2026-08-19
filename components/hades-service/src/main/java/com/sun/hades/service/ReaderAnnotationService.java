@@ -16,6 +16,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -146,6 +149,36 @@ public class ReaderAnnotationService extends BaseService<ReaderAnnotationEntity>
     return includeHidden
         ? all
         : all.stream().filter(a -> a.getStatus() == ReaderStatus.ACTIVE).toList();
+  }
+
+  /**
+   * Paginated annotations for a text, optionally including hidden ones.
+   *
+   * @param textId the text id
+   * @param includeHidden whether to include hidden annotations
+   * @param pageable the page request
+   * @return the page of annotations
+   */
+  public Page<ReaderAnnotationEntity> listForTextPaged(
+      UUID textId, boolean includeHidden, Pageable pageable) {
+    Specification<ReaderAnnotationEntity> spec = textIdSpec(textId);
+    if (!includeHidden) {
+      spec = spec.and(statusSpec(ReaderStatus.ACTIVE));
+    }
+    return annotationRepository.findAll(spec, pageable);
+  }
+
+  private Specification<ReaderAnnotationEntity> textIdSpec(UUID textId) {
+    return (root, query, cb) -> {
+      var sub = cb.createQuery(UUID.class);
+      var pos = sub.from(ReaderPositionEntity.class);
+      sub.select(pos.get("id")).where(cb.equal(pos.get("textId"), textId));
+      return root.get("positionId").in(sub);
+    };
+  }
+
+  private Specification<ReaderAnnotationEntity> statusSpec(ReaderStatus status) {
+    return (root, query, cb) -> cb.equal(root.get("status"), status);
   }
 
   /**

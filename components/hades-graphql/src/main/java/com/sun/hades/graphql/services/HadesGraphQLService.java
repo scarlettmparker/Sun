@@ -11,6 +11,7 @@ import com.sun.gaia.service.UserContextHolder;
 import com.sun.hades.codegen.types.CommentInput;
 import com.sun.hades.codegen.types.DiscordLoginResult;
 import com.sun.hades.codegen.types.PageInfo;
+import com.sun.hades.codegen.types.PagedReaderAnnotations;
 import com.sun.hades.codegen.types.PagedReaderComments;
 import com.sun.hades.codegen.types.PagedReaderTexts;
 import com.sun.hades.codegen.types.TextLevelAssessment;
@@ -194,23 +195,26 @@ public class HadesGraphQLService {
   }
 
   /**
-   * Lists annotations for a text, each with its resolved position.
+   * Paginated annotations for a text, optionally including hidden ones.
    *
    * @param textId the text id
    * @param includeHidden whether to include hidden annotations
-   * @return the annotations
+   * @param pagination the page request
+   * @return the paged annotations
    */
   @Transactional(readOnly = true)
-  public List<ReaderAnnotation> annotations(String textId, Boolean includeHidden) {
+  public PagedReaderAnnotations annotations(
+      String textId, Boolean includeHidden, PaginationInput pagination) {
     UUID id = UUID.fromString(textId);
-    List<ReaderAnnotationEntity> entities =
-        annotationService.listForText(id, Boolean.TRUE.equals(includeHidden));
+    Pageable pageable = toPageable(pagination, "createdAt", Sort.Direction.DESC);
+    var page = annotationService.listForTextPaged(
+        id, Boolean.TRUE.equals(includeHidden), pageable);
     Map<UUID, ReaderPosition> positions =
         positionService.listForText(id).stream()
             .collect(Collectors.toMap(
                 ReaderPositionEntity::getId, positionMapper::map, (a, b) -> a));
     Map<UUID, RemoteUser> authors = new HashMap<>();
-    entities.stream()
+    page.getContent().stream()
         .map(ReaderAnnotationEntity::getCreatedBy)
         .filter(Objects::nonNull)
         .distinct()
@@ -218,15 +222,19 @@ public class HadesGraphQLService {
             .ifPresent(acc -> authors.put(gaiaAccountId, remoteUserMapper.discord(acc.getDiscordId()))));
     Map<UUID, VoteValue> myVotes = voteService.myVotes(
         ReaderVoteTarget.ANNOTATION,
-        entities.stream().map(ReaderAnnotationEntity::getId).toList());
+        page.getContent().stream().map(ReaderAnnotationEntity::getId).toList());
     Map<UUID, Long> replyCounts = commentService.countByAnnotationIds(
-        entities.stream().map(ReaderAnnotationEntity::getId).toList());
-    return entities.stream()
+        page.getContent().stream().map(ReaderAnnotationEntity::getId).toList());
+    List<ReaderAnnotation> items = page.getContent().stream()
         .map(a -> annotationMapper.map(a, positions.get(a.getPositionId()),
             authors.get(a.getCreatedBy()),
             replyCounts.getOrDefault(a.getId(), 0L).intValue(),
             myVotes.get(a.getId())))
         .toList();
+    return PagedReaderAnnotations.newBuilder()
+        .items(items)
+        .pageInfo(pageInfo(page))
+        .build();
   }
 
   /**

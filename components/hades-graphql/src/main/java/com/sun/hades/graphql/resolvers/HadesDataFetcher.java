@@ -8,6 +8,7 @@ import com.sun.hades.codegen.types.CommentInput;
 import com.sun.hades.codegen.types.DiscordLoginResult;
 import com.sun.hades.codegen.types.HadesMutations;
 import com.sun.hades.codegen.types.HadesQueries;
+import com.sun.hades.codegen.types.PagedReaderAnnotations;
 import com.sun.hades.codegen.types.PagedReaderComments;
 import com.sun.hades.codegen.types.PagedReaderTexts;
 import com.sun.hades.codegen.types.PaginationInput;
@@ -129,16 +130,18 @@ public class HadesDataFetcher {
   }
 
   /**
-   * Lists annotations for a text.
+   * Paginated annotations for a text.
    *
    * @param textId the text id
    * @param includeHidden whether to include hidden annotations
-   * @return the annotations
+   * @param pagination the page request
+   * @return the paged annotations
    */
   @DgsData(parentType = "HadesQueries", field = "annotations")
   @PreAuthorize("@permissions.has('graphql.hades.annotations')")
-  public List<ReaderAnnotation> annotations(String textId, Boolean includeHidden) {
-    return hadesGraphQLService.annotations(textId, includeHidden);
+  public PagedReaderAnnotations annotations(
+      String textId, Boolean includeHidden, PaginationInput pagination) {
+    return hadesGraphQLService.annotations(textId, includeHidden, pagination);
   }
 
   /**

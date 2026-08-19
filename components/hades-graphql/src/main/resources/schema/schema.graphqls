@@ -1,4 +1,77 @@
 """
+Predicted probability for a single CEFR level.
+"""
+type LevelProbability {
+  level: CefrLevel!
+  probability: Float!
+}
+
+"""
+A contributing complexity factor with a direction (up/down).
+"""
+type ComplexityFactor {
+  name: String!
+  value: Float!
+  direction: String!
+  weight: Float!
+}
+
+"""
+Predicted CEFR level with confidence and contributing factors.
+"""
+type TextLevelAssessment {
+  level: CefrLevel!
+  confidence: Float!
+  probabilities: [LevelProbability!]!
+  factors: [ComplexityFactor!]!
+}
+
+"""
+Which parts of a WordReference word page to include.
+"""
+enum WordScope {
+  ALL_TRANSLATIONS
+  EXAMPLES
+  COMPOUNDS
+  RELATED_WORDS
+}
+
+"""
+A dictionary word with its translations, compounds, and related words.
+"""
+type Word {
+  id: ID!
+  term: String!
+  wordType: String
+  entries: [WordEntry!]!
+  compounds: [WordEntry!]!
+  relatedWords: [Word!]!
+  sourceUrl: String!
+}
+
+"""
+A single dictionary entry for a headword.
+"""
+type WordEntry {
+  id: ID!
+  term: String!
+  wordType: String!
+  sense: String
+  translations: [WordTranslation!]!
+  examples: [String!]!
+  note: String
+}
+
+"""
+A translated term under a word entry.
+"""
+type WordTranslation {
+  term: String!
+  wordType: String
+  usageNotes: [String!]!
+}
+
+"""
 The website a reader text originated from.
 """
 type ReaderSource {
@@ -104,6 +177,11 @@ type PagedReaderComments {
   pageInfo: PageInfo!
 }
 
+type PagedReaderAnnotations {
+  items: [ReaderAnnotation!]!
+  pageInfo: PageInfo!
+}
+
 type DiscordLoginResult {
   token: String!
   accountId: ID!
@@ -175,7 +253,11 @@ type HadesQueries {
   sources: [ReaderSource!]
   texts(pagination: PaginationInput): PagedReaderTexts!
   classifyTextLevel(text: String!): TextLevelAssessment
-  annotations(textId: ID!, includeHidden: Boolean): [ReaderAnnotation!]!
+  annotations(
+    textId: ID!
+    includeHidden: Boolean
+    pagination: PaginationInput
+  ): PagedReaderAnnotations!
   annotation(id: ID!): ReaderAnnotation
   comments(
     annotationId: ID!
@@ -218,77 +300,4 @@ extend type Query {
 
 extend type Mutation {
   hadesMutations: HadesMutations!
-}
-
-"""
-Predicted probability for a single CEFR level.
-"""
-type LevelProbability {
-  level: CefrLevel!
-  probability: Float!
-}
-
-"""
-A contributing complexity factor with a direction (up/down).
-"""
-type ComplexityFactor {
-  name: String!
-  value: Float!
-  direction: String!
-  weight: Float!
-}
-
-"""
-Predicted CEFR level with confidence and contributing factors.
-"""
-type TextLevelAssessment {
-  level: CefrLevel!
-  confidence: Float!
-  probabilities: [LevelProbability!]!
-  factors: [ComplexityFactor!]!
-}
-
-"""
-Which parts of a WordReference word page to include.
-"""
-enum WordScope {
-  ALL_TRANSLATIONS
-  EXAMPLES
-  COMPOUNDS
-  RELATED_WORDS
-}
-
-"""
-A dictionary word with its translations, compounds, and related words.
-"""
-type Word {
-  id: ID!
-  term: String!
-  wordType: String
-  entries: [WordEntry!]!
-  compounds: [WordEntry!]!
-  relatedWords: [Word!]!
-  sourceUrl: String!
-}
-
-"""
-A single dictionary entry for a headword.
-"""
-type WordEntry {
-  id: ID!
-  term: String!
-  wordType: String!
-  sense: String
-  translations: [WordTranslation!]!
-  examples: [String!]!
-  note: String
-}
-
-"""
-A translated term under a word entry.
-"""
-type WordTranslation {
-  term: String!
-  wordType: String
-  usageNotes: [String!]!
 }

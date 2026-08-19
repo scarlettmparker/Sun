@@ -9,6 +9,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.sun.gaia.service.UserContextHolder;
+import com.sun.hades.codegen.types.PagedReaderAnnotations;
+import com.sun.hades.codegen.types.PaginationInput;
 import com.sun.hades.codegen.types.QueryResult;
 import com.sun.hades.codegen.types.QuerySuccess;
 import com.sun.hades.codegen.types.ReaderAccount;
@@ -126,8 +128,9 @@ class HadesGraphQLServiceTest {
     annotation.setBody("body");
     annotation.setStatus(ReaderStatus.ACTIVE);
     annotation.setCreatedBy(userId);
+    Page<ReaderAnnotationEntity> page = new PageImpl<>(List.of(annotation), PageRequest.of(0, 10), 1);
     when(positionService.listForText(textId)).thenReturn(List.of(position));
-    when(annotationService.listForText(textId, false)).thenReturn(List.of(annotation));
+    when(annotationService.listForTextPaged(eq(textId), eq(false), any())).thenReturn(page);
     when(accountService.findByGaiaAccountId(userId)).thenReturn(Optional.empty());
     when(voteService.myVotes(eq(ReaderVoteTarget.ANNOTATION), anyList())).thenReturn(Map.of());
     when(commentService.countByAnnotationIds(anyList())).thenReturn(Map.of());
@@ -138,10 +141,11 @@ class HadesGraphQLServiceTest {
     when(positionMapper.map(position)).thenReturn(mappedPosition);
     when(annotationMapper.map(annotation, mappedPosition, null, 0, null)).thenReturn(mapped);
 
-    List<ReaderAnnotation> result = service.annotations(textId.toString(), false);
+    PagedReaderAnnotations result = service.annotations(textId.toString(), false, null);
 
-    assertThat(result).hasSize(1);
-    assertThat(result.get(0).getPosition().getStartOffset()).isZero();
+    assertThat(result.getItems()).hasSize(1);
+    assertThat(result.getItems().get(0).getPosition().getStartOffset()).isZero();
+    assertThat(result.getPageInfo().getTotalCount()).isEqualTo(1);
   }
 
   @Test
@@ -167,8 +171,9 @@ class HadesGraphQLServiceTest {
         .type(RemoteUserType.DISCORD)
         .id("123")
         .build();
+    Page<ReaderAnnotationEntity> page = new PageImpl<>(List.of(annotation), PageRequest.of(0, 10), 1);
     when(positionService.listForText(textId)).thenReturn(List.of(position));
-    when(annotationService.listForText(textId, false)).thenReturn(List.of(annotation));
+    when(annotationService.listForTextPaged(eq(textId), eq(false), any())).thenReturn(page);
     when(accountService.findByGaiaAccountId(userId)).thenReturn(Optional.of(accountEntity));
     when(voteService.myVotes(eq(ReaderVoteTarget.ANNOTATION), anyList())).thenReturn(Map.of());
     when(commentService.countByAnnotationIds(anyList())).thenReturn(Map.of());
@@ -181,12 +186,12 @@ class HadesGraphQLServiceTest {
     when(remoteUserMapper.discord("123")).thenReturn(author);
     when(annotationMapper.map(annotation, mappedPosition, author, 0, null)).thenReturn(mapped);
 
-    List<ReaderAnnotation> result = service.annotations(textId.toString(), false);
+    PagedReaderAnnotations result = service.annotations(textId.toString(), false, null);
 
-    assertThat(result).hasSize(1);
-    assertThat(result.get(0).getAuthor()).isNotNull();
-    assertThat(result.get(0).getAuthor().getType()).isEqualTo(RemoteUserType.DISCORD);
-    assertThat(result.get(0).getAuthor().getId()).isEqualTo("123");
+    assertThat(result.getItems()).hasSize(1);
+    assertThat(result.getItems().get(0).getAuthor()).isNotNull();
+    assertThat(result.getItems().get(0).getAuthor().getType()).isEqualTo(RemoteUserType.DISCORD);
+    assertThat(result.getItems().get(0).getAuthor().getId()).isEqualTo("123");
   }
 
   @Test
@@ -246,8 +251,9 @@ class HadesGraphQLServiceTest {
     annotation.setBody("body");
     annotation.setStatus(ReaderStatus.ACTIVE);
     annotation.setCreatedBy(userId);
+    Page<ReaderAnnotationEntity> page = new PageImpl<>(List.of(annotation), PageRequest.of(0, 10), 1);
     when(positionService.listForText(textId)).thenReturn(List.of(position));
-    when(annotationService.listForText(textId, false)).thenReturn(List.of(annotation));
+    when(annotationService.listForTextPaged(eq(textId), eq(false), any())).thenReturn(page);
     when(accountService.findByGaiaAccountId(userId)).thenReturn(Optional.empty());
     when(voteService.myVotes(eq(ReaderVoteTarget.ANNOTATION), anyList())).thenReturn(Map.of());
     when(commentService.countByAnnotationIds(anyList())).thenReturn(Map.of(annotationId, 5L));
@@ -258,10 +264,10 @@ class HadesGraphQLServiceTest {
     when(positionMapper.map(position)).thenReturn(mappedPosition);
     when(annotationMapper.map(annotation, mappedPosition, null, 5, null)).thenReturn(mapped);
 
-    List<ReaderAnnotation> result = service.annotations(textId.toString(), false);
+    PagedReaderAnnotations result = service.annotations(textId.toString(), false, null);
 
-    assertThat(result).hasSize(1);
-    assertThat(result.get(0).getReplyCount()).isEqualTo(5);
+    assertThat(result.getItems()).hasSize(1);
+    assertThat(result.getItems().get(0).getReplyCount()).isEqualTo(5);
     verify(commentService).countByAnnotationIds(List.of(annotationId));
   }
 
@@ -302,5 +308,46 @@ class HadesGraphQLServiceTest {
     when(inferenceClient.classify("some text")).thenReturn(Optional.empty());
 
     assertThat(service.classifyTextLevel("some text")).isNull();
+  }
+
+  @Test
+  void annotations_shouldReturnPagedResult() {
+    UUID textId = UUID.randomUUID();
+    when(positionService.listForText(textId)).thenReturn(List.of());
+    when(annotationService.listForTextPaged(eq(textId), eq(false), any()))
+        .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 10), 0));
+    when(voteService.myVotes(eq(ReaderVoteTarget.ANNOTATION), anyList())).thenReturn(Map.of());
+    when(commentService.countByAnnotationIds(anyList())).thenReturn(Map.of());
+
+    PagedReaderAnnotations result = service.annotations(textId.toString(), false, null);
+
+    assertThat(result.getItems()).isEmpty();
+    assertThat(result.getPageInfo()).isNotNull();
+    assertThat(result.getPageInfo().getTotalCount()).isEqualTo(0);
+  }
+
+  @Test
+  void annotations_shouldIncludeHiddenWhenRequested() {
+    UUID textId = UUID.randomUUID();
+    ReaderAnnotationEntity annotation = new ReaderAnnotationEntity();
+    annotation.setId(UUID.randomUUID());
+    annotation.setPositionId(UUID.randomUUID());
+    annotation.setBody("hidden body");
+    annotation.setStatus(ReaderStatus.HIDDEN);
+    annotation.setCreatedBy(userId);
+    Page<ReaderAnnotationEntity> page = new PageImpl<>(List.of(annotation), PageRequest.of(0, 10), 1);
+    when(annotationService.listForTextPaged(eq(textId), eq(true), any())).thenReturn(page);
+    when(positionService.listForText(textId)).thenReturn(List.of());
+    when(accountService.findByGaiaAccountId(userId)).thenReturn(Optional.empty());
+    when(voteService.myVotes(eq(ReaderVoteTarget.ANNOTATION), anyList())).thenReturn(Map.of());
+    when(commentService.countByAnnotationIds(anyList())).thenReturn(Map.of());
+    ReaderAnnotation mapped = ReaderAnnotation.newBuilder()
+        .id(annotation.getId().toString()).body("hidden body").build();
+    when(annotationMapper.map(eq(annotation), any(), any(), eq(0), any())).thenReturn(mapped);
+
+    PagedReaderAnnotations result = service.annotations(textId.toString(), true, null);
+
+    assertThat(result.getItems()).hasSize(1);
+    assertThat(result.getItems().get(0).getBody()).isEqualTo("hidden body");
   }
 }

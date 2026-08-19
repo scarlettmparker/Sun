@@ -4,10 +4,12 @@ import com.sun.base.repository.BaseRepository;
 import com.sun.hades.model.ReaderAnnotationEntity;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface ReaderAnnotationRepository extends BaseRepository<ReaderAnnotationEntity> {
+public interface ReaderAnnotationRepository
+    extends BaseRepository<ReaderAnnotationEntity>, JpaSpecificationExecutor<ReaderAnnotationEntity> {
 
   @Query("select a from ReaderAnnotationEntity a where a.positionId in "
       + "(select p.id from ReaderPositionEntity p where p.textId = :textId)")

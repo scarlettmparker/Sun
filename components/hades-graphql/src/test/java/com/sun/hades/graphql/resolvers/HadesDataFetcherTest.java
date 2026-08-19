@@ -4,8 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import com.sun.hades.codegen.types.AnnotationInput;
+import com.sun.hades.codegen.types.PagedReaderAnnotations;
+import com.sun.hades.codegen.types.PaginationInput;
 import com.sun.hades.codegen.types.QueryResult;
 import com.sun.hades.codegen.types.QuerySuccess;
+import com.sun.hades.codegen.types.ReaderAnnotation;
 import com.sun.hades.codegen.types.ReaderText;
 import com.sun.hades.codegen.types.TextLevelAssessment;
 import com.sun.hades.codegen.types.ReaderTextInput;
@@ -76,5 +79,23 @@ class HadesDataFetcherTest {
     when(service.classifyTextLevel("some text")).thenReturn(assessment);
 
     assertThat(fetcher.classifyTextLevel("some text")).isSameAs(assessment);
+  }
+
+  @Test
+  void annotations_shouldDelegateToService() {
+    ReaderAnnotation annotation = ReaderAnnotation.newBuilder()
+        .id("1").body("test").build();
+    PagedReaderAnnotations mockResult = PagedReaderAnnotations.newBuilder()
+        .items(List.of(annotation))
+        .pageInfo(com.sun.hades.codegen.types.PageInfo.newBuilder()
+            .page(0).size(10).totalPages(1).totalCount(1)
+            .hasNextPage(false).hasPreviousPage(false).build())
+        .build();
+    when(service.annotations("text-1", false, null)).thenReturn(mockResult);
+
+    PagedReaderAnnotations result = fetcher.annotations("text-1", false, null);
+
+    assertThat(result.getItems()).hasSize(1);
+    assertThat(result.getItems().get(0).getBody()).isEqualTo("test");
   }
 }
