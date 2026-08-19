@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -33,6 +34,7 @@ import org.springframework.web.util.ContentCachingResponseWrapper;
  */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 1)
+@ConditionalOnProperty(prefix = "audit", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class AuditFilter extends OncePerRequestFilter {
 
   private static final Logger logger = LoggerFactory.getLogger(AuditFilter.class);
