@@ -16,6 +16,10 @@ type TaggedInputProps = React.HTMLAttributes<HTMLDivElement> & {
    * Placeholder for the inner input.
    */
   placeholder?: string;
+  /**
+   * Called when a key is pressed in the input.
+   */
+  onKeyDown?: React.KeyboardEventHandler<HTMLInputElement>;
 };
 
 /**
@@ -23,8 +27,7 @@ type TaggedInputProps = React.HTMLAttributes<HTMLDivElement> & {
  */
 const TaggedInput = forwardRef<HTMLInputElement, TaggedInputProps>(
   (props, ref) => {
-    const { children, value, onChange, placeholder, className, ...rest } =
-      props;
+    const { children, value, onChange, placeholder, onKeyDown, className, ...rest } = props;
     const hasChildren = Array.isArray(children)
       ? children.length > 0
       : children != null && children !== false;
@@ -35,9 +38,8 @@ const TaggedInput = forwardRef<HTMLInputElement, TaggedInputProps>(
         <Input
           ref={ref}
           value={value}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            onChange(e.target.value)
-          }
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
+          onKeyDown={onKeyDown}
           placeholder={hasChildren ? undefined : placeholder}
           className={styles.input}
         />
