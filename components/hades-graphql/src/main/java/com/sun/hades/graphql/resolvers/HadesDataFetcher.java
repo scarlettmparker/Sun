@@ -229,6 +229,19 @@ public class HadesDataFetcher {
   }
 
   /**
+   * Searches reader accounts by username.
+   *
+   * @param query the username fragment
+   * @param pagination the page request
+   * @return the matching reader accounts
+   */
+  @DgsData(parentType = "HadesQueries", field = "searchReaderAccounts")
+  @PreAuthorize("@permissions.has('graphql.hades.searchReaderAccounts')")
+  public List<ReaderAccount> searchReaderAccounts(String query, PaginationInput pagination) {
+    return hadesGraphQLService.searchReaderAccounts(query, pagination);
+  }
+
+  /**
    * Returns the caller's vote on a target.
    *
    * @param targetType the target type

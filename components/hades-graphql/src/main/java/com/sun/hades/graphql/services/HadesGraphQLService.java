@@ -5,6 +5,7 @@ import com.sun.base.util.PageRequests;
 import com.sun.base.util.FilterSpec;
 import com.sun.gaia.model.AccountEntity;
 import com.sun.gaia.model.enums.AccountStatus;
+import com.sun.gaia.model.enums.AccountType;
 import com.sun.gaia.service.AccountService;
 import com.sun.gaia.service.JwtService;
 import com.sun.gaia.service.UserContextHolder;
@@ -75,6 +76,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -377,6 +379,36 @@ public class HadesGraphQLService {
             .distinct()
             .toList();
     return accountService.findByDiscordIds(discordIds).stream()
+        .map(accountMapper::map)
+        .toList();
+  }
+
+  /**
+   * Searches reader accounts by username.
+   *
+   * @param query the username fragment
+   * @param pagination the pagination input
+   * @return the matching reader accounts
+   */
+  @Transactional(readOnly = true)
+  public List<ReaderAccount> searchReaderAccounts(String query, PaginationInput pagination) {
+    if (query == null || query.isBlank()) {
+      return List.of();
+    }
+    Pageable pageable = pagination == null
+        ? PageRequest.of(0, 10)
+        : toPageable(pagination, "globalName", Sort.Direction.ASC);
+    List<ReaderAccountEntity> entities = accountService.searchByUsername(query, pageable);
+    return entities.stream()
+        .filter(e -> {
+          UUID gaiaId = e.getGaiaAccountId();
+          if (gaiaId == null) {
+            return false;
+          }
+          return gaiaAccountService.findById(gaiaId)
+              .map(a -> a.getAccountType() == AccountType.HUMAN)
+              .orElse(false);
+        })
         .map(accountMapper::map)
         .toList();
   }

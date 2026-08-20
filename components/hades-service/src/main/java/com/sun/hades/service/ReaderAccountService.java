@@ -8,6 +8,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,6 +55,30 @@ public class ReaderAccountService extends BaseService<ReaderAccountEntity> {
       return List.of();
     }
     return accountRepository.findByDiscordIdIn(discordIds);
+  }
+
+  /**
+   * Searches reader accounts by username.
+   *
+   * @param query the username fragment
+   * @param pageable the page request
+   * @return the matching accounts
+   */
+  public List<ReaderAccountEntity> searchByUsername(String query, Pageable pageable) {
+    if (query == null || query.isBlank()) {
+      return List.of();
+    }
+    return accountRepository.searchByUsername(query.trim(), pageable);
+  }
+
+  /**
+   * Searches reader accounts by username with default limit.
+   *
+   * @param query the username fragment
+   * @return the matching accounts
+   */
+  public List<ReaderAccountEntity> searchByUsername(String query) {
+    return searchByUsername(query, PageRequest.of(0, 10));
   }
 
   /**
