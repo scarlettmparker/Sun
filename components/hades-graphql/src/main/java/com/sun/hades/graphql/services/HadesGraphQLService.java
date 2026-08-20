@@ -18,7 +18,7 @@ import com.sun.hades.codegen.types.PagedReaderComments;
 import com.sun.hades.codegen.types.PagedReaderTexts;
 import com.sun.hades.codegen.types.PrivateNote;
 import com.sun.hades.codegen.types.PrivateNoteInput;
-import com.sun.hades.codegen.types.ShareInput;
+import com.sun.hades.codegen.types.ShareNotesInput;
 import com.sun.hades.codegen.types.TextLevelAssessment;
 import com.sun.hades.graphql.inference.InferenceClient;
 import com.sun.hades.codegen.types.PaginationInput;
@@ -629,17 +629,26 @@ public class HadesGraphQLService {
   }
 
   /**
-   * Shares a private note with a subject.
+   * Shares all private notes on a text.
    *
    * @param input the share input
    * @return a QueryResult
    */
   @Transactional
-  public QueryResult sharePrivateNote(ShareInput input) {
-    return mutate("sharePrivateNote", () -> {
-      // permify tuple write is handled via gaia_object_shares directly for now
-      return UUID.fromString(input.getObjectId());
-    });
+  public QueryResult shareNotes(ShareNotesInput input) {
+    return mutate("shareNotes", () -> privateNoteService.shareNotes(
+        UUID.fromString(input.getTextId()),
+        input.getSubjectIds() == null ? List.of() : input.getSubjectIds().stream()
+            .map(s -> {
+              try {
+                return UUID.fromString(s);
+              } catch (Exception e) {
+                return null;
+              }
+            })
+            .filter(s -> s != null)
+            .toList(),
+        input.getSubjectEmails() == null ? List.of() : input.getSubjectEmails()));
   }
 
   /**

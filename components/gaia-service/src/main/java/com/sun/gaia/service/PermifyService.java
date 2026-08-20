@@ -47,6 +47,24 @@ public class PermifyService {
   }
 
   /**
+   * Writes a relation tuple.
+   *
+   * @param object the object e.g. private_note:uuid
+   * @param relation the relation e.g. viewer
+   * @param subject the subject e.g. user:uuid
+   */
+  public void writeTuple(String object, String relation, String subject) {
+    if (!enabled) {
+      return;
+    }
+    try {
+      // TODO: gRPC Permify Write call to endpoint.
+    } catch (Exception e) {
+      throw new RuntimeException("Permify write failed", e);
+    }
+  }
+
+  /**
    * Checks the share table for a direct grant.
    *
    * @param subject the subject e.g. user:uuid

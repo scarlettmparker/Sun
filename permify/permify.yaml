@@ -1,0 +1,10 @@
+database:
+  engine: postgres
+  uri: postgres://sun:${SPRING_DATASOURCE_PASSWORD}@127.0.0.1:5432/sun?sslmode=disable
+server:
+  grpc: ":3476"
+  http: ":3477"
+authn:
+  enabled: false
+logger:
+  level: info

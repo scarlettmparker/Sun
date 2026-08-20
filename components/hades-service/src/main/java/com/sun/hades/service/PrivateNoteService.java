@@ -1,6 +1,12 @@
 package com.sun.hades.service;
 
 import com.sun.base.service.BaseService;
+import com.sun.fates.service.PersonService;
+import com.sun.gaia.mappers.ObjectShareMapper;
+import com.sun.gaia.model.enums.AccountType;
+import com.sun.gaia.repository.ObjectShareRepository;
+import com.sun.gaia.service.AccountService;
+import com.sun.gaia.service.EmailService;
 import com.sun.gaia.service.PermifyService;
 import com.sun.gaia.service.UserContextHolder;
 import com.sun.hades.model.PrivateNoteEntity;
@@ -9,8 +15,12 @@ import com.sun.hades.repository.PrivateNoteRepository;
 import com.sun.hades.repository.ReaderTextRepository;
 import com.sun.hades.service.RemoteObjectReference;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -24,18 +34,35 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class PrivateNoteService extends BaseService<PrivateNoteEntity> {
 
+  private static final Logger logger = LoggerFactory.getLogger(PrivateNoteService.class);
+
   private final PrivateNoteRepository noteRepository;
   private final ReaderTextRepository textRepository;
   private final PermifyService permifyService;
+  private final ObjectShareRepository shareRepository;
+  private final ObjectShareMapper shareMapper;
+  private final AccountService accountService;
+  private final PersonService personService;
+  private final EmailService emailService;
 
   public PrivateNoteService(
       PrivateNoteRepository repository,
       ReaderTextRepository textRepository,
-      PermifyService permifyService) {
+      PermifyService permifyService,
+      ObjectShareRepository shareRepository,
+      ObjectShareMapper shareMapper,
+      AccountService accountService,
+      PersonService personService,
+      EmailService emailService) {
     super(repository);
     this.noteRepository = repository;
     this.textRepository = textRepository;
     this.permifyService = permifyService;
+    this.shareRepository = shareRepository;
+    this.shareMapper = shareMapper;
+    this.accountService = accountService;
+    this.personService = personService;
+    this.emailService = emailService;
   }
 
   /**
@@ -105,6 +132,118 @@ public class PrivateNoteService extends BaseService<PrivateNoteEntity> {
       throw new IllegalArgumentException("Not the owner");
     }
     noteRepository.deleteById(id);
+  }
+
+  /**
+   * Shares all notes on a text.
+   *
+   * @param textId the text id
+   * @param subjectIds the subject account ids
+   * @param subjectEmails the subject emails
+   * @return the text id
+   */
+  public UUID shareNotes(UUID textId, List<UUID> subjectIds, List<String> subjectEmails) {
+    UUID viewer = requireUser();
+    var text = textRepository.findById(textId)
+        .orElseThrow(() -> new IllegalArgumentException("Text not found: " + textId));
+    Set<UUID> subjects = resolveSubjects(subjectIds, subjectEmails, viewer);
+    if (subjects.isEmpty()) {
+      return textId;
+    }
+    List<PrivateNoteEntity> notes = noteRepository.findByOwnerIdAndTextId(viewer, textId);
+    if (notes.isEmpty()) {
+      return textId;
+    }
+    createShares(notes, subjects);
+    sendShareEmails(subjects, text.getTitle(), viewer);
+    return textId;
+  }
+
+  /**
+   * Resolves ids and emails to human account ids.
+   *
+   * @param subjectIds the account ids
+   * @param subjectEmails the emails
+   * @param viewer the viewer id
+   * @return the human subjects
+   */
+  private Set<UUID> resolveSubjects(List<UUID> subjectIds, List<String> subjectEmails, UUID viewer) {
+    Set<UUID> subjects = new HashSet<>();
+    if (subjectIds != null) {
+      List<UUID> filtered = subjectIds.stream()
+          .filter(id -> id != null && !id.equals(viewer))
+          .toList();
+      for (UUID sid : filtered) {
+        accountService.findById(sid)
+            .filter(a -> a.getAccountType() == AccountType.HUMAN)
+            .ifPresent(a -> subjects.add(sid));
+      }
+    }
+    if (subjectEmails != null) {
+      for (String email : subjectEmails) {
+        if (email == null || email.isBlank()) {
+          continue;
+        }
+        String trimmed = email.trim().toLowerCase();
+        List<UUID> resolved = accountService.findByPersonEmail(trimmed).stream()
+            .filter(a -> a.getAccountType() == AccountType.HUMAN)
+            .map(a -> a.getId())
+            .filter(id -> !id.equals(viewer))
+            .toList();
+        subjects.addAll(resolved);
+      }
+    }
+    return subjects;
+  }
+
+  /**
+   * Creates viewer shares for each note.
+   *
+   * @param notes the notes to share
+   * @param subjects the subject ids
+   */
+  private void createShares(List<PrivateNoteEntity> notes, Set<UUID> subjects) {
+    for (PrivateNoteEntity note : notes) {
+      for (UUID subjectId : subjects) {
+        if (shareRepository.existsByObjectTypeAndObjectIdAndSubjectTypeAndSubjectId(
+            "private_note", note.getId(), "user", subjectId)) {
+          continue;
+        }
+        var share = shareMapper.toEntity("private_note", note.getId(), "user", subjectId, "VIEWER");
+        shareRepository.save(share);
+        try {
+          permifyService.writeTuple("private_note:" + note.getId(), "viewer", "user:" + subjectId);
+        } catch (Exception e) {
+          logger.error("Failed to write permify tuple for note {} subject {}", note.getId(), subjectId, e);
+        }
+      }
+    }
+  }
+
+  /**
+   * Sends one email per recipient.
+   *
+   * @param subjects the recipients
+   * @param textTitle the text title
+   * @param viewer the sharer id
+   */
+  private void sendShareEmails(Set<UUID> subjects, String textTitle, UUID viewer) {
+    String sharerName = accountService.findById(viewer)
+        .map(a -> a.getUsername())
+        .orElse("Someone");
+    for (UUID subjectId : subjects) {
+      try {
+        String toEmail = accountService.findById(subjectId)
+            .flatMap(a -> personService.findById(a.getPersonId()))
+            .map(p -> p.getEmail())
+            .orElse(null);
+        if (toEmail != null && !toEmail.isBlank()) {
+          emailService.sendShareNotesEmail(toEmail, textTitle, sharerName);
+        }
+      } catch (Exception e) {
+        logger.error("Failed to send share email to subject {}", subjectId, e);
+      }
+    }
   }
 
   /**

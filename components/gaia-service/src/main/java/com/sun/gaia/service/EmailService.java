@@ -83,6 +83,18 @@ public class EmailService {
   }
 
   /**
+   * Sends a notification that private notes were shared.
+   *
+   * @param toEmail the recipient address
+   * @param textTitle the text title
+   * @param sharerName the sharer display name
+   */
+  public void sendShareNotesEmail(String toEmail, String textTitle, String sharerName) {
+    String body = sharerName + " shared their private notes on \"" + textTitle + "\" with you.";
+    sendEmail(toEmail, "Private notes shared", body);
+  }
+
+  /**
    * Sends a plain-text email via Gmail XOAUTH2.
    *
    * @param toEmail the recipient address

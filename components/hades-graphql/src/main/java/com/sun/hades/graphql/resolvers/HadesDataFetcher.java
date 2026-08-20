@@ -25,7 +25,7 @@ import com.sun.hades.codegen.types.PrivateNoteInput;
 import com.sun.hades.codegen.types.ReaderTextInput;
 import com.sun.hades.codegen.types.ReaderObjectReference;
 import com.sun.hades.codegen.types.RemoteUserInput;
-import com.sun.hades.codegen.types.ShareInput;
+import com.sun.hades.codegen.types.ShareNotesInput;
 import com.sun.hades.codegen.types.VoteInput;
 import com.sun.hades.graphql.services.HadesGraphQLService;
 import com.sun.hades.graphql.services.WordReferenceService;
@@ -414,15 +414,15 @@ public class HadesDataFetcher {
   }
 
   /**
-   * Shares a private note with a subject.
+   * Shares all private notes on a text.
    *
    * @param input the share input
    * @return a QueryResult
    */
-  @DgsData(parentType = "HadesMutations", field = "sharePrivateNote")
-  @PreAuthorize("@permissions.has('graphql.hades.sharePrivateNote')")
-  public QueryResult sharePrivateNote(ShareInput input) {
-    return hadesGraphQLService.sharePrivateNote(input);
+  @DgsData(parentType = "HadesMutations", field = "shareNotes")
+  @PreAuthorize("@permissions.has('graphql.hades.shareNotes')")
+  public QueryResult shareNotes(ShareNotesInput input) {
+    return hadesGraphQLService.shareNotes(input);
   }
 
   /**

@@ -223,6 +223,12 @@ input ShareInput {
   relation: String!
 }
 
+input ShareNotesInput {
+  textId: ID!
+  subjectIds: [ID!]
+  subjectEmails: [String!]
+}
+
 type DiscordLoginResult {
   token: String!
   accountId: ID!
@@ -335,7 +341,7 @@ type HadesMutations {
 
   createPrivateNote(input: PrivateNoteInput!): QueryResult
   deletePrivateNote(id: ID!): QueryResult
-  sharePrivateNote(input: ShareInput!): QueryResult
+  shareNotes(input: ShareNotesInput!): QueryResult
 
   attachObject(source: ID!, target: String!): QueryResult
   discordLogin(code: String!, state: String!): DiscordLoginResult

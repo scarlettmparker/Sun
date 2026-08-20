@@ -1,0 +1,19 @@
+entity user {}
+
+entity role {
+  relation member @user
+}
+
+entity private_note {
+  relation owner @user
+  relation viewer @user @role#member
+  relation editor @user
+
+  permission view = owner or viewer or editor
+  permission edit = owner or editor
+  permission delete = owner
+}
+
+entity text {
+  relation owner @user
+}
