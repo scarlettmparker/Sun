@@ -13,7 +13,7 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
  * <p>All variables from the single backend {@code .env} are exposed as system properties, so any
  * new env var is picked up automatically without code changes here.
  */
-@SpringBootApplication(scanBasePackages = "com.sun")
+@SpringBootApplication(scanBasePackages = {"com.sun.graphql", "com.sun.base"})
 @EntityScan(basePackages = "com.sun")
 public class SunGraphQLApplication {
 

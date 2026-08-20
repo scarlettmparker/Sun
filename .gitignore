@@ -22,3 +22,5 @@ opencode.json
 
 # Hub runtime state
 .hub/
+vm/
+deploy.sh

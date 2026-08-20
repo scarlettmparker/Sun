@@ -1,0 +1,10 @@
+com.sun.gaia.config.GaiaConfig
+com.sun.apollo.config.ApolloConfig
+com.sun.briareus.config.BriareusConfig
+com.sun.cerberus.config.CerberusConfig
+com.sun.dionysus.config.DionysusConfig
+com.sun.echo.config.EchoConfig
+com.sun.fates.config.FatesConfig
+com.sun.hades.config.HadesConfig
+com.sun.icarus.config.IcarusConfig
+com.sun.narcissus.config.NarcissusConfig

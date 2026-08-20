@@ -24,11 +24,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
  * known. Unauthenticated requests pass through; authenticated requests are
  * checked against the enabled whitelist patterns.
  *
- * <p>Disabled entirely when {@code app.bypass-permissions=true}.
+ * <p>Disabled when {@code ip-whitelist.enabled=false}. Defaults to enabled.
  */
 @Component
 @Profile("!test")
-@ConditionalOnProperty(name = "app.bypass-permissions", havingValue = "false", matchIfMissing = true)
+@ConditionalOnProperty(name = "ip-whitelist.enabled", havingValue = "true", matchIfMissing = true)
 @Order(Ordered.HIGHEST_PRECEDENCE + 55)
 public class IpWhitelistFilter extends OncePerRequestFilter {
 
