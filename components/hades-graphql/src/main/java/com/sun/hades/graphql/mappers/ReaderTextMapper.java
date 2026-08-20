@@ -29,7 +29,6 @@ public class ReaderTextMapper {
     ReaderText text = ReaderText.newBuilder()
         .id(entity.getId().toString())
         .title(entity.getTitle())
-        .content(entity.getContent())
         .language(entity.getLanguage())
         .level(entity.getLevel())
         .ownerId(entity.getOwnerId() == null ? null : entity.getOwnerId().toString())

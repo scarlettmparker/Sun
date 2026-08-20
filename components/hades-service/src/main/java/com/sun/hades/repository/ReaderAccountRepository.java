@@ -14,4 +14,6 @@ public interface ReaderAccountRepository extends BaseRepository<ReaderAccountEnt
   List<ReaderAccountEntity> findByDiscordIdIn(Collection<String> discordIds);
 
   Optional<ReaderAccountEntity> findByGaiaAccountId(UUID gaiaAccountId);
+
+  List<ReaderAccountEntity> findByGaiaAccountIdIn(Collection<UUID> gaiaAccountIds);
 }

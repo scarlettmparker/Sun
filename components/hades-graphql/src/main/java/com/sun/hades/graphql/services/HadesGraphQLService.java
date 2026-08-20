@@ -66,6 +66,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -140,6 +141,7 @@ public class HadesGraphQLService {
    * @param pagination the pagination and sort input
    * @return a page of texts
    */
+  @Cacheable("texts")
   @Transactional(readOnly = true)
   public PagedReaderTexts texts(PaginationInput pagination) {
     Pageable pageable = toPageable(pagination, "level", Sort.Direction.ASC);
@@ -160,6 +162,19 @@ public class HadesGraphQLService {
   @Transactional(readOnly = true)
   public ReaderText text(String id) {
     return textService.findById(UUID.fromString(id)).map(textMapper::map).orElse(null);
+  }
+
+  /**
+   * Returns just the text body, fetched on demand by the lazy content resolver.
+   *
+   * @param id the text id
+   * @return the content, or null when the text is missing
+   */
+  @Transactional(readOnly = true)
+  public String textContent(String id) {
+    return textService.findById(UUID.fromString(id))
+        .map(ReaderTextEntity::getContent)
+        .orElse(null);
   }
 
   /**
@@ -214,12 +229,13 @@ public class HadesGraphQLService {
             .collect(Collectors.toMap(
                 ReaderPositionEntity::getId, positionMapper::map, (a, b) -> a));
     Map<UUID, RemoteUser> authors = new HashMap<>();
-    page.getContent().stream()
+    List<UUID> authorIds = page.getContent().stream()
         .map(ReaderAnnotationEntity::getCreatedBy)
         .filter(Objects::nonNull)
         .distinct()
-        .forEach(gaiaAccountId -> accountService.findByGaiaAccountId(gaiaAccountId)
-            .ifPresent(acc -> authors.put(gaiaAccountId, remoteUserMapper.discord(acc.getDiscordId()))));
+        .toList();
+    accountService.findByGaiaAccountIdIn(authorIds).forEach(acc ->
+        authors.put(acc.getGaiaAccountId(), remoteUserMapper.discord(acc.getDiscordId())));
     Map<UUID, VoteValue> myVotes = voteService.myVotes(
         ReaderVoteTarget.ANNOTATION,
         page.getContent().stream().map(ReaderAnnotationEntity::getId).toList());
@@ -275,12 +291,13 @@ public class HadesGraphQLService {
         .filter(c -> Boolean.TRUE.equals(includeHidden) || c.getStatus() == ReaderStatus.ACTIVE)
         .toList();
     Map<UUID, RemoteUser> authors = new HashMap<>();
-    visible.stream()
+    List<UUID> authorIds = visible.stream()
         .map(ReaderCommentEntity::getCreatedBy)
         .filter(Objects::nonNull)
         .distinct()
-        .forEach(gaiaAccountId -> accountService.findByGaiaAccountId(gaiaAccountId)
-            .ifPresent(acc -> authors.put(gaiaAccountId, remoteUserMapper.discord(acc.getDiscordId()))));
+        .toList();
+    accountService.findByGaiaAccountIdIn(authorIds).forEach(acc ->
+        authors.put(acc.getGaiaAccountId(), remoteUserMapper.discord(acc.getDiscordId())));
     Map<UUID, VoteValue> myVotes = voteService.myVotes(
         ReaderVoteTarget.COMMENT,
         visible.stream().map(ReaderCommentEntity::getId).toList());

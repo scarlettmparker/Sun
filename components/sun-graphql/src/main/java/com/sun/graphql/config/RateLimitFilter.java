@@ -18,6 +18,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.Ordered;
@@ -50,14 +51,17 @@ public class RateLimitFilter extends OncePerRequestFilter {
   private final boolean enabled;
   private final RateLimitProperties properties;
   private final RateLimitRegistry registry;
+  private final long maxBodyBytes;
 
   /**
    * Builds the filter from configuration and the operation registry.
    */
-  public RateLimitFilter(RateLimitProperties properties, RateLimitRegistry registry) {
+  public RateLimitFilter(RateLimitProperties properties, RateLimitRegistry registry,
+      @Value("${sun.graphql.max-body-bytes:1048576}") long maxBodyBytes) {
     this.enabled = properties.enabled();
     this.properties = properties;
     this.registry = registry;
+    this.maxBodyBytes = maxBodyBytes;
   }
 
   @Override
@@ -72,6 +76,13 @@ public class RateLimitFilter extends OncePerRequestFilter {
   protected void doFilterInternal(
       HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
+    long declared = request.getContentLengthLong();
+    if (declared > maxBodyBytes) {
+      response.setStatus(HttpStatus.PAYLOAD_TOO_LARGE.value());
+      response.setContentType("application/json");
+      response.getWriter().write("{\"error\":\"Payload Too Large\"}");
+      return;
+    }
     byte[] body = request.getInputStream().readAllBytes();
     String bodyText = new String(body, StandardCharsets.UTF_8);
     String operation = operationName(bodyText);

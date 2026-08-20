@@ -69,6 +69,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -249,6 +250,7 @@ public class GaiaGraphQLService {
   /**
    * Looks up every account across the system, paginated.
    */
+  @Cacheable("accounts")
   @Transactional(readOnly = true)
   public PagedAccounts accounts(PaginationInput pagination) {
     Pageable pageable = toPageable(pagination, "username", Sort.Direction.ASC);

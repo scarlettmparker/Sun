@@ -2,6 +2,7 @@ package com.sun.hades.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
+import com.netflix.graphql.dgs.DgsDataFetchingEnvironment;
 import com.sun.base.ratelimit.RateLimit;
 import com.sun.hades.codegen.types.AnnotationInput;
 import com.sun.hades.codegen.types.CommentInput;
@@ -79,6 +80,23 @@ public class HadesDataFetcher {
   @PreAuthorize("@permissions.has('graphql.hades.text')")
   public ReaderText text(String id) {
     return hadesGraphQLService.text(id);
+  }
+
+  /**
+   * Resolves the heavy text body only when the client selects it, so list
+   * queries that ask for id/title don't pull and serialize the full content.
+   *
+   * @param env the data-fetching environment, providing the parent ReaderText
+   * @return the text content, or null when the parent has no id
+   */
+  @DgsData(parentType = "ReaderText", field = "content")
+  @PreAuthorize("@permissions.has('graphql.hades.text')")
+  public String textContent(DgsDataFetchingEnvironment env) {
+    ReaderText parent = env.getSource();
+    if (parent == null || parent.getId() == null) {
+      return null;
+    }
+    return hadesGraphQLService.textContent(parent.getId());
   }
 
   /**

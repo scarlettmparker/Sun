@@ -35,6 +35,13 @@ public class ReaderAccountService extends BaseService<ReaderAccountEntity> {
     return accountRepository.findByGaiaAccountId(gaiaAccountId);
   }
 
+  public List<ReaderAccountEntity> findByGaiaAccountIdIn(Collection<UUID> gaiaAccountIds) {
+    if (gaiaAccountIds == null || gaiaAccountIds.isEmpty()) {
+      return List.of();
+    }
+    return accountRepository.findByGaiaAccountIdIn(gaiaAccountIds);
+  }
+
   /**
    * Finds reader accounts for a collection of Discord ids.
    *
