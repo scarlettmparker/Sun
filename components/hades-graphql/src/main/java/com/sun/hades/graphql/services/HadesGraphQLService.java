@@ -49,6 +49,7 @@ import com.sun.hades.graphql.mappers.ReaderSourceMapper;
 import com.sun.hades.graphql.mappers.ReaderTextMapper;
 import com.sun.hades.graphql.mappers.RemoteUserMapper;
 import com.sun.hades.model.PrivateNoteEntity;
+import com.sun.hades.model.ReaderAccountEntity;
 import com.sun.hades.model.ReaderAnnotationEntity;
 import com.sun.hades.model.ReaderCommentEntity;
 import com.sun.hades.model.ReaderPositionEntity;
@@ -409,7 +410,7 @@ public class HadesGraphQLService {
               .map(a -> a.getAccountType() == AccountType.HUMAN)
               .orElse(false);
         })
-        .map(accountMapper::map)
+        .map(e -> accountMapper.map(e))
         .toList();
   }
 
