@@ -16,7 +16,6 @@ const useIsomorphicLayoutEffect =
   typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 const OPEN_DELAY = 400;
-const CLOSE_DELAY = 0;
 
 /**
  * Shared state across all tooltips in a group, enabling the instant-switch
