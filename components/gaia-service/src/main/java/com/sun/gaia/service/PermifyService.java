@@ -1,9 +1,15 @@
 package com.sun.gaia.service;
 
 import com.sun.gaia.repository.ObjectShareRepository;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
 
 /**
  * Authorization check against Permify when enabled, otherwise falls back to
@@ -12,17 +18,19 @@ import org.springframework.stereotype.Service;
 @Service
 public class PermifyService {
 
+  private static final Logger logger = LoggerFactory.getLogger(PermifyService.class);
+
   private final ObjectShareRepository shareRepository;
   private final boolean enabled;
-  private final String endpoint;
+  private final RestClient restClient;
 
   public PermifyService(
       ObjectShareRepository shareRepository,
       @Value("${permify.enabled:false}") boolean enabled,
-      @Value("${permify.endpoint:localhost:3476}") String endpoint) {
+      @Value("${permify.http-endpoint:http://localhost:3477}") String httpEndpoint) {
     this.shareRepository = shareRepository;
     this.enabled = enabled;
-    this.endpoint = endpoint;
+    this.restClient = RestClient.builder().baseUrl(httpEndpoint).build();
   }
 
   /**
@@ -38,10 +46,27 @@ public class PermifyService {
       return fallbackCheck(subject, object);
     }
     try {
-      // TODO: gRPC Permify Check call to endpoint. Until permify binary is
-      // deployed, fall back to the share table so the feature works without it.
+      String[] subjectParts = subject.split(":", 2);
+      String[] objectParts = object.split(":", 2);
+      if (subjectParts.length != 2 || objectParts.length != 2) {
+        return fallbackCheck(subject, object);
+      }
+      Map<String, Object> body = new HashMap<>();
+      body.put("metadata", Map.of("schemaVersion", "", "depth", 8));
+      body.put("entity", Map.of("type", objectParts[0], "id", objectParts[1]));
+      body.put("permission", action);
+      body.put("subject", Map.of("type", subjectParts[0], "id", subjectParts[1]));
+      Map response = restClient.post()
+          .uri("/v1/tenants/t1/permissions/check")
+          .body(body)
+          .retrieve()
+          .body(Map.class);
+      if (response != null && "CHECK_RESULT_ALLOWED".equals(response.get("can"))) {
+        return true;
+      }
       return fallbackCheck(subject, object);
     } catch (Exception e) {
+      logger.warn("Permify check failed, falling back", e);
       return fallbackCheck(subject, object);
     }
   }
@@ -58,8 +83,25 @@ public class PermifyService {
       return;
     }
     try {
-      // TODO: gRPC Permify Write call to endpoint.
+      String[] subjectParts = subject.split(":", 2);
+      String[] objectParts = object.split(":", 2);
+      if (subjectParts.length != 2 || objectParts.length != 2) {
+        return;
+      }
+      Map<String, Object> tuple = new HashMap<>();
+      tuple.put("entity", Map.of("type", objectParts[0], "id", objectParts[1]));
+      tuple.put("relation", relation);
+      tuple.put("subject", Map.of("type", subjectParts[0], "id", subjectParts[1]));
+      Map<String, Object> body = new HashMap<>();
+      body.put("metadata", Map.of("schemaVersion", ""));
+      body.put("tuples", List.of(tuple));
+      restClient.post()
+          .uri("/v1/tenants/t1/relationships/write")
+          .body(body)
+          .retrieve()
+          .toBodilessEntity();
     } catch (Exception e) {
+      logger.warn("Permify write failed for {} {} {}", object, relation, subject, e);
       throw new RuntimeException("Permify write failed", e);
     }
   }
