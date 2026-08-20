@@ -14,7 +14,7 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
-  Date: { input: any; output: any; }
+  DateTime: { input: any; output: any; }
 };
 
 export type BlogMutations = {
@@ -38,14 +38,14 @@ export type BlogMutationsCreateBlogPostTypeArgs = {
 export type BlogPost = {
   __typename?: 'BlogPost';
   content?: Maybe<Scalars['String']['output']>;
-  createdAt?: Maybe<Scalars['Date']['output']>;
+  createdAt?: Maybe<Scalars['DateTime']['output']>;
   id: Scalars['String']['output'];
   language?: Maybe<Scalars['String']['output']>;
   remoteObject?: Maybe<Array<Scalars['String']['output']>>;
   tags?: Maybe<Array<Scalars['String']['output']>>;
   title: Scalars['String']['output'];
   type?: Maybe<BlogPostType>;
-  updatedAt?: Maybe<Scalars['Date']['output']>;
+  updatedAt?: Maybe<Scalars['DateTime']['output']>;
 };
 
 export type BlogPostInput = {
@@ -123,13 +123,13 @@ export type GaiaQueries = {
 export type GalleryItem = {
   __typename?: 'GalleryItem';
   content?: Maybe<Scalars['String']['output']>;
-  createdAt?: Maybe<Scalars['Date']['output']>;
+  createdAt?: Maybe<Scalars['DateTime']['output']>;
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['String']['output'];
   imagePath?: Maybe<Scalars['String']['output']>;
   remoteObject?: Maybe<Array<Scalars['String']['output']>>;
   title: Scalars['String']['output'];
-  updatedAt?: Maybe<Scalars['Date']['output']>;
+  updatedAt?: Maybe<Scalars['DateTime']['output']>;
 };
 
 export type GalleryItemInput = {
