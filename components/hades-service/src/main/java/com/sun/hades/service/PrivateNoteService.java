@@ -129,6 +129,13 @@ public class PrivateNoteService extends BaseService<PrivateNoteEntity> {
     return out;
   }
 
+  /**
+   * Checks whether the viewer may see the note.
+   *
+   * @param viewer the viewer id
+   * @param note the note
+   * @return true when visible
+   */
   private boolean canView(UUID viewer, PrivateNoteEntity note) {
     if (note.getOwnerId().equals(viewer)) {
       return true;
@@ -136,6 +143,11 @@ public class PrivateNoteService extends BaseService<PrivateNoteEntity> {
     return permifyService.check("user:" + viewer, "view", "private_note:" + note.getId());
   }
 
+  /**
+   * Returns the authenticated user or throws.
+   *
+   * @return the caller's account id
+   */
   private UUID requireUser() {
     UUID id = UserContextHolder.getUserId();
     if (id == null) {

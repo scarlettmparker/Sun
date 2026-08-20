@@ -46,6 +46,13 @@ public class PermifyService {
     }
   }
 
+  /**
+   * Checks the share table for a direct grant.
+   *
+   * @param subject the subject e.g. user:uuid
+   * @param object the object e.g. private_note:uuid
+   * @return true when a share row exists
+   */
   private boolean fallbackCheck(String subject, String object) {
     String[] subjectParts = subject.split(":", 2);
     String[] objectParts = object.split(":", 2);
