@@ -182,6 +182,47 @@ type PagedReaderAnnotations {
   pageInfo: PageInfo!
 }
 
+"""
+A per-user private note anchored to a text range.
+"""
+type PrivateNote {
+  id: String!
+  textId: ID!
+  startOffset: Int!
+  endOffset: Int!
+  body: String!
+  visibility: PrivateNoteVisibility!
+  remoteObject: [String!]
+  author: RemoteUser
+  createdAt: Date
+  updatedAt: Date
+}
+
+enum PrivateNoteVisibility {
+  PRIVATE
+  SHARED
+}
+
+type PagedPrivateNotes {
+  items: [PrivateNote!]!
+  pageInfo: PageInfo!
+}
+
+input PrivateNoteInput {
+  textId: ID!
+  startOffset: Int!
+  endOffset: Int!
+  body: String!
+}
+
+input ShareInput {
+  objectType: String!
+  objectId: ID!
+  subjectType: String!
+  subjectId: ID!
+  relation: String!
+}
+
 type DiscordLoginResult {
   token: String!
   accountId: ID!
@@ -264,6 +305,7 @@ type HadesQueries {
     includeHidden: Boolean
     pagination: PaginationInput
   ): PagedReaderComments!
+  privateNotes(textId: ID!, pagination: PaginationInput): PagedPrivateNotes!
   readerAccount: ReaderAccount
   readerAccounts(remoteUsers: [RemoteUserInput!]!): [ReaderAccount!]!
   myVote(targetType: ReaderVoteTarget!, targetId: ID!): VoteValue
@@ -289,6 +331,10 @@ type HadesMutations {
 
   vote(input: VoteInput!): QueryResult
   removeVote(targetType: ReaderVoteTarget!, targetId: ID!): QueryResult
+
+  createPrivateNote(input: PrivateNoteInput!): QueryResult
+  deletePrivateNote(id: ID!): QueryResult
+  sharePrivateNote(input: ShareInput!): QueryResult
 
   attachObject(source: ID!, target: String!): QueryResult
   discordLogin(code: String!, state: String!): DiscordLoginResult

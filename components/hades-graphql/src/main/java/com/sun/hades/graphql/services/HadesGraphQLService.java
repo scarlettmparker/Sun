@@ -11,9 +11,13 @@ import com.sun.gaia.service.UserContextHolder;
 import com.sun.hades.codegen.types.CommentInput;
 import com.sun.hades.codegen.types.DiscordLoginResult;
 import com.sun.hades.codegen.types.PageInfo;
+import com.sun.hades.codegen.types.PagedPrivateNotes;
 import com.sun.hades.codegen.types.PagedReaderAnnotations;
 import com.sun.hades.codegen.types.PagedReaderComments;
 import com.sun.hades.codegen.types.PagedReaderTexts;
+import com.sun.hades.codegen.types.PrivateNote;
+import com.sun.hades.codegen.types.PrivateNoteInput;
+import com.sun.hades.codegen.types.ShareInput;
 import com.sun.hades.codegen.types.TextLevelAssessment;
 import com.sun.hades.graphql.inference.InferenceClient;
 import com.sun.hades.codegen.types.PaginationInput;
@@ -34,6 +38,7 @@ import com.sun.hades.codegen.types.StandardError;
 import com.sun.hades.codegen.types.VoteInput;
 import com.sun.hades.model.enums.ReaderVoteTarget;
 import com.sun.hades.model.enums.VoteValue;
+import com.sun.hades.graphql.mappers.PrivateNoteMapper;
 import com.sun.hades.graphql.mappers.ReaderAccountMapper;
 import com.sun.hades.graphql.mappers.ReaderAnnotationMapper;
 import com.sun.hades.graphql.mappers.ReaderCommentMapper;
@@ -42,6 +47,7 @@ import com.sun.hades.graphql.mappers.ReaderPositionMapper;
 import com.sun.hades.graphql.mappers.ReaderSourceMapper;
 import com.sun.hades.graphql.mappers.ReaderTextMapper;
 import com.sun.hades.graphql.mappers.RemoteUserMapper;
+import com.sun.hades.model.PrivateNoteEntity;
 import com.sun.hades.model.ReaderAnnotationEntity;
 import com.sun.hades.model.ReaderCommentEntity;
 import com.sun.hades.model.ReaderPositionEntity;
@@ -49,6 +55,7 @@ import com.sun.hades.model.ReaderSourceEntity;
 import com.sun.hades.model.ReaderTextEntity;
 import com.sun.hades.model.enums.ReaderTextStatus;
 import com.sun.hades.service.DiscordOAuthService;
+import com.sun.hades.service.PrivateNoteService;
 import com.sun.hades.service.ReaderAccountService;
 import com.sun.hades.service.ReaderAnnotationService;
 import com.sun.hades.service.ReaderCommentService;
@@ -56,6 +63,7 @@ import com.sun.hades.service.ReaderPositionService;
 import com.sun.hades.service.ReaderSourceService;
 import com.sun.hades.service.ReaderTextService;
 import com.sun.hades.service.ReaderVoteService;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -88,6 +96,7 @@ public class HadesGraphQLService {
   private final ReaderVoteService voteService;
   private final ReaderAccountService accountService;
   private final ReaderPositionService positionService;
+  private final PrivateNoteService privateNoteService;
   private final DiscordOAuthService discordOAuthService;
   private final AccountService gaiaAccountService;
   private final JwtService jwtService;
@@ -96,6 +105,7 @@ public class HadesGraphQLService {
   private final ReaderSourceMapper sourceMapper;
   private final ReaderAnnotationMapper annotationMapper;
   private final ReaderCommentMapper commentMapper;
+  private final PrivateNoteMapper privateNoteMapper;
   private final ReaderAccountMapper accountMapper;
   private final ReaderPositionMapper positionMapper;
   private final ReaderObjectReferenceMapper objectReferenceMapper;
@@ -105,10 +115,12 @@ public class HadesGraphQLService {
   public HadesGraphQLService(ReaderTextService textService, ReaderSourceService sourceService,
       ReaderAnnotationService annotationService, ReaderCommentService commentService,
       ReaderVoteService voteService, ReaderAccountService accountService,
-      ReaderPositionService positionService, DiscordOAuthService discordOAuthService,
+      ReaderPositionService positionService, PrivateNoteService privateNoteService,
+      DiscordOAuthService discordOAuthService,
       AccountService gaiaAccountService, JwtService jwtService, ReaderTextMapper textMapper,
       ReaderSourceMapper sourceMapper, ReaderAnnotationMapper annotationMapper,
-      ReaderCommentMapper commentMapper, ReaderAccountMapper accountMapper,
+      ReaderCommentMapper commentMapper, PrivateNoteMapper privateNoteMapper,
+      ReaderAccountMapper accountMapper,
       ReaderPositionMapper positionMapper, ReaderObjectReferenceMapper objectReferenceMapper,
       RemoteUserMapper remoteUserMapper, InferenceClient inferenceClient) {
     this.textService = textService;
@@ -118,6 +130,7 @@ public class HadesGraphQLService {
     this.voteService = voteService;
     this.accountService = accountService;
     this.positionService = positionService;
+    this.privateNoteService = privateNoteService;
     this.discordOAuthService = discordOAuthService;
     this.gaiaAccountService = gaiaAccountService;
     this.jwtService = jwtService;
@@ -125,6 +138,7 @@ public class HadesGraphQLService {
     this.sourceMapper = sourceMapper;
     this.annotationMapper = annotationMapper;
     this.commentMapper = commentMapper;
+    this.privateNoteMapper = privateNoteMapper;
     this.accountMapper = accountMapper;
     this.positionMapper = positionMapper;
     this.objectReferenceMapper = objectReferenceMapper;
@@ -308,6 +322,32 @@ public class HadesGraphQLService {
   }
 
   /**
+   * Paginated private notes for a text, visible to the current viewer.
+   *
+   * @param textId the text id
+   * @param pagination the page request
+   * @return the paged private notes
+   */
+  @Transactional(readOnly = true)
+  public PagedPrivateNotes privateNotes(String textId, PaginationInput pagination) {
+    UUID id = UUID.fromString(textId);
+    Pageable pageable = toPageable(pagination, "createdAt", Sort.Direction.DESC);
+    var page = privateNoteService.listForText(id, pageable);
+    Map<UUID, RemoteUser> authors = new HashMap<>();
+    List<UUID> ownerIds = page.getContent().stream()
+        .map(PrivateNoteEntity::getOwnerId)
+        .filter(Objects::nonNull)
+        .distinct()
+        .toList();
+    accountService.findByGaiaAccountIdIn(ownerIds).forEach(acc ->
+        authors.put(acc.getGaiaAccountId(), remoteUserMapper.discord(acc.getDiscordId())));
+    List<PrivateNote> items = page.getContent().stream()
+        .map(n -> privateNoteMapper.map(n, authors.get(n.getOwnerId())))
+        .toList();
+    return PagedPrivateNotes.newBuilder().items(items).pageInfo(pageInfo(page)).build();
+  }
+
+  /**
    * Returns the current member's reader account.
    *
    * @return the reader account, or null
@@ -353,16 +393,17 @@ public class HadesGraphQLService {
   }
 
   /**
-   * Finds annotations that reference any of the given remote object ids.
+   * Finds annotations and private notes that reference any of the given remote object ids.
    *
    * @param ids the remote object ids
    * @return the matching references
    */
   @Transactional(readOnly = true)
   public List<ReaderObjectReference> locateRemoteObjects(List<String> ids) {
-    return annotationService.locateRemoteObjects(ids).stream()
-        .map(objectReferenceMapper::map)
-        .toList();
+    List<com.sun.hades.service.RemoteObjectReference> out = new ArrayList<>();
+    out.addAll(annotationService.locateRemoteObjects(ids));
+    out.addAll(privateNoteService.locateRemoteObjects(ids));
+    return out.stream().map(objectReferenceMapper::map).toList();
   }
 
   /**
@@ -523,6 +564,49 @@ public class HadesGraphQLService {
   public QueryResult removeVote(ReaderVoteTarget targetType, String targetId) {
     return mutate("removeVote",
         () -> voteService.removeVote(targetType, UUID.fromString(targetId)));
+  }
+
+  /**
+   * Creates a private note on a range.
+   *
+   * @param input the private note input
+   * @return a QueryResult
+   */
+  @Transactional
+  public QueryResult createPrivateNote(PrivateNoteInput input) {
+    return mutate("createPrivateNote", () -> privateNoteService.createPrivateNote(
+        UUID.fromString(input.getTextId()),
+        input.getStartOffset(),
+        input.getEndOffset(),
+        input.getBody()));
+  }
+
+  /**
+   * Deletes a private note (owner only).
+   *
+   * @param id the note id
+   * @return a QueryResult
+   */
+  @Transactional
+  public QueryResult deletePrivateNote(String id) {
+    return mutate("deletePrivateNote", () -> {
+      privateNoteService.deletePrivateNote(UUID.fromString(id));
+      return UUID.fromString(id);
+    });
+  }
+
+  /**
+   * Shares a private note with a subject.
+   *
+   * @param input the share input
+   * @return a QueryResult
+   */
+  @Transactional
+  public QueryResult sharePrivateNote(ShareInput input) {
+    return mutate("sharePrivateNote", () -> {
+      // permify tuple write is handled via gaia_object_shares directly for now
+      return UUID.fromString(input.getObjectId());
+    });
   }
 
   /**

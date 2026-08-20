@@ -20,9 +20,12 @@ import com.sun.hades.codegen.types.ReaderText;
 import com.sun.hades.codegen.types.TextLevelAssessment;
 import com.sun.hades.codegen.types.Word;
 import com.sun.hades.codegen.types.WordScope;
+import com.sun.hades.codegen.types.PagedPrivateNotes;
+import com.sun.hades.codegen.types.PrivateNoteInput;
 import com.sun.hades.codegen.types.ReaderTextInput;
 import com.sun.hades.codegen.types.ReaderObjectReference;
 import com.sun.hades.codegen.types.RemoteUserInput;
+import com.sun.hades.codegen.types.ShareInput;
 import com.sun.hades.codegen.types.VoteInput;
 import com.sun.hades.graphql.services.HadesGraphQLService;
 import com.sun.hades.graphql.services.WordReferenceService;
@@ -186,6 +189,19 @@ public class HadesDataFetcher {
   @PreAuthorize("@permissions.has('graphql.hades.comments')")
   public PagedReaderComments comments(String annotationId, Boolean includeHidden, PaginationInput pagination) {
     return hadesGraphQLService.comments(annotationId, includeHidden, pagination);
+  }
+
+  /**
+   * Paginated private notes for a text, visible to the current viewer.
+   *
+   * @param textId the text id
+   * @param pagination the page request
+   * @return the paged private notes
+   */
+  @DgsData(parentType = "HadesQueries", field = "privateNotes")
+  @PreAuthorize("@permissions.has('graphql.hades.privateNotes')")
+  public PagedPrivateNotes privateNotes(String textId, PaginationInput pagination) {
+    return hadesGraphQLService.privateNotes(textId, pagination);
   }
 
   /**
@@ -358,6 +374,42 @@ public class HadesDataFetcher {
   @PreAuthorize("@permissions.has('graphql.hades.deleteComment')")
   public QueryResult deleteComment(String id) {
     return hadesGraphQLService.deleteComment(id);
+  }
+
+  /**
+   * Creates a private note on a range.
+   *
+   * @param input the private note input
+   * @return a QueryResult
+   */
+  @DgsData(parentType = "HadesMutations", field = "createPrivateNote")
+  @PreAuthorize("@permissions.has('graphql.hades.createPrivateNote')")
+  public QueryResult createPrivateNote(PrivateNoteInput input) {
+    return hadesGraphQLService.createPrivateNote(input);
+  }
+
+  /**
+   * Deletes a private note (owner only).
+   *
+   * @param id the note id
+   * @return a QueryResult
+   */
+  @DgsData(parentType = "HadesMutations", field = "deletePrivateNote")
+  @PreAuthorize("@permissions.has('graphql.hades.deletePrivateNote')")
+  public QueryResult deletePrivateNote(String id) {
+    return hadesGraphQLService.deletePrivateNote(id);
+  }
+
+  /**
+   * Shares a private note with a subject.
+   *
+   * @param input the share input
+   * @return a QueryResult
+   */
+  @DgsData(parentType = "HadesMutations", field = "sharePrivateNote")
+  @PreAuthorize("@permissions.has('graphql.hades.sharePrivateNote')")
+  public QueryResult sharePrivateNote(ShareInput input) {
+    return hadesGraphQLService.sharePrivateNote(input);
   }
 
   /**
