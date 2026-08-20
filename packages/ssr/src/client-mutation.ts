@@ -42,6 +42,17 @@ export async function executeMutation(
     });
 
     if (!response.ok) {
+      try {
+        const body = await response.json();
+        if (body && typeof body === "object" && "message" in body) {
+          return {
+            __typename: "StandardError",
+            message: (body as { message: string }).message,
+          };
+        }
+      } catch {
+        // fall through to generic
+      }
       return {
         __typename: "StandardError",
         message: `HTTP ${response.status}: ${response.statusText}`,

@@ -18,10 +18,6 @@ const TopNavBar = () => {
           <a href={item.href ?? `/${key}`}>
             <Button variant="secondary">{item.name}</Button>
           </a>
-
-          {idx < entries.length - 1 && (
-            <span className={styles.divider} role="separator" />
-          )}
         </React.Fragment>
       ))}
     </nav>
