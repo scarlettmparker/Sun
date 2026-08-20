@@ -1,5 +1,6 @@
 package com.sun.gaia.graphql.mappers;
 
+import java.time.ZoneOffset;
 import com.sun.gaia.codegen.types.Account;
 import com.sun.gaia.codegen.types.RemoteUser;
 import com.sun.gaia.codegen.types.RemoteUserType;
@@ -27,8 +28,8 @@ public class AccountMapper {
         .status(entity.getStatus())
         .provider(entity.getProvider())
         .remoteUsers(remoteUsers(entity))
-        .createdAt(entity.getCreatedAt())
-        .updatedAt(entity.getLastUpdatedAt())
+        .createdAt(entity.getCreatedAt() == null ? null : entity.getCreatedAt().atOffset(ZoneOffset.UTC))
+        .updatedAt(entity.getLastUpdatedAt() == null ? null : entity.getLastUpdatedAt().atOffset(ZoneOffset.UTC))
         .build();
   }
 

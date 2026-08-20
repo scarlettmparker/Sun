@@ -9,8 +9,8 @@ VALUES ('22222222-2222-2222-2222-222222222222', 'learner', 'Default Guided Reade
 ON CONFLICT (name) DO NOTHING;
 
 -- 2. Learner permissions - hades (text read, annotation/comment create/vote, defineWord, private notes)
-INSERT INTO gaia_role_permissions (role_id, permission, createdat, lastupdatedat)
-SELECT r.id, p.perm, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+INSERT INTO gaia_role_permissions (id, role_id, permission, createdat, lastupdatedat)
+SELECT gen_random_uuid(), r.id, p.perm, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM gaia_roles r,
      (VALUES
        ('graphql.hades.texts'),

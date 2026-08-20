@@ -6,6 +6,7 @@ import com.sun.fates.codegen.types.Person;
 import com.sun.fates.codegen.types.PersonInput;
 import com.sun.fates.model.PersonEntity;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,8 +43,8 @@ class PersonMapperTest {
     assertThat(result.getTitle()).isEqualTo("Engineer");
     assertThat(result.getEmail()).isEqualTo("jane@example.com");
     assertThat(result.getPhone()).isEqualTo("1234567890");
-    assertThat(result.getCreatedAt()).isEqualTo(createdAt);
-    assertThat(result.getUpdatedAt()).isEqualTo(updatedAt);
+    assertThat(result.getCreatedAt()).isEqualTo(createdAt.atOffset(ZoneOffset.UTC));
+    assertThat(result.getUpdatedAt()).isEqualTo(updatedAt.atOffset(ZoneOffset.UTC));
   }
 
   @Test

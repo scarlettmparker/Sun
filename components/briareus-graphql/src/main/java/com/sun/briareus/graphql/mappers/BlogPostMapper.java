@@ -1,5 +1,6 @@
 package com.sun.briareus.graphql.mappers;
 
+import java.time.ZoneOffset;
 import com.sun.briareus.codegen.types.BlogPost;
 import com.sun.briareus.codegen.types.BlogPostInput;
 import com.sun.briareus.model.BlogPostTypeEntity;
@@ -41,8 +42,8 @@ public class BlogPostMapper {
         .tags(postEntity.getTags())
         .remoteObject(postEntity.getRemoteObject())
         .language(postEntity.getLanguage())
-        .createdAt(postEntity.getCreatedAt())
-        .updatedAt(postEntity.getLastUpdatedAt());
+        .createdAt(postEntity.getCreatedAt() == null ? null : postEntity.getCreatedAt().atOffset(ZoneOffset.UTC))
+        .updatedAt(postEntity.getLastUpdatedAt() == null ? null : postEntity.getLastUpdatedAt().atOffset(ZoneOffset.UTC));
     if (postEntity.getType() != null) {
       builder.type(blogPostTypeMapper.map(postEntity.getType()));
     }

@@ -1,5 +1,6 @@
 package com.sun.gaia.graphql.mappers;
 
+import java.time.ZoneOffset;
 import com.sun.gaia.codegen.types.IpWhitelistEntry;
 import com.sun.gaia.model.IpWhitelistEntryEntity;
 import java.util.List;
@@ -29,10 +30,10 @@ public class IpWhitelistMapper {
             builder.description(entity.getDescription());
         }
         if (entity.getCreatedAt() != null) {
-            builder.createdAt(entity.getCreatedAt());
+            builder.createdAt(entity.getCreatedAt().atOffset(ZoneOffset.UTC));
         }
         if (entity.getLastUpdatedAt() != null) {
-            builder.updatedAt(entity.getLastUpdatedAt());
+            builder.updatedAt(entity.getLastUpdatedAt().atOffset(ZoneOffset.UTC));
         }
 
         return builder.build();

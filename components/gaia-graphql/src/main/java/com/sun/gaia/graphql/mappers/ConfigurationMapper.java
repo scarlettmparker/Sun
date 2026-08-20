@@ -1,5 +1,6 @@
 package com.sun.gaia.graphql.mappers;
 
+import java.time.ZoneOffset;
 import com.sun.gaia.codegen.types.Configuration;
 import com.sun.gaia.model.ConfigurationEntity;
 import org.slf4j.Logger;
@@ -29,10 +30,10 @@ public class ConfigurationMapper {
         .description(entity.getDescription())
         .enabled(entity.isEnabled())
         .content(entity.getContent())
-        .lastAppliedAt(entity.getLastAppliedAt())
+        .lastAppliedAt(entity.getLastAppliedAt().atOffset(ZoneOffset.UTC))
         .lastApplyError(entity.getLastApplyError())
-        .createdAt(entity.getCreatedAt())
-        .updatedAt(entity.getLastUpdatedAt())
+        .createdAt(entity.getCreatedAt().atOffset(ZoneOffset.UTC))
+        .updatedAt(entity.getLastUpdatedAt().atOffset(ZoneOffset.UTC))
         .build();
 
     logger.debug("Mapped configuration {}", configuration.getId());

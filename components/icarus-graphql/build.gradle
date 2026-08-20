@@ -50,7 +50,7 @@ generateJava {
     packageName = 'com.sun.icarus.codegen'
     generateClient = true
     typeMapping = [
-        "DateTime": "java.time.LocalDateTime",
+        "DateTime": "java.time.OffsetDateTime",
         "ThreadStatus": "com.sun.icarus.model.enums.ThreadStatus",
         "PostStatus": "com.sun.icarus.model.enums.PostStatus",
         "VoteValue": "com.sun.icarus.model.enums.VoteValue"

@@ -49,7 +49,7 @@ generateJava {
     packageName = 'com.sun.cerberus.codegen'
     generateClient = true
     typeMapping = [
-        "DateTime": "java.time.LocalDateTime"
+        "DateTime": "java.time.OffsetDateTime"
     ]
 }
 

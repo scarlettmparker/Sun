@@ -1,5 +1,6 @@
 package com.sun.icarus.graphql.mappers;
 
+import java.time.ZoneOffset;
 import com.sun.icarus.codegen.types.ForumPost;
 import com.sun.icarus.codegen.types.RemoteUser;
 import com.sun.icarus.model.ForumPostEntity;
@@ -38,8 +39,8 @@ public class ForumPostMapper {
         .netScore(entity.getUpvotes() - entity.getDownvotes())
         .author(author)
         .myVote(myVote)
-        .createdAt(entity.getCreatedAt())
-        .updatedAt(entity.getLastUpdatedAt())
+        .createdAt(entity.getCreatedAt() == null ? null : entity.getCreatedAt().atOffset(ZoneOffset.UTC))
+        .updatedAt(entity.getLastUpdatedAt() == null ? null : entity.getLastUpdatedAt().atOffset(ZoneOffset.UTC))
         .build();
     logger.debug("Mapped forum post with id {}", post.getId());
     return post;

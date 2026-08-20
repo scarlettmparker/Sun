@@ -1,5 +1,6 @@
 package com.sun.gaia.graphql.mappers;
 
+import java.time.ZoneOffset;
 import com.sun.gaia.codegen.types.DeviceStatus;
 import com.sun.gaia.codegen.types.TailscaleDevice;
 import com.sun.gaia.model.TailscaleDeviceEntity;
@@ -28,16 +29,16 @@ public class TailscaleDeviceMapper {
             builder.ipv4(entity.getIpv4());
         }
         if (entity.getExpiredAt() != null) {
-            builder.expiredAt(entity.getExpiredAt());
+            builder.expiredAt(entity.getExpiredAt().atOffset(ZoneOffset.UTC));
         }
         if (entity.getLastSeen() != null) {
             builder.lastSeen(entity.getLastSeen());
         }
         if (entity.getCreatedAt() != null) {
-            builder.createdAt(entity.getCreatedAt());
+            builder.createdAt(entity.getCreatedAt().atOffset(ZoneOffset.UTC));
         }
         if (entity.getLastUpdatedAt() != null) {
-            builder.updatedAt(entity.getLastUpdatedAt());
+            builder.updatedAt(entity.getLastUpdatedAt().atOffset(ZoneOffset.UTC));
         }
 
         return builder.build();

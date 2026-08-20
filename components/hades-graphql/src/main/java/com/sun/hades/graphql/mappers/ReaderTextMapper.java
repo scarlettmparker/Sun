@@ -1,5 +1,6 @@
 package com.sun.hades.graphql.mappers;
 
+import java.time.ZoneOffset;
 import com.sun.hades.codegen.types.ReaderText;
 import com.sun.hades.codegen.types.ReaderTextInput;
 import com.sun.hades.model.ReaderTextEntity;
@@ -34,8 +35,8 @@ public class ReaderTextMapper {
         .ownerId(entity.getOwnerId() == null ? null : entity.getOwnerId().toString())
         .sourceId(entity.getSourceId() == null ? null : entity.getSourceId().toString())
         .status(entity.getStatus())
-        .createdAt(entity.getCreatedAt())
-        .updatedAt(entity.getLastUpdatedAt())
+        .createdAt(entity.getCreatedAt() == null ? null : entity.getCreatedAt().atOffset(ZoneOffset.UTC))
+        .updatedAt(entity.getLastUpdatedAt() == null ? null : entity.getLastUpdatedAt().atOffset(ZoneOffset.UTC))
         .build();
     logger.debug("Mapped reader text {} with id {}", entity.getTitle(), text.getId());
     return text;

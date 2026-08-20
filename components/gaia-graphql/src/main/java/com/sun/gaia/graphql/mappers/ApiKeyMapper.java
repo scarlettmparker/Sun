@@ -1,5 +1,6 @@
 package com.sun.gaia.graphql.mappers;
 
+import java.time.ZoneOffset;
 import com.sun.gaia.codegen.types.ApiKey;
 import com.sun.gaia.model.ApiKeyEntity;
 import org.springframework.stereotype.Component;
@@ -22,10 +23,10 @@ public class ApiKeyMapper {
         .name(entity.getName())
         .keyPrefix(entity.getKeyPrefix())
         .enabled(entity.isEnabled())
-        .createdAt(entity.getCreatedAt())
-        .updatedAt(entity.getLastUpdatedAt());
-    if (entity.getLastUsedAt() != null) {
-      builder.lastUsedAt(entity.getLastUsedAt());
+        .createdAt(entity.getCreatedAt() == null ? null : entity.getCreatedAt().atOffset(ZoneOffset.UTC))
+        .updatedAt(entity.getLastUpdatedAt() == null ? null : entity.getLastUpdatedAt().atOffset(ZoneOffset.UTC));
+    if (entity.getLastUsedAt() == null ? null : entity.getLastUsedAt().atOffset(ZoneOffset.UTC) != null) {
+      builder.lastUsedAt(entity.getLastUsedAt() == null ? null : entity.getLastUsedAt().atOffset(ZoneOffset.UTC));
     }
     return builder.build();
   }

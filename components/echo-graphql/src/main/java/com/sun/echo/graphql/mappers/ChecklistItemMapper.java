@@ -1,5 +1,6 @@
 package com.sun.echo.graphql.mappers;
 
+import java.time.ZoneOffset;
 import com.sun.echo.codegen.types.ChecklistItem;
 import com.sun.echo.codegen.types.ChecklistItemInput;
 import com.sun.echo.model.ChecklistItemEntity;
@@ -27,8 +28,8 @@ public class ChecklistItemMapper {
         .icon(entity.getIcon())
         .categoryId(entity.getCategoryId() == null ? null : entity.getCategoryId().toString())
         .lifecycleStatus(entity.getLifecycleStatus() == null ? null : entity.getLifecycleStatus().name())
-        .createdAt(entity.getCreatedAt())
-        .updatedAt(entity.getLastUpdatedAt())
+        .createdAt(entity.getCreatedAt() == null ? null : entity.getCreatedAt().atOffset(ZoneOffset.UTC))
+        .updatedAt(entity.getLastUpdatedAt() == null ? null : entity.getLastUpdatedAt().atOffset(ZoneOffset.UTC))
         .build();
   }
 

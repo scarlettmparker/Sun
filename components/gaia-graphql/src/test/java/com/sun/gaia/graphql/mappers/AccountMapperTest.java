@@ -7,6 +7,7 @@ import com.sun.gaia.codegen.types.RemoteUserType;
 import com.sun.gaia.model.AccountEntity;
 import com.sun.gaia.model.enums.AccountStatus;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,8 +42,8 @@ class AccountMapperTest {
     assertThat(result.getStatus()).isEqualTo(AccountStatus.ACTIVE);
     assertThat(result.getProvider()).isEqualTo("local");
     assertThat(result.getRemoteUsers()).isNull();
-    assertThat(result.getCreatedAt()).isEqualTo(createdAt);
-    assertThat(result.getUpdatedAt()).isEqualTo(updatedAt);
+    assertThat(result.getCreatedAt()).isEqualTo(createdAt.atOffset(ZoneOffset.UTC));
+    assertThat(result.getUpdatedAt()).isEqualTo(updatedAt.atOffset(ZoneOffset.UTC));
   }
 
   @Test

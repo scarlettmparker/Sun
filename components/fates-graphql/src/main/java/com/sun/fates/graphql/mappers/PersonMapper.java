@@ -1,5 +1,6 @@
 package com.sun.fates.graphql.mappers;
 
+import java.time.ZoneOffset;
 import com.sun.fates.codegen.types.Person;
 import com.sun.fates.codegen.types.PersonInput;
 import com.sun.fates.model.PersonEntity;
@@ -27,8 +28,8 @@ public class PersonMapper {
         .title(entity.getTitle())
         .email(entity.getEmail())
         .phone(entity.getPhone())
-        .createdAt(entity.getCreatedAt())
-        .updatedAt(entity.getLastUpdatedAt())
+        .createdAt(entity.getCreatedAt() == null ? null : entity.getCreatedAt().atOffset(ZoneOffset.UTC))
+        .updatedAt(entity.getLastUpdatedAt() == null ? null : entity.getLastUpdatedAt().atOffset(ZoneOffset.UTC))
         .build();
   }
 

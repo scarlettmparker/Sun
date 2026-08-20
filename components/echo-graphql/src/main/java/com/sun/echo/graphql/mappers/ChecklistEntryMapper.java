@@ -1,5 +1,6 @@
 package com.sun.echo.graphql.mappers;
 
+import java.time.ZoneOffset;
 import com.sun.echo.codegen.types.ChecklistEntry;
 import com.sun.echo.codegen.types.ChecklistEntryInput;
 import com.sun.echo.model.ChecklistEntryEntity;
@@ -22,11 +23,11 @@ public class ChecklistEntryMapper {
     return ChecklistEntry.newBuilder()
         .id(entity.getId().toString())
         .name(entity.getName())
-        .dueAt(entity.getDueAt())
-        .completedAt(entity.getCompletedAt())
+        .dueAt(entity.getDueAt() == null ? null : entity.getDueAt().atOffset(ZoneOffset.UTC))
+        .completedAt(entity.getCompletedAt() == null ? null : entity.getCompletedAt().atOffset(ZoneOffset.UTC))
         .status(entity.getStatus() == null ? null : entity.getStatus().name())
-        .createdAt(entity.getCreatedAt())
-        .updatedAt(entity.getLastUpdatedAt())
+        .createdAt(entity.getCreatedAt() == null ? null : entity.getCreatedAt().atOffset(ZoneOffset.UTC))
+        .updatedAt(entity.getLastUpdatedAt() == null ? null : entity.getLastUpdatedAt().atOffset(ZoneOffset.UTC))
         .build();
   }
 

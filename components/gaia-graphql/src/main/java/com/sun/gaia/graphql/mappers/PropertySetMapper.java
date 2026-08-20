@@ -1,5 +1,6 @@
 package com.sun.gaia.graphql.mappers;
 
+import java.time.ZoneOffset;
 import com.sun.gaia.codegen.types.PropertySetEntry;
 import com.sun.gaia.codegen.types.PropertySetSchema;
 import com.sun.gaia.model.PropertySetEntryEntity;
@@ -34,8 +35,8 @@ public class PropertySetMapper {
         .values(entity.getValues())
         .configurable(entity.isConfigurable())
         .status(entity.getStatus())
-        .createdAt(entity.getCreatedAt())
-        .updatedAt(entity.getLastUpdatedAt())
+        .createdAt(entity.getCreatedAt().atOffset(ZoneOffset.UTC))
+        .updatedAt(entity.getLastUpdatedAt().atOffset(ZoneOffset.UTC))
         .build();
 
     logger.debug("Mapped property set entry {}", entry.getId());
@@ -58,8 +59,8 @@ public class PropertySetMapper {
         .properties(entity.getProperties())
         .configurable(entity.isConfigurable())
         .status(entity.getStatus())
-        .createdAt(entity.getCreatedAt())
-        .updatedAt(entity.getLastUpdatedAt())
+        .createdAt(entity.getCreatedAt().atOffset(ZoneOffset.UTC))
+        .updatedAt(entity.getLastUpdatedAt().atOffset(ZoneOffset.UTC))
         .build();
 
     logger.debug("Mapped property set schema {}", schema.getId());

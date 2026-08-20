@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.sun.gaia.codegen.types.ApiKey;
 import com.sun.gaia.model.ApiKeyEntity;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -33,7 +34,7 @@ class ApiKeyMapperTest {
     assertThat(result.getKeyPrefix()).isEqualTo("ns_ab12cd34");
     assertThat(result.getEnabled()).isTrue();
     assertThat(result.getLastUsedAt()).isEqualTo(lastUsedAt);
-    assertThat(result.getCreatedAt()).isEqualTo(createdAt);
+    assertThat(result.getCreatedAt()).isEqualTo(createdAt.atOffset(ZoneOffset.UTC));
   }
 
   @Test

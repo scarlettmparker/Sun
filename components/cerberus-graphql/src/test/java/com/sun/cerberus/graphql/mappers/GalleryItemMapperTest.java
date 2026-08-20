@@ -5,6 +5,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.UUID;
 
@@ -42,8 +43,8 @@ class GalleryItemMapperTest {
     assertThat(result.getContent()).isEqualTo("Test Content");
     assertThat(result.getImagePath()).isEqualTo("/path/to/image.jpg");
     assertThat(result.getRemoteObject()).containsExactly("id1", "id2");
-    assertThat(result.getCreatedAt()).isEqualTo(createdAt);
-    assertThat(result.getUpdatedAt()).isEqualTo(updatedAt);
+    assertThat(result.getCreatedAt()).isEqualTo(createdAt.atOffset(ZoneOffset.UTC));
+    assertThat(result.getUpdatedAt()).isEqualTo(updatedAt.atOffset(ZoneOffset.UTC));
   }
 
   @Test

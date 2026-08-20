@@ -7,6 +7,7 @@ import com.sun.echo.codegen.types.ChecklistItemInput;
 import com.sun.echo.model.ChecklistItemEntity;
 import com.sun.echo.model.enums.LifecycleStatus;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,8 +43,8 @@ class ChecklistItemMapperTest {
     assertThat(result.getIcon()).isEqualTo("milk");
     assertThat(result.getCategoryId()).isEqualTo(categoryId.toString());
     assertThat(result.getLifecycleStatus()).isEqualTo("ACTIVE");
-    assertThat(result.getCreatedAt()).isEqualTo(createdAt);
-    assertThat(result.getUpdatedAt()).isEqualTo(updatedAt);
+    assertThat(result.getCreatedAt()).isEqualTo(createdAt.atOffset(ZoneOffset.UTC));
+    assertThat(result.getUpdatedAt()).isEqualTo(updatedAt.atOffset(ZoneOffset.UTC));
   }
 
   @Test

@@ -1,5 +1,6 @@
 package com.sun.hades.graphql.mappers;
 
+import java.time.ZoneOffset;
 import com.sun.hades.codegen.types.ReaderAnnotation;
 import com.sun.hades.codegen.types.ReaderPosition;
 import com.sun.hades.codegen.types.RemoteUser;
@@ -44,8 +45,8 @@ public class ReaderAnnotationMapper {
         .remoteObject(entity.getRemoteObject())
         .author(author)
         .myVote(myVote)
-        .createdAt(entity.getCreatedAt())
-        .updatedAt(entity.getLastUpdatedAt())
+        .createdAt(entity.getCreatedAt() == null ? null : entity.getCreatedAt().atOffset(ZoneOffset.UTC))
+        .updatedAt(entity.getLastUpdatedAt() == null ? null : entity.getLastUpdatedAt().atOffset(ZoneOffset.UTC))
         .build();
     logger.debug("Mapped annotation with id {}", annotation.getId());
     return annotation;

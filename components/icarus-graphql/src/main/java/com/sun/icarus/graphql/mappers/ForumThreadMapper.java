@@ -1,5 +1,6 @@
 package com.sun.icarus.graphql.mappers;
 
+import java.time.ZoneOffset;
 import com.sun.icarus.codegen.types.ForumThread;
 import com.sun.icarus.model.ForumThreadEntity;
 import org.slf4j.Logger;
@@ -27,8 +28,8 @@ public class ForumThreadMapper {
         .title(entity.getTitle())
         .status(entity.getStatus())
         .remoteObject(entity.getRemoteObject())
-        .createdAt(entity.getCreatedAt())
-        .updatedAt(entity.getLastUpdatedAt())
+        .createdAt(entity.getCreatedAt() == null ? null : entity.getCreatedAt().atOffset(ZoneOffset.UTC))
+        .updatedAt(entity.getLastUpdatedAt() == null ? null : entity.getLastUpdatedAt().atOffset(ZoneOffset.UTC))
         .build();
     logger.debug("Mapped forum thread {} with id {}", entity.getTitle(), thread.getId());
     return thread;

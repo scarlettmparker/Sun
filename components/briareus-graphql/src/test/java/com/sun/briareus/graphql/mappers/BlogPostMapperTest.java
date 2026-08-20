@@ -7,6 +7,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.UUID;
 
@@ -63,8 +64,8 @@ class BlogPostMapperTest {
     assertThat(result.getTags()).containsExactly("tag1", "tag2");
     assertThat(result.getLanguage()).isEqualTo("en");
     assertThat(result.getType()).isEqualTo(type);
-    assertThat(result.getCreatedAt()).isEqualTo(createdAt);
-    assertThat(result.getUpdatedAt()).isEqualTo(updatedAt);
+    assertThat(result.getCreatedAt()).isEqualTo(createdAt.atOffset(ZoneOffset.UTC));
+    assertThat(result.getUpdatedAt()).isEqualTo(updatedAt.atOffset(ZoneOffset.UTC));
   }
 
   @Test

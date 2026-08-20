@@ -1,5 +1,6 @@
 package com.sun.cerberus.graphql.mappers;
 
+import java.time.ZoneOffset;
 import com.sun.cerberus.codegen.types.GalleryItem;
 import com.sun.cerberus.codegen.types.GalleryItemInput;
 import org.slf4j.Logger;
@@ -35,8 +36,8 @@ public class GalleryItemMapper {
         .imagePath(galleryItemEntity.getImagePath())
         .remoteObject(galleryItemEntity.getRemoteObject())
         .keyDetailId(galleryItemEntity.getKeyDetailId() == null ? null : galleryItemEntity.getKeyDetailId().toString())
-        .createdAt(galleryItemEntity.getCreatedAt())
-        .updatedAt(galleryItemEntity.getLastUpdatedAt())
+        .createdAt(galleryItemEntity.getCreatedAt() == null ? null : galleryItemEntity.getCreatedAt().atOffset(ZoneOffset.UTC))
+        .updatedAt(galleryItemEntity.getLastUpdatedAt() == null ? null : galleryItemEntity.getLastUpdatedAt().atOffset(ZoneOffset.UTC))
         .build();
 
     logger.debug("Mapped gallery item {} with id {}", galleryItemEntity.getTitle(), galleryItemEntity.getId());
