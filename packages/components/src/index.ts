@@ -80,6 +80,7 @@ export { default as Select, SelectOption } from "./components/select";
 export { default as Separator } from "./components/separator";
 export { default as Sidebar } from "./components/sidebar";
 export { default as Skeleton } from "./components/skeleton";
+export { default as TaggedInput } from "./components/tagged-input";
 export { default as TextArea } from "./components/textarea";
 export {
   Tooltip,

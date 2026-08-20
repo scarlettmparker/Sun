@@ -1,3 +1,4 @@
+import React from "react";
 import { cn } from "~/utils/cn";
 import styles from "./input.module.css";
 
@@ -32,7 +33,7 @@ type InputProps = RangeInputProps | OtherInputProps;
 /**
  * Scarlet UI Input.
  */
-const Input = (props: InputProps) => {
+const Input = React.forwardRef<HTMLInputElement, InputProps>((props, ref) => {
   const { type = "text", ...rest } = props;
 
   switch (type) {
@@ -44,6 +45,7 @@ const Input = (props: InputProps) => {
       } = rest as RangeInputProps;
       return (
         <input
+          ref={ref}
           {...rangeProps}
           type="range"
           className={cn(className, styles.range, styles[orient])}
@@ -54,6 +56,7 @@ const Input = (props: InputProps) => {
       const { className, ...checkboxProps } = rest;
       return (
         <input
+          ref={ref}
           {...checkboxProps}
           type="checkbox"
           className={cn(className, styles.checkbox)}
@@ -64,6 +67,7 @@ const Input = (props: InputProps) => {
       const { className, ...textProps } = rest;
       return (
         <input
+          ref={ref}
           {...textProps}
           type="text"
           className={cn(className, styles.text)}
@@ -74,6 +78,7 @@ const Input = (props: InputProps) => {
       const { className, ...restProps } = rest;
       return (
         <input
+          ref={ref}
           {...restProps}
           type={type}
           className={cn(className, styles.text)}
@@ -81,6 +86,8 @@ const Input = (props: InputProps) => {
       );
     }
   }
-};
+});
+
+Input.displayName = "Input";
 
 export default Input;
