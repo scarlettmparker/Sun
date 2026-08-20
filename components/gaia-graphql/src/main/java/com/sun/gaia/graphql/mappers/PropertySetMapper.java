@@ -35,8 +35,8 @@ public class PropertySetMapper {
         .values(entity.getValues())
         .configurable(entity.isConfigurable())
         .status(entity.getStatus())
-        .createdAt(entity.getCreatedAt().atOffset(ZoneOffset.UTC))
-        .updatedAt(entity.getLastUpdatedAt().atOffset(ZoneOffset.UTC))
+        .createdAt(entity.getCreatedAt() == null ? null : entity.getCreatedAt().atOffset(ZoneOffset.UTC))
+        .updatedAt(entity.getLastUpdatedAt() == null ? null : entity.getLastUpdatedAt().atOffset(ZoneOffset.UTC))
         .build();
 
     logger.debug("Mapped property set entry {}", entry.getId());
@@ -59,8 +59,8 @@ public class PropertySetMapper {
         .properties(entity.getProperties())
         .configurable(entity.isConfigurable())
         .status(entity.getStatus())
-        .createdAt(entity.getCreatedAt().atOffset(ZoneOffset.UTC))
-        .updatedAt(entity.getLastUpdatedAt().atOffset(ZoneOffset.UTC))
+        .createdAt(entity.getCreatedAt() == null ? null : entity.getCreatedAt().atOffset(ZoneOffset.UTC))
+        .updatedAt(entity.getLastUpdatedAt() == null ? null : entity.getLastUpdatedAt().atOffset(ZoneOffset.UTC))
         .build();
 
     logger.debug("Mapped property set schema {}", schema.getId());

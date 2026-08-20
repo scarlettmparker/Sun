@@ -30,10 +30,10 @@ public class ConfigurationMapper {
         .description(entity.getDescription())
         .enabled(entity.isEnabled())
         .content(entity.getContent())
-        .lastAppliedAt(entity.getLastAppliedAt().atOffset(ZoneOffset.UTC))
+        .lastAppliedAt(entity.getLastAppliedAt() == null ? null : entity.getLastAppliedAt().atOffset(ZoneOffset.UTC))
         .lastApplyError(entity.getLastApplyError())
-        .createdAt(entity.getCreatedAt().atOffset(ZoneOffset.UTC))
-        .updatedAt(entity.getLastUpdatedAt().atOffset(ZoneOffset.UTC))
+        .createdAt(entity.getCreatedAt() == null ? null : entity.getCreatedAt().atOffset(ZoneOffset.UTC))
+        .updatedAt(entity.getLastUpdatedAt() == null ? null : entity.getLastUpdatedAt().atOffset(ZoneOffset.UTC))
         .build();
 
     logger.debug("Mapped configuration {}", configuration.getId());

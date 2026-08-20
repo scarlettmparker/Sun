@@ -42,7 +42,7 @@ public class ChecklistEntryMapper {
       entity.setName(input.getName());
     }
     if (input.getDueAt() != null) {
-      entity.setDueAt(input.getDueAt());
+      entity.setDueAt(input.getDueAt().toLocalDateTime());
     }
     if (input.getStatus() != null) {
       entity.setStatus(ChecklistStatus.valueOf(input.getStatus()));
