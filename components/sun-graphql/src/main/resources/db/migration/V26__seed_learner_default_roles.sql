@@ -4,12 +4,12 @@
 -- nor gaia admin (accounts, ipWhitelist, tailscale, suspend/unsuspend, property mutations).
 
 -- 1. Learner role
-INSERT INTO gaia_roles (id, name, description, created_at, last_updated_at)
-VALUES ('22222222-2222-2222-2222-222222222222', 'learner', 'Default Guided Reader learner — Discord users', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+INSERT INTO gaia_roles (id, name, description, createdat, lastupdatedat)
+VALUES ('22222222-2222-2222-2222-222222222222', 'learner', 'Default Guided Reader learner - Discord users', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 ON CONFLICT (name) DO NOTHING;
 
--- 2. Learner permissions — hades (text read, annotation/comment create/vote, defineWord, private notes)
-INSERT INTO gaia_role_permissions (role_id, permission, created_at, last_updated_at)
+-- 2. Learner permissions - hades (text read, annotation/comment create/vote, defineWord, private notes)
+INSERT INTO gaia_role_permissions (role_id, permission, createdat, lastupdatedat)
 SELECT r.id, p.perm, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM gaia_roles r,
      (VALUES

@@ -1,6 +1,6 @@
 -- V27 private notes (own table, remote_object tag), text views, text versions and polymorphic shares.
 -- Notes use remote_object ["private_note","hades:text:{textId}"] for locateRemoteObjects.
--- Shares is generic (any ownable) — private_note, comment, text etc. future.
+-- Shares is generic (any ownable) - private_note, comment, text etc. future.
 
 CREATE TABLE hades_private_notes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -11,8 +11,8 @@ CREATE TABLE hades_private_notes (
   body TEXT NOT NULL CHECK (char_length(body) >= 1),
   visibility TEXT NOT NULL DEFAULT 'PRIVATE' CHECK (visibility IN ('PRIVATE','SHARED')),
   remote_object JSONB NOT NULL DEFAULT '["private_note"]'::jsonb,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  last_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  createdat TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  lastupdatedat TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   created_by UUID,
   last_updated_by UUID,
   CONSTRAINT private_note_range CHECK (end_offset > start_offset)
@@ -27,8 +27,8 @@ CREATE TABLE hades_text_views (
   account_id UUID NOT NULL REFERENCES gaia_accounts(id) ON DELETE CASCADE,
   text_id UUID NOT NULL REFERENCES hades_reader_texts(id) ON DELETE CASCADE,
   viewed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  last_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  createdat TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  lastupdatedat TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   created_by UUID,
   last_updated_by UUID,
   CONSTRAINT uq_text_views_account_text UNIQUE (account_id, text_id)
@@ -45,8 +45,8 @@ CREATE TABLE hades_text_versions (
   level TEXT NOT NULL,
   language TEXT NOT NULL,
   edited_by UUID REFERENCES gaia_accounts(id) ON DELETE SET NULL,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  last_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  createdat TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  lastupdatedat TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   created_by UUID,
   last_updated_by UUID,
   CONSTRAINT uq_text_versions_text_version UNIQUE (text_id, version)
@@ -61,8 +61,8 @@ CREATE TABLE gaia_object_shares (
   subject_type TEXT NOT NULL CHECK (subject_type IN ('user','role')),
   subject_id UUID NOT NULL,
   relation TEXT NOT NULL CHECK (relation IN ('VIEWER','EDITOR','OWNER')),
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  last_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  createdat TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  lastupdatedat TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   created_by UUID,
   last_updated_by UUID,
   CONSTRAINT uq_object_shares UNIQUE (object_type, object_id, subject_type, subject_id)

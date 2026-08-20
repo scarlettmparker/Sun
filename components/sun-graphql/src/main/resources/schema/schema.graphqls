@@ -1,4 +1,4 @@
-scalar DateTimeTime
+scalar DateTime
 scalar Long
 scalar JSON
 
