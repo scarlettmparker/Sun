@@ -11,6 +11,7 @@ import com.sun.hades.repository.ReaderAnnotationRepository;
 import com.sun.hades.repository.ReaderPositionRepository;
 import com.sun.hades.repository.ReaderTextRepository;
 import com.sun.hades.repository.ReaderVoteRepository;
+import jakarta.persistence.criteria.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -172,7 +173,8 @@ public class ReaderAnnotationService extends BaseService<ReaderAnnotationEntity>
     return (root, query, cb) -> {
       var sub = cb.createQuery(UUID.class);
       var pos = sub.from(ReaderPositionEntity.class);
-      sub.select(pos.get("id")).where(cb.equal(pos.get("textId"), textId));
+      Path<UUID> posTextId = pos.get("textId");
+      sub.select(pos.get("id")).where(cb.equal(posTextId, textId));
       return root.get("positionId").in(sub);
     };
   }
