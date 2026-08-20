@@ -9,3 +9,7 @@ extend type ReaderComment {
 extend type ForumPost {
   authorProfile: ReaderAccount
 }
+
+extend type PrivateNote {
+  authorProfile: ReaderAccount
+}

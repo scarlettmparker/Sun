@@ -12,6 +12,7 @@ import java.util.Set;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -48,6 +49,7 @@ public class WordReferenceService {
    * @param scope the parts of the page to include
    * @return the word, or null when the entry does not exist
    */
+  @Cacheable(value = "defineWord", key = "#word.toLowerCase() + ':' + #scope")
   public Word defineWord(String word, List<WordScope> scope) {
     Document doc = fetch(word);
     return doc == null ? null : map(doc, word, scope);

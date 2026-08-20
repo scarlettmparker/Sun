@@ -16,7 +16,7 @@ const useIsomorphicLayoutEffect =
   typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 const OPEN_DELAY = 400;
-const CLOSE_DELAY = 650;
+const CLOSE_DELAY = 0;
 
 /**
  * Shared state across all tooltips in a group, enabling the instant-switch
@@ -268,10 +268,8 @@ const Tooltip = ({ children, open: controlledOpen }: TooltipProps) => {
   const hide = () => {
     if (isControlled) return;
     clearTimers();
-    closeTimer.current = setTimeout(() => {
-      setInternalOpen(false);
-      group.onClose();
-    }, CLOSE_DELAY);
+    setInternalOpen(false);
+    group.onClose();
   };
 
   useEffect(() => () => clearTimers(), []);
@@ -359,17 +357,38 @@ const TooltipContent = ({
 }: TooltipContentProps) => {
   const { open, instant, triggerRef, show, hide } = useTooltip();
   const contentRef = useRef<HTMLDivElement>(null);
+  const [rendered, setRendered] = useState(open);
+  const [closing, setClosing] = useState(false);
 
-  useTooltipPositioning(contentRef, triggerRef, open, side);
+  useIsomorphicLayoutEffect(() => {
+    if (open) {
+      setRendered(true);
+      setClosing(false);
+    } else if (rendered) {
+      setClosing(true);
+      const timer = setTimeout(() => {
+        setRendered(false);
+        setClosing(false);
+      }, 120);
+      return () => clearTimeout(timer);
+    }
+  }, [open, rendered]);
 
-  if (!open) {
+  useTooltipPositioning(contentRef, triggerRef, rendered, side);
+
+  if (!rendered) {
     return null;
   }
 
   return createPortal(
     <div
       ref={contentRef}
-      className={cn(styles.content, !instant && styles.fade_in, className)}
+      className={cn(
+        styles.content,
+        !instant && !closing && styles.fade_in,
+        closing && styles.fade_out,
+        className,
+      )}
       onMouseEnter={show}
       onMouseLeave={hide}
       {...rest}

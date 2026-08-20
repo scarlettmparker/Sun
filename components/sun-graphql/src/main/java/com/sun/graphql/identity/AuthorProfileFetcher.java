@@ -3,6 +3,7 @@ package com.sun.graphql.identity;
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
 import com.netflix.graphql.dgs.DgsDataFetchingEnvironment;
+import com.sun.hades.codegen.types.PrivateNote;
 import com.sun.hades.codegen.types.ReaderAccount;
 import java.util.concurrent.CompletableFuture;
 import org.dataloader.DataLoader;
@@ -33,6 +34,13 @@ public class AuthorProfileFetcher {
   @DgsData(parentType = "ForumPost", field = "authorProfile")
   public CompletableFuture<ReaderAccount> postProfile(DgsDataFetchingEnvironment env) {
     ForumPost source = env.getSource();
+    return loadById(env, source.getAuthor() == null ? null : source.getAuthor().getId());
+  }
+
+  @DgsData(parentType = "PrivateNote", field = "authorProfile")
+  public CompletableFuture<ReaderAccount> privateNoteProfile(
+      DgsDataFetchingEnvironment env) {
+    PrivateNote source = env.getSource();
     return loadById(env, source.getAuthor() == null ? null : source.getAuthor().getId());
   }
 

@@ -57,6 +57,7 @@ import com.sun.hades.model.enums.ReaderTextStatus;
 import com.sun.hades.service.DiscordOAuthService;
 import com.sun.hades.service.PrivateNoteService;
 import com.sun.hades.service.ReaderAccountService;
+import com.sun.hades.service.RemoteObjectReference;
 import com.sun.hades.service.ReaderAnnotationService;
 import com.sun.hades.service.ReaderCommentService;
 import com.sun.hades.service.ReaderPositionService;
@@ -400,7 +401,7 @@ public class HadesGraphQLService {
    */
   @Transactional(readOnly = true)
   public List<ReaderObjectReference> locateRemoteObjects(List<String> ids) {
-    List<com.sun.hades.service.RemoteObjectReference> out = new ArrayList<>();
+    List<RemoteObjectReference> out = new ArrayList<>();
     out.addAll(annotationService.locateRemoteObjects(ids));
     out.addAll(privateNoteService.locateRemoteObjects(ids));
     return out.stream().map(objectReferenceMapper::map).toList();

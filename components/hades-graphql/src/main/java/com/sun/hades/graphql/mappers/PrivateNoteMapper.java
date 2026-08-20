@@ -1,6 +1,7 @@
 package com.sun.hades.graphql.mappers;
 
 import com.sun.hades.codegen.types.PrivateNote;
+import com.sun.hades.codegen.types.PrivateNoteVisibility;
 import com.sun.hades.codegen.types.RemoteUser;
 import com.sun.hades.model.PrivateNoteEntity;
 import org.springframework.stereotype.Component;
@@ -25,9 +26,7 @@ public class PrivateNoteMapper {
         .startOffset(entity.getStartOffset())
         .endOffset(entity.getEndOffset())
         .body(entity.getBody())
-        .visibility(
-            com.sun.hades.codegen.types.PrivateNoteVisibility.valueOf(
-                entity.getVisibility().name()))
+        .visibility(PrivateNoteVisibility.valueOf(entity.getVisibility().name()))
         .remoteObject(entity.getRemoteObject())
         .author(author)
         .createdAt(entity.getCreatedAt())

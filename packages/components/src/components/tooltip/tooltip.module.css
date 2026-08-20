@@ -14,11 +14,24 @@
   animation: tooltip_fade_in var(--fast) ease;
 }
 
+.fade_out {
+  animation: tooltip_fade_out 120ms ease forwards;
+}
+
 @keyframes tooltip_fade_in {
   from {
     opacity: 0;
   }
   to {
     opacity: 1;
+  }
+}
+
+@keyframes tooltip_fade_out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
   }
 }
