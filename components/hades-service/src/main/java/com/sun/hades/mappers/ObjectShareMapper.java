@@ -1,4 +1,4 @@
-package com.sun.gaia.mappers;
+package com.sun.hades.mappers;
 
 import com.sun.gaia.model.ObjectShareEntity;
 import java.util.UUID;

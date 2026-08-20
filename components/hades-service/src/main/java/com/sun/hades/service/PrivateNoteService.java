@@ -2,9 +2,9 @@ package com.sun.hades.service;
 
 import com.sun.base.service.BaseService;
 import com.sun.fates.service.PersonService;
-import com.sun.gaia.mappers.ObjectShareMapper;
 import com.sun.gaia.model.enums.AccountType;
 import com.sun.gaia.repository.ObjectShareRepository;
+import com.sun.hades.mappers.ObjectShareMapper;
 import com.sun.gaia.service.AccountService;
 import com.sun.gaia.service.EmailService;
 import com.sun.gaia.service.PermifyService;
