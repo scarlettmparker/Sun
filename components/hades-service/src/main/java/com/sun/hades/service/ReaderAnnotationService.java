@@ -171,11 +171,13 @@ public class ReaderAnnotationService extends BaseService<ReaderAnnotationEntity>
 
   private Specification<ReaderAnnotationEntity> textIdSpec(UUID textId) {
     return (root, query, cb) -> {
-      var sub = cb.createQuery(UUID.class);
+      var sub = query.subquery(Boolean.class);
       var pos = sub.from(ReaderPositionEntity.class);
-      Path<UUID> posTextId = pos.get("textId");
-      sub.select(pos.get("id")).where(cb.equal(posTextId, textId));
-      return root.get("positionId").in(sub);
+      sub.where(
+          cb.and(
+              cb.equal(root.get("positionId"), pos.get("id")),
+              cb.equal(pos.get("textId"), textId)));
+      return cb.exists(sub);
     };
   }
 
