@@ -49,7 +49,7 @@ generateJava {
     packageName = 'com.sun.fates.codegen'
     generateClient = true
     typeMapping = [
-        "Date": "java.time.LocalDateTime"
+        "DateTime": "java.time.LocalDateTime"
     ]
 }
 

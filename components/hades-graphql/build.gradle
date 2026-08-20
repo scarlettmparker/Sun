@@ -51,7 +51,7 @@ generateJava {
     packageName = 'com.sun.hades.codegen'
     generateClient = true
     typeMapping = [
-        "Date": "java.time.LocalDateTime",
+        "DateTime": "java.time.LocalDateTime",
         "CefrLevel": "com.sun.hades.model.enums.CefrLevel",
         "ReaderTextType": "com.sun.hades.model.enums.ReaderTextType",
         "ReaderTextStatus": "com.sun.hades.model.enums.ReaderTextStatus",

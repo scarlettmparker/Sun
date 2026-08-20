@@ -6,8 +6,8 @@ type GalleryItem {
   imagePath: String
   remoteObject: [String!]
   keyDetailId: ID
-  createdAt: Date
-  updatedAt: Date
+  createdAt: DateTime
+  updatedAt: DateTime
 }
 
 input GalleryItemInput {

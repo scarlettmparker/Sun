@@ -4,8 +4,8 @@ type ForumThread {
   title: String!
   status: ThreadStatus!
   remoteObject: [String!]
-  createdAt: Date
-  updatedAt: Date
+  createdAt: DateTime
+  updatedAt: DateTime
 }
 
 """A post in a discussion thread."""
@@ -20,8 +20,8 @@ type ForumPost {
   netScore: Int!
   author: RemoteUser
   myVote: VoteValue
-  createdAt: Date
-  updatedAt: Date
+  createdAt: DateTime
+  updatedAt: DateTime
 }
 
 type PagedForumThreads {

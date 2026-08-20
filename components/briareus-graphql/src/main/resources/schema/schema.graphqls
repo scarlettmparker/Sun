@@ -12,8 +12,8 @@ type BlogPost {
   remoteObject: [String!]
   type: BlogPostType
   language: String
-  createdAt: Date
-  updatedAt: Date
+  createdAt: DateTime
+  updatedAt: DateTime
 }
 
 input BlogPostInput {

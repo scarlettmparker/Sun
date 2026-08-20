@@ -92,8 +92,8 @@ type ReaderText {
   ownerId: ID
   sourceId: ID
   status: ReaderTextStatus!
-  createdAt: Date
-  updatedAt: Date
+  createdAt: DateTime
+  updatedAt: DateTime
 }
 
 """
@@ -122,8 +122,8 @@ type ReaderAnnotation {
   remoteObject: [String!]
   author: RemoteUser
   myVote: VoteValue
-  createdAt: Date
-  updatedAt: Date
+  createdAt: DateTime
+  updatedAt: DateTime
 }
 
 """
@@ -140,8 +140,8 @@ type ReaderComment {
   netScore: Int!
   author: RemoteUser
   myVote: VoteValue
-  createdAt: Date
-  updatedAt: Date
+  createdAt: DateTime
+  updatedAt: DateTime
 }
 
 """
@@ -194,8 +194,8 @@ type PrivateNote {
   visibility: PrivateNoteVisibility!
   remoteObject: [String!]
   author: RemoteUser
-  createdAt: Date
-  updatedAt: Date
+  createdAt: DateTime
+  updatedAt: DateTime
 }
 
 enum PrivateNoteVisibility {

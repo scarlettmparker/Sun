@@ -56,7 +56,7 @@ generateJava {
     packageName = 'com.sun.gaia.codegen'
     generateClient = true
     typeMapping = [
-        "Date": "java.time.LocalDateTime",
+        "DateTime": "java.time.LocalDateTime",
         "AccountStatus": "com.sun.gaia.model.enums.AccountStatus",
         "EntryStatus": "com.sun.gaia.model.enums.EntryStatus",
         "JSON": "java.lang.Object"

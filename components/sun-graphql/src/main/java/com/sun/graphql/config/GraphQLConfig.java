@@ -20,7 +20,7 @@ public class GraphQLConfig {
 
   private GraphQLScalarType dateScalar() {
     return GraphQLScalarType.newScalar()
-        .name("Date")
+        .name("DateTime")
         .description("A scalar for LocalDateTime")
         .coercing(new graphql.schema.Coercing<LocalDateTime, String>() {
           @Override

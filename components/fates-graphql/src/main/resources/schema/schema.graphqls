@@ -7,8 +7,8 @@ type Person {
   email: String
   phone: String
   place: Place
-  createdAt: Date
-  updatedAt: Date
+  createdAt: DateTime
+  updatedAt: DateTime
 }
 
 type Place {

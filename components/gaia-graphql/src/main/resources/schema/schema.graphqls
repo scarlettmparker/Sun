@@ -5,8 +5,8 @@ type Account {
   status: AccountStatus!
   provider: String
   remoteUsers: [RemoteUser!]
-  createdAt: Date
-  updatedAt: Date
+  createdAt: DateTime
+  updatedAt: DateTime
 }
 
 enum AccountStatus {
@@ -27,9 +27,9 @@ type ApiKey {
   name: String!
   keyPrefix: String!
   enabled: Boolean!
-  lastUsedAt: Date
-  createdAt: Date
-  updatedAt: Date
+  lastUsedAt: DateTime
+  createdAt: DateTime
+  updatedAt: DateTime
 }
 
 type IssuedApiKey {
@@ -180,8 +180,8 @@ type PropertySetEntry {
   values: JSON!
   configurable: Boolean!
   status: EntryStatus!
-  createdAt: Date
-  updatedAt: Date
+  createdAt: DateTime
+  updatedAt: DateTime
 }
 
 type PropertySetSchema {
@@ -191,8 +191,8 @@ type PropertySetSchema {
   properties: JSON!
   configurable: Boolean!
   status: EntryStatus!
-  createdAt: Date
-  updatedAt: Date
+  createdAt: DateTime
+  updatedAt: DateTime
 }
 
 type Configuration {
@@ -201,10 +201,10 @@ type Configuration {
   description: String
   enabled: Boolean!
   content: JSON!
-  lastAppliedAt: Date
+  lastAppliedAt: DateTime
   lastApplyError: String
-  createdAt: Date
-  updatedAt: Date
+  createdAt: DateTime
+  updatedAt: DateTime
 }
 
 input PropertySetSchemaInput {
@@ -220,8 +220,8 @@ type IpWhitelistEntry {
   description: String
   enabled: Boolean!
   immutable: Boolean!
-  createdAt: Date
-  updatedAt: Date
+  createdAt: DateTime
+  updatedAt: DateTime
 }
 
 input IpWhitelistEntryInput {
@@ -244,10 +244,10 @@ type TailscaleDevice {
   ipv4: String
   status: DeviceStatus!
   online: Boolean!
-  expiredAt: Date
+  expiredAt: DateTime
   lastSeen: String
-  createdAt: Date
-  updatedAt: Date
+  createdAt: DateTime
+  updatedAt: DateTime
 }
 
 input ConfigurationInput {

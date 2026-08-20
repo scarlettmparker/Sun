@@ -6,19 +6,19 @@ type ChecklistItem {
   icon: String
   categoryId: ID
   lifecycleStatus: String!
-  createdAt: Date
-  updatedAt: Date
+  createdAt: DateTime
+  updatedAt: DateTime
 }
 
 """A dated checklist instance carrying a set of items with per-item status."""
 type ChecklistEntry {
   id: String!
   name: String
-  dueAt: Date
-  completedAt: Date
+  dueAt: DateTime
+  completedAt: DateTime
   status: String!
-  createdAt: Date
-  updatedAt: Date
+  createdAt: DateTime
+  updatedAt: DateTime
 }
 
 """A reusable set of items that can seed new checklist entries."""
@@ -27,8 +27,8 @@ type ChecklistTemplate {
   name: String!
   description: String
   status: String!
-  createdAt: Date
-  updatedAt: Date
+  createdAt: DateTime
+  updatedAt: DateTime
 }
 
 """A grouping for checklist items (e.g. chores, work, packing)."""
@@ -36,8 +36,8 @@ type ChecklistCategory {
   id: String!
   name: String!
   description: String
-  createdAt: Date
-  updatedAt: Date
+  createdAt: DateTime
+  updatedAt: DateTime
 }
 
 """An item linked to an entry, carrying its runtime status and ordering."""
@@ -124,7 +124,7 @@ input ChecklistItemInput {
 input ChecklistEntryInput {
   id: ID
   name: String
-  dueAt: Date
+  dueAt: DateTime
   status: String
 }
 
