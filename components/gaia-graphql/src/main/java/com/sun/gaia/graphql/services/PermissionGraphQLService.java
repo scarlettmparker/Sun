@@ -83,6 +83,16 @@ public class PermissionGraphQLService {
   }
 
   /**
+   * Lists all distinct permissions known to the system.
+   *
+   * @return the distinct permissions
+   */
+  @Transactional(readOnly = true)
+  public List<String> allPermissions() {
+    return roleAdminService.allPermissions();
+  }
+
+  /**
    * Replaces the account's direct permissions with the given set.
    *
    * @param accountId the account id

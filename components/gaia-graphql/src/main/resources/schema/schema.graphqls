@@ -114,6 +114,7 @@ type GaiaQueries {
   accountRoles(accountId: ID!): [String!]!
   accountPermissions(accountId: ID!): [String!]!
   rolePermissions(roleId: ID!): [String!]!
+  allPermissions: [String!]!
   propertySet(ownerKey: String!, name: String!, entry: String): JSON
   propertySets(ownerKey: String!, name: String!): [PropertySetEntry!]!
   propertySetSchema(ownerKey: String!, name: String!): PropertySetSchema

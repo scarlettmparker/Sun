@@ -166,6 +166,7 @@ public class RoleAdminService {
       }
     }
     accountRoleRepository.deleteByAccountId(accountId);
+    accountRoleRepository.flush();
     for (String name : desired) {
       RoleEntity role = roleRepository.findByName(name).orElseThrow();
       AccountRoleEntity link = new AccountRoleEntity();
@@ -188,6 +189,7 @@ public class RoleAdminService {
     requireAccount(accountId);
     Set<String> desired = normalisePermissions(permissions);
     accountPermissionRepository.deleteByAccountId(accountId);
+    accountPermissionRepository.flush();
     for (String perm : desired) {
       AccountPermissionEntity entity = new AccountPermissionEntity();
       entity.setAccountId(accountId);
@@ -210,6 +212,7 @@ public class RoleAdminService {
         .orElseThrow(() -> new IllegalArgumentException("Role not found: " + roleId));
     Set<String> desired = normalisePermissions(permissions);
     rolePermissionRepository.deleteByRoleId(role.getId());
+    rolePermissionRepository.flush();
     for (String perm : desired) {
       RolePermissionEntity entity = new RolePermissionEntity();
       entity.setRoleId(role.getId());
@@ -217,6 +220,21 @@ public class RoleAdminService {
       rolePermissionRepository.save(entity);
     }
     return rolePermissions(role.getId());
+  }
+
+  /**
+   * Lists all distinct permission strings known to the system.
+   *
+   * @return the distinct permissions sorted
+   */
+  @Transactional(readOnly = true)
+  public List<String> allPermissions() {
+    Set<String> all = new LinkedHashSet<>();
+    all.addAll(accountPermissionRepository.findDistinctPermissions());
+    all.addAll(rolePermissionRepository.findDistinctPermissions());
+    List<String> sorted = new ArrayList<>(all);
+    sorted.sort(String::compareTo);
+    return sorted;
   }
 
   private void requireAccount(UUID accountId) {

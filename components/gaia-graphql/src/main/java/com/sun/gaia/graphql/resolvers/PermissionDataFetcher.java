@@ -57,6 +57,15 @@ public class PermissionDataFetcher {
     return permissionGraphQLService.rolePermissions(roleId);
   }
 
+  /**
+   * Lists all distinct permissions.
+   */
+  @DgsData(parentType = "GaiaQueries", field = "allPermissions")
+  @PreAuthorize("@permissions.has('graphql.gaia.allPermissions')")
+  public List<String> allPermissions() {
+    return permissionGraphQLService.allPermissions();
+  }
+
    /**
     * Replaces the account's direct permissions with the given set.
     */

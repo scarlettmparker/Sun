@@ -16,5 +16,5 @@
 
 .secondary {
   background-color: transparent;
-  color: var(--text-secondary, var(--secondary));
+  color: var(--text-secondary, var(--text));
 }

@@ -17,10 +17,10 @@ export type MutationContext = {
   cookie?: string;
 };
 
-export type MutationHandler = (
+export type MutationHandler<TResult = MutationResult> = (
   body: Record<string, unknown>,
   context: MutationContext,
-) => Promise<MutationResult>;
+) => Promise<(TResult & { invalidated?: string[] }) | MutationResult>;
 
 const mutationHandlers: Record<string, MutationHandler> = {};
 
@@ -98,7 +98,7 @@ export type VariablesOf<TDoc> = TDoc extends {
   ? V
   : Record<string, unknown>;
 
-export interface MutationDefinition<TBody> {
+export interface MutationDefinition<TBody, TResult = MutationResult> {
   /**
    * Registered URL path, e.g. "hades/createAnnotation".
    */
@@ -106,17 +106,20 @@ export interface MutationDefinition<TBody> {
   /**
    * Handler that receives the typed request body and returns the result.
    */
-  handler: (body: TBody, context: MutationContext) => Promise<MutationResult>;
+  handler: (
+    body: TBody,
+    context: MutationContext,
+  ) => Promise<(TResult & { invalidated?: string[] }) | MutationResult>;
 }
 
 /**
  * Registers a typed mutation handler. TBody is inferred from the handler's
  * first parameter, so call sites declare the body shape and need no casts.
  */
-export function defineMutation<TBody>(
-  definition: MutationDefinition<TBody>,
+export function defineMutation<TBody, TResult = MutationResult>(
+  definition: MutationDefinition<TBody, TResult>,
 ): void {
   registerMutationHandler(definition.path, async (body, context) =>
-    definition.handler(body as TBody, context),
+    definition.handler(body as TBody, context) as unknown as MutationResult,
   );
 }
