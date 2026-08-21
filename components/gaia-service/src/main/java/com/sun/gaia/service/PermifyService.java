@@ -107,6 +107,52 @@ public class PermifyService {
   }
 
   /**
+   * Writes multiple relation tuples in one call.
+   *
+   * @param tuples the tuples, each as object, relation, subject
+   */
+  public void writeTuples(List<Map<String, String>> tuples) {
+    if (!enabled || tuples == null || tuples.isEmpty()) {
+      return;
+    }
+    try {
+      List<Map<String, Object>> permifyTuples = new java.util.ArrayList<>();
+      for (Map<String, String> t : tuples) {
+        String object = t.get("object");
+        String relation = t.get("relation");
+        String subject = t.get("subject");
+        if (object == null || relation == null || subject == null) {
+          continue;
+        }
+        String[] subjectParts = subject.split(":", 2);
+        String[] objectParts = object.split(":", 2);
+        if (subjectParts.length != 2 || objectParts.length != 2) {
+          continue;
+        }
+        Map<String, Object> tuple = new HashMap<>();
+        tuple.put("entity", Map.of("type", objectParts[0], "id", objectParts[1]));
+        tuple.put("relation", relation);
+        tuple.put("subject", Map.of("type", subjectParts[0], "id", subjectParts[1]));
+        permifyTuples.add(tuple);
+      }
+      if (permifyTuples.isEmpty()) {
+        return;
+      }
+      Map<String, Object> body = new HashMap<>();
+      body.put("metadata", Map.of("schemaVersion", ""));
+      body.put("tuples", permifyTuples);
+      restClient.post()
+          .uri("/v1/tenants/t1/relationships/write")
+          .body(body)
+          .retrieve()
+          .toBodilessEntity();
+    } catch (Exception e) {
+      logger.warn("Permify batch write failed for {} tuples", tuples.size(), e);
+      throw new RuntimeException("Permify batch write failed", e);
+    }
+  }
+
+  /**
    * Checks the share table for a direct grant.
    *
    * @param subject the subject e.g. user:uuid

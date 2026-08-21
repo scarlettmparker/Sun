@@ -9,6 +9,8 @@ public interface ObjectShareRepository extends BaseRepository<ObjectShareEntity>
 
   List<ObjectShareEntity> findByObjectTypeAndObjectId(String objectType, UUID objectId);
 
+  List<ObjectShareEntity> findByObjectTypeAndObjectIdIn(String objectType, List<UUID> objectIds);
+
   List<ObjectShareEntity> findBySubjectTypeAndSubjectId(String subjectType, UUID subjectId);
 
   boolean existsByObjectTypeAndObjectIdAndSubjectTypeAndSubjectId(

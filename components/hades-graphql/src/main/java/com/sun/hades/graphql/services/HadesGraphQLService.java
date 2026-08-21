@@ -400,10 +400,14 @@ public class HadesGraphQLService {
         ? PageRequest.of(0, 10)
         : toPageable(pagination, "globalName", Sort.Direction.ASC);
     List<ReaderAccountEntity> entities = accountService.searchByUsername(query, pageable);
+    UUID viewer = UserContextHolder.getUserId();
     return entities.stream()
         .filter(e -> {
           UUID gaiaId = e.getGaiaAccountId();
           if (gaiaId == null) {
+            return false;
+          }
+          if (viewer != null && gaiaId.equals(viewer)) {
             return false;
           }
           return gaiaAccountService.findById(gaiaId)

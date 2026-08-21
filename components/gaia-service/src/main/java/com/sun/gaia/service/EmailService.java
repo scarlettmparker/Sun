@@ -91,7 +91,7 @@ public class EmailService {
    */
   public void sendShareNotesEmail(String toEmail, String textTitle, String sharerName) {
     String body = sharerName + " shared their private notes on \"" + textTitle + "\" with you.";
-    sendEmail(toEmail, "Private notes shared", body);
+    sendEmail(toEmail, "Notes shared with you", body);
   }
 
   /**

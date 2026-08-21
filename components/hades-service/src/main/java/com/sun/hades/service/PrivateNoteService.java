@@ -2,6 +2,7 @@ package com.sun.hades.service;
 
 import com.sun.base.service.BaseService;
 import com.sun.fates.service.PersonService;
+import com.sun.gaia.model.ObjectShareEntity;
 import com.sun.gaia.model.enums.AccountType;
 import com.sun.gaia.repository.ObjectShareRepository;
 import com.sun.hades.mappers.ObjectShareMapper;
@@ -15,8 +16,10 @@ import com.sun.hades.repository.PrivateNoteRepository;
 import com.sun.hades.repository.ReaderTextRepository;
 import com.sun.hades.service.RemoteObjectReference;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import org.slf4j.Logger;
@@ -83,6 +86,8 @@ public class PrivateNoteService extends BaseService<PrivateNoteEntity> {
         .findById(textId)
         .orElseThrow(() -> new IllegalArgumentException("Text not found: " + textId));
 
+    Set<UUID> existingRecipients = findExistingRecipients(textId, viewer);
+
     PrivateNoteEntity note = new PrivateNoteEntity();
     note.setOwnerId(viewer);
     note.setTextId(textId);
@@ -91,7 +96,13 @@ public class PrivateNoteService extends BaseService<PrivateNoteEntity> {
     note.setBody(body);
     note.setVisibility(PrivateNoteVisibility.PRIVATE);
     note.setRemoteObject(List.of("private_note", "hades:text:" + textId));
-    return noteRepository.save(note).getId();
+    UUID noteId = noteRepository.save(note).getId();
+
+    if (!existingRecipients.isEmpty()) {
+      createSharesForNote(noteId, existingRecipients);
+    }
+
+    return noteId;
   }
 
   /**
@@ -174,9 +185,12 @@ public class PrivateNoteService extends BaseService<PrivateNoteEntity> {
           .filter(id -> id != null && !id.equals(viewer))
           .toList();
       for (UUID sid : filtered) {
-        accountService.findById(sid)
-            .filter(a -> a.getAccountType() == AccountType.HUMAN)
-            .ifPresent(a -> subjects.add(sid));
+        var account = accountService.findById(sid)
+            .orElseThrow(() -> new IllegalArgumentException("Invalid subject: " + sid));
+        if (account.getAccountType() != AccountType.HUMAN) {
+          throw new IllegalArgumentException("Invalid subject: " + sid);
+        }
+        subjects.add(sid);
       }
     }
     if (subjectEmails != null) {
@@ -203,19 +217,105 @@ public class PrivateNoteService extends BaseService<PrivateNoteEntity> {
    * @param subjects the subject ids
    */
   private void createShares(List<PrivateNoteEntity> notes, Set<UUID> subjects) {
+    if (notes.isEmpty() || subjects.isEmpty()) {
+      return;
+    }
+    List<UUID> noteIds = notes.stream().map(PrivateNoteEntity::getId).toList();
+    List<ObjectShareEntity> existing = shareRepository.findByObjectTypeAndObjectIdIn("private_note", noteIds);
+    Set<String> existingKeys = new HashSet<>();
+    for (ObjectShareEntity share : existing) {
+      existingKeys.add(share.getObjectId() + ":" + share.getSubjectId());
+    }
+    List<ObjectShareEntity> toSave = new ArrayList<>();
+    List<Map<String, String>> tuples = new ArrayList<>();
     for (PrivateNoteEntity note : notes) {
       for (UUID subjectId : subjects) {
-        if (shareRepository.existsByObjectTypeAndObjectIdAndSubjectTypeAndSubjectId(
-            "private_note", note.getId(), "user", subjectId)) {
+        String key = note.getId() + ":" + subjectId;
+        if (existingKeys.contains(key)) {
           continue;
         }
-        var share = shareMapper.toEntity("private_note", note.getId(), "user", subjectId, "VIEWER");
-        shareRepository.save(share);
-        try {
-          permifyService.writeTuple("private_note:" + note.getId(), "viewer", "user:" + subjectId);
-        } catch (Exception e) {
-          logger.error("Failed to write permify tuple for note {} subject {}", note.getId(), subjectId, e);
-        }
+        toSave.add(shareMapper.toEntity("private_note", note.getId(), "user", subjectId, "VIEWER"));
+        Map<String, String> tuple = new HashMap<>();
+        tuple.put("object", "private_note:" + note.getId());
+        tuple.put("relation", "viewer");
+        tuple.put("subject", "user:" + subjectId);
+        tuples.add(tuple);
+        existingKeys.add(key);
+      }
+    }
+    if (!toSave.isEmpty()) {
+      shareRepository.saveAll(toSave);
+    }
+    if (!tuples.isEmpty()) {
+      try {
+        permifyService.writeTuples(tuples);
+      } catch (Exception e) {
+        logger.error("Failed to write permify tuples for {} shares", tuples.size(), e);
+      }
+    }
+  }
+
+  /**
+   * Finds recipients already shared on this text.
+   *
+   * @param textId the text id
+   * @param viewer the owner id
+   * @return the recipient ids
+   */
+  private Set<UUID> findExistingRecipients(UUID textId, UUID viewer) {
+    List<PrivateNoteEntity> notes = noteRepository.findByOwnerIdAndTextId(viewer, textId);
+    if (notes.isEmpty()) {
+      return new HashSet<>();
+    }
+    List<UUID> noteIds = notes.stream().map(PrivateNoteEntity::getId).toList();
+    List<ObjectShareEntity> shares = shareRepository.findByObjectTypeAndObjectIdIn("private_note", noteIds);
+    Set<UUID> recipients = new HashSet<>();
+    for (ObjectShareEntity share : shares) {
+      if ("user".equals(share.getSubjectType()) && "VIEWER".equals(share.getRelation())) {
+        recipients.add(share.getSubjectId());
+      }
+    }
+    return recipients;
+  }
+
+  /**
+   * Creates shares for a single note without email.
+   *
+   * @param noteId the note id
+   * @param subjects the recipients
+   */
+  private void createSharesForNote(UUID noteId, Set<UUID> subjects) {
+    if (subjects.isEmpty()) {
+      return;
+    }
+    List<ObjectShareEntity> existing = shareRepository.findByObjectTypeAndObjectId("private_note", noteId);
+    Set<UUID> existingSubjects = new HashSet<>();
+    for (ObjectShareEntity share : existing) {
+      if ("user".equals(share.getSubjectType()) && "VIEWER".equals(share.getRelation())) {
+        existingSubjects.add(share.getSubjectId());
+      }
+    }
+    List<ObjectShareEntity> toSave = new ArrayList<>();
+    List<Map<String, String>> tuples = new ArrayList<>();
+    for (UUID subjectId : subjects) {
+      if (existingSubjects.contains(subjectId)) {
+        continue;
+      }
+      toSave.add(shareMapper.toEntity("private_note", noteId, "user", subjectId, "VIEWER"));
+      Map<String, String> tuple = new HashMap<>();
+      tuple.put("object", "private_note:" + noteId);
+      tuple.put("relation", "viewer");
+      tuple.put("subject", "user:" + subjectId);
+      tuples.add(tuple);
+    }
+    if (!toSave.isEmpty()) {
+      shareRepository.saveAll(toSave);
+    }
+    if (!tuples.isEmpty()) {
+      try {
+        permifyService.writeTuples(tuples);
+      } catch (Exception e) {
+        logger.error("Failed to write permify tuples for note {}", noteId, e);
       }
     }
   }
