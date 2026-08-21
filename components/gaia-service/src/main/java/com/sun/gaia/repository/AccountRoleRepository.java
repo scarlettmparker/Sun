@@ -8,4 +8,10 @@ import java.util.UUID;
 public interface AccountRoleRepository extends BaseRepository<AccountRoleEntity> {
 
   List<AccountRoleEntity> findByAccountId(UUID accountId);
+
+  List<AccountRoleEntity> findByRoleId(UUID roleId);
+
+  void deleteByAccountId(UUID accountId);
+
+  void deleteByRoleId(UUID roleId);
 }

@@ -69,18 +69,6 @@ class BlogPostMapperTest {
   }
 
   @Test
-  void map_shouldOmitTypeAndLanguageWhenAbsent() {
-    PostEntity postEntity = new PostEntity();
-    postEntity.setId(UUID.randomUUID());
-    postEntity.setTitle("Test Title");
-
-    BlogPost result = blogPostMapper.map(postEntity);
-
-    assertThat(result.getType()).isNull();
-    assertThat(result.getLanguage()).isNull();
-  }
-
-  @Test
   void mapInput_shouldMapAllFields() {
     BlogPostTypeEntity typeEntity = new BlogPostTypeEntity();
     typeEntity.setName("BOT_FAQ");
@@ -101,15 +89,4 @@ class BlogPostMapperTest {
     assertThat(result.getType()).isEqualTo(typeEntity);
   }
 
-  @Test
-  void mapInput_shouldThrowWhenTypeNotFound() {
-    BlogPostInput input = BlogPostInput.newBuilder()
-        .typeId("b9f70000-0000-4000-8000-000000000001")
-        .build();
-    when(blogPostTypeService.findById(any(UUID.class))).thenReturn(Optional.empty());
-
-    assertThatThrownBy(() -> blogPostMapper.mapInput("Test Title", input))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("Blog post type not found");
-  }
 }

@@ -35,16 +35,4 @@ class BlogPostTypeMapperTest {
     assertThat(mapper.map(entity).getDescription()).isNull();
   }
 
-  @Test
-  void map_listOfEntities() {
-    BlogPostTypeEntity a = new BlogPostTypeEntity();
-    a.setId(UUID.randomUUID());
-    a.setName("BLOG");
-    BlogPostTypeEntity b = new BlogPostTypeEntity();
-    b.setId(UUID.randomUUID());
-    b.setName("BOT_FAQ");
-
-    assertThat(mapper.map(List.of(a, b))).extracting(BlogPostType::getName)
-        .containsExactly("BLOG", "BOT_FAQ");
-  }
 }

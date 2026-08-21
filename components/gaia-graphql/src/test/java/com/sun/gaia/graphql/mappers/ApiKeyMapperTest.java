@@ -33,7 +33,7 @@ class ApiKeyMapperTest {
     assertThat(result.getName()).isEqualTo("bot");
     assertThat(result.getKeyPrefix()).isEqualTo("ns_ab12cd34");
     assertThat(result.getEnabled()).isTrue();
-    assertThat(result.getLastUsedAt()).isEqualTo(lastUsedAt);
+    assertThat(result.getLastUsedAt()).isEqualTo(lastUsedAt.atOffset(ZoneOffset.UTC));
     assertThat(result.getCreatedAt()).isEqualTo(createdAt.atOffset(ZoneOffset.UTC));
   }
 

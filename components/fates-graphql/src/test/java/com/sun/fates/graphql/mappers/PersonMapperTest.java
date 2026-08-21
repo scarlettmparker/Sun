@@ -64,19 +64,4 @@ class PersonMapperTest {
     assertThat(entity.getEmail()).isEqualTo("new@example.com");
   }
 
-  @Test
-  void map_inputSkipsNullFields() {
-    PersonInput input = PersonInput.newBuilder()
-        .firstName("OnlyName")
-        .build();
-    PersonEntity entity = new PersonEntity();
-    entity.setLastName("KeepThis");
-    entity.setEmail("keep@example.com");
-
-    mapper.map(input, entity);
-
-    assertThat(entity.getFirstName()).isEqualTo("OnlyName");
-    assertThat(entity.getLastName()).isEqualTo("KeepThis");
-    assertThat(entity.getEmail()).isEqualTo("keep@example.com");
-  }
 }

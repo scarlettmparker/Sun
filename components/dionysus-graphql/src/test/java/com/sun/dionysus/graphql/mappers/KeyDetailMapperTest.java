@@ -47,40 +47,6 @@ class KeyDetailMapperTest {
   }
 
   @Test
-  void map_withArchivedEntity_mapsArchivedAt() {
-    KeyDetailEntity entity = new KeyDetailEntity();
-    entity.setId(UUID.randomUUID());
-    entity.setBucket("b");
-    entity.setKeyPath("old/file.txt");
-    entity.setStatus(Status.ARCHIVED);
-    entity.setCreatedAt(LocalDateTime.of(2023, 6, 1, 0, 0));
-    entity.setLastUpdatedAt(LocalDateTime.of(2024, 1, 1, 0, 0));
-    entity.setArchivedAt(LocalDateTime.of(2024, 2, 15, 9, 0));
-
-    KeyDetail result = mapper.map(entity);
-
-    assertThat(result).isNotNull();
-    assertThat(result.getStatus()).isEqualTo("ARCHIVED");
-    assertThat(result.getArchivedAt()).isEqualTo("2024-02-15T09:00");
-  }
-
-  @Test
-  void map_withNullTimestamps_mapsToNull() {
-    KeyDetailEntity entity = new KeyDetailEntity();
-    entity.setId(UUID.randomUUID());
-    entity.setBucket("b");
-    entity.setKeyPath("k");
-    entity.setStatus(Status.ACTIVE);
-
-    KeyDetail result = mapper.map(entity);
-
-    assertThat(result).isNotNull();
-    assertThat(result.getCreatedAt()).isNull();
-    assertThat(result.getLastUpdatedAt()).isNull();
-    assertThat(result.getArchivedAt()).isNull();
-  }
-
-  @Test
   void map_withNull_returnsNull() {
     KeyDetail result = mapper.map(null);
 

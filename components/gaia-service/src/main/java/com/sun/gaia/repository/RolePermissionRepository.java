@@ -8,4 +8,6 @@ import java.util.UUID;
 public interface RolePermissionRepository extends BaseRepository<RolePermissionEntity> {
 
   List<RolePermissionEntity> findByRoleId(UUID roleId);
+
+  void deleteByRoleId(UUID roleId);
 }

@@ -8,4 +8,6 @@ import java.util.UUID;
 public interface AccountPermissionRepository extends BaseRepository<AccountPermissionEntity> {
 
   List<AccountPermissionEntity> findByAccountId(UUID accountId);
+
+  void deleteByAccountId(UUID accountId);
 }

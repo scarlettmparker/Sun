@@ -7,17 +7,11 @@ import com.sun.dionysus.codegen.types.FilestoreQueries;
 import com.sun.dionysus.codegen.types.FilestoreMutations;
 import com.sun.dionysus.codegen.types.RenameKeyResult;
 import com.sun.dionysus.codegen.types.Bucket;
-import com.sun.dionysus.codegen.types.File;
 import com.sun.dionysus.codegen.types.KeyEntry;
 import com.sun.dionysus.codegen.types.KeyDetail;
-import com.sun.dionysus.codegen.types.TorrentJob;
-import com.sun.dionysus.graphql.services.TorrentGraphQLService;
-import com.sun.dionysus.torrent.search.TorrentSearchResult;
-import com.sun.dionysus.torrent.search.TorrentSearchService;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
-import com.sun.dionysus.codegen.types.AddTorrentInput;
 import com.sun.dionysus.codegen.types.BucketKeyInput;
 import com.sun.dionysus.codegen.types.PresignInput;
 import com.sun.dionysus.codegen.types.PutKeyInput;
@@ -28,12 +22,6 @@ public class FilestoreDataFetcher {
 
   @Autowired
   private FilestoreGraphQLService filestoreGraphQLService;
-
-  @Autowired
-  private TorrentGraphQLService torrentGraphQLService;
-
-  @Autowired
-  private TorrentSearchService torrentSearchService;
 
   @DgsData(parentType = "Query", field = "filestoreQueries")
   public FilestoreQueries getFilestoreQueries() {
@@ -73,48 +61,6 @@ public class FilestoreDataFetcher {
   @PreAuthorize("@permissions.has('graphql.dionysus.locateImage')")
   public KeyDetail locateImage(String bucket, String keyPath) {
     return filestoreGraphQLService.locateImage(bucket, keyPath);
-  }
-
-  @DgsData(parentType = "FilestoreQueries", field = "torrentJob")
-  @PreAuthorize("@permissions.has('graphql.dionysus.torrent.view')")
-  public TorrentJob torrentJob(String jobId) {
-    return torrentGraphQLService.locate(jobId);
-  }
-
-  @DgsData(parentType = "FilestoreQueries", field = "torrentJobs")
-  @PreAuthorize("@permissions.has('graphql.dionysus.torrent.view')")
-  public List<TorrentJob> torrentJobs(String bucket, String status) {
-    return torrentGraphQLService.list(bucket, status);
-  }
-
-  @DgsData(parentType = "FilestoreQueries", field = "searchTorrents")
-  @PreAuthorize("@permissions.has('graphql.dionysus.searchTorrents')")
-  public List<TorrentSearchResult> searchTorrents(String query) {
-    return torrentSearchService.search(query);
-  }
-
-  @DgsData(parentType = "FilestoreMutations", field = "addTorrent")
-  @PreAuthorize("@permissions.has('graphql.dionysus.torrent.add')")
-  public TorrentJob addTorrent(AddTorrentInput input) {
-    return torrentGraphQLService.addTorrent(input.getBucket(), input.getPath(), input.getMagnet(), input.getTorrentFileBase64());
-  }
-
-  @DgsData(parentType = "FilestoreMutations", field = "pauseTorrent")
-  @PreAuthorize("@permissions.has('graphql.dionysus.torrent.pause')")
-  public TorrentJob pauseTorrent(String jobId) {
-    return torrentGraphQLService.pauseTorrent(jobId);
-  }
-
-  @DgsData(parentType = "FilestoreMutations", field = "resumeTorrent")
-  @PreAuthorize("@permissions.has('graphql.dionysus.torrent.resume')")
-  public TorrentJob resumeTorrent(String jobId) {
-    return torrentGraphQLService.resumeTorrent(jobId);
-  }
-
-  @DgsData(parentType = "FilestoreMutations", field = "cancelTorrent")
-  @PreAuthorize("@permissions.has('graphql.dionysus.torrent.cancel')")
-  public TorrentJob cancelTorrent(String jobId) {
-    return torrentGraphQLService.cancelTorrent(jobId);
   }
 
   @DgsData(parentType = "Mutation", field = "filestoreMutations")

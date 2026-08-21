@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.sun.gaia.codegen.types.Configuration;
 import com.sun.gaia.model.ConfigurationEntity;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -35,7 +36,7 @@ class ConfigurationMapperTest {
     assertThat(result.getDescription()).isEqualTo("Default themes");
     assertThat(result.getEnabled()).isTrue();
     assertThat(result.getContent()).isEqualTo(content);
-    assertThat(result.getLastAppliedAt()).isEqualTo(entity.getLastAppliedAt());
+    assertThat(result.getLastAppliedAt()).isEqualTo(entity.getLastAppliedAt().atOffset(ZoneOffset.UTC));
     assertThat(result.getLastApplyError()).isNull();
   }
 }

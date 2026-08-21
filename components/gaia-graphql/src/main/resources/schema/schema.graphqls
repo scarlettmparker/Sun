@@ -95,12 +95,25 @@ input HubRegistryInput {
   apps: [HubAppInput!]!
 }
 
+type Role {
+  id: ID!
+  name: String!
+  description: String
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
 type GaiaQueries {
   me: Account
   account(id: ID!): Account
   listAccounts: [Account!]
   myRoles: [String!]!
   accounts(pagination: PaginationInput): PagedAccounts!
+  roles: [Role!]!
+  role(id: ID!): Role
+  accountRoles(accountId: ID!): [String!]!
+  accountPermissions(accountId: ID!): [String!]!
+  rolePermissions(roleId: ID!): [String!]!
   propertySet(ownerKey: String!, name: String!, entry: String): JSON
   propertySets(ownerKey: String!, name: String!): [PropertySetEntry!]!
   propertySetSchema(ownerKey: String!, name: String!): PropertySetSchema
@@ -125,6 +138,11 @@ type GaiaMutations {
   logout: QueryResult
   suspendAccount(id: ID!): QueryResult
   unsuspendAccount(id: ID!): QueryResult
+  createRole(name: String!, description: String): Role
+  deleteRole(id: ID!): QueryResult
+  setAccountRoles(accountId: ID!, roleNames: [String!]!): QueryResult
+  setAccountPermissions(accountId: ID!, permissions: [String!]!): QueryResult
+  setRolePermissions(roleId: ID!, permissions: [String!]!): QueryResult
   deactivateAccount: QueryResult
   requestAccountReactivation(email: String!, provider: String!): QueryResult
   confirmAccountReactivation(token: String!): QueryResult

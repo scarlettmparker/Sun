@@ -31,7 +31,7 @@ class RateLimitFilterTest {
   void setUp() {
     RateLimitProperties properties = new RateLimitProperties(true, 2, 0);
     registry = new RateLimitRegistry(Mockito.mock(ApplicationContext.class));
-    filter = new RateLimitFilter(properties, registry);
+    filter = new RateLimitFilter(properties, registry, 1048576L);
     chain = Mockito.mock(FilterChain.class);
   }
 

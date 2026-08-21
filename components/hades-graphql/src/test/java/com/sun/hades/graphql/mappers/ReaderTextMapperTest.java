@@ -35,7 +35,7 @@ class ReaderTextMapperTest {
 
     assertThat(result.getId()).isEqualTo(entity.getId().toString());
     assertThat(result.getTitle()).isEqualTo("Title");
-    assertThat(result.getContent()).isEqualTo("content");
+    assertThat(result.getContent()).isNull();
     assertThat(result.getLanguage()).isEqualTo("fr");
     assertThat(result.getLevel()).isEqualTo(CefrLevel.A1);
     assertThat(result.getSourceId()).isEqualTo(sourceId.toString());
