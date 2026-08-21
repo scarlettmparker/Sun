@@ -271,7 +271,7 @@ public class GaiaGraphQLService {
   }
 
   /**
-   * Marks an account suspended.
+   * Marks an account suspended and revokes all sessions.
    */
   @Transactional
   public QueryResult suspendAccount(String id) {
@@ -279,6 +279,11 @@ public class GaiaGraphQLService {
         .orElseThrow(() -> new IllegalArgumentException("Account not found: " + id));
     account.setStatus(AccountStatus.SUSPENDED);
     accountService.save(account);
+    try {
+      jwtService.revokeAllForAccount(UUID.fromString(id));
+    } catch (Exception e) {
+      logger.warn("Failed to revoke sessions for suspended account {}", id, e);
+    }
     logger.info("Suspended account {}", id);
     return QuerySuccess.newBuilder().message("Account suspended").id(id).build();
   }
@@ -310,6 +315,19 @@ public class GaiaGraphQLService {
           .build();
     }
     accountService.deactivateAccount(userId);
+    try {
+      jwtService.revokeAllForAccount(userId);
+      ServletRequestAttributes attrs =
+          (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+      if (attrs != null) {
+        String authHeader = attrs.getRequest().getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+          jwtService.revokeToken(authHeader.substring(7));
+        }
+      }
+    } catch (Exception e) {
+      logger.warn("Failed to revoke token on deactivate {}", userId, e);
+    }
     logger.info("Deactivated account {}", userId);
     return QuerySuccess.newBuilder()
         .message("Account deactivated")
@@ -439,11 +457,24 @@ public class GaiaGraphQLService {
   }
 
   /**
-   * Logs out the current account.
+   * Logs out the current account, revoking the current JWT.
    *
    * @return a QuerySuccess result
    */
   public QueryResult logout() {
+    try {
+      ServletRequestAttributes attrs =
+          (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+      if (attrs != null) {
+        String authHeader = attrs.getRequest().getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+          String token = authHeader.substring(7);
+          jwtService.revokeToken(token);
+        }
+      }
+    } catch (Exception e) {
+      logger.warn("Failed to revoke token on logout", e);
+    }
     return QuerySuccess.newBuilder()
         .message("Logout succeeded")
         .build();
