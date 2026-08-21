@@ -35,6 +35,7 @@ public class EmailService {
   private final String clientSecret;
   private final String refreshToken;
   private final String fromAddress;
+  private final String baseUrl;
 
   private volatile String cachedAccessToken;
   private volatile long tokenExpiresAt;
@@ -46,7 +47,8 @@ public class EmailService {
       @Value("${EMAIL_CLIENT_ID:}") String clientId,
       @Value("${EMAIL_CLIENT_SECRET:}") String clientSecret,
       @Value("${EMAIL_REFRESH_TOKEN:}") String refreshToken,
-      @Value("${EMAIL_ADDRESS:}") String fromAddress) {
+      @Value("${EMAIL_ADDRESS:}") String fromAddress,
+      @Value("${app.base-url:http://localhost:5178}") String baseUrl) {
     this.host = host;
     this.port = port;
     this.oauthEndpoint = oauthEndpoint;
@@ -54,6 +56,7 @@ public class EmailService {
     this.clientSecret = clientSecret;
     this.refreshToken = refreshToken;
     this.fromAddress = fromAddress;
+    this.baseUrl = baseUrl;
   }
 
   /**
@@ -88,9 +91,15 @@ public class EmailService {
    * @param toEmail the recipient address
    * @param textTitle the text title
    * @param sharerName the sharer display name
+   * @param textId the text id
+   * @param noteId the first shared note id, or null
    */
-  public void sendShareNotesEmail(String toEmail, String textTitle, String sharerName) {
-    String body = sharerName + " shared their private notes on \"" + textTitle + "\" with you.";
+  public void sendShareNotesEmail(String toEmail, String textTitle, String sharerName, String textId, String noteId) {
+    String link = baseUrl + "/texts/" + textId;
+    if (noteId != null && !noteId.isBlank()) {
+      link += "?note=" + noteId;
+    }
+    String body = sharerName + " shared their notes on \"" + textTitle + "\" with you.\n\nView them here: " + link;
     sendEmail(toEmail, "Notes shared with you", body);
   }
 

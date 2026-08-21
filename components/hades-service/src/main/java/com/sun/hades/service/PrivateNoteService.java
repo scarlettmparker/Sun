@@ -13,6 +13,7 @@ import com.sun.gaia.service.UserContextHolder;
 import com.sun.hades.model.PrivateNoteEntity;
 import com.sun.hades.model.enums.PrivateNoteVisibility;
 import com.sun.hades.repository.PrivateNoteRepository;
+import com.sun.hades.repository.ReaderAccountRepository;
 import com.sun.hades.repository.ReaderTextRepository;
 import com.sun.hades.service.RemoteObjectReference;
 import java.util.ArrayList;
@@ -41,6 +42,7 @@ public class PrivateNoteService extends BaseService<PrivateNoteEntity> {
 
   private final PrivateNoteRepository noteRepository;
   private final ReaderTextRepository textRepository;
+  private final ReaderAccountRepository readerAccountRepository;
   private final PermifyService permifyService;
   private final ObjectShareRepository shareRepository;
   private final ObjectShareMapper shareMapper;
@@ -51,6 +53,7 @@ public class PrivateNoteService extends BaseService<PrivateNoteEntity> {
   public PrivateNoteService(
       PrivateNoteRepository repository,
       ReaderTextRepository textRepository,
+      ReaderAccountRepository readerAccountRepository,
       PermifyService permifyService,
       ObjectShareRepository shareRepository,
       ObjectShareMapper shareMapper,
@@ -60,6 +63,7 @@ public class PrivateNoteService extends BaseService<PrivateNoteEntity> {
     super(repository);
     this.noteRepository = repository;
     this.textRepository = textRepository;
+    this.readerAccountRepository = readerAccountRepository;
     this.permifyService = permifyService;
     this.shareRepository = shareRepository;
     this.shareMapper = shareMapper;
@@ -166,7 +170,8 @@ public class PrivateNoteService extends BaseService<PrivateNoteEntity> {
       return textId;
     }
     createShares(notes, subjects);
-    sendShareEmails(subjects, text.getTitle(), viewer);
+    String firstNoteId = notes.get(0).getId().toString();
+    sendShareEmails(subjects, text.getTitle(), viewer, textId.toString(), firstNoteId);
     return textId;
   }
 
@@ -326,11 +331,22 @@ public class PrivateNoteService extends BaseService<PrivateNoteEntity> {
    * @param subjects the recipients
    * @param textTitle the text title
    * @param viewer the sharer id
+   * @param textId the text id
+   * @param noteId the first note id for the link
    */
-  private void sendShareEmails(Set<UUID> subjects, String textTitle, UUID viewer) {
-    String sharerName = accountService.findById(viewer)
-        .map(a -> a.getUsername())
-        .orElse("Someone");
+  private void sendShareEmails(Set<UUID> subjects, String textTitle, UUID viewer, String textId, String noteId) {
+    String sharerName = readerAccountRepository.findByGaiaAccountId(viewer)
+        .map(r -> {
+          if (r.getGlobalName() != null && !r.getGlobalName().isBlank()) {
+            return r.getGlobalName();
+          }
+          if (r.getDiscordUsername() != null && !r.getDiscordUsername().isBlank()) {
+            return r.getDiscordUsername();
+          }
+          return null;
+        })
+        .filter(s -> s != null && !s.isBlank())
+        .orElseGet(() -> accountService.findById(viewer).map(a -> a.getUsername()).orElse("Someone"));
     for (UUID subjectId : subjects) {
       try {
         String toEmail = accountService.findById(subjectId)
@@ -338,7 +354,7 @@ public class PrivateNoteService extends BaseService<PrivateNoteEntity> {
             .map(p -> p.getEmail())
             .orElse(null);
         if (toEmail != null && !toEmail.isBlank()) {
-          emailService.sendShareNotesEmail(toEmail, textTitle, sharerName);
+          emailService.sendShareNotesEmail(toEmail, textTitle, sharerName, textId, noteId);
         }
       } catch (Exception e) {
         logger.error("Failed to send share email to subject {}", subjectId, e);
