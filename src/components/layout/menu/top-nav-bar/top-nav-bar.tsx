@@ -1,25 +1,50 @@
+import { Suspense } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@sun/components";
-import menu from "..";
+import { RoleCheck } from "@sun/ssr/react";
+import { Cog6ToothIcon } from "@heroicons/react/24/outline";
 import styles from "./top-nav-bar.module.css";
-// import { useTranslation } from "react-i18next";
-import React from "react";
+
+const NAV_ITEMS = [
+  { labelKey: "home", href: "/" },
+  { labelKey: "blog", href: "/blog" },
+  { labelKey: "gallery", href: "/gallery" },
+  { labelKey: "stem-player", href: "/stem-player" },
+] as const;
+
+const PUBLIC_PATHS = ["/login"];
 
 /**
- * Top Nav Bar component that displays on all pages.
+ * Top navigation: page links on the left.
  */
 const TopNavBar = () => {
-  // const { t } = useTranslation("home");
-  const entries = Object.entries(menu);
+  const { t } = useTranslation("nav");
+  const { pathname } = useLocation();
+  const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
+  if (isPublic) {
+    return null;
+  }
 
   return (
     <nav className={styles.top_nav_bar}>
-      {entries.map(([key, item], idx) => (
-        <React.Fragment key={idx}>
-          <a href={item.href ?? `/${key}`}>
-            <Button variant="secondary">{item.name}</Button>
-          </a>
-        </React.Fragment>
-      ))}
+      {NAV_ITEMS.map((item) => {
+        const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+        return (
+          <Link key={item.href} to={item.href} style={{ textDecoration: "none" }}>
+            <Button variant={active ? "default" : "secondary"}>{t(item.labelKey)}</Button>
+          </Link>
+        );
+      })}
+      <Suspense fallback={null}>
+        <RoleCheck roles={["Admin", "Super Admin"]} match="any">
+          <Link to="/admin" style={{ textDecoration: "none" }}>
+            <Button variant="secondary" title={t("admin")} aria-label={t("admin")}>
+              <Cog6ToothIcon width={20} height={20} />
+            </Button>
+          </Link>
+        </RoleCheck>
+      </Suspense>
     </nav>
   );
 };

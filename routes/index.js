@@ -2,32 +2,69 @@
  * @fileoverview Defines and sets up all application routes.
  * @module routes
  */
-import { renderApp } from "../utils/ssr.js";
-import { base, isProduction } from "../config.js";
+import { renderApp } from "@sun/ssr/server";
+import { base, isProduction, manifestPath } from "../config.js";
 import { Buffer } from "buffer";
+import { createHmac, timingSafeEqual } from "crypto";
+import { getCookieValue } from "@sun/api";
+import {
+  AUTH_COOKIE,
+  loginViaGaia,
+  buildAuthCookie,
+  clearAuthCookie,
+} from "../src/utils/auth.ts";
 import { registerHubRoutes } from "../src/server/hub/routes.ts";
 
+const PUBLIC_PAGES = new Set(["/login"]);
+
 /**
- * Reads a named cookie value from a raw Cookie header.
- *
- * @param {string|undefined} cookieHeader - The full Cookie header string.
- * @param {string} name - Cookie name to read.
- * @returns {string|undefined} Decoded cookie value or undefined if not found.
+ * Verifies a JWT's HMAC-SHA256 signature using the configured secret.
+ * Returns the decoded payload if valid, null otherwise.
  */
-function getCookieValue(cookieHeader, name) {
-  if (!cookieHeader) return undefined;
-  for (const part of cookieHeader.split(/;\s*/)) {
-    const index = part.indexOf("=");
-    if (index < 0) continue;
-    const key = part.slice(0, index).trim();
-    if (key === name) {
-      return decodeURIComponent(part.slice(index + 1));
+function verifyToken(token) {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    try {
+      const payload = JSON.parse(
+        Buffer.from(token.split(".")[1], "base64url").toString(),
+      );
+      if (payload.exp && payload.exp * 1000 < Date.now()) return null;
+      return payload;
+    } catch {
+      return {};
     }
+  }
+
+  const parts = token.split(".");
+  if (parts.length !== 3) return null;
+
+  const data = parts[0] + "." + parts[1];
+  const expectedSig = createHmac("sha256", secret)
+    .update(data)
+    .digest("base64url");
+
+  const expectedBuf = Buffer.from(expectedSig);
+  const actualBuf = Buffer.from(parts[2]);
+  if (
+    expectedBuf.length !== actualBuf.length ||
+    !timingSafeEqual(expectedBuf, actualBuf)
+  ) {
+    return null;
+  }
+
+  try {
+    const payload = JSON.parse(
+      Buffer.from(parts[1], "base64url").toString(),
+    );
+    if (payload.exp && payload.exp * 1000 < Date.now()) return null;
+    return payload;
+  } catch {
+    return null;
   }
 }
 
 /**
- * Sets up all routes for the Fastify application.
+ * Sets up routes for the Fastify application.
  *
  * @param {import("fastify").FastifyInstance} app - The Fastify application instance.
  * @param {object} vite - The Vite dev server instance (optional, only in development).
@@ -35,15 +72,21 @@ function getCookieValue(cookieHeader, name) {
 export function setupRoutes(app, vite) {
   registerHubRoutes(app);
 
-  /**
-   * Catch-all route for server-side rendering of pages.
-   * This route handles all GET requests not otherwise handled by static file serving or specific API routes.
-   * It fetches user data, loads translations, and renders the React application.
-   * It also includes a basic check for file extensions to bypass SSR for static assets.
-   *
-   * @param {import("fastify").FastifyRequest} request - Fastify request object.
-   * @param {import("fastify").FastifyReply} reply - Fastify reply object.
-   */
+  app.post("/__login", async (request, reply) => {
+    const { username, password } = request.body ?? {};
+    const token = await loginViaGaia(username, password);
+    if (!token) return reply.redirect("/login?error=1");
+    reply.header("Set-Cookie", buildAuthCookie(token));
+    const redirectTo =
+      typeof request.query?.redirect === "string" ? request.query.redirect : "/";
+    return reply.redirect(redirectTo);
+  });
+
+  app.post("/__logout", async (_request, reply) => {
+    reply.header("Set-Cookie", clearAuthCookie());
+    return reply.redirect("/login");
+  });
+
   app.setNotFoundHandler({ method: ["GET"] }, async (request, reply) => {
     const mutationPayloadCookie = getCookieValue(
       request.headers.cookie,
@@ -70,12 +113,39 @@ export function setupRoutes(app, vite) {
       return reply.callNotFound();
     }
 
+    const token = getCookieValue(request.headers.cookie, AUTH_COOKIE);
+    if (token) {
+      const payload = verifyToken(token);
+      if (!payload) {
+        reply.header("Set-Cookie", clearAuthCookie());
+        return reply.redirect(
+          `/login?redirect=${encodeURIComponent(request.raw.url)}`,
+        );
+      }
+    }
+
+    const normalizedPath =
+      pathname.length > 1 && pathname.endsWith("/")
+        ? pathname.replace(/\/+$/, "")
+        : pathname;
+    const isPublic = PUBLIC_PAGES.has(normalizedPath);
+
+    if (!token && !isPublic)
+      return reply.redirect(
+        `/login?redirect=${encodeURIComponent(request.raw.url)}`,
+      );
+    if (token && isPublic) return reply.redirect("/");
+
     let url = pathname.replace(base, "");
     if (!url.startsWith("/")) url = "/" + url;
     if (requestUrl.search) url += requestUrl.search;
 
     const langHeader = request.headers["accept-language"] || "en";
     const locale = langHeader.split(",")[0] || "en";
+
+    const pathOnly = url.split("?")[0];
+    const pageName =
+      pathOnly === "/" ? "home" : pathOnly.split("/")[1] || "home";
 
     try {
       await renderApp(
@@ -84,8 +154,10 @@ export function setupRoutes(app, vite) {
           isProduction,
           url,
           locale,
+          pageName,
           mutationPayload,
           invalidateCacheCookie,
+          manifestPath,
         },
         reply.raw,
       );

@@ -1,22 +1,25 @@
-// Shared data fetchers
-
-import { ListGalleryItemsByRemoteObjectsQuery } from "~/generated/graphql";
-import { fetchListGalleryItemsByRemoteObjects } from "~/utils/api";
+import { executeDocument } from "@sun/api";
+import {
+  ListGalleryItemsByRemoteObjectsDocument,
+  type ListGalleryItemsByRemoteObjectsQuery,
+} from "~/generated/graphql";
 
 /**
  * Data fetching function for gallery items by foreign object. Used in multiple routes.
- * @param ids Foreign IDs for input.
- * @returns Promise resolving to page data or null if no data.
+ *
+ * @param ids foreign ids for input
+ * @returns promise resolving to page data
  */
-export async function getGalleryItemsByRemoteObjects(
-  ids: string[],
-): Promise<Record<string, unknown> | null> {
+export async function getGalleryItemsByRemoteObjects(ids: string[]): Promise<Record<string, unknown> | null> {
   try {
-    const result = await fetchListGalleryItemsByRemoteObjects(ids);
+    const result = await executeDocument<ListGalleryItemsByRemoteObjectsQuery>(
+      ListGalleryItemsByRemoteObjectsDocument,
+      { ids },
+    );
     if (result.success && result.data) {
       return {
-        galleryItems: (result.data as ListGalleryItemsByRemoteObjectsQuery)
-          .galleryQueries.listByRemoteObjects,
+        galleryItems: (result.data as ListGalleryItemsByRemoteObjectsQuery).galleryQueries
+          .listByRemoteObjects,
       };
     }
     return {

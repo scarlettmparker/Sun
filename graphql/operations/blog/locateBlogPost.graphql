@@ -1,9 +1,21 @@
 query locateBlogPost($id: ID!) {
   blogQueries {
     locateBlogPost(id: $id) {
+      id
       title
       content
       tags
+      remoteObject
+      language
+      parentId
+      parent {
+        id
+        title
+      }
+      type {
+        id
+        name
+      }
       createdAt
       updatedAt
     }

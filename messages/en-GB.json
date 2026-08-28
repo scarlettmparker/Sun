@@ -1,0 +1,144 @@
+{
+  "blog": {
+    "form": {
+      "title": {
+        "label": "Title",
+        "placeholder": "Enter title..."
+      },
+      "content": {
+        "label": "Content",
+        "placeholder": "Enter content..."
+      },
+      "cancel": {
+        "label": "Cancel",
+        "title": "Click here to go back"
+      },
+      "create": {
+        "label": "Create Blog Post",
+        "title": "Click here to Create Blog Post"
+      },
+      "creating": {
+        "label": "Loading...",
+        "title": "Please wait while the Blog Post is being created..."
+      }
+    },
+    "months": {
+      "January": "January",
+      "February": "February",
+      "March": "March",
+      "April": "April",
+      "May": "May",
+      "June": "June",
+      "July": "July",
+      "August": "August",
+      "September": "September",
+      "October": "October",
+      "November": "November",
+      "December": "December"
+    }
+  },
+  "home": {},
+  "hub": {
+    "title": "Ecosystem Hub",
+    "subtitle": "Run and manage every app in the ecosystem",
+    "mode": {
+      "dev": "Dev",
+      "serve": "Serve"
+    },
+    "reconcile": "Start missing apps",
+    "addApp": "Add app",
+    "token": {
+      "label": "Admin token",
+      "placeholder": "HUB_ADMIN_TOKEN"
+    },
+    "status": {
+      "up": "Running",
+      "down": "Stopped",
+      "external": "External",
+      "self": "This app"
+    },
+    "port": "Port",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "start": "Start",
+    "stop": "Stop",
+    "restart": "Restart",
+    "edit": "Edit",
+    "delete": "Delete",
+    "delete-title": "Delete {{app}}?",
+    "delete-body": "This will remove {{app}} from the registry and stop it if it is running.",
+    "cancel": "Cancel",
+    "visit": "Visit",
+    "empty": "No apps configured",
+    "error": "Something went wrong",
+    "form": {
+      "key": "Key",
+      "name": "Name",
+      "dir": "Repo path",
+      "devPort": "Dev port",
+      "prodPort": "Prod port",
+      "url": "URL",
+      "description": "Description",
+      "enabled": "Enabled",
+      "yes": "Yes",
+      "no": "No",
+      "create": "Add app",
+      "update": "Save",
+      "saving": "Saving..."
+    }
+  },
+  "login": {
+    "title": "Scarlet Sun",
+    "subtitle": "Sign in to continue.",
+    "username": "Username",
+    "username-placeholder": "Enter username",
+    "password": "Password",
+    "password-placeholder": "Enter password",
+    "sign-in-label": "Sign in",
+    "sign-in-title": "Sign in",
+    "error-default": "Invalid credentials",
+    "error-discord": "Discord sign-in failed",
+    "or": "OR",
+    "discord-label": "Continue with Discord",
+    "register-prompt": "No account?",
+    "register-link": "Register"
+  },
+  "nav": {
+    "home": "Home",
+    "blog": "Blog",
+    "gallery": "Gallery",
+    "stem-player": "Stem Player",
+    "admin": "Admin"
+  },
+  "not-found": {
+    "not-found": "404 - Page Not Found",
+    "description": "The page you are looking for does not exist."
+  },
+  "stem-player": {
+    "controls": {
+      "aria": {
+        "seek-back": "Skip back",
+        "seek-forward": "Skip forward",
+        "stop": "Stop",
+        "play": "Play",
+        "restart": "Restart",
+        "seek": "Seek",
+        "master-volume": "Master volume"
+      },
+      "title": {
+        "seek-back": "Click to skip back ({{ offset }}s)",
+        "seek-forward": "Click to skip forward ({{ offset }}s)",
+        "stop": "Click to stop playing",
+        "play": "Click to start playing",
+        "restart": "Click to restart from the beginning",
+        "seek": "Seek to {{ position }}",
+        "master-volume": "Set master volume to {{ volume }}%"
+      },
+      "stop": "Stop",
+      "play": "Play",
+      "restart": "Restart",
+      "master": "Master"
+    },
+    "playback": "Playback time"
+  }
+}

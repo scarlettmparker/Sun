@@ -1,6 +1,6 @@
 import { defineLoader } from "@sun/ssr";
-import { fetchLocateSong } from "~/utils/api";
-import type { LocateSongQuery, Song } from "~/generated/graphql";
+import { executeDocument } from "@sun/api";
+import { LocateSongDocument, type LocateSongQuery, type Song } from "~/generated/graphql";
 
 const EMPTY_SONG: Song = { id: "", path: "" };
 
@@ -12,10 +12,9 @@ defineLoader({
   async loader(params) {
     const id = typeof params.id === "string" ? params.id : "";
     try {
-      const result = await fetchLocateSong(id);
+      const result = await executeDocument<LocateSongQuery>(LocateSongDocument, { id });
       const song = result.success
-        ? (result.data as LocateSongQuery | undefined)?.stemPlayerQueries
-            ?.locate
+        ? (result.data as LocateSongQuery | undefined)?.stemPlayerQueries?.locate
         : null;
       return { song: song ?? EMPTY_SONG };
     } catch {

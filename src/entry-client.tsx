@@ -1,107 +1,41 @@
-import { BrowserRouter, useLocation, matchRoutes } from "react-router-dom";
-import { Router, routes } from "./router";
+import { BrowserRouter } from "react-router-dom";
+import { Router } from "./router";
 import { initReactI18next } from "react-i18next";
 import ReactDOM from "react-dom/client";
 import i18n from "i18next";
-import { Suspense, useEffect } from "react";
-
+import { Suspense } from "react";
+import ErrorBoundary from "./components/error-boundary";
 import Layout from "./components/layout";
-import { hydratePageData } from "@sun/ssr";
+import { initClientBootstrap } from "@sun/ssr";
+import { loadPersistedTheme, applyTheme } from "@sun/themes";
 import { PostHogProvider } from "./utils/hooks/posthog";
-
+import "./utils/configure-framework";
 import "@sun/components/style.css";
+import "@sun/themes/style.css";
 
-// Define the postlude hydration function on window for SSR
-window.hydratePageDataFromPostlude = hydratePageData;
-
-/**
- * Get page name from path.
- *
- * @param pathname Path of page.
- */
-function getPageName(pathname: string) {
-  const page = pathname.split("/")[1];
-  return page || "home";
+// Apply the server-rendered theme before mount so there is no flash; a
+// persisted user choice takes precedence.
+if (window.localStorage.getItem("sun:theme")) {
+  loadPersistedTheme();
+} else if ((window as unknown as { __theme__?: unknown }).__theme__) {
+  applyTheme((window as unknown as { __theme__: unknown }).__theme__ as never);
 }
 
-/**
- * Dynamically load translations for a given page/locale.
- *
- * @param page Page to load translations for.
- * @param locale Locale.
- */
-async function loadTranslations(page: string, locale: string) {
-  try {
-    const res = await fetch(`/messages/${page}/${locale}.json`);
-    if (!res.ok) throw new Error("Not found");
-    return await res.json();
-  } catch {
-    // fallback to en
-    const res = await fetch(`/messages/${page}/en.json`);
-    return await res.json();
-  }
-}
+i18n.use(initReactI18next);
 
-/**
- * Wrapper to handle translation loading on route change
- */
-function AppWithI18n() {
-  const location = useLocation();
-
-  useEffect(() => {
-    const locale = window.__locale__ || "en";
-    const matches = matchRoutes(routes, location.pathname);
-    const page =
-      matches && matches[0].route.path === "*"
-        ? "not-found"
-        : getPageName(location.pathname);
-    loadTranslations(page, locale).then((translations) => {
-      i18n.addResourceBundle(locale, page, translations, true, true);
-      i18n.changeLanguage(locale);
-    });
-  }, [location.pathname]);
-
-  return (
-    <Suspense fallback={null}>
-      <Router />
-    </Suspense>
+initClientBootstrap({ i18n }).then(() => {
+  ReactDOM.hydrateRoot(
+    document.getElementById("app") as HTMLElement,
+    <PostHogProvider client>
+      <BrowserRouter>
+        <Layout>
+          <ErrorBoundary>
+            <Suspense fallback={null}>
+              <Router />
+            </Suspense>
+          </ErrorBoundary>
+        </Layout>
+      </BrowserRouter>
+    </PostHogProvider>,
   );
-}
-
-// Initialize i18n on the client with translations injected from the server
-i18n
-  .use(initReactI18next)
-  .init({
-    lng: window.__locale__ || "en",
-    resources: {
-      [window.__locale__ || "en"]: {
-        home: window.__translations__ || {},
-        login: window.__translations__ || {},
-        blog: window.__translations__ || {},
-      },
-    },
-    interpolation: { escapeValue: false },
-    react: { useSuspense: true },
-  })
-  .then(() => {
-    const serverCacheData = window.__serverCacheData__ || {};
-    if (Object.keys(serverCacheData).length > 0) {
-      hydratePageData(serverCacheData);
-      window.__serverCacheData__ = {};
-    }
-
-    ReactDOM.hydrateRoot(
-      document.getElementById("app") as HTMLElement,
-
-      <PostHogProvider client>
-        <BrowserRouter>
-          <Layout>
-            <AppWithI18n />
-          </Layout>
-        </BrowserRouter>
-      </PostHogProvider>,
-    );
-  })
-  .catch((error) => {
-    console.error("i18n initialization failed", error);
-  });
+});

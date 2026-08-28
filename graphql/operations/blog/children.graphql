@@ -1,6 +1,6 @@
-query listBlogPosts($pagination: PaginationInput) {
+query children($parentId: ID!, $pagination: PaginationInput) {
   blogQueries {
-    listBlogPosts(pagination: $pagination) {
+    children(parentId: $parentId, pagination: $pagination) {
       items {
         id
         title

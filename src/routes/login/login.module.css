@@ -1,0 +1,43 @@
+.wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--xl);
+  height: calc(100vh - var(--xl) * 2);
+}
+
+.card {
+  width: 100%;
+  max-width: 420px;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: var(--sm);
+  margin-block: var(--md);
+  color: var(--muted);
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--muted-foreground);
+  margin: 0 var(--xl);
+}
+
+.discord {
+  margin: 0 auto;
+  gap: var(--sm);
+  width: 100%;
+  padding: var(--sm) var(--md);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  font-weight: 500;
+}
+
+.discord:hover {
+  filter: brightness(0.97);
+}

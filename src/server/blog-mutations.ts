@@ -25,7 +25,7 @@ defineMutation({
     if (data?.__typename === "QuerySuccess") {
       throw new ServerRedirectError(
         `/blog/${data.id}`,
-        makeCacheKey("blog", {}),
+        makeCacheKey("blog:blogPosts", {}),
         data,
       );
     }

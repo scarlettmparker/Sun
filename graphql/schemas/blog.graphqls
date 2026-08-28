@@ -14,6 +14,8 @@ type BlogPost {
   remoteObject: [String!]
   type: BlogPostType
   language: String
+  parentId: ID
+  parent: BlogPost
   createdAt: DateTime
   updatedAt: DateTime
 }
@@ -24,6 +26,7 @@ input BlogPostInput {
   remoteObject: [String!]
   typeId: ID
   language: String
+  parentId: ID
 }
 
 type PagedBlogPosts {
@@ -36,11 +39,14 @@ type BlogQueries {
   locateBlogPost(id: ID!): BlogPost
   listByRemoteObjects(ids: [String!]!): [BlogPost]
   blogPostTypes: [BlogPostType!]!
+  children(parentId: ID!, pagination: PaginationInput): PagedBlogPosts!
 }
 
 type BlogMutations {
   createBlogPost(title: String!, input: BlogPostInput): QueryResult
   createBlogPostType(name: String!, description: String): QueryResult
+  addRemoteObject(postId: ID!, target: String!): QueryResult
+  removeRemoteObject(postId: ID!, target: String!): QueryResult
 }
 
 extend type Query {

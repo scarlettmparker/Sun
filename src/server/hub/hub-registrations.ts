@@ -1,6 +1,8 @@
 import { timingSafeEqual } from "node:crypto";
 import { defineLoader, defineMutation, makeCacheKey } from "@sun/ssr";
 import type { MutationResult } from "@sun/ssr";
+import { getCookieValue } from "@sun/api";
+import { AUTH_COOKIE } from "~/utils/auth";
 import type { HubAppConfig, HubMode, HubRegistry } from "./types";
 import { getRegistry, saveRegistry } from "./store";
 import {
@@ -95,7 +97,12 @@ async function persistOrFail(
  */
 defineLoader({
   pattern: "hub",
-  async loader() {
+  async loader(_params, context) {
+    const cookie = (context as { cookie?: string } | undefined)?.cookie;
+    const token = getCookieValue(cookie, AUTH_COOKIE);
+    if (!token) {
+      throw new Error("Unauthorized");
+    }
     return { hubRegistry: await getRegistry() };
   },
 });

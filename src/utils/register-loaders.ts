@@ -8,3 +8,4 @@ import "~/routes/gallery/gallery-data";
 import "~/routes/stem-player/stem-player-data";
 import "~/routes/stem-player/[id]/stem-player-details-data";
 import "~/server/hub/hub-registrations";
+import "~/utils/global-data";

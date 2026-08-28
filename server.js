@@ -11,13 +11,33 @@ import {
   isProduction,
   backendHost,
   backendPort,
+  clientId,
+  clientSecret,
 } from "./config.js";
 import { setupRoutes } from "./routes/index.js";
 
-import "./src/utils/register-loaders.ts";
-import "./src/utils/register-mutations.ts";
+const configure = async (app) => {
+  const { default: formbody } = await import("@fastify/formbody");
+  await app.register(formbody);
+  const { default: compress } = await import("@fastify/compress");
+  await app.register(compress, {
+    global: true,
+    threshold: 1024,
+    encodings: ["gzip", "br"],
+  });
+};
 
 await createServer({
-  config: { port, host, base, isProduction, backendHost, backendPort },
+  config: {
+    port,
+    host,
+    base,
+    isProduction,
+    backendHost,
+    backendPort,
+    clientId,
+    clientSecret,
+  },
   setupRoutes,
+  configure,
 });

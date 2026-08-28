@@ -1,162 +1,79 @@
 import React, { Suspense } from "react";
-import { createI18nInstance } from "./utils/i18n";
-import { renderToPipeableStream } from "react-dom/server";
 import { StaticRouter } from "react-router-dom/server";
-import { Router, routes } from "./router";
+import { matchRoutes } from "react-router-dom";
+import { Router, routes, routeMeta } from "./router";
 import Layout from "./components/layout";
 import NotFound from "./routes/not-found";
-import { matchRoutes } from "react-router-dom";
-import { inlineCss, generateCssTag } from "./utils/css-inlining";
+import {
+  createRenderer,
+  autoDiscoverRegistrations,
+  type RouteMeta,
+} from "@sun/ssr/server";
+import { createI18nInstance } from "./utils/i18n";
 import { configureApi } from "@sun/api";
-import { clientId, clientSecret, appBaseUrl } from "../config.js";
-import "./utils/register-loaders";
-import { suspenseCache, makeCacheKey } from "@sun/ssr";
-import { MutationResult } from "@sun/ssr";
+import { AUTH_COOKIE } from "./utils/auth";
+import { clientId, clientSecret, base } from "../config.js";
+import "./utils/configure-framework";
 
-configureApi({ clientId, clientSecret, appBaseUrl });
+configureApi({
+  authCookie: AUTH_COOKIE,
+  clientId,
+  clientSecret,
+  appBaseUrl: base,
+});
 
-type i18n = {
-  /**
-   * Record mapping translation keys to their string values.
-   */
-  translations: Record<string, string>;
+// Colocated loaders and mutation handlers self-register at boot.
+autoDiscoverRegistrations(import.meta.glob("./**/*-data.ts", { eager: true }));
+autoDiscoverRegistrations(
+  import.meta.glob("./**/*-mutations.ts", { eager: true }),
+);
+autoDiscoverRegistrations(
+  import.meta.glob("./server/**/*-registrations.ts", { eager: true }),
+);
 
-  /**
-   * Current locale.
-   */
-  locale: string;
-
-  /**
-   * Name of the page used to load the translation bundle.
-   */
-  pageName: string;
-};
-
-type RenderProps = {
-  /**
-   * URL of requested route.
-   */
-  url: string;
-
-  /**
-   * Translation strings for current locale/page.
-   */
-  translations: i18n["translations"];
-
-  /**
-   * User's locale.
-   */
-  locale: string;
-
-  /**
-   * Page name corresponding to current route.
-   */
-  pageName: string;
-
-  /**
-   * Path or URL to client-side JS bundle.
-   */
-  clientJs: string;
-
-  /**
-   * Paths or URLs to client-side CSS bundles.
-   */
-  clientCss: string[];
-
-  /**
-   * Whether running in production mode.
-   */
-  isProduction: boolean;
-
-  /**
-   * Payload for displaying toasts, etc. on client after redirect
-   */
-  mutationPayload: MutationResult;
-
-  /**
-   * Cookie to invalidate the entry-server suspense cache.
-   */
-  invalidateCacheCookie?: string;
-};
-
-/**
- * Invalidates the suspense cache if the invalidateCacheCookie matches the cache key for the current route.
- *
- * @param invalidateCacheCookie Cookie value to check.
- * @param url Current URL.
- * @returns True if the cache was invalidated, false otherwise.
- */
-function invalidateCache(invalidateCacheCookie: string, url: string): boolean {
+function matchMeta(url: string): RouteMeta | undefined {
   const matches = matchRoutes(routes, url);
-  if (matches && matches.length > 0) {
-    const matched = matches[0];
-    const pattern = matched.route.path;
-    if (pattern) {
-      const params = matched.params;
-      const currentCacheKey = makeCacheKey(pattern, params);
-      if (invalidateCacheCookie === currentCacheKey) {
-        suspenseCache.delete(invalidateCacheCookie);
-        return true;
-      }
-    }
-  }
-  return false;
+  if (!matches) return undefined;
+  const composed = matches
+    .map((m) => m.route.path ?? "")
+    .join("/")
+    .replace(/\/{2,}/g, "/");
+  return routeMeta[composed === "" ? "/" : composed];
 }
 
-/**
- * Renders the React application to an HTML stream suitable for server-side rendering.
- * Sets up i18n, initializes the React Router, and returns a promise
- * that resolves when the shell is ready to stream HTML to the client.
- *
- * @returns A promise that resolves with SSR output metadata and stream.
- */
-export async function render({
-  url,
-  locale,
-  pageName,
-  clientJs,
-  clientCss,
-  isProduction,
-  mutationPayload: _mutationPayload,
-  invalidateCacheCookie,
-}: RenderProps) {
-  const posthogKey = process.env.POSTHOG_API_KEY ?? "";
-  const posthogHost = process.env.POSTHOG_HOST ?? "";
+const renderer = createRenderer({
+  title: "Scarlet Sun",
+  initI18n(locale, translations) {
+    const i18n = createI18nInstance();
+    return i18n.init({
+      lng: locale,
+      fallbackLng: "en",
+      resources: { [locale]: translations } as never,
+      interpolation: { escapeValue: false },
+      react: { useSuspense: true },
+    });
+  },
+  async resolveTheme() {
+    return { current: null, all: [] };
+  },
+});
 
-  if (!clientJs) {
-    throw new Error("Missing required clientJs path");
-  }
-
-  let shouldDeleteCookie = false;
-  if (invalidateCacheCookie) {
-    shouldDeleteCookie = invalidateCache(invalidateCacheCookie, url);
-  }
-
-  // Clean up rejected cache entries
-  // TODO: should probably move a lot of this elsewhere
-  for (const [key, record] of suspenseCache.entries()) {
-    if (record.status === "rejected") {
-      suspenseCache.delete(key);
-    }
-  }
-
-  // Create i18n
-  const i18n = createI18nInstance();
-  await i18n.init({
-    lng: locale,
-    fallbackLng: "en",
-    resources: {},
-    interpolation: { escapeValue: false },
-  });
-  const translations = i18n.getResourceBundle(locale, pageName) || {};
-
-  // Find if page exists (otherwise 404)
-  const matches = matchRoutes(routes, url);
+export async function render(options: {
+  url: string;
+  locale: string;
+  pageName: string;
+  clientJs: string;
+  clientCss: string[];
+  isProduction: boolean;
+  mutationPayload?: unknown;
+  invalidateCacheCookie?: string;
+  frontendMode?: string;
+}) {
+  const matches = matchRoutes(routes, options.url);
   const didMatch = Boolean(matches);
-
   const App = (
     <React.StrictMode>
-      <StaticRouter location={url}>
+      <StaticRouter location={options.url}>
         <Layout>
           <Suspense fallback={null}>
             <Router />
@@ -166,86 +83,18 @@ export async function render({
     </React.StrictMode>
   );
 
-  // In production, inline CSS to avoid extra fetch
-  const cssContent = await inlineCss(isProduction, clientCss);
-
-  return new Promise((resolve) => {
-    let resolved = false;
-    let postludeData = "";
-
-    const stream = renderToPipeableStream(didMatch ? App : <NotFound />, {
-      bootstrapModules: [clientJs],
-      onShellReady() {
-        const cssTag = generateCssTag(isProduction, cssContent, clientCss);
-        const headers: Record<string, string> = { "Content-Type": "text/html" };
-        if (shouldDeleteCookie) {
-          headers["Set-Cookie"] =
-            "invalidate_cache=; Path=/; Max-Age=0; SameSite=Lax;";
-        }
-        const prelude = `<!DOCTYPE html>
-          <html lang="en">
-            <head>
-              <meta charset="UTF-8" />
-              <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-              ${cssTag}
-              <title>Scarlet Sun</title>
-            </head>
-            <script type="module">
-              import RefreshRuntime from '${process.env.VITE_SERVER_BASE}/@react-refresh'
-              RefreshRuntime.injectIntoGlobalHook(window)
-              window.$RefreshReg$ = () => {}
-              window.$RefreshSig$ = () => (type) => type
-              window.__vite_plugin_react_preamble_installed__ = true
-            </script>
-            <script>
-              // Inject the translations and locale into the client-side window object
-              window.__translations__ = ${JSON.stringify(translations)};
-              // We can expose posthog key and posthog host so if we want to stop using it
-              // just remove the key/host from the environment. TODO is to write some
-              // script for all of this shit.
-              window.__posthog_key__ = '${posthogKey}';
-              window.__posthog_host__ = '${posthogHost}';
-              window.__locale__ = '${locale}';
-              // Initialize server cache data (will be updated in postlude)
-              window.__serverCacheData__ = {};
-            </script>
-            <body>
-              <div id="app">`;
-        if (!resolved) {
-          resolved = true;
-          resolve({
-            statusCode: didMatch ? 200 : 404,
-            headers,
-            prelude,
-            postlude: () => postludeData,
-            stream,
-          });
-        }
-      },
-      onAllReady() {
-        // Collect all resolved data after ALL rendering/data loading completes
-        const serverCacheData: Record<string, unknown> = {};
-
-        for (const [key, record] of suspenseCache.entries()) {
-          if (record.status === "resolved") {
-            serverCacheData[key] = record.result;
-          }
-        }
-
-        postludeData = `</div>
-          <script>
-          // Inject server-side cache data so client doesn't re-fetch
-          if (window.__serverCacheData__ !== undefined) {
-            Object.assign(window.__serverCacheData__, ${JSON.stringify(serverCacheData)});
-            if (window.hydratePageDataFromPostlude) {
-              window.hydratePageDataFromPostlude(window.__serverCacheData__);
-            }
-          }
-          </script>
-          <script type="module" src="${clientJs}"></script>
-        </body>
-      </html>`;
-      },
-    });
+  return renderer.render({
+    app: didMatch ? App : <NotFound />,
+    didMatch,
+    meta: matchMeta(options.url),
+    url: options.url,
+    locale: options.locale,
+    pageName: options.pageName,
+    clientJs: options.clientJs,
+    clientCss: options.clientCss,
+    isProduction: options.isProduction,
+    mutationPayload: options.mutationPayload as never,
+    invalidateCacheCookie: options.invalidateCacheCookie,
+    frontendMode: options.frontendMode,
   });
 }
