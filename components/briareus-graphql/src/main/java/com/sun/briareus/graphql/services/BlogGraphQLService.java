@@ -18,6 +18,7 @@ import com.sun.briareus.codegen.types.PaginationInput;
 import com.sun.briareus.codegen.types.QueryResult;
 import com.sun.briareus.codegen.types.QuerySuccess;
 import com.sun.briareus.codegen.types.StandardError;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -162,6 +163,14 @@ public class BlogGraphQLService {
     logger.info("Creating blog post with title: {}", title);
 
     try {
+      if (input.getParentId() != null) {
+        UUID parentId = UUID.fromString(input.getParentId());
+        if (!briareusService.locatePost(parentId).isPresent()) {
+          return StandardError.newBuilder()
+              .message("Parent post not found: " + input.getParentId())
+              .build();
+        }
+      }
       PostEntity postEntity = blogPostMapper.mapInput(title, input);
       PostEntity savedEntity = briareusService.save(postEntity);
 
@@ -176,6 +185,86 @@ public class BlogGraphQLService {
           .message("Failed to create blog post: " + e.getMessage())
           .build();
     }
+  }
+
+  /**
+   * Lists children of a parent post with pagination.
+   *
+   * @param parentId the parent post id
+   * @param pagination the pagination input
+   * @return the matching page
+   */
+  @Transactional(readOnly = true)
+  public PagedBlogPosts children(String parentId, PaginationInput pagination) {
+    logger.info("Retrieving children for parentId: {}", parentId);
+
+    Pageable pageable = toPageable(pagination, "createdAt", Sort.Direction.DESC);
+    Page<PostEntity> result = briareusService.children(UUID.fromString(parentId), pageable);
+    List<BlogPost> items = result.getContent().stream().map(blogPostMapper::map).toList();
+
+    logger.info("Retrieved {} children for parentId: {}", items.size(), parentId);
+    return PagedBlogPosts.newBuilder().items(items).pageInfo(pageInfo(result)).build();
+  }
+
+  /**
+   * Appends a remote-object edge to a post.
+   *
+   * @param postId the post id
+   * @param target the remote-object string to add
+   * @return the outcome
+   */
+  @Transactional
+  public QueryResult addRemoteObject(String postId, String target) {
+    logger.info("Adding remote object {} to post {}", target, postId);
+
+    if (target == null || target.isBlank()) {
+      return StandardError.newBuilder().message("Target is required").build();
+    }
+    PostEntity post = briareusService.locatePost(UUID.fromString(postId))
+        .orElse(null);
+    if (post == null) {
+      return StandardError.newBuilder().message("Blog post not found: " + postId).build();
+    }
+    List<String> remoteObjects = post.getRemoteObject() == null
+        ? new ArrayList<>()
+        : new ArrayList<>(post.getRemoteObject());
+    if (!remoteObjects.contains(target)) {
+      remoteObjects.add(target);
+      post.setRemoteObject(remoteObjects);
+      briareusService.save(post);
+    }
+    logger.info("Added remote object {} to post {}", target, postId);
+    return QuerySuccess.newBuilder().message("Remote object added").id(postId).build();
+  }
+
+  /**
+   * Removes a remote-object edge from a post.
+   *
+   * @param postId the post id
+   * @param target the remote-object string to remove
+   * @return the outcome
+   */
+  @Transactional
+  public QueryResult removeRemoteObject(String postId, String target) {
+    logger.info("Removing remote object {} from post {}", target, postId);
+
+    if (target == null || target.isBlank()) {
+      return StandardError.newBuilder().message("Target is required").build();
+    }
+    PostEntity post = briareusService.locatePost(UUID.fromString(postId))
+        .orElse(null);
+    if (post == null) {
+      return StandardError.newBuilder().message("Blog post not found: " + postId).build();
+    }
+    List<String> remoteObjects = post.getRemoteObject() == null
+        ? new ArrayList<>()
+        : new ArrayList<>(post.getRemoteObject());
+    if (remoteObjects.remove(target)) {
+      post.setRemoteObject(remoteObjects);
+      briareusService.save(post);
+    }
+    logger.info("Removed remote object {} from post {}", target, postId);
+    return QuerySuccess.newBuilder().message("Remote object removed").id(postId).build();
   }
 
   /**

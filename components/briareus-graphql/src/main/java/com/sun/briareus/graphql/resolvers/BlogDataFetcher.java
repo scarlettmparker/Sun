@@ -8,6 +8,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import com.sun.briareus.graphql.services.BlogGraphQLService;
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
+import com.netflix.graphql.dgs.DgsDataFetchingEnvironment;
 import com.sun.briareus.codegen.types.BlogPost;
 import com.sun.briareus.codegen.types.BlogPostType;
 import com.sun.briareus.codegen.types.BlogQueries;
@@ -114,5 +115,63 @@ public class BlogDataFetcher {
   @PreAuthorize("@permissions.has('graphql.briareus.createBlogPostType')")
   public QueryResult createBlogPostType(String name, String description) {
     return blogGraphQLService.createBlogPostType(name, description);
+  }
+
+  /**
+   * Lists children of a parent post with pagination.
+   *
+   * @param parentId the parent post id
+   * @param pagination the pagination input
+   * @return the matching page
+   */
+  @DgsData(parentType = "BlogQueries", field = "children")
+  @PreAuthorize("@permissions.has('graphql.briareus.children')")
+  public PagedBlogPosts children(String parentId, PaginationInput pagination) {
+    return blogGraphQLService.children(parentId, pagination);
+  }
+
+  /**
+   * Resolves the parent of a blog post.
+   *
+   * @param env the data-fetching environment
+   * @return the parent post or null
+   */
+  @DgsData(parentType = "BlogPost", field = "parent")
+  public BlogPost parent(DgsDataFetchingEnvironment env) {
+    BlogPost source = env.getSource();
+    if (source == null || source.getParentId() == null) {
+      return null;
+    }
+    try {
+      return blogGraphQLService.locateBlogPost(source.getParentId());
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  /**
+   * Appends a remote-object edge to a post.
+   *
+   * @param postId the post id
+   * @param target the remote-object string
+   * @return the outcome
+   */
+  @DgsData(parentType = "BlogMutations", field = "addRemoteObject")
+  @PreAuthorize("@permissions.has('graphql.briareus.addRemoteObject')")
+  public QueryResult addRemoteObject(String postId, String target) {
+    return blogGraphQLService.addRemoteObject(postId, target);
+  }
+
+  /**
+   * Removes a remote-object edge from a post.
+   *
+   * @param postId the post id
+   * @param target the remote-object string
+   * @return the outcome
+   */
+  @DgsData(parentType = "BlogMutations", field = "removeRemoteObject")
+  @PreAuthorize("@permissions.has('graphql.briareus.removeRemoteObject')")
+  public QueryResult removeRemoteObject(String postId, String target) {
+    return blogGraphQLService.removeRemoteObject(postId, target);
   }
 }

@@ -42,6 +42,7 @@ public class BlogPostMapper {
         .tags(postEntity.getTags())
         .remoteObject(postEntity.getRemoteObject())
         .language(postEntity.getLanguage())
+        .parentId(postEntity.getParentId() == null ? null : postEntity.getParentId().toString())
         .createdAt(postEntity.getCreatedAt() == null ? null : postEntity.getCreatedAt().atOffset(ZoneOffset.UTC))
         .updatedAt(postEntity.getLastUpdatedAt() == null ? null : postEntity.getLastUpdatedAt().atOffset(ZoneOffset.UTC));
     if (postEntity.getType() != null) {
@@ -71,6 +72,10 @@ public class BlogPostMapper {
     postEntity.setLanguage(input.getLanguage());
     if (input.getTypeId() != null) {
       postEntity.setType(resolveType(UUID.fromString(input.getTypeId())));
+    }
+    if (input.getParentId() != null) {
+      UUID parentId = UUID.fromString(input.getParentId());
+      postEntity.setParentId(parentId);
     }
 
     logger.debug("Mapped input to post entity with title: {}", title);
