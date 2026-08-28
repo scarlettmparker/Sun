@@ -18,14 +18,13 @@ type RelatedGalleryProps = {
 const RelatedGallery = (props: RelatedGalleryProps) => {
   const { ids } = props;
   const { t } = useTranslation("blog");
+  const { data: galleryItems } = usePageData<
+    NonNullable<ListGalleryItemsByRemoteObjectsQuery["galleryQueries"]["listByRemoteObjects"]>
+  >("galleryItems", "blog/gallery", { ids: JSON.stringify(ids) } as unknown as Record<string, string>);
 
   if (ids.length === 0) {
     return null;
   }
-
-  const { data: galleryItems } = usePageData<
-    NonNullable<ListGalleryItemsByRemoteObjectsQuery["galleryQueries"]["listByRemoteObjects"]>
-  >("galleryItems", "blog/gallery", { ids: JSON.stringify(ids) } as unknown as Record<string, string>);
 
   if ((galleryItems?.length ?? 0) === 0) {
     return null;

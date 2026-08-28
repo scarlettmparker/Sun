@@ -18,14 +18,13 @@ type RelatedPostsProps = {
 const RelatedPosts = (props: RelatedPostsProps) => {
   const { ids } = props;
   const { t } = useTranslation("blog");
+  const { data: relatedPosts } = usePageData<
+    NonNullable<ListBlogPostsByRemoteObjectsQuery["blogQueries"]["listByRemoteObjects"]>
+  >("relatedPosts", "blog/relatedPosts", { ids: JSON.stringify(ids) } as unknown as Record<string, string>);
 
   if (ids.length === 0) {
     return null;
   }
-
-  const { data: relatedPosts } = usePageData<
-    NonNullable<ListBlogPostsByRemoteObjectsQuery["blogQueries"]["listByRemoteObjects"]>
-  >("relatedPosts", "blog/relatedPosts", { ids: JSON.stringify(ids) } as unknown as Record<string, string>);
 
   if ((relatedPosts?.length ?? 0) === 0) {
     return null;

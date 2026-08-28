@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import { useParams } from "react-router-dom";
 import { usePageData } from "@sun/ssr/react";
 import { Card, CardBody, CardHeader, CardTitle, MarkdownViewer } from "@sun/components";
@@ -36,9 +35,7 @@ const BlogDetail = (props: BlogDetailProps) => {
           <MarkdownViewer className={styles.blog_body}>{data.content}</MarkdownViewer>
         </CardBody>
       </Card>
-      <Suspense fallback={null}>
-        <KnowledgeGraph post={data} />
-      </Suspense>
+      <KnowledgeGraph post={data} />
     </div>
   );
 };

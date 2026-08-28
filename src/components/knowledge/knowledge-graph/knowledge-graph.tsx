@@ -1,8 +1,11 @@
 import { Suspense } from "react";
 import type { BlogPost } from "~/generated/graphql";
 import KnowledgeChildren from "~/components/knowledge/knowledge-children";
+import { KnowledgeChildrenSkeleton } from "~/components/knowledge/knowledge-children/skeletons";
 import RelatedPosts from "~/components/knowledge/related-posts";
+import { RelatedPostsSkeleton } from "~/components/knowledge/related-posts/skeletons";
 import RelatedGallery from "~/components/knowledge/related-gallery";
+import { RelatedGallerySkeleton } from "~/components/knowledge/related-gallery/skeletons";
 import styles from "./knowledge-graph.module.css";
 
 type KnowledgeGraphProps = {
@@ -23,15 +26,19 @@ const KnowledgeGraph = (props: KnowledgeGraphProps) => {
 
   return (
     <div className={styles.graph_wrapper}>
-      <Suspense fallback={null}>
+      <Suspense fallback={<KnowledgeChildrenSkeleton />}>
         <KnowledgeChildren postId={post.id} />
       </Suspense>
-      <Suspense fallback={null}>
-        <RelatedPosts ids={blogTargets} />
-      </Suspense>
-      <Suspense fallback={null}>
-        <RelatedGallery ids={galleryTargets} />
-      </Suspense>
+      {blogTargets.length > 0 ? (
+        <Suspense fallback={<RelatedPostsSkeleton />}>
+          <RelatedPosts ids={blogTargets} />
+        </Suspense>
+      ) : null}
+      {galleryTargets.length > 0 ? (
+        <Suspense fallback={<RelatedGallerySkeleton />}>
+          <RelatedGallery ids={galleryTargets} />
+        </Suspense>
+      ) : null}
     </div>
   );
 };
