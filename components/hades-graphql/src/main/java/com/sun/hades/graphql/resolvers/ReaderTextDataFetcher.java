@@ -207,4 +207,16 @@ public class ReaderTextDataFetcher {
   public PagedTextViews viewedTexts(PaginationInput pagination) {
     return readerTextGraphQLService.viewedTexts(pagination);
   }
+
+  /**
+   * Lists the full texts the caller has viewed, in viewed-at order.
+   *
+   * @param pagination the pagination
+   * @return a page of texts
+   */
+  @DgsData(parentType = "HadesQueries", field = "viewedReaderTexts")
+  @PreAuthorize("@permissions.has('graphql.hades.viewedReaderTexts')")
+  public PagedReaderTexts viewedReaderTexts(PaginationInput pagination) {
+    return readerTextGraphQLService.viewedReaderTexts(pagination);
+  }
 }

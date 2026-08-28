@@ -19,14 +19,20 @@ import com.sun.hades.graphql.mappers.ReaderSourceMapper;
 import com.sun.hades.graphql.mappers.ReaderTextMapper;
 import com.sun.hades.model.ReaderSourceEntity;
 import com.sun.hades.model.ReaderTextEntity;
+import com.sun.hades.model.TextViewEntity;
 import com.sun.hades.model.enums.ReaderTextStatus;
+import com.sun.hades.repository.ReaderTextRepository;
 import com.sun.hades.service.ReaderSourceService;
 import com.sun.hades.service.ReaderTextService;
 import com.sun.hades.service.TextViewService;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
@@ -50,16 +56,18 @@ public class ReaderTextGraphQLService {
   private final ReaderSourceMapper sourceMapper;
   private final InferenceClient inferenceClient;
   private final TextViewService textViewService;
+  private final ReaderTextRepository textRepository;
 
   public ReaderTextGraphQLService(ReaderTextService textService, ReaderSourceService sourceService,
       ReaderTextMapper textMapper, ReaderSourceMapper sourceMapper, InferenceClient inferenceClient,
-      TextViewService textViewService) {
+      TextViewService textViewService, ReaderTextRepository textRepository) {
     this.textService = textService;
     this.sourceService = sourceService;
     this.textMapper = textMapper;
     this.sourceMapper = sourceMapper;
     this.inferenceClient = inferenceClient;
     this.textViewService = textViewService;
+    this.textRepository = textRepository;
   }
 
   /**
@@ -120,6 +128,40 @@ public class ReaderTextGraphQLService {
     return PagedTextViews.newBuilder()
         .items(items.getContent())
         .pageInfo(HadesGraphQLSupport.pageInfo(items))
+        .build();
+  }
+
+  /**
+   * Lists the full texts the caller has viewed, in viewed-at order.
+   * Reuses the {@code viewedTexts} pagination (size 5) to obtain ids.
+   *
+   * @param pagination the pagination input
+   * @return a page of texts filtered by the viewer's history
+   */
+  @Transactional(readOnly = true)
+  public PagedReaderTexts viewedReaderTexts(PaginationInput pagination) {
+    Pageable pageable = HadesGraphQLSupport.toPageable(pagination, "viewedAt", Sort.Direction.DESC);
+    Page<TextViewEntity> views = textViewService.viewedTexts(pageable);
+    List<UUID> ids = views.getContent().stream()
+        .map(TextViewEntity::getTextId)
+        .toList();
+    if (ids.isEmpty()) {
+      return PagedReaderTexts.newBuilder()
+          .items(List.of())
+          .pageInfo(HadesGraphQLSupport.pageInfo(views))
+          .build();
+    }
+    List<ReaderTextEntity> entities = textRepository.findAllById(ids);
+    Map<UUID, ReaderTextEntity> byId = entities.stream()
+        .collect(Collectors.toMap(ReaderTextEntity::getId, Function.identity()));
+    List<ReaderText> ordered = ids.stream()
+        .map(byId::get)
+        .filter(Objects::nonNull)
+        .map(textMapper::map)
+        .toList();
+    return PagedReaderTexts.newBuilder()
+        .items(ordered)
+        .pageInfo(HadesGraphQLSupport.pageInfo(views))
         .build();
   }
 

@@ -330,8 +330,9 @@ type HadesQueries {
   searchReaderAccounts(query: String!, pagination: PaginationInput): [ReaderAccount!]!
   myVote(targetType: ReaderVoteTarget!, targetId: ID!): VoteValue
   locateRemoteObjects(ids: [String!]!): [ReaderObjectReference!]!
-  defineWord(word: String!, scope: [WordScope!]): Word
-  viewedTexts(pagination: PaginationInput): PagedTextViews!
+   defineWord(word: String!, scope: [WordScope!]): Word
+   viewedTexts(pagination: PaginationInput): PagedTextViews!
+   viewedReaderTexts(pagination: PaginationInput): PagedReaderTexts!
 }
 
 """
