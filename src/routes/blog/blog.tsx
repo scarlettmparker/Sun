@@ -1,39 +1,22 @@
-import { ListBlogPostsQuery } from "~/generated/graphql";
-import { usePageData } from "@sun/ssr/react";
-import { useTranslation } from "react-i18next";
+import { Suspense } from "react";
+import { Outlet } from "react-router-dom";
+import BlogTypeSidebar from "~/components/blog/blog-type-sidebar";
 import styles from "./blog.module.css";
-import { groupPostsByMonthYear } from "./group-posts-by-month-year";
-import React from "react";
-import { Card, CardBody } from "@sun/components";
 
-const BlogPage = () => {
-  const { t } = useTranslation("blog");
-
-  const { data: initialData } = usePageData<
-    ListBlogPostsQuery["blogQueries"]["listBlogPosts"]["items"]
-  >("blogPosts", "blog");
-
-  const groupedPosts = groupPostsByMonthYear(initialData ?? []);
-
+/**
+ * Blog layout with sidebar and outlet.
+ */
+const BlogLayout = () => {
   return (
-    <div className={styles.blog_wrapper}>
-      <Card>
-        <CardBody>
-          {groupedPosts.map((group) => (
-            <React.Fragment key={group.monthYear}>
-              <h1>{t(group.monthYear)}</h1>
-              <hr />
-              {group.posts.map((blogPost) => (
-                <a key={blogPost.id} href={`/blog/${blogPost.id}`}>
-                  <h4>{blogPost.title}</h4>
-                </a>
-              ))}
-            </React.Fragment>
-          ))}
-        </CardBody>
-      </Card>
+    <div className={styles.blog_layout}>
+      <Suspense fallback={null}>
+        <BlogTypeSidebar />
+      </Suspense>
+      <div className={styles.blog_main}>
+        <Outlet />
+      </div>
     </div>
   );
 };
 
-export default BlogPage;
+export default BlogLayout;

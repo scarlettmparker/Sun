@@ -9,7 +9,8 @@ const Index = lazy(() => import("~/routes/index"));
 const NotFound = lazy(() => import("~/routes/not-found"));
 const StemPlayerPage = lazy(() => import("~/routes/stem-player/stem-player"));
 const StemPlayerDetailsPage = lazy(() => import("~/routes/stem-player/[id]"));
-const BlogPage = lazy(() => import("~/routes/blog"));
+const BlogLayout = lazy(() => import("~/routes/blog"));
+const BlogListPage = lazy(() => import("~/routes/blog/list"));
 const BlogPostPage = lazy(() => import("~/routes/blog/[id]"));
 const CreateBlogPostPage = lazy(() => import("~/routes/blog/create"));
 const HubPage = lazy(() => import("~/routes/hub"));
@@ -61,17 +62,27 @@ export const routes: RouteObject[] = [
     path: "blog",
     element: (
       <Suspense fallback={<BlogSkeleton />}>
-        <BlogPage />
+        <BlogLayout />
       </Suspense>
     ),
-  },
-  {
-    path: "blog/create",
-    element: <CreateBlogPostPage />,
-  },
-  {
-    path: "blog/:id",
-    element: <BlogPostPage />,
+    children: [
+      {
+        index: true,
+        element: (
+          <Suspense fallback={<BlogSkeleton />}>
+            <BlogListPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: "create",
+        element: <CreateBlogPostPage />,
+      },
+      {
+        path: ":id",
+        element: <BlogPostPage />,
+      },
+    ],
   },
   {
     path: "gallery",

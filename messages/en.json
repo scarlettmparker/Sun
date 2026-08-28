@@ -22,6 +22,22 @@
         "title": "Please wait while the Blog Post is being created..."
       }
     },
+    "filter": {
+      "all": "All",
+      "empty": "No posts found"
+    },
+    "types": {
+      "title": "Types",
+      "KNOWLEDGE": "Knowledge",
+      "REVIEW": "Review",
+      "PHILOSOPHY": "Philosophy",
+      "DOCS": "Docs",
+      "BOT_FAQ": "FAQ",
+      "BOT_HELP": "Help"
+    },
+    "breadcrumb": {
+      "blog": "Blog"
+    },
     "months": {
       "January": "January",
       "February": "February",
@@ -37,7 +53,11 @@
       "December": "December"
     }
   },
-  "home": {},
+  "home": {
+    "title": "Home",
+    "welcome": "Welcome to Scarlet Sun.",
+    "empty": "No types yet"
+  },
   "hub": {
     "title": "Ecosystem Hub",
     "subtitle": "Run and manage every app in the ecosystem",

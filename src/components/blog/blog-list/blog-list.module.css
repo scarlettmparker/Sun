@@ -1,0 +1,9 @@
+.groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lg);
+}
+
+.no_items {
+  margin: 0;
+}

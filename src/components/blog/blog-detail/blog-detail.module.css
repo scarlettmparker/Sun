@@ -1,0 +1,9 @@
+.detail_wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lg);
+}
+
+.blog_body {
+  overflow-y: auto;
+}
