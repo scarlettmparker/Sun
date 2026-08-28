@@ -38,11 +38,9 @@ FROM gaia_roles r,
        ('graphql.hades.createPrivateNote'),
        ('graphql.hades.deletePrivateNote'),
        ('graphql.hades.sharePrivateNote'),
-       -- viewed / versioning
-       ('graphql.hades.viewedTexts'),
-       ('graphql.hades.textVersions'),
-       ('graphql.hades.markViewed'),
-       ('graphql.hades.editText'),
+        -- viewed
+        ('graphql.hades.viewedTexts'),
+        ('graphql.hades.markViewed'),
        -- icarus discussion
        ('graphql.icarus.thread'),
        ('graphql.icarus.threads'),

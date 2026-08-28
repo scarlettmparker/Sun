@@ -299,21 +299,6 @@ type TextView {
   viewedAt: DateTime!
 }
 
-"""
-An immutable snapshot of a text before an edit.
-"""
-type TextVersion {
-  id: ID!
-  textId: ID!
-  version: Int!
-  title: String!
-  content: String!
-  level: CefrLevel!
-  language: String!
-  editedBy: ID
-  createdAt: DateTime!
-}
-
 type PagedTextViews {
   items: [TextView!]!
   pageInfo: PageInfo!
@@ -347,7 +332,6 @@ type HadesQueries {
   locateRemoteObjects(ids: [String!]!): [ReaderObjectReference!]!
   defineWord(word: String!, scope: [WordScope!]): Word
   viewedTexts(pagination: PaginationInput): PagedTextViews!
-  textVersions(textId: ID!): [TextVersion!]!
 }
 
 """
@@ -357,7 +341,6 @@ type HadesMutations {
   createSource(name: String!, url: String!): QueryResult
   createText(input: ReaderTextInput!): QueryResult
   archiveText(id: ID!): QueryResult
-  editText(id: ID!, input: ReaderTextInput!): QueryResult
   markViewed(textId: ID!): QueryResult
 
   createAnnotation(input: AnnotationInput!): QueryResult

@@ -13,7 +13,6 @@ import com.sun.hades.codegen.types.ReaderSource;
 import com.sun.hades.codegen.types.ReaderText;
 import com.sun.hades.codegen.types.ReaderTextInput;
 import com.sun.hades.codegen.types.TextLevelAssessment;
-import com.sun.hades.codegen.types.TextVersion;
 import com.sun.hades.codegen.types.Word;
 import com.sun.hades.codegen.types.WordScope;
 import com.sun.hades.graphql.services.ReaderTextGraphQLService;
@@ -186,19 +185,6 @@ public class ReaderTextDataFetcher {
   }
 
   /**
-   * Edits a text.
-   *
-   * @param id the text id
-   * @param input the new values
-   * @return a QueryResult
-   */
-  @DgsData(parentType = "HadesMutations", field = "editText")
-  @PreAuthorize("@permissions.has('graphql.hades.editText')")
-  public QueryResult editText(String id, ReaderTextInput input) {
-    return readerTextGraphQLService.editText(id, input);
-  }
-
-  /**
    * Marks a text as viewed.
    *
    * @param textId the text id
@@ -220,17 +206,5 @@ public class ReaderTextDataFetcher {
   @PreAuthorize("@permissions.has('graphql.hades.viewedTexts')")
   public PagedTextViews viewedTexts(PaginationInput pagination) {
     return readerTextGraphQLService.viewedTexts(pagination);
-  }
-
-  /**
-   * Lists versions for a text.
-   *
-   * @param textId the text id
-   * @return the versions
-   */
-  @DgsData(parentType = "HadesQueries", field = "textVersions")
-  @PreAuthorize("@permissions.has('graphql.hades.textVersions')")
-  public List<TextVersion> textVersions(String textId) {
-    return readerTextGraphQLService.textVersions(textId);
   }
 }
