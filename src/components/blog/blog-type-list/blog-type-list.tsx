@@ -1,6 +1,15 @@
 import { useTranslation } from "react-i18next";
 import { usePageData } from "@sun/ssr/react";
 import { Button } from "@sun/components";
+import {
+  BookOpenIcon,
+  DocumentTextIcon,
+  InformationCircleIcon,
+  LightBulbIcon,
+  QuestionMarkCircleIcon,
+  Squares2X2Icon,
+  StarIcon,
+} from "@heroicons/react/24/outline";
 import type { BlogPostTypesQuery } from "~/generated/graphql";
 import styles from "./blog-type-list.module.css";
 
@@ -29,20 +38,52 @@ const BlogTypeList = (props: BlogTypeListProps) => {
 
   return (
     <>
-      <Button variant={selectedType == null ? "default" : "secondary"} onClick={() => onSelect(null)}>
-        {t("filter.all")}
+      <Button
+        className={styles.type_button}
+        variant={selectedType == null ? "default" : "secondary"}
+        onClick={() => onSelect(null)}
+      >
+        <Squares2X2Icon className={styles.type_icon} width={16} height={16} />
+        <span className={styles.type_name}>{t("filter.all")}</span>
       </Button>
-      {(types ?? []).map((postType) => (
-        <Button
-          key={postType.id}
-          variant={selectedType === postType.name ? "default" : "secondary"}
-          onClick={() => onSelect(postType.name)}
-        >
-          {t(`types.${postType.name}`, { defaultValue: postType.name })}
-        </Button>
-      ))}
+      {(types ?? []).map((postType) => {
+        const Icon = getIconForType(postType.name);
+        return (
+          <Button
+            key={postType.id}
+            className={styles.type_button}
+            variant={selectedType === postType.name ? "default" : "secondary"}
+            onClick={() => onSelect(postType.name)}
+          >
+            <Icon className={styles.type_icon} width={16} height={16} />
+            <span className={styles.type_name}>
+              {t(`types.${postType.name}`, { defaultValue: postType.name })}
+            </span>
+          </Button>
+        );
+      })}
     </>
   );
 };
+
+/**
+ * Maps blog post type to heroicon. Checklist style: per-item icon data-driven.
+ */
+function getIconForType(name: string) {
+  switch (name) {
+    case "KNOWLEDGE":
+      return LightBulbIcon;
+    case "REVIEW":
+      return StarIcon;
+    case "DOCS":
+      return DocumentTextIcon;
+    case "BOT_FAQ":
+      return QuestionMarkCircleIcon;
+    case "BOT_HELP":
+      return InformationCircleIcon;
+    default:
+      return BookOpenIcon;
+  }
+}
 
 export default BlogTypeList;

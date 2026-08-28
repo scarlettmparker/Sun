@@ -3,3 +3,21 @@
   flex-direction: column;
   gap: var(--lg);
 }
+
+.type_button {
+  display: flex;
+  align-items: center;
+  gap: var(--lg);
+  width: 100%;
+  text-align: left;
+}
+
+.type_icon {
+  flex-shrink: 0;
+}
+
+.type_name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
