@@ -90,7 +90,7 @@ public class HubRegistryGraphQLService {
         appValues("sun", "Sun", ".", 5173, 5173,
             "https://sun.int.scarlettparker.co.uk", "Ecosystem home with blog and gallery", true, true),
         appValues("guided-reader", "Guided Reader", "../Guided-Reader", 5178, 5178,
-            "http://localhost:5178", "Reading app with texts, annotations and a forum", true, false),
+            "https://reader.int.scarlettparker.co.uk", "Reading app with texts, annotations and a forum", true, false),
         appValues("checklist", "Checklist", "../Checklist", 5176, 5176,
             "https://checklist.int.scarlettparker.co.uk", "Structured checklists", true, false),
         appValues("viewer", "Viewer", "../Viewer", 5177, 5177,

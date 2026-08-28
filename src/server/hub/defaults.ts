@@ -23,7 +23,7 @@ export const DEFAULT_REGISTRY: HubRegistry = {
       dir: "../Guided-Reader",
       devPort: 5178,
       prodPort: 5178,
-      url: "http://localhost:5178",
+      url: "https://reader.int.scarlettparker.co.uk",
       description: "Reading app with texts, annotations and a forum",
       enabled: true,
     },

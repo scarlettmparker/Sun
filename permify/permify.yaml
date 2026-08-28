@@ -1,9 +1,14 @@
 database:
   engine: postgres
   uri: postgres://sun:${SPRING_DATASOURCE_PASSWORD}@127.0.0.1:5432/sun?sslmode=disable
+  auto_migrate: true
+  max_open_connections: 20
+  max_idle_connections: 5
 server:
-  grpc: ":3476"
-  http: ":3477"
+  http:
+    port: 3477
+  grpc:
+    port: 3476
 authn:
   enabled: false
 logger:
