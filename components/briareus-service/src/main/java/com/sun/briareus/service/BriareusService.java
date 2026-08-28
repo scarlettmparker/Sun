@@ -67,4 +67,31 @@ public class BriareusService extends BaseService<PostEntity> {
   public List<PostEntity> listByRemoteObjects(List<String> ids) {
     return postRepository.findByRemoteObjectsIn(ids.toArray(new String[0]));
   }
+
+  /**
+   * Lists direct children of a parent post.
+   *
+   * @param parentId the parent post id
+   * @param pageable the pagination and sort
+   * @return the matching page
+   */
+  public Page<PostEntity> children(UUID parentId, Pageable pageable) {
+    if (parentId == null) {
+      return Page.empty(pageable);
+    }
+    return postRepository.findByParentId(parentId, pageable);
+  }
+
+  /**
+   * Lists direct children of a parent post.
+   *
+   * @param parentId the parent post id
+   * @return children
+   */
+  public List<PostEntity> children(UUID parentId) {
+    if (parentId == null) {
+      return List.of();
+    }
+    return postRepository.findByParentId(parentId);
+  }
 }

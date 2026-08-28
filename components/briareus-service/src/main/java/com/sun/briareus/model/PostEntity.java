@@ -5,6 +5,7 @@ import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.*;
 import org.hibernate.annotations.Type;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "briareus_posts")
@@ -30,6 +31,9 @@ public class PostEntity extends BaseEntity {
 
   @Column(name = "language")
   private String language;
+
+  @Column(name = "parent_id")
+  private UUID parentId;
 
   // Getters and setters
   public String getTitle() {
@@ -78,5 +82,13 @@ public class PostEntity extends BaseEntity {
 
   public void setLanguage(String language) {
     this.language = language;
+  }
+
+  public UUID getParentId() {
+    return parentId;
+  }
+
+  public void setParentId(UUID parentId) {
+    this.parentId = parentId;
   }
 }
