@@ -1,0 +1,27 @@
+.list_body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sm);
+}
+
+.row_link {
+  display: flex;
+  align-items: center;
+  padding: var(--md) var(--lg);
+  border-radius: var(--sm);
+  text-decoration: none;
+  color: inherit;
+  width: calc(100% - var(--lg) * 2);
+}
+
+.row_link:hover {
+  background-color: var(--secondary-hover);
+}
+
+.row_title {
+  overflow: hidden;
+  white-space: nowrap;
+  width: fit-content;
+  text-overflow: ellipsis;
+  text-decoration: underline;
+}

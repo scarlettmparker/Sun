@@ -1,8 +1,10 @@
+import { Suspense } from "react";
 import { useParams } from "react-router-dom";
 import { usePageData } from "@sun/ssr/react";
 import { Card, CardBody, CardHeader, CardTitle, MarkdownViewer } from "@sun/components";
 import type { LocateBlogPostQuery } from "~/generated/graphql";
 import BlogBreadcrumb from "~/components/blog/blog-breadcrumb";
+import KnowledgeGraph from "~/components/knowledge/knowledge-graph";
 import styles from "./blog-detail.module.css";
 
 type BlogDetailProps = Record<string, never>;
@@ -34,6 +36,9 @@ const BlogDetail = (props: BlogDetailProps) => {
           <MarkdownViewer className={styles.blog_body}>{data.content}</MarkdownViewer>
         </CardBody>
       </Card>
+      <Suspense fallback={null}>
+        <KnowledgeGraph post={data} />
+      </Suspense>
     </div>
   );
 };

@@ -38,6 +38,12 @@
     "breadcrumb": {
       "blog": "Blog"
     },
+    "detail": {
+      "children": "Children",
+      "related": "Related Posts",
+      "gallery": "Gallery",
+      "attachedTexts": "Attached Texts"
+    },
     "months": {
       "January": "January",
       "February": "February",
