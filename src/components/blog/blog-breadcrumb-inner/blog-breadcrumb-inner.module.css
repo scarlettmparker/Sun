@@ -1,0 +1,10 @@
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  gap: var(--xs);
+}

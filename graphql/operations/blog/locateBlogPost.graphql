@@ -11,6 +11,10 @@ query locateBlogPost($id: ID!) {
       parent {
         id
         title
+        parent {
+          id
+          title
+        }
       }
       type {
         id

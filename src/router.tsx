@@ -2,6 +2,8 @@ import { RouteObject, useRoutes } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import type { RouteMeta } from "@sun/ssr/server";
 import BlogSkeleton from "./_components/blog/skeleton/blog-skeleton";
+import { BlogDetailSkeleton } from "./components/blog/blog-detail/skeletons";
+import { BlogListSkeleton } from "./components/blog/skeletons";
 import HubSkeleton from "./_components/hub/skeleton/hub-skeleton";
 import Gallery from "./routes/gallery";
 
@@ -22,7 +24,7 @@ const Login = lazy(() => import("~/routes/login"));
 export const routeMeta: Record<string, RouteMeta> = {
   "/": {
     title: "Scarlet Sun | Home",
-    description: "Personal knowledge hub — browse blog types and curated docs.",
+    description: "Personal knowledge hub.",
   },
   blog: {
     title: "Blog | Scarlet Sun",
@@ -69,7 +71,7 @@ export const routes: RouteObject[] = [
       {
         index: true,
         element: (
-          <Suspense fallback={<BlogSkeleton />}>
+          <Suspense fallback={<BlogListSkeleton />}>
             <BlogListPage />
           </Suspense>
         ),
@@ -80,7 +82,11 @@ export const routes: RouteObject[] = [
       },
       {
         path: ":id",
-        element: <BlogPostPage />,
+        element: (
+          <Suspense fallback={<BlogDetailSkeleton />}>
+            <BlogPostPage />
+          </Suspense>
+        ),
       },
     ],
   },

@@ -26,7 +26,7 @@ const BlogDetail = (props: BlogDetailProps) => {
 
   return (
     <div className={styles.detail_wrapper}>
-      <BlogBreadcrumb typeName={data.type?.name ?? null} />
+      <BlogBreadcrumb post={data} />
       <Card>
         <CardHeader>
           <CardTitle>{data.title}</CardTitle>

@@ -1,54 +1,20 @@
-import { useEffect } from "react";
-import { useTranslation } from "react-i18next";
-import { Breadcrumb, BreadcrumbProvider, useBreadcrumbContext } from "@sun/components";
+import BlogBreadcrumbInner from "~/components/blog/blog-breadcrumb-inner";
+import type { BlogPost } from "~/generated/graphql";
 
 type BlogBreadcrumbProps = {
   /**
-   * Type name for back link.
+   * Blog post for breadcrumb.
    */
-  typeName: string | null;
-};
-
-type InnerProps = {
-  /**
-   * Type name for back link.
-   */
-  typeName: string | null;
-};
-
-/**
- * Inner breadcrumb that syncs crumbs to context.
- */
-const BlogBreadcrumbInner = (props: InnerProps) => {
-  const { typeName } = props;
-  const { t } = useTranslation("blog");
-  const { setBreadcrumbs, setCurrent } = useBreadcrumbContext();
-  const href = typeName ? `/blog?type=${encodeURIComponent(typeName)}` : "/blog";
-
-  useEffect(() => {
-    const typeLabel = typeName ? t(`types.${typeName}`, { defaultValue: typeName }) : null;
-    const crumbs = [{ label: t("breadcrumb.blog"), href: "/blog" }];
-    if (typeLabel && typeName) {
-      crumbs.push({ label: typeLabel, href });
-    }
-    setBreadcrumbs(crumbs);
-    setCurrent(href);
-  }, [typeName, t, setBreadcrumbs, setCurrent, href]);
-
-  return <Breadcrumb separator="/" />;
+  post: BlogPost | null | undefined;
 };
 
 /**
  * Breadcrumb for blog post detail.
  */
 const BlogBreadcrumb = (props: BlogBreadcrumbProps) => {
-  const { typeName } = props;
+  const { post } = props;
 
-  return (
-    <BreadcrumbProvider>
-      <BlogBreadcrumbInner typeName={typeName} />
-    </BreadcrumbProvider>
-  );
+  return <BlogBreadcrumbInner post={post} />;
 };
 
 export default BlogBreadcrumb;
