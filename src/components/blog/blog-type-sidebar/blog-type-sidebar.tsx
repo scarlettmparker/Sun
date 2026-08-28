@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { useTranslation } from "react-i18next";
-import { Sidebar } from "@sun/components";
+import { CardHeader, CardTitle, Sidebar } from "@sun/components";
 import BlogTypeContainer from "~/components/blog/blog-type-container";
 import { BlogTypeSidebarSkeleton } from "./skeletons";
 import styles from "./blog-type-sidebar.module.css";
@@ -13,7 +13,8 @@ const BlogTypeSidebar = () => {
 
   return (
     <Sidebar className={styles.sidebar}>
-      <h3 className={styles.header}>{t("types.title")}</h3>
+      {/* TODO: might need a "sidebar title" kind of component */}
+      <CardTitle>{t("types.title")}</CardTitle>
       <Suspense fallback={<BlogTypeSidebarSkeleton />}>
         <BlogTypeContainer />
       </Suspense>

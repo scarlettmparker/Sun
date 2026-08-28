@@ -14,7 +14,13 @@ input PaginationInput {
   size: Int
   sortBy: String
   sortDir: SortDirection
+  sorts: [SortInput!]
   filters: [FilterInput!]
+}
+
+input SortInput {
+  field: String!
+  dir: SortDirection!
 }
 
 enum SortDirection {

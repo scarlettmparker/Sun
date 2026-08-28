@@ -1,6 +1,10 @@
 import { defineLoader } from "@sun/ssr";
 import { executeDocument } from "@sun/api";
-import { ChildrenDocument, type ChildrenQuery } from "~/generated/graphql";
+import {
+  ChildrenDocument,
+  type ChildrenQuery,
+  type PaginationInput,
+} from "~/generated/graphql";
 
 const EMPTY_CHILDREN: ChildrenQuery["blogQueries"]["children"] = {
   items: [],
@@ -20,14 +24,17 @@ const EMPTY_CHILDREN: ChildrenQuery["blogQueries"]["children"] = {
 defineLoader({
   pattern: "blog/:id/children",
   async loader(params) {
-    const id = typeof params.id === "string" ? params.id : "";
+    const { id, pagination } = params as {
+      id?: string;
+      pagination?: PaginationInput;
+    };
     if (!id || id === "create") {
       return { children: EMPTY_CHILDREN };
     }
     try {
       const result = await executeDocument<ChildrenQuery>(ChildrenDocument, {
         parentId: id,
-        pagination: { page: 0, size: 50, sortBy: "createdAt", sortDir: "DESC" as const },
+        pagination,
       });
       const children = result.success
         ? (result.data as ChildrenQuery | undefined)?.blogQueries?.children

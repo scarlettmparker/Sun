@@ -61,7 +61,7 @@ public class BlogGraphQLService {
   public PagedBlogPosts listBlogPosts(PaginationInput pagination) {
     logger.info("Retrieving blog posts");
 
-    Pageable pageable = toPageable(pagination, "createdAt", Sort.Direction.DESC);
+    Pageable pageable = toPageable(pagination, "lastUpdatedAt", Sort.Direction.DESC);
     List<FilterSpec> filters = GraphQLSupport.toFilterSpecs(
         pagination == null ? null : pagination.getFilters(),
         f -> new FilterSpec(f.getField(), f.getOperator().name(), f.getValue()));
@@ -198,7 +198,7 @@ public class BlogGraphQLService {
   public PagedBlogPosts children(String parentId, PaginationInput pagination) {
     logger.info("Retrieving children for parentId: {}", parentId);
 
-    Pageable pageable = toPageable(pagination, "createdAt", Sort.Direction.DESC);
+    Pageable pageable = toPageable(pagination, "lastUpdatedAt", Sort.Direction.DESC);
     Page<PostEntity> result = briareusService.children(UUID.fromString(parentId), pageable);
     List<BlogPost> items = result.getContent().stream().map(blogPostMapper::map).toList();
 
@@ -279,6 +279,13 @@ public class BlogGraphQLService {
       Sort.Direction defaultDir) {
     if (pagination == null) {
       return PageRequests.of(null, null, null, null, defaultSortBy, defaultDir);
+    }
+    if (pagination.getSorts() != null && !pagination.getSorts().isEmpty()) {
+      List<Sort.Order> orders = pagination.getSorts().stream()
+          .map(s -> new Sort.Order(Sort.Direction.valueOf(s.getDir().name()), s.getField()))
+          .toList();
+      return PageRequests.of(pagination.getPage(), pagination.getSize(), orders, defaultSortBy,
+          defaultDir);
     }
     return PageRequests.of(pagination.getPage(), pagination.getSize(), pagination.getSortBy(),
         pagination.getSortDir() == null ? null : pagination.getSortDir().name(),

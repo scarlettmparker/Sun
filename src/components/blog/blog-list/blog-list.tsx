@@ -19,9 +19,22 @@ type BlogListProps = {
 const BlogList = (props: BlogListProps) => {
   const { selectedType } = props;
   const { t } = useTranslation("blog");
+  const filters = [];
+  if (selectedType) {
+    filters.push({ field: "type.name", operator: "EQUALS" as const, value: selectedType });
+  }
+  const pagination = {
+    page: 0,
+    size: 50,
+    filters,
+    sorts: [
+      { field: "lastUpdatedAt", dir: "DESC" as const },
+      { field: "title", dir: "ASC" as const },
+    ],
+  };
   const { data: initialData } = usePageData<
     ListBlogPostsQuery["blogQueries"]["listBlogPosts"]["items"]
-  >("blogPosts", "blog", { type: selectedType ?? undefined });
+  >("blogPosts", "blog", { pagination });
 
   const groupedPosts = groupPostsByMonthYear(initialData ?? []);
 

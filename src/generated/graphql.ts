@@ -414,6 +414,7 @@ export type PaginationInput = {
   size?: InputMaybe<Scalars['Int']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
   sortDir?: InputMaybe<SortDirection>;
+  sorts?: InputMaybe<Array<SortInput>>;
 };
 
 export type Query = {
@@ -469,6 +470,11 @@ export enum SortDirection {
   Asc = 'ASC',
   Desc = 'DESC'
 }
+
+export type SortInput = {
+  dir: SortDirection;
+  field: Scalars['String']['input'];
+};
 
 export type StandardError = {
   __typename?: 'StandardError';

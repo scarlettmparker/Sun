@@ -18,10 +18,18 @@ type KnowledgeChildrenProps = {
 const KnowledgeChildren = (props: KnowledgeChildrenProps) => {
   const { postId } = props;
   const { t } = useTranslation("blog");
+  const pagination = {
+    page: 0,
+    size: 50,
+    sorts: [
+      { field: "lastUpdatedAt", dir: "DESC" as const },
+      { field: "title", dir: "ASC" as const },
+    ],
+  };
   const { data: children } = usePageData<ChildrenQuery["blogQueries"]["children"]>(
     "children",
     "blog/:id/children",
-    { id: postId },
+    { id: postId, pagination },
   );
 
   if ((children?.items?.length ?? 0) === 0) {
