@@ -20,16 +20,13 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Evaluates whether a client IP is permitted by the whitelist.
  *
- * <p>Pattern formats supported:
- * <ul>
- *   <li><b>CIDR</b> - e.g. {@code 192.168.0.0/24}. Proper subnet bitwise match.</li>
- *   <li><b>Glob</b> - e.g. {@code 192.168.0.*} or {@code 5.*}. {@code *} matches
- *       any sequence of characters.</li>
- *   <li><b>Exact</b> - a bare IP like {@code 10.0.0.1}. String equality.</li>
- * </ul>
+ * Pattern formats supported:
+ * 
+ * CIDR - e.g. 192.168.0.0/24.
+ * Glob - e.g. 192.168.0.* or 5.* .* matches any sequence of characters.
+ * Exact- an IP like 10.0.0.1.
  *
- * <p>When {@code app.bypass-permissions=true} the check always passes (returns
- * a synthetic wildcard entry so the filter never blocks).
+ * When app.bypass-permissions=true the check always passes.
  */
 @Service
 public class IpWhitelistService {
@@ -162,8 +159,8 @@ public class IpWhitelistService {
         return pattern.equals(ip);
     }
 
-    // --- CIDR matching ---------------------------------------------------
-
+    
+    // CIDR matching
     private boolean cidrMatches(String cidr, String ip) {
         try {
             String[] parts = cidr.split("/");
@@ -201,8 +198,6 @@ public class IpWhitelistService {
         }
     }
 
-    // --- Glob matching ----------------------------------------------------
-
     private boolean globMatches(String glob, String ip) {
         Pattern p = globPatternCache.computeIfAbsent(glob, g -> {
             String regex = "^" + g.replace(".", "\\.").replace("*", ".*") + "$";
@@ -211,11 +206,10 @@ public class IpWhitelistService {
         return p.matcher(ip).matches();
     }
 
-    // --- Bypass -----------------------------------------------------------
 
     /**
      * Returns a synthetic wildcard entry that matches everything, used when
-     * {@code app.bypass-permissions=true}.
+     * app.bypass-permissions=true/
      */
     private List<IpWhitelistEntryEntity> wildcardEntry() {
         IpWhitelistEntryEntity wildcard = new IpWhitelistEntryEntity();

@@ -484,8 +484,6 @@ export function getPageData<T>(
   return { data: (record.result as Record<string, unknown>)?.[key] as T };
 }
 
-// --- invalidation ----------------------------------------------------------
-
 function parseInvalidationPatterns(cookieValue: string): string[] {
   try {
     const decoded = decodeURIComponent(cookieValue);
@@ -584,7 +582,6 @@ export function invalidateCache(invalidateCacheCookie: string): boolean {
   return invalidateCacheKeys(parseInvalidationPatterns(invalidateCacheCookie));
 }
 
-// --- client-side reactivity -------------------------------------------------
 // Framework-agnostic pub/sub so the React hook (react.ts) can react to
 // invalidation/revalidation without a circular import. Listeners receive the
 // cache keys that should be refreshed (or undefined for a blanket refresh).
