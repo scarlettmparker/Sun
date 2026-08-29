@@ -49,7 +49,7 @@ class ReaderVoteServiceTest {
   @Test
   void vote_downvoteToThreshold_hidesAnnotation() {
     ReaderAnnotationEntity annotation = annotation(0, 2);
-    when(voteRepository.findByAccountIdAndTargetTypeAndTargetId(
+    when(voteRepository.findVote(
         userId, ReaderVoteTarget.ANNOTATION, targetId)).thenReturn(Optional.empty());
     when(annotationRepository.findById(targetId)).thenReturn(Optional.of(annotation));
 
@@ -63,7 +63,7 @@ class ReaderVoteServiceTest {
   void vote_upvoteRecovers_reactivatesAnnotation() {
     ReaderAnnotationEntity annotation = annotation(0, 3);
     annotation.setStatus(ReaderStatus.HIDDEN);
-    when(voteRepository.findByAccountIdAndTargetTypeAndTargetId(
+    when(voteRepository.findVote(
         userId, ReaderVoteTarget.ANNOTATION, targetId)).thenReturn(Optional.empty());
     when(annotationRepository.findById(targetId)).thenReturn(Optional.of(annotation));
 
@@ -78,7 +78,7 @@ class ReaderVoteServiceTest {
     ReaderAnnotationEntity annotation = annotation(1, 0);
     ReaderVoteEntity existing = new ReaderVoteEntity();
     existing.setValue(VoteValue.UP);
-    when(voteRepository.findByAccountIdAndTargetTypeAndTargetId(
+    when(voteRepository.findVote(
         userId, ReaderVoteTarget.ANNOTATION, targetId)).thenReturn(Optional.of(existing));
     when(annotationRepository.findById(targetId)).thenReturn(Optional.of(annotation));
 

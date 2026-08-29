@@ -37,15 +37,29 @@ public class BriareusService extends BaseService<PostEntity> {
   }
 
   /**
-   * Retrieves a page of posts matching the filters.
+   * Retrieves a page of posts matching the filters for the viewer.
+   *
+   * @param filters the filter criteria
+   * @param pageable the pagination and sort
+   * @param viewer the viewer id
+   * @return the matching page
+   */
+  public Page<PostEntity> listPostsPaged(List<FilterSpec> filters, Pageable pageable, UUID viewer) {
+    Specification<PostEntity> vis = BriareusVisibilitySpec.visibleTo(viewer);
+    Specification<PostEntity> base = FilterBuilder.buildFilters(filters);
+    Specification<PostEntity> spec = base == null ? vis : base.and(vis);
+    return postRepository.findAll(spec, pageable);
+  }
+
+  /**
+   * Retrieves a page of posts matching the filters (no viewer, public only).
    *
    * @param filters the filter criteria
    * @param pageable the pagination and sort
    * @return the matching page
    */
   public Page<PostEntity> listPostsPaged(List<FilterSpec> filters, Pageable pageable) {
-    Specification<PostEntity> spec = FilterBuilder.buildFilters(filters);
-    return spec == null ? findAllPaged(pageable) : postRepository.findAll(spec, pageable);
+    return listPostsPaged(filters, pageable, null);
   }
 
   /**
@@ -65,7 +79,25 @@ public class BriareusService extends BaseService<PostEntity> {
    * @return the matching posts
    */
   public List<PostEntity> listByRemoteObjects(List<String> ids) {
-    return postRepository.findByRemoteObjectsIn(ids.toArray(new String[0]));
+    return listByRemoteObjects(ids, null);
+  }
+
+  /**
+   * Retrieves visible posts that reference any of the given remote-object ids.
+   *
+   * @param ids the remote-object ids to match
+   * @param viewer the viewer id
+   * @return the matching posts
+   */
+  public List<PostEntity> listByRemoteObjects(List<String> ids, UUID viewer) {
+    List<PostEntity> candidates = postRepository.findByRemoteObjectsIn(ids.toArray(new String[0]));
+    if (candidates.isEmpty()) {
+      return List.of();
+    }
+    Specification<PostEntity> vis = BriareusVisibilitySpec.visibleTo(viewer);
+    Specification<PostEntity> idSpec = (root, query, cb) -> root.get("id").in(candidates.stream().map(PostEntity::getId).toList());
+    Specification<PostEntity> spec = idSpec.and(vis);
+    return postRepository.findAll(spec);
   }
 
   /**
@@ -76,10 +108,24 @@ public class BriareusService extends BaseService<PostEntity> {
    * @return the matching page
    */
   public Page<PostEntity> children(UUID parentId, Pageable pageable) {
+    return children(parentId, pageable, null);
+  }
+
+  /**
+   * Lists visible direct children of a parent post.
+   *
+   * @param parentId the parent post id
+   * @param pageable the pagination and sort
+   * @param viewer the viewer id
+   * @return the matching page
+   */
+  public Page<PostEntity> children(UUID parentId, Pageable pageable, UUID viewer) {
     if (parentId == null) {
       return Page.empty(pageable);
     }
-    return postRepository.findByParentId(parentId, pageable);
+    Specification<PostEntity> parentSpec = (root, query, cb) -> cb.equal(root.get("parentId"), parentId);
+    Specification<PostEntity> vis = BriareusVisibilitySpec.visibleTo(viewer);
+    return postRepository.findAll(parentSpec.and(vis), pageable);
   }
 
   /**

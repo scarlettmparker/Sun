@@ -61,7 +61,7 @@ class KeyDetailServiceTest {
   void listActiveForBucketAndPath_returnsActiveRecords() {
     KeyDetailEntity d = new KeyDetailEntity();
     d.setStatus(Status.ACTIVE);
-    when(repository.findByBucketAndKeyPathStartingWithAndStatus("bkt", "dir/", Status.ACTIVE))
+    when(repository.findByPrefixAndStatus("bkt", "dir/", Status.ACTIVE))
         .thenReturn(List.of(d));
 
     List<KeyDetailEntity> result = service.listActiveForBucketAndPath("bkt", "dir/");
@@ -74,7 +74,7 @@ class KeyDetailServiceTest {
   void updatePath_updatesKeyPaths() {
     KeyDetailEntity d = new KeyDetailEntity();
     d.setKeyPath("old/file.txt");
-    when(repository.findByBucketAndKeyPathStartingWith("bkt", "old/")).thenReturn(List.of(d));
+    when(repository.findByPrefix("bkt", "old/")).thenReturn(List.of(d));
 
     service.updatePath("bkt", "old", "new");
 
@@ -89,7 +89,7 @@ class KeyDetailServiceTest {
     d.setKeyPath("dir/file.txt");
     d.setName("file.txt");
     d.setStatus(Status.ACTIVE);
-    when(repository.findByBucketAndKeyPathAndStatus("bkt", "dir/file.txt", Status.ACTIVE))
+    when(repository.findByKey("bkt", "dir/file.txt", Status.ACTIVE))
         .thenReturn(Optional.of(d));
 
     Optional<KeyDetailEntity> result = service.locateByBucketAndKeyPath("bkt", "dir/file.txt");
@@ -102,7 +102,7 @@ class KeyDetailServiceTest {
 
   @Test
   void locateByBucketAndKeyPath_returnsEmptyWhenNotFound() {
-    when(repository.findByBucketAndKeyPathAndStatus("bkt", "missing.txt", Status.ACTIVE))
+    when(repository.findByKey("bkt", "missing.txt", Status.ACTIVE))
         .thenReturn(Optional.empty());
 
     Optional<KeyDetailEntity> result = service.locateByBucketAndKeyPath("bkt", "missing.txt");

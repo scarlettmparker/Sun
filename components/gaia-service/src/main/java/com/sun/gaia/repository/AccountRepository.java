@@ -25,8 +25,12 @@ public interface AccountRepository extends BaseRepository<AccountEntity>, JpaSpe
 
   Optional<AccountEntity> findByProviderAndProviderId(String provider, String providerId);
 
-  Optional<AccountEntity> findByProviderAndProviderIdAndStatus(
-      String provider, String providerId, AccountStatus status);
+  @Query("select a from AccountEntity a where a.provider = :provider "
+      + "and a.providerId = :providerId and a.status = :status")
+  Optional<AccountEntity> findByProviderStatus(
+      @Param("provider") String provider,
+      @Param("providerId") String providerId,
+      @Param("status") AccountStatus status);
 
   /**
    * Permission patterns granted to the caller's person (any of that person's

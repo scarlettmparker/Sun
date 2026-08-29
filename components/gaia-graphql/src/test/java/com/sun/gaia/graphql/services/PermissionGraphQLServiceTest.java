@@ -60,7 +60,7 @@ class PermissionGraphQLServiceTest {
     UUID accountId = UUID.randomUUID();
     AccountEntity account = new AccountEntity();
     account.setId(accountId);
-    when(accountRepository.findByProviderAndProviderIdAndStatus(
+    when(accountRepository.findByProviderStatus(
         "discord", "12345", AccountStatus.ACTIVE))
         .thenReturn(Optional.of(account));
     when(accountRepository.findEffectivePermissions(accountId))
@@ -73,7 +73,7 @@ class PermissionGraphQLServiceTest {
 
   @Test
   void effectivePermissions_returnsEmptyForUnknownUser() {
-    when(accountRepository.findByProviderAndProviderIdAndStatus(
+    when(accountRepository.findByProviderStatus(
         "discord", "unknown", AccountStatus.ACTIVE))
         .thenReturn(Optional.empty());
 

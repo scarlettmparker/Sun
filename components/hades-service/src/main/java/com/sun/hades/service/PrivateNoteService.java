@@ -27,8 +27,8 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -120,17 +120,9 @@ public class PrivateNoteService extends BaseService<PrivateNoteEntity> {
   @Transactional(readOnly = true)
   public Page<PrivateNoteEntity> listForText(UUID textId, Pageable pageable) {
     UUID viewer = requireUser();
-    List<PrivateNoteEntity> all = noteRepository.findByTextId(textId);
-    List<PrivateNoteEntity> visible = new ArrayList<>();
-    for (PrivateNoteEntity n : all) {
-      if (canView(viewer, n)) {
-        visible.add(n);
-      }
-    }
-    int start = Math.min((int) pageable.getOffset(), visible.size());
-    int end = Math.min(start + pageable.getPageSize(), visible.size());
-    List<PrivateNoteEntity> content = visible.subList(start, end);
-    return new PageImpl<>(content, pageable, visible.size());
+    Specification<PrivateNoteEntity> base = (root, query, cb) -> cb.equal(root.get("textId"), textId);
+    Specification<PrivateNoteEntity> vis = PrivateNoteVisibilitySpec.visibleTo(viewer);
+    return noteRepository.findAll(base.and(vis), pageable);
   }
 
   /**
@@ -369,12 +361,17 @@ public class PrivateNoteService extends BaseService<PrivateNoteEntity> {
     if (viewer == null) {
       return List.of();
     }
-    String[] arr = ids.toArray(new String[0]);
+    List<PrivateNoteEntity> candidates = noteRepository.findByRemoteObjectsIn(ids.toArray(new String[0]));
+    if (candidates.isEmpty()) {
+      return List.of();
+    }
+    Specification<PrivateNoteEntity> vis = PrivateNoteVisibilitySpec.visibleTo(viewer);
+    Specification<PrivateNoteEntity> idSpec = (root, query, cb) ->
+        root.get("id").in(candidates.stream().map(PrivateNoteEntity::getId).toList());
+    List<PrivateNoteEntity> visible = noteRepository.findAll(idSpec.and(vis));
     List<RemoteObjectReference> out = new ArrayList<>();
-    for (PrivateNoteEntity n : noteRepository.findByRemoteObjectsIn(arr)) {
-      if (canView(viewer, n)) {
-        out.add(new RemoteObjectReference(n.getId(), "PRIVATE_NOTE", n.getId(), null));
-      }
+    for (PrivateNoteEntity n : visible) {
+      out.add(new RemoteObjectReference(n.getId(), "PRIVATE_NOTE", n.getId(), null));
     }
     return out;
   }
@@ -390,8 +387,7 @@ public class PrivateNoteService extends BaseService<PrivateNoteEntity> {
     if (note.getOwnerId().equals(viewer)) {
       return true;
     }
-    return permifyService.check(
-        PermifyUtil.userSubject(viewer), "view", PermifyUtil.object("private_note", note.getId()));
+    return shareRepository.isVisibleToViewer("private_note", note.getId(), viewer);
   }
 
   /**

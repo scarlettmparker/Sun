@@ -17,3 +17,12 @@ entity private_note {
 entity text {
   relation owner @user
 }
+
+entity briareus_post {
+  relation owner @user
+  relation viewer @user
+
+  permission view = owner or viewer
+  permission edit = owner
+  permission delete = owner
+}

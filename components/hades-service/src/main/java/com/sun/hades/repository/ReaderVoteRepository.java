@@ -7,19 +7,33 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface ReaderVoteRepository extends BaseRepository<ReaderVoteEntity> {
 
-  Optional<ReaderVoteEntity> findByAccountIdAndTargetTypeAndTargetId(
-      UUID accountId, ReaderVoteTarget targetType, UUID targetId);
+  @Query("select v from ReaderVoteEntity v where v.accountId = :accountId "
+      + "and v.targetType = :targetType and v.targetId = :targetId")
+  Optional<ReaderVoteEntity> findVote(
+      @Param("accountId") UUID accountId,
+      @Param("targetType") ReaderVoteTarget targetType,
+      @Param("targetId") UUID targetId);
 
   Optional<ReaderVoteEntity> findByAccountIdAndTargetId(UUID accountId, UUID targetId);
 
-  List<ReaderVoteEntity> findByAccountIdAndTargetTypeAndTargetIdIn(
-      UUID accountId, ReaderVoteTarget targetType, Collection<UUID> targetIds);
+  @Query("select v from ReaderVoteEntity v where v.accountId = :accountId "
+      + "and v.targetType = :targetType and v.targetId in :targetIds")
+  List<ReaderVoteEntity> findVotes(
+      @Param("accountId") UUID accountId,
+      @Param("targetType") ReaderVoteTarget targetType,
+      @Param("targetIds") Collection<UUID> targetIds);
 
-  long deleteByAccountIdAndTargetTypeAndTargetId(
-      UUID accountId, ReaderVoteTarget targetType, UUID targetId);
+  @Query("delete from ReaderVoteEntity v where v.accountId = :accountId "
+      + "and v.targetType = :targetType and v.targetId = :targetId")
+  long deleteVote(
+      @Param("accountId") UUID accountId,
+      @Param("targetType") ReaderVoteTarget targetType,
+      @Param("targetId") UUID targetId);
 
   long deleteByTargetTypeAndTargetId(ReaderVoteTarget targetType, UUID targetId);
 }

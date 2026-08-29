@@ -56,7 +56,7 @@ class ReaderAnnotationServiceTest {
     when(textRepository.findByIdForUpdate(textId)).thenReturn(Optional.of(new ReaderTextEntity()));
     when(annotationRepository.findByTextId(textId)).thenReturn(List.of());
     when(positionRepository.findByTextId(textId)).thenReturn(List.of());
-    when(positionRepository.findByTextIdAndStartOffsetAndEndOffset(textId, 0, 10))
+    when(positionRepository.findPosition(textId, 0, 10))
         .thenReturn(Optional.empty());
     ReaderPositionEntity savedPosition = position(textId, 0, 10);
     when(positionRepository.save(any())).thenReturn(savedPosition);
@@ -93,7 +93,7 @@ class ReaderAnnotationServiceTest {
     ReaderAnnotationEntity active = annotation(existing.getId());
     active.setStatus(ReaderStatus.ACTIVE);
     when(annotationRepository.findByTextId(textId)).thenReturn(List.of(active));
-    when(positionRepository.findByTextIdAndStartOffsetAndEndOffset(textId, 10, 20))
+    when(positionRepository.findPosition(textId, 10, 20))
         .thenReturn(Optional.of(existing));
     when(annotationRepository.save(any())).thenReturn(annotation(existing.getId()));
 
@@ -110,7 +110,7 @@ class ReaderAnnotationServiceTest {
     when(textRepository.findByIdForUpdate(textId)).thenReturn(Optional.of(new ReaderTextEntity()));
     when(positionRepository.findByTextId(textId)).thenReturn(List.of(existing));
     when(annotationRepository.findByTextId(textId)).thenReturn(List.of());
-    when(positionRepository.findByTextIdAndStartOffsetAndEndOffset(textId, 10, 20))
+    when(positionRepository.findPosition(textId, 10, 20))
         .thenReturn(Optional.of(existing));
     when(annotationRepository.save(any())).thenReturn(annotation(existing.getId()));
 

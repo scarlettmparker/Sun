@@ -41,7 +41,7 @@ public class PropertySetService extends BaseService<PropertySetEntryEntity> {
   public Optional<PropertySetEntryEntity> getEntry(String ownerKey, String propertySet,
       String entryName) {
     return entryRepository
-        .findByOwnerKeyAndPropertySetAndEntryName(ownerKey, propertySet, entryName)
+        .findEntry(ownerKey, propertySet, entryName)
         .filter(entry -> entry.getStatus() == EntryStatus.ACTIVE);
   }
 
@@ -53,7 +53,7 @@ public class PropertySetService extends BaseService<PropertySetEntryEntity> {
    * @return the active entries
    */
   public List<PropertySetEntryEntity> listActiveEntries(String ownerKey, String propertySet) {
-    return entryRepository.findByOwnerKeyAndPropertySetAndStatus(
+    return entryRepository.findByStatus(
         ownerKey, propertySet, EntryStatus.ACTIVE);
   }
 
@@ -108,7 +108,7 @@ public class PropertySetService extends BaseService<PropertySetEntryEntity> {
       Map<String, Object> values, boolean configurable) {
     validateAgainstSchema(ownerKey, propertySet, values);
     PropertySetEntryEntity entry = entryRepository
-        .findByOwnerKeyAndPropertySetAndEntryName(ownerKey, propertySet, entryName)
+        .findEntry(ownerKey, propertySet, entryName)
         .orElseGet(() -> {
           PropertySetEntryEntity created = new PropertySetEntryEntity();
           created.setOwnerKey(ownerKey);
@@ -135,7 +135,7 @@ public class PropertySetService extends BaseService<PropertySetEntryEntity> {
   public PropertySetEntryEntity setProperty(String ownerKey, String propertySet, String entryName,
       String property, Object value) {
     PropertySetEntryEntity entry = entryRepository
-        .findByOwnerKeyAndPropertySetAndEntryName(ownerKey, propertySet, entryName)
+        .findEntry(ownerKey, propertySet, entryName)
         .orElseGet(() -> {
           PropertySetEntryEntity created = new PropertySetEntryEntity();
           created.setOwnerKey(ownerKey);

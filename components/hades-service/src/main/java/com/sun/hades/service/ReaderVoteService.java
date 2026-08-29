@@ -53,7 +53,7 @@ public class ReaderVoteService {
   public UUID vote(ReaderVoteTarget targetType, UUID targetId, VoteValue value) {
     UUID accountId = requireUser();
     Optional<ReaderVoteEntity> existing =
-        voteRepository.findByAccountIdAndTargetTypeAndTargetId(accountId, targetType, targetId);
+        voteRepository.findVote(accountId, targetType, targetId);
 
     if (existing.isPresent()) {
       ReaderVoteEntity vote = existing.get();
@@ -88,7 +88,7 @@ public class ReaderVoteService {
   public UUID removeVote(ReaderVoteTarget targetType, UUID targetId) {
     UUID accountId = requireUser();
     ReaderVoteEntity vote = voteRepository
-        .findByAccountIdAndTargetTypeAndTargetId(accountId, targetType, targetId)
+        .findVote(accountId, targetType, targetId)
         .orElseThrow(() -> new IllegalArgumentException("No vote to remove"));
     adjust(targetType, targetId, vote.getValue(), c -> c - 1);
     voteRepository.delete(vote);
@@ -108,7 +108,7 @@ public class ReaderVoteService {
       return Optional.empty();
     }
     return voteRepository
-        .findByAccountIdAndTargetTypeAndTargetId(accountId, targetType, targetId)
+        .findVote(accountId, targetType, targetId)
         .map(ReaderVoteEntity::getValue);
   }
 
@@ -126,7 +126,7 @@ public class ReaderVoteService {
       return Map.of();
     }
     return voteRepository
-        .findByAccountIdAndTargetTypeAndTargetIdIn(accountId, targetType, targetIds)
+        .findVotes(accountId, targetType, targetIds)
         .stream()
         .collect(Collectors.toMap(ReaderVoteEntity::getTargetId, ReaderVoteEntity::getValue));
   }

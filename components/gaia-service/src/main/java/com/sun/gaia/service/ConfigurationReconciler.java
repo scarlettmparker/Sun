@@ -196,7 +196,7 @@ public class ConfigurationReconciler {
    */
   private void upsertEntry(PropertySet propertySet, ConfigurationContent.Entry entry) {
     PropertySetEntryEntity entity = entryRepository
-        .findByOwnerKeyAndPropertySetAndEntryName(propertySet.ownerKey(), propertySet.name(),
+        .findEntry(propertySet.ownerKey(), propertySet.name(),
             entry.name())
         .orElseGet(() -> {
           PropertySetEntryEntity created = new PropertySetEntryEntity();
@@ -219,7 +219,7 @@ public class ConfigurationReconciler {
    */
   private void archiveRemovedEntries(PropertySet propertySet, Set<String> declaredEntries) {
     List<PropertySetEntryEntity> configurable = entryRepository
-        .findByOwnerKeyAndPropertySetAndConfigurable(propertySet.ownerKey(), propertySet.name(),
+        .findByConfigurable(propertySet.ownerKey(), propertySet.name(),
             true);
     for (PropertySetEntryEntity entry : configurable) {
       if (!declaredEntries.contains(entry.getEntryName())) {

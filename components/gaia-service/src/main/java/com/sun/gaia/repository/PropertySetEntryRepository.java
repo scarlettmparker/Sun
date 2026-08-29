@@ -10,14 +10,26 @@ import org.springframework.data.repository.query.Param;
 
 public interface PropertySetEntryRepository extends BaseRepository<PropertySetEntryEntity> {
 
-  Optional<PropertySetEntryEntity> findByOwnerKeyAndPropertySetAndEntryName(
-      String ownerKey, String propertySet, String entryName);
+  @Query("select e from PropertySetEntryEntity e where e.ownerKey = :ownerKey "
+      + "and e.propertySet = :propertySet and e.entryName = :entryName")
+  Optional<PropertySetEntryEntity> findEntry(
+      @Param("ownerKey") String ownerKey,
+      @Param("propertySet") String propertySet,
+      @Param("entryName") String entryName);
 
-  List<PropertySetEntryEntity> findByOwnerKeyAndPropertySetAndStatus(
-      String ownerKey, String propertySet, EntryStatus status);
+  @Query("select e from PropertySetEntryEntity e where e.ownerKey = :ownerKey "
+      + "and e.propertySet = :propertySet and e.status = :status")
+  List<PropertySetEntryEntity> findByStatus(
+      @Param("ownerKey") String ownerKey,
+      @Param("propertySet") String propertySet,
+      @Param("status") EntryStatus status);
 
-  List<PropertySetEntryEntity> findByOwnerKeyAndPropertySetAndConfigurable(
-      String ownerKey, String propertySet, boolean configurable);
+  @Query("select e from PropertySetEntryEntity e where e.ownerKey = :ownerKey "
+      + "and e.propertySet = :propertySet and e.configurable = :configurable")
+  List<PropertySetEntryEntity> findByConfigurable(
+      @Param("ownerKey") String ownerKey,
+      @Param("propertySet") String propertySet,
+      @Param("configurable") boolean configurable);
 
   /**
    * Active entries whose permission is NULL or matches a caller pattern.

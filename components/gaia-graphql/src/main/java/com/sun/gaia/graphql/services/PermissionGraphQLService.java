@@ -55,7 +55,7 @@ public class PermissionGraphQLService {
       return List.of();
     }
     return accountRepository
-        .findByProviderAndProviderIdAndStatus("discord", remoteUserId, AccountStatus.ACTIVE)
+        .findByProviderStatus("discord", remoteUserId, AccountStatus.ACTIVE)
         .map(account -> accountRepository.findEffectivePermissions(account.getId()))
         .orElseGet(List::of);
   }

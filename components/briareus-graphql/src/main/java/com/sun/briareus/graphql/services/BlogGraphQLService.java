@@ -11,6 +11,7 @@ import com.sun.briareus.model.BlogPostTypeEntity;
 import com.sun.briareus.model.PostEntity;
 import com.sun.briareus.service.BlogPostTypeService;
 import com.sun.briareus.service.BriareusService;
+import com.sun.gaia.repository.ObjectShareRepository;
 import com.sun.briareus.codegen.types.BlogPost;
 import com.sun.briareus.codegen.types.BlogPostInput;
 import com.sun.briareus.codegen.types.BlogPostType;
@@ -57,6 +58,9 @@ public class BlogGraphQLService {
   @Autowired
   private PermifyClient permifyClient;
 
+  @Autowired
+  private ObjectShareRepository objectShareRepository;
+
   /**
    * Retrieves a page of blog posts matching the filters.
    *
@@ -71,9 +75,9 @@ public class BlogGraphQLService {
     List<FilterSpec> filters = GraphQLSupport.toFilterSpecs(
         pagination == null ? null : pagination.getFilters(),
         f -> new FilterSpec(f.getField(), f.getOperator().name(), f.getValue()));
-    Page<PostEntity> result = briareusService.listPostsPaged(filters, pageable);
+    UUID viewer = currentUserId();
+    Page<PostEntity> result = briareusService.listPostsPaged(filters, pageable, viewer);
     List<BlogPost> items = result.getContent().stream()
-        .filter(this::canView)
         .map(blogPostMapper::map)
         .toList();
 
@@ -113,7 +117,8 @@ public class BlogGraphQLService {
   public List<BlogPost> listByRemoteObjects(List<String> ids) {
     logger.info("Retrieving blog posts by remote object ids: {}", ids);
 
-    List<PostEntity> postEntities = briareusService.listByRemoteObjects(ids);
+    UUID viewer = currentUserId();
+    List<PostEntity> postEntities = briareusService.listByRemoteObjects(ids, viewer);
     List<BlogPost> blogPosts = postEntities.stream()
         .map(blogPostMapper::map)
         .collect(Collectors.toList());
@@ -222,9 +227,9 @@ public class BlogGraphQLService {
       throw new RuntimeException("Not authorized to view parent post: " + parentId);
     }
     Pageable pageable = toPageable(pagination, "lastUpdatedAt", Sort.Direction.DESC);
-    Page<PostEntity> result = briareusService.children(UUID.fromString(parentId), pageable);
+    UUID viewer = currentUserId();
+    Page<PostEntity> result = briareusService.children(UUID.fromString(parentId), pageable, viewer);
     List<BlogPost> items = result.getContent().stream()
-        .filter(this::canView)
         .map(blogPostMapper::map)
         .toList();
 
@@ -339,8 +344,13 @@ public class BlogGraphQLService {
       }
     }
     UUID viewer = currentUserId();
-    return PermifyUtil.canView(
-        viewer, post.getCreatedBy(), permifyClient, PermifyUtil.object("briareus_post", post.getId()));
+    if (viewer != null && post.getCreatedBy() != null && post.getCreatedBy().equals(viewer)) {
+      return true;
+    }
+    if (viewer == null) {
+      return false;
+    }
+    return objectShareRepository.isVisibleToViewer("briareus_post", post.getId(), viewer);
   }
 
   /**

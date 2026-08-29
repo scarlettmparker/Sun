@@ -83,7 +83,7 @@ public class ReaderAnnotationService extends BaseService<ReaderAnnotationEntity>
     }
 
     ReaderPositionEntity position = positionRepository
-        .findByTextIdAndStartOffsetAndEndOffset(textId, startOffset, endOffset)
+        .findPosition(textId, startOffset, endOffset)
         .orElseGet(() -> {
           ReaderPositionEntity np = new ReaderPositionEntity();
           np.setTextId(textId);

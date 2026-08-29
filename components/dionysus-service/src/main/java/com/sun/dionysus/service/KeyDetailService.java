@@ -40,9 +40,9 @@ public class KeyDetailService extends BaseService<KeyDetailEntity> {
   public List<KeyDetailEntity> listActiveForBucketAndPath(String bucket, String prefix) {
     logger.debug("Listing active key details for bucket: {} with prefix: {}", bucket, prefix);
     if (prefix == null) {
-      return keyDetailRepository.findByBucketAndKeyPathStartingWithAndStatus(bucket, "", Status.ACTIVE);
+      return keyDetailRepository.findByPrefixAndStatus(bucket, "", Status.ACTIVE);
     }
-    return keyDetailRepository.findByBucketAndKeyPathStartingWithAndStatus(bucket, prefix, Status.ACTIVE);
+    return keyDetailRepository.findByPrefixAndStatus(bucket, prefix, Status.ACTIVE);
   }
 
   /**
@@ -103,7 +103,7 @@ public class KeyDetailService extends BaseService<KeyDetailEntity> {
    */
   public List<KeyDetailEntity> listImages(String bucket) {
     logger.debug("Listing image key details for bucket: {}", bucket);
-    return keyDetailRepository.findByBucketAndContentTypeStartingWithAndStatus(bucket, "image/", Status.ACTIVE);
+    return keyDetailRepository.findByContentTypePrefixAndStatus(bucket, "image/", Status.ACTIVE);
   }
 
   /**
@@ -115,7 +115,7 @@ public class KeyDetailService extends BaseService<KeyDetailEntity> {
    */
   public Optional<KeyDetailEntity> locateImage(String bucket, String keyPath) {
     logger.debug("Locating image key detail for bucket: {} at path: {}", bucket, keyPath);
-    return keyDetailRepository.findByBucketAndKeyPathAndContentTypeStartingWithAndStatus(bucket, keyPath, "image/", Status.ACTIVE);
+    return keyDetailRepository.findByKeyAndContentType(bucket, keyPath, "image/", Status.ACTIVE);
   }
 
   /**
@@ -127,7 +127,7 @@ public class KeyDetailService extends BaseService<KeyDetailEntity> {
    */
   public Optional<KeyDetailEntity> locateByBucketAndKeyPath(String bucket, String keyPath) {
     logger.debug("Locating key detail for bucket: {} at path: {}", bucket, keyPath);
-    return keyDetailRepository.findByBucketAndKeyPathAndStatus(bucket, keyPath, Status.ACTIVE);
+    return keyDetailRepository.findByKey(bucket, keyPath, Status.ACTIVE);
   }
 
   /**
@@ -158,7 +158,7 @@ public class KeyDetailService extends BaseService<KeyDetailEntity> {
     logger.info("Archiving key details recursively for bucket: {} with prefix: {}", bucket, keyPrefix);
 
     String prefix = keyPrefix.endsWith("/") ? keyPrefix : keyPrefix + "/";
-    List<KeyDetailEntity> list = keyDetailRepository.findByBucketAndKeyPathStartingWith(bucket, prefix);
+    List<KeyDetailEntity> list = keyDetailRepository.findByPrefix(bucket, prefix);
 
     for (KeyDetailEntity d : list) {
       d.setStatus(Status.ARCHIVED);
@@ -181,7 +181,7 @@ public class KeyDetailService extends BaseService<KeyDetailEntity> {
     String srcPrefix = sourceKey.endsWith("/") ? sourceKey : sourceKey + "/";
     String tgtPrefix = targetKey.endsWith("/") ? targetKey : targetKey + "/";
 
-    List<KeyDetailEntity> list = keyDetailRepository.findByBucketAndKeyPathStartingWith(bucket, srcPrefix);
+    List<KeyDetailEntity> list = keyDetailRepository.findByPrefix(bucket, srcPrefix);
 
     if (!sourceKey.endsWith("/")) {
       List<KeyDetailEntity> exact = keyDetailRepository.findByBucketAndKeyPath(bucket, sourceKey);

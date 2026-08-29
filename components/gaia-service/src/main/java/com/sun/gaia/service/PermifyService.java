@@ -86,7 +86,9 @@ public class PermifyService {
       return false;
     }
     String objectType = objectParts[0];
-    return shareRepository.existsByObjectTypeAndObjectIdAndSubjectTypeAndSubjectId(
-        objectType, objectId, subjectType, subjectId);
+    if (!"user".equals(subjectType)) {
+      return false;
+    }
+    return shareRepository.isVisibleToViewer(objectType, objectId, subjectId);
   }
 }

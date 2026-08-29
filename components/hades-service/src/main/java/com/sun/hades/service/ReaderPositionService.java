@@ -43,7 +43,7 @@ public class ReaderPositionService extends BaseService<ReaderPositionEntity> {
    */
   public Optional<ReaderPositionEntity> findExact(
       UUID textId, int startOffset, int endOffset) {
-    return positionRepository.findByTextIdAndStartOffsetAndEndOffset(
+    return positionRepository.findPosition(
         textId, startOffset, endOffset);
   }
 }
