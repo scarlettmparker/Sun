@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import com.sun.base.cache.CaffeineSpec;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -50,6 +51,7 @@ public class WordReferenceService {
    * @return the word, or null when the entry does not exist
    */
   @Cacheable(value = "defineWord", key = "#word.toLowerCase() + ':' + #scope")
+  @CaffeineSpec(expireAfterWrite = "24h", maximumSize = 2000)
   public Word defineWord(String word, List<WordScope> scope) {
     Document doc = fetch(word);
     return doc == null ? null : map(doc, word, scope);
