@@ -15,11 +15,11 @@
       },
       "cancel": {
         "label": "Cancel",
-        "title": "Click here to go back"
+        "title": "Click to go back"
       },
       "create": {
         "label": "Create Blog Post",
-        "title": "Click here to Create Blog Post"
+        "title": "Click to create a Blog Post"
       },
       "creating": {
         "label": "Loading...",
@@ -39,13 +39,18 @@
       "BOT_HELP": "Help"
     },
     "breadcrumb": {
-      "blog": "Blog"
+      "blog": "Blog",
+      "new": "New",
+      "new-child": "New (child)"
     },
     "detail": {
       "children": "Children",
       "related": "Related Posts",
       "gallery": "Gallery",
-      "attachedTexts": "Attached Texts"
+      "attachedTexts": "Attached Texts",
+      "create-child": {
+        "title": "Create child post"
+      }
     },
     "months": {
       "January": "January",

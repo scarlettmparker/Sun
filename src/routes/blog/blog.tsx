@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { Outlet } from "react-router-dom";
+import { BreadcrumbProvider } from "@sun/components";
 import BlogTypeSidebar from "~/components/blog/blog-type-sidebar";
 import styles from "./blog.module.css";
 
@@ -8,14 +9,16 @@ import styles from "./blog.module.css";
  */
 const BlogLayout = () => {
   return (
-    <div className={styles.blog_layout}>
-      <Suspense fallback={null}>
-        <BlogTypeSidebar />
-      </Suspense>
-      <div className={styles.blog_main}>
-        <Outlet />
+    <BreadcrumbProvider>
+      <div className={styles.blog_layout}>
+        <Suspense fallback={null}>
+          <BlogTypeSidebar />
+        </Suspense>
+        <div className={styles.blog_main}>
+          <Outlet />
+        </div>
       </div>
-    </div>
+    </BreadcrumbProvider>
   );
 };
 

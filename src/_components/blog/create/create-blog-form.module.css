@@ -1,4 +1,4 @@
-.create_blog_form {
+.form {
   display: flex;
   flex-direction: column;
   gap: var(--lg);

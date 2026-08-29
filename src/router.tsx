@@ -78,7 +78,11 @@ export const routes: RouteObject[] = [
       },
       {
         path: "create",
-        element: <CreateBlogPostPage />,
+        element: (
+          <Suspense fallback={null}>
+            <CreateBlogPostPage />
+          </Suspense>
+        ),
       },
       {
         path: ":id",
