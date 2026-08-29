@@ -1,0 +1,10 @@
+.list_body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sm);
+}
+
+.row {
+  width: 100%;
+  height: 3rem;
+}

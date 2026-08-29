@@ -2,6 +2,8 @@
   display: flex;
   flex-direction: column;
   gap: var(--lg);
+  position: relative;
+  margin: 0 auto;
 }
 
 .breadcrumb {
@@ -17,4 +19,38 @@
 .block {
   width: 100%;
   height: 20rem;
+}
+
+.columns {
+  display: flex;
+  gap: var(--lg);
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.left_column {
+  min-width: 350px;
+  max-width: 36rem;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--lg);
+}
+
+.right_column {
+  width: 22rem;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--lg);
+}
+
+.small_block {
+  width: 100%;
+  height: 8rem;
+}
+
+.small_title {
+  width: 6rem;
+  height: 1.5rem;
 }

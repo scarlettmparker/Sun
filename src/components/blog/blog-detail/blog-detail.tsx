@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { usePageData } from "@sun/ssr/react";
@@ -14,8 +13,8 @@ import { PlusIcon } from "@heroicons/react/24/outline";
 import type { LocateBlogPostQuery } from "~/generated/graphql";
 import BlogBreadcrumb from "~/components/blog/blog-breadcrumb";
 import KnowledgeGraph from "~/components/knowledge/knowledge-graph";
-import AttachTextDialog from "~/components/blog/attach-text-dialog";
-import IngestPanel from "~/components/blog/ingest-panel";
+import AttachTextPicker from "~/components/blog/attach-text-picker";
+import IngestBlogForm from "~/components/blog/ingest-blog-form";
 import styles from "./blog-detail.module.css";
 
 /**
@@ -54,12 +53,8 @@ const BlogDetail = () => {
           <KnowledgeGraph post={data} />
         </div>
         <div className={styles.right_column}>
-          <Suspense fallback={null}>
-            <AttachTextDialog postId={data.id} />
-          </Suspense>
-          <Suspense fallback={null}>
-            <IngestPanel />
-          </Suspense>
+          <AttachTextPicker postId={data.id} />
+          <IngestBlogForm />
         </div>
       </div>
       <Button
