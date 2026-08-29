@@ -219,4 +219,16 @@ public class ReaderTextDataFetcher {
   public PagedReaderTexts viewedReaderTexts(PaginationInput pagination) {
     return readerTextGraphQLService.viewedReaderTexts(pagination);
   }
+
+  /**
+   * Locates reader texts by ids for batch attach resolution.
+   *
+   * @param ids the text ids
+   * @return the texts
+   */
+  @DgsData(parentType = "HadesQueries", field = "locateReaderTexts")
+  @PreAuthorize("@permissions.has('graphql.hades.locateReaderTexts')")
+  public List<ReaderText> locateReaderTexts(List<String> ids) {
+    return readerTextGraphQLService.locateReaderTexts(ids);
+  }
 }

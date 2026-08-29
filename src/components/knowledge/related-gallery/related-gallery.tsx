@@ -10,21 +10,24 @@ type RelatedGalleryProps = {
    * Remote object ids for gallery items.
    */
   ids: string[];
+  /**
+   * Blog post id for inverse lookup.
+   */
+  postId: string;
 };
 
 /**
  * Renders related gallery items resolved via remoteObject.
  */
 const RelatedGallery = (props: RelatedGalleryProps) => {
-  const { ids } = props;
+  const { ids, postId } = props;
   const { t } = useTranslation("blog");
   const { data: galleryItems } = usePageData<
     NonNullable<ListGalleryItemsByRemoteObjectsQuery["galleryQueries"]["listByRemoteObjects"]>
-  >("galleryItems", "blog/gallery", { ids: JSON.stringify(ids) } as unknown as Record<string, string>);
-
-  if (ids.length === 0) {
-    return null;
-  }
+  >("galleryItems", "blog/gallery", {
+    ids: JSON.stringify(ids),
+    postId,
+  } as unknown as Record<string, string>);
 
   if ((galleryItems?.length ?? 0) === 0) {
     return null;

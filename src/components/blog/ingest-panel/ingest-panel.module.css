@@ -1,0 +1,5 @@
+.form_actions {
+  display: flex;
+  column-gap: var(--md);
+  margin-left: auto;
+}

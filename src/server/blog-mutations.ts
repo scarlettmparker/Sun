@@ -1,7 +1,12 @@
 import { defineMutation, makeCacheKey, ServerRedirectError } from "@sun/ssr";
 import type { MutationResult } from "@sun/ssr";
+import {
+  mutateAddRemoteObject,
+  mutateIngestBlogFromSource,
+  mutateRemoveRemoteObject,
+} from "~/utils/api";
 import { mutateCreateBlogPost } from "~/utils/api";
-import type { BlogPostInput } from "~/generated/graphql";
+import type { BlogPostInput, IngestBlogInput } from "~/generated/graphql";
 
 /**
  * Creates a blog post and redirects to it.
@@ -35,5 +40,87 @@ defineMutation({
       __typename: "StandardError",
       message: result.error || "Failed to create blog post",
     };
+  },
+});
+
+/**
+ * Adds a remote object edge to a post.
+ */
+defineMutation({
+  path: "blog/add-remote-object",
+  async handler(body: Record<string, unknown>) {
+    const postId = body.postId as string | undefined;
+    const target = body.target as string | undefined;
+    if (typeof postId !== "string" || typeof target !== "string") {
+      return { __typename: "StandardError", message: "Invalid input" };
+    }
+    const result = await mutateAddRemoteObject(postId, target);
+    const data = result.data?.blogMutations.addRemoteObject as MutationResult | undefined;
+    if (data == null) {
+      return { __typename: "StandardError", message: result.error || "Failed" };
+    }
+    if (data.__typename === "QuerySuccess") {
+      return {
+        ...data,
+        invalidated: [
+          makeCacheKey("blog/:id:blogPost", { id: postId }),
+          makeCacheKey("blog/:id/attachedTexts:attachedTexts", { id: postId }),
+          makeCacheKey("blog/gallery:galleryItems", { ids: "*", postId: "*" }),
+        ],
+      };
+    }
+    return data;
+  },
+});
+
+/**
+ * Removes a remote object edge from a post.
+ */
+defineMutation({
+  path: "blog/remove-remote-object",
+  async handler(body: Record<string, unknown>) {
+    const postId = body.postId as string | undefined;
+    const target = body.target as string | undefined;
+    if (typeof postId !== "string" || typeof target !== "string") {
+      return { __typename: "StandardError", message: "Invalid input" };
+    }
+    const result = await mutateRemoveRemoteObject(postId, target);
+    const data = result.data?.blogMutations.removeRemoteObject as MutationResult | undefined;
+    if (data == null) {
+      return { __typename: "StandardError", message: result.error || "Failed" };
+    }
+    if (data.__typename === "QuerySuccess") {
+      return {
+        ...data,
+        invalidated: [
+          makeCacheKey("blog/:id:blogPost", { id: postId }),
+          makeCacheKey("blog/:id/attachedTexts:attachedTexts", { id: postId }),
+          makeCacheKey("blog/gallery:galleryItems", { ids: "*", postId: "*" }),
+        ],
+      };
+    }
+    return data;
+  },
+});
+
+/**
+ * Ingests a blog from wikipedia or wiktionary.
+ */
+defineMutation({
+  path: "blog/ingest-source",
+  async handler(body: Record<string, unknown>) {
+    const input = body.input as IngestBlogInput | undefined;
+    if (input == null || typeof input.title !== "string" || typeof input.sourceId !== "string") {
+      return { __typename: "StandardError", message: "Invalid input" };
+    }
+    const result = await mutateIngestBlogFromSource(input);
+    const data = result.data?.blogMutations.ingestBlogFromSource as MutationResult | undefined;
+    if (data == null) {
+      return { __typename: "StandardError", message: result.error || "Failed" };
+    }
+    if (data.__typename === "QuerySuccess" && data.id) {
+      throw new ServerRedirectError(`/blog/${data.id}`, [makeCacheKey("blog:blogPosts", {})], data);
+    }
+    return data;
   },
 });

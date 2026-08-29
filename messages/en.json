@@ -47,10 +47,29 @@
       "children": "Children",
       "related": "Related Posts",
       "gallery": "Gallery",
-      "attachedTexts": "Attached Texts",
+      "attached-texts": "Attached Texts",
+      "attach": "Attach",
+      "detach": "Detach",
       "create-child": {
         "title": "Create child post"
       }
+    },
+    "attach": {
+      "title": "Attach Text",
+      "placeholder": "Search texts…",
+      "empty": "No texts found",
+      "attach-label": "Attach"
+    },
+    "ingest": {
+      "title": "Ingest from Source",
+      "title-label": "Title",
+      "title-placeholder": "Enter title…",
+      "type-label": "Type",
+      "source-kind-label": "Source",
+      "source-id-label": "Source ID",
+      "source-id-placeholder": "e.g. Stoicism or logos",
+      "submit-label": "Ingest",
+      "submitting-label": "Ingesting…"
     },
     "months": {
       "January": "January",

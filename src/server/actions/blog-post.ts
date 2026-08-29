@@ -41,3 +41,33 @@ export async function createBlogPost(
 
   return result;
 }
+
+/**
+ * Attaches a remote object to a post.
+ */
+export async function attachRemoteObject(postId: string, target: string): Promise<MutationResult> {
+  return executeMutation("blog/add-remote-object", { postId, target });
+}
+
+/**
+ * Detaches a remote object from a post.
+ */
+export async function detachRemoteObject(postId: string, target: string): Promise<MutationResult> {
+  return executeMutation("blog/remove-remote-object", { postId, target });
+}
+
+/**
+ * Ingests a blog from a source.
+ */
+export async function ingestBlogFromSource(input: {
+  title: string;
+  typeName: string;
+  sourceKind: string;
+  sourceId: string;
+}): Promise<MutationResult> {
+  const result = await executeMutation("blog/ingest-source", { input });
+  if (result.__typename === "Redirect") {
+    window.location.assign(result.redirectTo);
+  }
+  return result;
+}

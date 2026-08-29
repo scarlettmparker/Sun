@@ -299,6 +299,41 @@ public class ReaderTextGraphQLService {
   }
 
   /**
+   * Locates reader texts by ids for batch attach resolution.
+   *
+   * @param ids the text ids
+   * @return the texts in request order, missing ids omitted
+   */
+  @Transactional(readOnly = true)
+  public List<ReaderText> locateReaderTexts(List<String> ids) {
+    if (ids == null || ids.isEmpty()) {
+      return List.of();
+    }
+    List<UUID> uuids = ids.stream()
+        .map(id -> {
+          try {
+            return UUID.fromString(id);
+          } catch (IllegalArgumentException e) {
+            return null;
+          }
+        })
+        .filter(Objects::nonNull)
+        .toList();
+    if (uuids.isEmpty()) {
+      return List.of();
+    }
+    List<ReaderTextEntity> entities = textRepository.findAllById(uuids);
+    Map<UUID, ReaderTextEntity> byId = entities.stream()
+        .collect(Collectors.toMap(ReaderTextEntity::getId, Function.identity()));
+    return uuids.stream()
+        .map(byId::get)
+        .filter(Objects::nonNull)
+        .filter(e -> e.getStatus() == ReaderTextStatus.ACTIVE)
+        .map(textMapper::map)
+        .toList();
+  }
+
+  /**
    * Returns the authenticated account id, throwing if none is present.
    *
    * @return the caller's account id

@@ -3,13 +3,10 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import BlogTypeList from "~/components/blog/blog-type-list";
 import BlogPostTypeFetcher from "~/components/blog/blog-post-type-fetcher";
 
-type BlogTypeContainerProps = Record<string, never>;
-
 /**
  * Container that provides selected type and navigation for blog type list.
  */
-const BlogTypeContainer = (props: BlogTypeContainerProps) => {
-  const {} = props;
+const BlogTypeContainer = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();

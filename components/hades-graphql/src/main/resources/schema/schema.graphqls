@@ -327,12 +327,16 @@ type HadesQueries {
   privateNotes(textId: ID!, pagination: PaginationInput): PagedPrivateNotes!
   readerAccount: ReaderAccount
   readerAccounts(remoteUsers: [RemoteUserInput!]!): [ReaderAccount!]!
-  searchReaderAccounts(query: String!, pagination: PaginationInput): [ReaderAccount!]!
+  searchReaderAccounts(
+    query: String!
+    pagination: PaginationInput
+  ): [ReaderAccount!]!
   myVote(targetType: ReaderVoteTarget!, targetId: ID!): VoteValue
   locateRemoteObjects(ids: [String!]!): [ReaderObjectReference!]!
-   defineWord(word: String!, scope: [WordScope!]): Word
-   viewedTexts(pagination: PaginationInput): PagedTextViews!
-   viewedReaderTexts(pagination: PaginationInput): PagedReaderTexts!
+  defineWord(word: String!, scope: [WordScope!]): Word
+  viewedTexts(pagination: PaginationInput): PagedTextViews!
+  viewedReaderTexts(pagination: PaginationInput): PagedReaderTexts!
+  locateReaderTexts(ids: [ID!]!): [ReaderText!]!
 }
 
 """

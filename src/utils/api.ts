@@ -3,11 +3,33 @@
  */
 
 import {
+  AddRemoteObjectDocument,
+  AddRemoteObjectMutation,
+  type AddRemoteObjectMutationVariables,
   CreateBlogPostDocument,
   BlogPostInput,
   CreateBlogPostMutation,
+  HadesTextsDocument,
+  type HadesTextsQuery,
+  type HadesTextsQueryVariables,
   HubRegistryDocument,
+  IngestBlogFromSourceDocument,
+  type IngestBlogFromSourceMutation,
+  type IngestBlogFromSourceMutationVariables,
+  IngestBlogInput,
+  LocateReaderTextsDocument,
+  type LocateReaderTextsQuery,
+  type LocateReaderTextsQueryVariables,
+  RemoveRemoteObjectDocument,
+  type RemoveRemoteObjectMutation,
+  type RemoveRemoteObjectMutationVariables,
   SaveRegistryDocument,
+  WikipediaSummaryDocument,
+  type WikipediaSummaryQuery,
+  type WikipediaSummaryQueryVariables,
+  WiktionaryEntryDocument,
+  type WiktionaryEntryQuery,
+  type WiktionaryEntryQueryVariables,
   type HubRegistryInput,
   type HubRegistryQuery,
   type SaveRegistryMutation,
@@ -24,6 +46,75 @@ export async function mutateCreateBlogPost(
   return executeDocument<CreateBlogPostMutation>(CreateBlogPostDocument, {
     title,
     input,
+  });
+}
+
+/**
+ * Fetches a wikipedia summary.
+ */
+export async function fetchWikipediaSummary(title: string) {
+  return executeDocument<WikipediaSummaryQuery, WikipediaSummaryQueryVariables>(
+    WikipediaSummaryDocument,
+    { title },
+  );
+}
+
+/**
+ * Fetches a wiktionary entry.
+ */
+export async function fetchWiktionaryEntry(word: string) {
+  return executeDocument<WiktionaryEntryQuery, WiktionaryEntryQueryVariables>(
+    WiktionaryEntryDocument,
+    { word },
+  );
+}
+
+/**
+ * Ingests a blog from a source.
+ */
+export async function mutateIngestBlogFromSource(input: IngestBlogInput) {
+  return executeDocument<IngestBlogFromSourceMutation, IngestBlogFromSourceMutationVariables>(
+    IngestBlogFromSourceDocument,
+    { input },
+  );
+}
+
+/**
+ * Adds a remote-object edge to a blog post.
+ */
+export async function mutateAddRemoteObject(postId: string, target: string) {
+  return executeDocument<AddRemoteObjectMutation, AddRemoteObjectMutationVariables>(
+    AddRemoteObjectDocument,
+    { postId, target },
+  );
+}
+
+/**
+ * Removes a remote-object edge from a blog post.
+ */
+export async function mutateRemoveRemoteObject(postId: string, target: string) {
+  return executeDocument<RemoveRemoteObjectMutation, RemoveRemoteObjectMutationVariables>(
+    RemoveRemoteObjectDocument,
+    { postId, target },
+  );
+}
+
+/**
+ * Locates reader texts by ids in batch.
+ */
+export async function fetchLocateReaderTexts(ids: string[]) {
+  return executeDocument<LocateReaderTextsQuery, LocateReaderTextsQueryVariables>(
+    LocateReaderTextsDocument,
+    { ids },
+  );
+}
+
+/**
+ * Lists hades texts with pagination.
+ */
+export async function fetchHadesTexts(pagination?: HadesTextsQueryVariables["pagination"]) {
+  return executeDocument<HadesTextsQuery, HadesTextsQueryVariables>(HadesTextsDocument, {
+    pagination,
   });
 }
 

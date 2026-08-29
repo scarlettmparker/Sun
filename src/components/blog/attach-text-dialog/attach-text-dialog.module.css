@@ -1,0 +1,48 @@
+.inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lg);
+}
+
+.list_body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sm);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--lg);
+  padding: var(--md) var(--lg);
+  border-radius: var(--sm);
+  width: calc(100% - var(--lg) * 2);
+}
+
+.row:hover {
+  background-color: var(--secondary-hover);
+}
+
+.row_title {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-decoration: underline;
+  width: fit-content;
+}
+
+.attach_button {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.no_items {
+  margin: 0;
+}
+
+.toolbar {
+  display: flex;
+  gap: var(--md);
+  align-items: center;
+  margin-bottom: var(--lg);
+}
