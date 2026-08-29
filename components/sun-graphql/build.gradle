@@ -32,6 +32,9 @@ processResources {
     from('src/main/graphql-extensions') {
         into 'schema'
     }
+    from("${rootDir}/permify/schema.zed") {
+        into 'permify'
+    }
 }
 
 group = 'com.sun'
