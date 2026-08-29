@@ -23,11 +23,12 @@ defineMutation({
     const data = result.data?.blogMutations.createBlogPost as MutationResult;
 
     if (data?.__typename === "QuerySuccess") {
-      throw new ServerRedirectError(
-        `/blog/${data.id}`,
-        makeCacheKey("blog:blogPosts", {}),
-        data,
-      );
+      const parentId = (input as BlogPostInput)?.parentId as string | undefined;
+      const invalidated = [makeCacheKey("blog:blogPosts", {})];
+      if (parentId) {
+        invalidated.push(makeCacheKey("blog/:id:children", { id: parentId }));
+      }
+      throw new ServerRedirectError(`/blog/${data.id}`, invalidated, data);
     }
 
     return {

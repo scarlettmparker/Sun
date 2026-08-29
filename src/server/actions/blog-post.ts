@@ -4,11 +4,15 @@ import { MutationResult, executeMutation } from "@sun/ssr";
  * Creates a new blog post.
  * @param title The title of the blog post.
  * @param content The content of the blog post.
+ * @param typeId Optional type id.
+ * @param parentId Optional parent id.
  * @returns Promise resolving to the mutation result.
  */
 export async function createBlogPost(
   title: string,
   content: string,
+  typeId?: string,
+  parentId?: string,
 ): Promise<MutationResult> {
   if (
     typeof title !== "string" ||
@@ -26,6 +30,8 @@ export async function createBlogPost(
     title: title.trim(),
     input: {
       content: content.trim(),
+      ...(typeId ? { typeId } : {}),
+      ...(parentId ? { parentId } : {}),
     },
   });
 

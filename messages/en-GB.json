@@ -9,6 +9,10 @@
         "label": "Content",
         "placeholder": "Enter content..."
       },
+      "type": {
+        "label": "Type",
+        "placeholder": "Select a type..."
+      },
       "cancel": {
         "label": "Cancel",
         "title": "Click here to go back"

@@ -13,6 +13,7 @@ const DEFAULT_ALLOWED_ORIGINS = [
   "scarlettparker.co.uk",
   "localhost",
   "127.0.0.1",
+  "app",
 ];
 /**
  * CSRF cookie lifetime in seconds (24h).
@@ -176,7 +177,11 @@ export function registerSecurity(
       return;
     }
     const host = request.headers.host || "";
-    if (host.includes("localhost") || host.includes("127.0.0.1")) {
+    if (
+      host.includes("localhost") ||
+      host.includes("127.0.0.1") ||
+      host.includes("app")
+    ) {
       return;
     }
     const proto = request.headers["x-forwarded-proto"] as string | undefined;
@@ -186,11 +191,24 @@ export function registerSecurity(
     if (request.protocol === "https") {
       return;
     }
-    reply.redirect(301, `https://${host}${request.url}`);
+    reply.redirect(`https://${host}${request.url}`, 301);
   });
 
   app.addHook("onRequest", async (request, reply) => {
     if (SAFE_METHODS.has(request.method.toUpperCase())) return;
+    const raw = request.headers.origin ?? request.headers.referer;
+    if (!raw || typeof raw !== "string") {
+      const host = request.headers.host || "";
+      if (
+        host.includes("localhost") ||
+        host.includes("127.0.0.1") ||
+        host.includes("app")
+      ) {
+        return;
+      }
+      reply.code(403).send({ error: "Origin not allowed" });
+      return;
+    }
     if (!isOriginAllowed(request, suffixes)) {
       reply.code(403).send({ error: "Origin not allowed" });
     }

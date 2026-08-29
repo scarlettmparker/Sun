@@ -1,0 +1,14 @@
+.list_page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lg);
+}
+
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.create_button {
+  text-decoration: none;
+}

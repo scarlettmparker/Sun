@@ -1,24 +1,36 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  Button,
   Form,
   FormField,
-  FormLabel,
-  FormItem,
   FormFooter,
+  FormItem,
+  FormLabel,
+  Input,
+  MarkdownEditor,
+  Select,
+  SelectOption,
 } from "@sun/components";
-import { Input } from "@sun/components";
+import { usePageData } from "@sun/ssr/react";
+import { Link, useSearchParams } from "react-router-dom";
+import type { BlogPostTypesQuery } from "~/generated/graphql";
 import { createBlogPost } from "~/server/actions/blog-post";
-import { Button } from "@sun/components";
-import styles from "./create-blog-form.module.css";
-import { MarkdownEditor } from "@sun/components";
-import { Link } from "react-router-dom";
 
 /**
  * Form for creating a new blog post.
  */
 const CreateBlogForm = () => {
   const { t } = useTranslation("blog");
+  const [searchParams] = useSearchParams();
+  const cancelTo = searchParams.get("from") || "/blog";
+  const parentId = searchParams.get("parentId") || undefined;
+
+  const { data: types } = usePageData<BlogPostTypesQuery["blogQueries"]["blogPostTypes"]>(
+    "types",
+    "home",
+    {},
+  );
 
   const DEFAULT_ROWS = 10;
 
@@ -36,8 +48,14 @@ const CreateBlogForm = () => {
     const formData = new FormData(e.currentTarget);
     const title = formData.get("title") as string;
     const content = formData.get("content") as string;
+    const typeId = formData.get("typeId") as string;
 
-    const result = await createBlogPost(title, content);
+    const result = await createBlogPost(
+      title,
+      content,
+      typeId || undefined,
+      parentId,
+    );
 
     if (result.__typename === "QuerySuccess") {
       setSuccess(true);
@@ -49,15 +67,26 @@ const CreateBlogForm = () => {
   };
 
   return (
-    <Form
-      onSubmit={handleSubmit}
-      className={styles.create_blog_form}
-      data-testid="create-blog-form"
-    >
+    <Form onSubmit={handleSubmit} data-testid="create-blog-form">
       <FormField name="title">
         <FormLabel>{t("form.title.label")}</FormLabel>
         <FormItem>
-          <Input type="text" placeholder={t("form.title.placeholder")} />
+          <Input type="text" placeholder={t("form.title.placeholder")} required />
+        </FormItem>
+      </FormField>
+      <FormField name="typeId">
+        <FormLabel>{t("form.type.label")}</FormLabel>
+        <FormItem>
+          <Select name="typeId" defaultValue="">
+            <SelectOption value="">{t("form.type.placeholder")}</SelectOption>
+            {(types ?? [])
+              .filter((postType) => postType.name !== "BOT_FAQ" && postType.name !== "BOT_HELP")
+              .map((postType) => (
+                <SelectOption key={postType.id} value={postType.id}>
+                  {t(`types.${postType.name}`, { defaultValue: postType.name })}
+                </SelectOption>
+              ))}
+          </Select>
         </FormItem>
       </FormField>
       <FormField name="content">
@@ -72,12 +101,8 @@ const CreateBlogForm = () => {
         </FormItem>
       </FormField>
       <FormFooter>
-        <Link to="/blog">
-          <Button
-            type="button"
-            variant="secondary"
-            title={t("form.cancel.title")}
-          >
+        <Link to={cancelTo}>
+          <Button type="button" variant="secondary" title={t("form.cancel.title")}>
             {t("form.cancel.label")}
           </Button>
         </Link>
