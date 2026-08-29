@@ -14,6 +14,7 @@ import com.sun.briareus.codegen.types.BlogPostType;
 import com.sun.briareus.codegen.types.BlogQueries;
 import com.sun.briareus.codegen.types.BlogMutations;
 import com.sun.briareus.codegen.types.BlogPostInput;
+import com.sun.briareus.codegen.types.IngestBlogInput;
 import com.sun.briareus.codegen.types.PagedBlogPosts;
 import com.sun.briareus.codegen.types.PaginationInput;
 import com.sun.briareus.codegen.types.QueryResult;
@@ -173,5 +174,17 @@ public class BlogDataFetcher {
   @PreAuthorize("@permissions.has('graphql.briareus.removeRemoteObject')")
   public QueryResult removeRemoteObject(String postId, String target) {
     return blogGraphQLService.removeRemoteObject(postId, target);
+  }
+
+  /**
+   * Ingests a blog from a source.
+   *
+   * @param input the ingest input
+   * @return the outcome
+   */
+  @DgsData(parentType = "BlogMutations", field = "ingestBlogFromSource")
+  @PreAuthorize("@permissions.has('graphql.briareus.ingestBlogFromSource')")
+  public QueryResult ingestBlogFromSource(IngestBlogInput input) {
+    return blogGraphQLService.ingestBlogFromSource(input);
   }
 }

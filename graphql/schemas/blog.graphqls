@@ -42,15 +42,47 @@ type BlogQueries {
   children(parentId: ID!, pagination: PaginationInput): PagedBlogPosts!
 }
 
+enum SourceKind {
+  WIKIPEDIA
+  WIKTIONARY
+}
+
+type Summary {
+  title: String!
+  extract: String
+  pageUrl: String
+  thumbnailUrl: String
+}
+
+type Entry {
+  word: String!
+  definitions: [String!]!
+  sourceUrl: String
+}
+
+type WikiQueries {
+  wikipediaSummary(title: String!): Summary
+  wiktionaryEntry(word: String!): Entry
+}
+
+input IngestBlogInput {
+  title: String!
+  typeName: String!
+  sourceKind: SourceKind!
+  sourceId: String!
+}
+
 type BlogMutations {
   createBlogPost(title: String!, input: BlogPostInput): QueryResult
   createBlogPostType(name: String!, description: String): QueryResult
   addRemoteObject(postId: ID!, target: String!): QueryResult
   removeRemoteObject(postId: ID!, target: String!): QueryResult
+  ingestBlogFromSource(input: IngestBlogInput!): QueryResult
 }
 
 extend type Query {
   blogQueries: BlogQueries!
+  wikiQueries: WikiQueries!
 }
 
 extend type Mutation {

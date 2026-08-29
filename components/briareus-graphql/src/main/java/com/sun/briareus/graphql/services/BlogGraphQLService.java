@@ -1,10 +1,25 @@
 package com.sun.briareus.graphql.services;
 
+import com.sun.base.nlp.WikipediaService;
+import com.sun.base.nlp.WikipediaSummary;
+import com.sun.base.nlp.WiktionaryService;
+import com.sun.base.nlp.WiktionaryEntry;
 import com.sun.base.permify.PermifyClient;
 import com.sun.base.permify.PermifyUtil;
 import com.sun.base.util.FilterSpec;
 import com.sun.base.util.GraphQLSupport;
 import com.sun.base.util.PageRequests;
+import com.sun.briareus.codegen.types.BlogPost;
+import com.sun.briareus.codegen.types.BlogPostInput;
+import com.sun.briareus.codegen.types.BlogPostType;
+import com.sun.briareus.codegen.types.IngestBlogInput;
+import com.sun.briareus.codegen.types.PagedBlogPosts;
+import com.sun.briareus.codegen.types.PageInfo;
+import com.sun.briareus.codegen.types.PaginationInput;
+import com.sun.briareus.codegen.types.QueryResult;
+import com.sun.briareus.codegen.types.QuerySuccess;
+import com.sun.briareus.codegen.types.SourceKind;
+import com.sun.briareus.codegen.types.StandardError;
 import com.sun.briareus.graphql.mappers.BlogPostMapper;
 import com.sun.briareus.graphql.mappers.BlogPostTypeMapper;
 import com.sun.briareus.model.BlogPostTypeEntity;
@@ -12,15 +27,6 @@ import com.sun.briareus.model.PostEntity;
 import com.sun.briareus.service.BlogPostTypeService;
 import com.sun.briareus.service.BriareusService;
 import com.sun.gaia.repository.ObjectShareRepository;
-import com.sun.briareus.codegen.types.BlogPost;
-import com.sun.briareus.codegen.types.BlogPostInput;
-import com.sun.briareus.codegen.types.BlogPostType;
-import com.sun.briareus.codegen.types.PagedBlogPosts;
-import com.sun.briareus.codegen.types.PageInfo;
-import com.sun.briareus.codegen.types.PaginationInput;
-import com.sun.briareus.codegen.types.QueryResult;
-import com.sun.briareus.codegen.types.QuerySuccess;
-import com.sun.briareus.codegen.types.StandardError;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -60,6 +66,12 @@ public class BlogGraphQLService {
 
   @Autowired
   private ObjectShareRepository objectShareRepository;
+
+  @Autowired
+  private WikipediaService wikipediaService;
+
+  @Autowired
+  private WiktionaryService wiktionaryService;
 
   /**
    * Retrieves a page of blog posts matching the filters.
@@ -302,6 +314,87 @@ public class BlogGraphQLService {
     }
     logger.info("Removed remote object {} from post {}", target, postId);
     return QuerySuccess.newBuilder().message("Remote object removed").id(postId).build();
+  }
+
+  /**
+   * Creates a blog from a Wikipedia or Wiktionary source.
+   *
+   * @param input the ingest input
+   * @return the outcome
+   */
+  @Transactional
+  public QueryResult ingestBlogFromSource(IngestBlogInput input) {
+    if (input == null) {
+      return StandardError.newBuilder().message("Input is required").build();
+    }
+    String title = input.getTitle();
+    String typeName = input.getTypeName();
+    SourceKind sourceKind = input.getSourceKind();
+    String sourceId = input.getSourceId();
+    if (title == null || title.isBlank()) {
+      return StandardError.newBuilder().message("Title is required").build();
+    }
+    if (typeName == null || typeName.isBlank()) {
+      return StandardError.newBuilder().message("Type name is required").build();
+    }
+    if (sourceKind == null) {
+      return StandardError.newBuilder().message("Source kind is required").build();
+    }
+    if (sourceId == null || sourceId.isBlank()) {
+      return StandardError.newBuilder().message("Source id is required").build();
+    }
+    UUID viewer = currentUserId();
+    if (viewer == null) {
+      return StandardError.newBuilder().message("Authentication required").build();
+    }
+    BlogPostTypeEntity type = blogPostTypeService.findByName(typeName).orElse(null);
+    if (type == null) {
+      return StandardError.newBuilder().message("Unknown type: " + typeName).build();
+    }
+    String norm = sourceId.toLowerCase().trim();
+    String summary;
+    String sourceUrl;
+    List<String> edges = new ArrayList<>();
+    if (sourceKind == SourceKind.WIKIPEDIA) {
+      WikipediaSummary s = wikipediaService.summary(norm);
+      if (s == null || s.extract() == null || s.extract().isBlank()) {
+        return StandardError.newBuilder().message("not_found").build();
+      }
+      summary = s.extract();
+      sourceUrl = s.pageUrl();
+      if (sourceUrl == null || sourceUrl.isBlank()) {
+        sourceUrl = "https://en.wikipedia.org/wiki/" + norm;
+      }
+      edges.add("source:wikipedia:" + norm);
+      edges.add("wikipedia:page:" + norm);
+    } else if (sourceKind == SourceKind.WIKTIONARY) {
+      WiktionaryEntry e = wiktionaryService.define(norm);
+      if (e == null || e.definitions().isEmpty()) {
+        return StandardError.newBuilder().message("not_found").build();
+      }
+      summary = String.join("\n\n", e.definitions());
+      sourceUrl = e.sourceUrl();
+      if (sourceUrl == null || sourceUrl.isBlank()) {
+        sourceUrl = "https://en.wiktionary.org/wiki/" + norm;
+      }
+      edges.add("source:wiktionary:" + norm);
+    } else {
+      return StandardError.newBuilder().message("Unsupported sourceKind").build();
+    }
+    PostEntity post = new PostEntity();
+    post.setTitle(title.trim());
+    post.setContent(summary + "\n\nSource: " + sourceUrl);
+    post.setType(type);
+    post.setLanguage("en");
+    post.setTags(List.of(sourceKind.name().toLowerCase(), "ingested"));
+    post.setRemoteObject(edges);
+    PostEntity saved = briareusService.save(post);
+    writeOwnerTuple(saved.getId());
+    logger.info("Ingested blog {} from {}:{}", saved.getId(), sourceKind, norm);
+    return QuerySuccess.newBuilder()
+        .message("Blog ingested")
+        .id(saved.getId().toString())
+        .build();
   }
 
   /**

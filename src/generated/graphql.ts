@@ -49,6 +49,7 @@ export type BlogMutations = {
   addRemoteObject?: Maybe<QueryResult>;
   createBlogPost?: Maybe<QueryResult>;
   createBlogPostType?: Maybe<QueryResult>;
+  ingestBlogFromSource?: Maybe<QueryResult>;
   removeRemoteObject?: Maybe<QueryResult>;
 };
 
@@ -68,6 +69,11 @@ export type BlogMutationsCreateBlogPostArgs = {
 export type BlogMutationsCreateBlogPostTypeArgs = {
   description?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
+};
+
+
+export type BlogMutationsIngestBlogFromSourceArgs = {
+  input: IngestBlogInput;
 };
 
 
@@ -135,6 +141,13 @@ export type BlogQueriesListByRemoteObjectsArgs = {
 
 export type BlogQueriesLocateBlogPostArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type Entry = {
+  __typename?: 'Entry';
+  definitions: Array<Scalars['String']['output']>;
+  sourceUrl?: Maybe<Scalars['String']['output']>;
+  word: Scalars['String']['output'];
 };
 
 export type FilterInput = {
@@ -374,6 +387,13 @@ export type HubRegistryInput = {
   mode: HubMode;
 };
 
+export type IngestBlogInput = {
+  sourceId: Scalars['String']['input'];
+  sourceKind: SourceKind;
+  title: Scalars['String']['input'];
+  typeName: Scalars['String']['input'];
+};
+
 export type LoginInput = {
   password: Scalars['String']['input'];
   username: Scalars['String']['input'];
@@ -423,6 +443,7 @@ export type Query = {
   gaiaQueries: GaiaQueries;
   galleryQueries: GalleryQueries;
   stemPlayerQueries: StemPlayerQueries;
+  wikiQueries: WikiQueries;
 };
 
 export type QueryResult = QuerySuccess | StandardError;
@@ -476,6 +497,11 @@ export type SortInput = {
   field: Scalars['String']['input'];
 };
 
+export enum SourceKind {
+  Wikipedia = 'WIKIPEDIA',
+  Wiktionary = 'WIKTIONARY'
+}
+
 export type StandardError = {
   __typename?: 'StandardError';
   message: Scalars['String']['output'];
@@ -496,6 +522,30 @@ export type StemPlayerQueries = {
 
 export type StemPlayerQueriesLocateArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type Summary = {
+  __typename?: 'Summary';
+  extract?: Maybe<Scalars['String']['output']>;
+  pageUrl?: Maybe<Scalars['String']['output']>;
+  thumbnailUrl?: Maybe<Scalars['String']['output']>;
+  title: Scalars['String']['output'];
+};
+
+export type WikiQueries = {
+  __typename?: 'WikiQueries';
+  wikipediaSummary?: Maybe<Summary>;
+  wiktionaryEntry?: Maybe<Entry>;
+};
+
+
+export type WikiQueriesWikipediaSummaryArgs = {
+  title: Scalars['String']['input'];
+};
+
+
+export type WikiQueriesWiktionaryEntryArgs = {
+  word: Scalars['String']['input'];
 };
 
 export type BlogPostTypesQueryVariables = Exact<{ [key: string]: never; }>;
