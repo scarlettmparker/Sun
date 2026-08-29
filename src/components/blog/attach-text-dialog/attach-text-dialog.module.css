@@ -23,12 +23,24 @@
   background-color: var(--secondary-hover);
 }
 
+.item_level {
+  flex-shrink: 0;
+}
+
+.row_title_link {
+  flex: 1;
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
+}
+
 .row_title {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   text-decoration: underline;
-  width: fit-content;
+  min-width: 0;
+  display: block;
 }
 
 .attach_button {

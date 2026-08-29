@@ -66,38 +66,39 @@ const CreateBlogPostPage = () => {
           <ParentBreadcrumb parentId={parentId} />
         </Suspense>
       )}
-      <Form
-        id="create-blog-form"
-        onSubmit={handleSubmit}
-        data-testid="create-blog-form"
-      >
-        <Card>
-          <CardBody>
-            <Suspense fallback={<CreateBlogSkeleton />}>
-              <CreateBlogForm />
-            </Suspense>
-          </CardBody>
-        </Card>
-        <div className={styles.form_actions}>
-          <Link to={cancelTo}>
-            <Button
-              type="button"
-              variant="secondary"
-              title={t("form.cancel.title")}
+      <Card>
+        <CardBody>
+          <Suspense fallback={<CreateBlogSkeleton />}>
+            <Form
+              id="create-blog-form"
+              onSubmit={handleSubmit}
+              data-testid="create-blog-form"
             >
-              {t("form.cancel.label")}
-            </Button>
-          </Link>
+              <CreateBlogForm />
+            </Form>
+          </Suspense>
+        </CardBody>
+      </Card>
+      <div className={styles.form_actions}>
+        <Link to={cancelTo}>
           <Button
-            type="submit"
-            title={loading ? t("form.creating.title") : t("form.create.title")}
-            disabled={loading}
-            data-testid="create-blog-submit-button"
+            type="button"
+            variant="secondary"
+            title={t("form.cancel.title")}
           >
-            {loading ? t("form.creating.label") : t("form.create.label")}
+            {t("form.cancel.label")}
           </Button>
-        </div>
-      </Form>
+        </Link>
+        <Button
+          type="submit"
+          title={loading ? t("form.creating.title") : t("form.create.title")}
+          disabled={loading}
+          data-testid="create-blog-submit-button"
+          form="create-blog-form"
+        >
+          {loading ? t("form.creating.label") : t("form.create.label")}
+        </Button>
+      </div>
     </div>
   );
 };

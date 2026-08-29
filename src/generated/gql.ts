@@ -27,6 +27,7 @@ type Documents = {
     "mutation logout {\n  gaiaMutations {\n    logout {\n      __typename\n      ... on QuerySuccess {\n        message\n      }\n      ... on StandardError {\n        message\n      }\n    }\n  }\n}": typeof types.LogoutDocument,
     "query me {\n  gaiaQueries {\n    me {\n      id\n      username\n      personId\n      status\n      createdAt\n      updatedAt\n    }\n  }\n}": typeof types.MeDocument,
     "query myRoles {\n  gaiaQueries {\n    myRoles\n  }\n}": typeof types.MyRolesDocument,
+    "query propertySet($ownerKey: String!, $name: String!) {\n  gaiaQueries {\n    propertySet(ownerKey: $ownerKey, name: $name)\n  }\n}": typeof types.PropertySetDocument,
     "mutation createGalleryItem($input: GalleryItemInput!) {\n  galleryMutations {\n    create(input: $input) {\n      ... on QuerySuccess {\n        message\n        id\n      }\n      ... on StandardError {\n        message\n      }\n    }\n  }\n}": typeof types.CreateGalleryItemDocument,
     "query listGalleryItems {\n  galleryQueries {\n    list {\n      id\n      title\n      description\n      content\n      imagePath\n      remoteObject\n      createdAt\n      updatedAt\n    }\n  }\n}": typeof types.ListGalleryItemsDocument,
     "query listGalleryItemsByRemoteObjects($ids: [String!]!) {\n  galleryQueries {\n    listByRemoteObjects(ids: $ids) {\n      id\n      title\n      imagePath\n    }\n  }\n}": typeof types.ListGalleryItemsByRemoteObjectsDocument,
@@ -54,6 +55,7 @@ const documents: Documents = {
     "mutation logout {\n  gaiaMutations {\n    logout {\n      __typename\n      ... on QuerySuccess {\n        message\n      }\n      ... on StandardError {\n        message\n      }\n    }\n  }\n}": types.LogoutDocument,
     "query me {\n  gaiaQueries {\n    me {\n      id\n      username\n      personId\n      status\n      createdAt\n      updatedAt\n    }\n  }\n}": types.MeDocument,
     "query myRoles {\n  gaiaQueries {\n    myRoles\n  }\n}": types.MyRolesDocument,
+    "query propertySet($ownerKey: String!, $name: String!) {\n  gaiaQueries {\n    propertySet(ownerKey: $ownerKey, name: $name)\n  }\n}": types.PropertySetDocument,
     "mutation createGalleryItem($input: GalleryItemInput!) {\n  galleryMutations {\n    create(input: $input) {\n      ... on QuerySuccess {\n        message\n        id\n      }\n      ... on StandardError {\n        message\n      }\n    }\n  }\n}": types.CreateGalleryItemDocument,
     "query listGalleryItems {\n  galleryQueries {\n    list {\n      id\n      title\n      description\n      content\n      imagePath\n      remoteObject\n      createdAt\n      updatedAt\n    }\n  }\n}": types.ListGalleryItemsDocument,
     "query listGalleryItemsByRemoteObjects($ids: [String!]!) {\n  galleryQueries {\n    listByRemoteObjects(ids: $ids) {\n      id\n      title\n      imagePath\n    }\n  }\n}": types.ListGalleryItemsByRemoteObjectsDocument,
@@ -134,6 +136,10 @@ export function graphql(source: "query me {\n  gaiaQueries {\n    me {\n      id
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "query myRoles {\n  gaiaQueries {\n    myRoles\n  }\n}"): (typeof documents)["query myRoles {\n  gaiaQueries {\n    myRoles\n  }\n}"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "query propertySet($ownerKey: String!, $name: String!) {\n  gaiaQueries {\n    propertySet(ownerKey: $ownerKey, name: $name)\n  }\n}"): (typeof documents)["query propertySet($ownerKey: String!, $name: String!) {\n  gaiaQueries {\n    propertySet(ownerKey: $ownerKey, name: $name)\n  }\n}"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
