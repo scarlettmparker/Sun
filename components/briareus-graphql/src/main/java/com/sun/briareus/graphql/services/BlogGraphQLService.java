@@ -25,13 +25,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import com.sun.gaia.service.UserContextHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -310,24 +310,7 @@ public class BlogGraphQLService {
    * @return the viewer id
    */
   private UUID currentUserId() {
-    var auth = SecurityContextHolder.getContext().getAuthentication();
-    if (auth == null || auth.getPrincipal() == null) {
-      return null;
-    }
-    Object principal = auth.getPrincipal();
-    String idStr = principal.toString();
-    if (principal instanceof org.springframework.security.core.userdetails.UserDetails details) {
-      idStr = details.getUsername();
-    }
-    try {
-      return UUID.fromString(idStr);
-    } catch (IllegalArgumentException e) {
-      try {
-        return UUID.fromString(auth.getName());
-      } catch (IllegalArgumentException ex) {
-        return null;
-      }
-    }
+    return UserContextHolder.getUserId();
   }
 
   /**
@@ -374,8 +357,12 @@ public class BlogGraphQLService {
     if (viewer == null) {
       return;
     }
-    permifyClient.writeTuple(
-        PermifyUtil.object("briareus_post", postId), "owner", PermifyUtil.userSubject(viewer));
+    try {
+      permifyClient.writeTuple(
+          PermifyUtil.object("briareus_post", postId), "owner", PermifyUtil.userSubject(viewer));
+    } catch (Exception e) {
+      logger.warn("Permify write owner failed for {}", postId, e);
+    }
   }
 
   /**
