@@ -46,8 +46,10 @@ public class BriareusService extends BaseService<PostEntity> {
    */
   public Page<PostEntity> listPostsPaged(List<FilterSpec> filters, Pageable pageable, UUID viewer) {
     Specification<PostEntity> vis = BriareusVisibilitySpec.visibleTo(viewer);
+    Specification<PostEntity> topLevel = (root, query, cb) -> cb.isNull(root.get("parentId"));
+    Specification<PostEntity> visTop = vis.and(topLevel);
     Specification<PostEntity> base = FilterBuilder.buildFilters(filters);
-    Specification<PostEntity> spec = base == null ? vis : base.and(vis);
+    Specification<PostEntity> spec = base == null ? visTop : base.and(visTop);
     return postRepository.findAll(spec, pageable);
   }
 
