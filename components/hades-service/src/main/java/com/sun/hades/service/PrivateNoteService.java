@@ -1,5 +1,6 @@
 package com.sun.hades.service;
 
+import com.sun.base.permify.PermifyUtil;
 import com.sun.base.service.BaseService;
 import com.sun.fates.service.PersonService;
 import com.sun.gaia.model.ObjectShareEntity;
@@ -240,11 +241,8 @@ public class PrivateNoteService extends BaseService<PrivateNoteEntity> {
           continue;
         }
         toSave.add(shareMapper.toEntity("private_note", note.getId(), "user", subjectId, "VIEWER"));
-        Map<String, String> tuple = new HashMap<>();
-        tuple.put("object", "private_note:" + note.getId());
-        tuple.put("relation", "viewer");
-        tuple.put("subject", "user:" + subjectId);
-        tuples.add(tuple);
+        tuples.add(PermifyUtil.tuple(
+            PermifyUtil.object("private_note", note.getId()), "viewer", PermifyUtil.userSubject(subjectId)));
         existingKeys.add(key);
       }
     }
@@ -307,11 +305,8 @@ public class PrivateNoteService extends BaseService<PrivateNoteEntity> {
         continue;
       }
       toSave.add(shareMapper.toEntity("private_note", noteId, "user", subjectId, "VIEWER"));
-      Map<String, String> tuple = new HashMap<>();
-      tuple.put("object", "private_note:" + noteId);
-      tuple.put("relation", "viewer");
-      tuple.put("subject", "user:" + subjectId);
-      tuples.add(tuple);
+      tuples.add(PermifyUtil.tuple(
+          PermifyUtil.object("private_note", noteId), "viewer", PermifyUtil.userSubject(subjectId)));
     }
     if (!toSave.isEmpty()) {
       shareRepository.saveAll(toSave);
@@ -395,7 +390,8 @@ public class PrivateNoteService extends BaseService<PrivateNoteEntity> {
     if (note.getOwnerId().equals(viewer)) {
       return true;
     }
-    return permifyService.check("user:" + viewer, "view", "private_note:" + note.getId());
+    return permifyService.check(
+        PermifyUtil.userSubject(viewer), "view", PermifyUtil.object("private_note", note.getId()));
   }
 
   /**

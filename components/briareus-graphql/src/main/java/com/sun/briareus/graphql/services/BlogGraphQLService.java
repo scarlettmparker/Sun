@@ -1,5 +1,7 @@
 package com.sun.briareus.graphql.services;
 
+import com.sun.base.permify.PermifyClient;
+import com.sun.base.permify.PermifyUtil;
 import com.sun.base.util.FilterSpec;
 import com.sun.base.util.GraphQLSupport;
 import com.sun.base.util.PageRequests;
@@ -28,6 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,6 +54,9 @@ public class BlogGraphQLService {
   @Autowired
   private BlogPostTypeMapper blogPostTypeMapper;
 
+  @Autowired
+  private PermifyClient permifyClient;
+
   /**
    * Retrieves a page of blog posts matching the filters.
    *
@@ -66,7 +72,10 @@ public class BlogGraphQLService {
         pagination == null ? null : pagination.getFilters(),
         f -> new FilterSpec(f.getField(), f.getOperator().name(), f.getValue()));
     Page<PostEntity> result = briareusService.listPostsPaged(filters, pageable);
-    List<BlogPost> items = result.getContent().stream().map(blogPostMapper::map).toList();
+    List<BlogPost> items = result.getContent().stream()
+        .filter(this::canView)
+        .map(blogPostMapper::map)
+        .toList();
 
     logger.info("Retrieved {} blog posts", items.size());
     return PagedBlogPosts.newBuilder().items(items).pageInfo(pageInfo(result)).build();
@@ -84,6 +93,9 @@ public class BlogGraphQLService {
 
     PostEntity postEntity = briareusService.locatePost(UUID.fromString(id))
         .orElseThrow(() -> new RuntimeException("Blog post not found with id: " + id));
+    if (!canView(postEntity)) {
+      throw new RuntimeException("Not authorized to view blog post: " + id);
+    }
 
     BlogPost blogPost = blogPostMapper.map(postEntity);
 
@@ -165,14 +177,21 @@ public class BlogGraphQLService {
     try {
       if (input.getParentId() != null) {
         UUID parentId = UUID.fromString(input.getParentId());
-        if (!briareusService.locatePost(parentId).isPresent()) {
+        PostEntity parent = briareusService.locatePost(parentId).orElse(null);
+        if (parent == null) {
           return StandardError.newBuilder()
               .message("Parent post not found: " + input.getParentId())
+              .build();
+        }
+        if (!canView(parent)) {
+          return StandardError.newBuilder()
+              .message("Not authorized to create child under parent: " + input.getParentId())
               .build();
         }
       }
       PostEntity postEntity = blogPostMapper.mapInput(title, input);
       PostEntity savedEntity = briareusService.save(postEntity);
+      writeOwnerTuple(savedEntity.getId());
 
       logger.info("Successfully created blog post with id: {}", savedEntity.getId());
       return QuerySuccess.newBuilder()
@@ -198,9 +217,16 @@ public class BlogGraphQLService {
   public PagedBlogPosts children(String parentId, PaginationInput pagination) {
     logger.info("Retrieving children for parentId: {}", parentId);
 
+    PostEntity parent = briareusService.locatePost(UUID.fromString(parentId)).orElse(null);
+    if (parent != null && !canView(parent)) {
+      throw new RuntimeException("Not authorized to view parent post: " + parentId);
+    }
     Pageable pageable = toPageable(pagination, "lastUpdatedAt", Sort.Direction.DESC);
     Page<PostEntity> result = briareusService.children(UUID.fromString(parentId), pageable);
-    List<BlogPost> items = result.getContent().stream().map(blogPostMapper::map).toList();
+    List<BlogPost> items = result.getContent().stream()
+        .filter(this::canView)
+        .map(blogPostMapper::map)
+        .toList();
 
     logger.info("Retrieved {} children for parentId: {}", items.size(), parentId);
     return PagedBlogPosts.newBuilder().items(items).pageInfo(pageInfo(result)).build();
@@ -224,6 +250,9 @@ public class BlogGraphQLService {
         .orElse(null);
     if (post == null) {
       return StandardError.newBuilder().message("Blog post not found: " + postId).build();
+    }
+    if (!canEdit(post)) {
+      return StandardError.newBuilder().message("Not authorized to edit blog post: " + postId).build();
     }
     List<String> remoteObjects = post.getRemoteObject() == null
         ? new ArrayList<>()
@@ -256,6 +285,9 @@ public class BlogGraphQLService {
     if (post == null) {
       return StandardError.newBuilder().message("Blog post not found: " + postId).build();
     }
+    if (!canEdit(post)) {
+      return StandardError.newBuilder().message("Not authorized to edit blog post: " + postId).build();
+    }
     List<String> remoteObjects = post.getRemoteObject() == null
         ? new ArrayList<>()
         : new ArrayList<>(post.getRemoteObject());
@@ -265,6 +297,75 @@ public class BlogGraphQLService {
     }
     logger.info("Removed remote object {} from post {}", target, postId);
     return QuerySuccess.newBuilder().message("Remote object removed").id(postId).build();
+  }
+
+  /**
+   * Returns the current authenticated user id, or null when unauthenticated.
+   *
+   * @return the viewer id
+   */
+  private UUID currentUserId() {
+    var auth = SecurityContextHolder.getContext().getAuthentication();
+    if (auth == null || auth.getPrincipal() == null) {
+      return null;
+    }
+    Object principal = auth.getPrincipal();
+    String idStr = principal.toString();
+    if (principal instanceof org.springframework.security.core.userdetails.UserDetails details) {
+      idStr = details.getUsername();
+    }
+    try {
+      return UUID.fromString(idStr);
+    } catch (IllegalArgumentException e) {
+      try {
+        return UUID.fromString(auth.getName());
+      } catch (IllegalArgumentException ex) {
+        return null;
+      }
+    }
+  }
+
+  /**
+   * Checks whether the current viewer may view the post.
+   *
+   * @param post the post
+   * @return true when visible
+   */
+  private boolean canView(PostEntity post) {
+    if (post.getType() != null) {
+      String typeName = post.getType().getName();
+      if ("BOT_FAQ".equals(typeName) || "BOT_HELP".equals(typeName)) {
+        return true;
+      }
+    }
+    UUID viewer = currentUserId();
+    return PermifyUtil.canView(
+        viewer, post.getCreatedBy(), permifyClient, PermifyUtil.object("briareus_post", post.getId()));
+  }
+
+  /**
+   * Checks whether the current viewer may edit the post.
+   *
+   * @param post the post
+   * @return true when editable
+   */
+  private boolean canEdit(PostEntity post) {
+    UUID viewer = currentUserId();
+    return viewer != null && post.getCreatedBy() != null && post.getCreatedBy().equals(viewer);
+  }
+
+  /**
+   * Writes owner tuple for a newly created post.
+   *
+   * @param postId the post id
+   */
+  private void writeOwnerTuple(UUID postId) {
+    UUID viewer = currentUserId();
+    if (viewer == null) {
+      return;
+    }
+    permifyClient.writeTuple(
+        PermifyUtil.object("briareus_post", postId), "owner", PermifyUtil.userSubject(viewer));
   }
 
   /**

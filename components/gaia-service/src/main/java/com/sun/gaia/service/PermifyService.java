@@ -1,15 +1,13 @@
 package com.sun.gaia.service;
 
+import com.sun.base.permify.PermifyClient;
 import com.sun.gaia.repository.ObjectShareRepository;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
 
 /**
  * Authorization check against Permify when enabled, otherwise falls back to
@@ -21,16 +19,13 @@ public class PermifyService {
   private static final Logger logger = LoggerFactory.getLogger(PermifyService.class);
 
   private final ObjectShareRepository shareRepository;
-  private final boolean enabled;
-  private final RestClient restClient;
+  private final PermifyClient permifyClient;
 
   public PermifyService(
       ObjectShareRepository shareRepository,
-      @Value("${permify.enabled:false}") boolean enabled,
-      @Value("${permify.http-endpoint:http://localhost:3477}") String httpEndpoint) {
+      PermifyClient permifyClient) {
     this.shareRepository = shareRepository;
-    this.enabled = enabled;
-    this.restClient = RestClient.builder().baseUrl(httpEndpoint).build();
+    this.permifyClient = permifyClient;
   }
 
   /**
@@ -42,33 +37,10 @@ public class PermifyService {
    * @return true when permitted
    */
   public boolean check(String subject, String action, String object) {
-    if (!enabled) {
-      return fallbackCheck(subject, object);
+    if (permifyClient.check(subject, action, object)) {
+      return true;
     }
-    try {
-      String[] subjectParts = subject.split(":", 2);
-      String[] objectParts = object.split(":", 2);
-      if (subjectParts.length != 2 || objectParts.length != 2) {
-        return fallbackCheck(subject, object);
-      }
-      Map<String, Object> body = new HashMap<>();
-      body.put("metadata", Map.of("schemaVersion", "", "depth", 8));
-      body.put("entity", Map.of("type", objectParts[0], "id", objectParts[1]));
-      body.put("permission", action);
-      body.put("subject", Map.of("type", subjectParts[0], "id", subjectParts[1]));
-      Map response = restClient.post()
-          .uri("/v1/tenants/t1/permissions/check")
-          .body(body)
-          .retrieve()
-          .body(Map.class);
-      if (response != null && "CHECK_RESULT_ALLOWED".equals(response.get("can"))) {
-        return true;
-      }
-      return fallbackCheck(subject, object);
-    } catch (Exception e) {
-      logger.warn("Permify check failed, falling back", e);
-      return fallbackCheck(subject, object);
-    }
+    return fallbackCheck(subject, object);
   }
 
   /**
@@ -79,31 +51,7 @@ public class PermifyService {
    * @param subject the subject e.g. user:uuid
    */
   public void writeTuple(String object, String relation, String subject) {
-    if (!enabled) {
-      return;
-    }
-    try {
-      String[] subjectParts = subject.split(":", 2);
-      String[] objectParts = object.split(":", 2);
-      if (subjectParts.length != 2 || objectParts.length != 2) {
-        return;
-      }
-      Map<String, Object> tuple = new HashMap<>();
-      tuple.put("entity", Map.of("type", objectParts[0], "id", objectParts[1]));
-      tuple.put("relation", relation);
-      tuple.put("subject", Map.of("type", subjectParts[0], "id", subjectParts[1]));
-      Map<String, Object> body = new HashMap<>();
-      body.put("metadata", Map.of("schemaVersion", ""));
-      body.put("tuples", List.of(tuple));
-      restClient.post()
-          .uri("/v1/tenants/t1/relationships/write")
-          .body(body)
-          .retrieve()
-          .toBodilessEntity();
-    } catch (Exception e) {
-      logger.warn("Permify write failed for {} {} {}", object, relation, subject, e);
-      throw new RuntimeException("Permify write failed", e);
-    }
+    permifyClient.writeTuple(object, relation, subject);
   }
 
   /**
@@ -112,44 +60,7 @@ public class PermifyService {
    * @param tuples the tuples, each as object, relation, subject
    */
   public void writeTuples(List<Map<String, String>> tuples) {
-    if (!enabled || tuples == null || tuples.isEmpty()) {
-      return;
-    }
-    try {
-      List<Map<String, Object>> permifyTuples = new java.util.ArrayList<>();
-      for (Map<String, String> t : tuples) {
-        String object = t.get("object");
-        String relation = t.get("relation");
-        String subject = t.get("subject");
-        if (object == null || relation == null || subject == null) {
-          continue;
-        }
-        String[] subjectParts = subject.split(":", 2);
-        String[] objectParts = object.split(":", 2);
-        if (subjectParts.length != 2 || objectParts.length != 2) {
-          continue;
-        }
-        Map<String, Object> tuple = new HashMap<>();
-        tuple.put("entity", Map.of("type", objectParts[0], "id", objectParts[1]));
-        tuple.put("relation", relation);
-        tuple.put("subject", Map.of("type", subjectParts[0], "id", subjectParts[1]));
-        permifyTuples.add(tuple);
-      }
-      if (permifyTuples.isEmpty()) {
-        return;
-      }
-      Map<String, Object> body = new HashMap<>();
-      body.put("metadata", Map.of("schemaVersion", ""));
-      body.put("tuples", permifyTuples);
-      restClient.post()
-          .uri("/v1/tenants/t1/relationships/write")
-          .body(body)
-          .retrieve()
-          .toBodilessEntity();
-    } catch (Exception e) {
-      logger.warn("Permify batch write failed for {} tuples", tuples.size(), e);
-      throw new RuntimeException("Permify batch write failed", e);
-    }
+    permifyClient.writeTuples(tuples);
   }
 
   /**
