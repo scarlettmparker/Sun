@@ -137,9 +137,22 @@ public class BriareusService extends BaseService<PostEntity> {
    * @return children
    */
   public List<PostEntity> children(UUID parentId) {
+    return children(parentId, (UUID) null);
+  }
+
+  /**
+   * Lists visible direct children of a parent post.
+   *
+   * @param parentId the parent post id
+   * @param viewer the viewer id
+   * @return children
+   */
+  public List<PostEntity> children(UUID parentId, UUID viewer) {
     if (parentId == null) {
       return List.of();
     }
-    return postRepository.findByParentId(parentId);
+    Specification<PostEntity> parentSpec = (root, query, cb) -> cb.equal(root.get("parentId"), parentId);
+    Specification<PostEntity> vis = BriareusVisibilitySpec.visibleTo(viewer);
+    return postRepository.findAll(parentSpec.and(vis));
   }
 }
