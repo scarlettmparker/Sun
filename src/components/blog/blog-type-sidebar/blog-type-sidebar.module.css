@@ -10,7 +10,8 @@
   height: auto;
   min-height: calc(100vh - var(--lg) * 2);
   align-self: flex-start;
-  position: absolute;
+  position: sticky;
+  top: 0;
 }
 
 .sidebar:hover {
