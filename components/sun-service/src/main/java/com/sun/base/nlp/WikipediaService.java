@@ -34,7 +34,7 @@ public class WikipediaService {
    * @param title the page title
    * @return the summary, or null when not found
    */
-  @Cacheable(value = "wikipediaSummary", key = "#title.toLowerCase().trim()")
+  @Cacheable(value = "wikipediaSummary", key = "#title == null ? '' : #title.toLowerCase().trim()")
   @CaffeineSpec(expireAfterWrite = "24h", maximumSize = 1000)
   public WikipediaSummary summary(String title) {
     if (title == null || title.trim().isEmpty()) {
@@ -90,7 +90,7 @@ public class WikipediaService {
    * @param title the page title
    * @return the related topics, empty when not found
    */
-  @Cacheable(value = "wikipediaRelatedTopics", key = "#title.toLowerCase().trim()")
+  @Cacheable(value = "wikipediaRelatedTopics", key = "#title == null ? '' : #title.toLowerCase().trim()")
   @CaffeineSpec(expireAfterWrite = "24h", maximumSize = 100)
   public List<WikipediaRelatedTopic> relatedTopics(String title) {
     if (title == null || title.trim().isEmpty()) {
@@ -103,6 +103,45 @@ public class WikipediaService {
           .retrieve()
           .body(String.class);
       return mapRelated(json);
+    } catch (Exception e) {
+      return List.of();
+    }
+  }
+
+  /**
+   * Searches Wikipedia via opensearch and returns summaries for closest matches.
+   *
+   * @param query the search query
+   * @return the summaries for matches
+   */
+  @Cacheable(value = "wikipediaSearch", key = "#query == null ? '' : #query.toLowerCase().trim()")
+  @CaffeineSpec(expireAfterWrite = "24h", maximumSize = 100)
+  public List<WikipediaSummary> search(String query) {
+    if (query == null || query.trim().isEmpty()) {
+      return List.of();
+    }
+    String enc = encode(query.trim());
+    try {
+      String json = restClient.get()
+          .uri("/w/api.php?action=opensearch&search={enc}&limit=5&namespace=0&format=json", enc)
+          .retrieve()
+          .body(String.class);
+      JsonNode node = objectMapper.readTree(json);
+      JsonNode titles = node.path(1);
+      if (!titles.isArray() || titles.isEmpty()) {
+        return List.of();
+      }
+      List<WikipediaSummary> out = new ArrayList<>();
+      for (JsonNode t : titles) {
+        String title = t.asText(null);
+        if (title == null || title.isBlank()) continue;
+        WikipediaSummary s = summary(title);
+        if (s != null && s.extract() != null && !s.extract().isBlank()) {
+          out.add(s);
+          if (out.size() >= 5) break;
+        }
+      }
+      return out;
     } catch (Exception e) {
       return List.of();
     }

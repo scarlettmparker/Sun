@@ -74,4 +74,16 @@ public class WikiGraphQLService {
             .build())
         .toList();
   }
+
+  /**
+   * Searches Wikipedia for closest matches.
+   *
+   * @param query the search query
+   * @return the summaries for matches
+   */
+  @Transactional(readOnly = true)
+  public List<Summary> wikipediaSearch(String query) {
+    List<WikipediaSummary> domain = wikipediaService.search(query);
+    return domain.stream().map(summaryMapper::map).filter(s -> s != null).toList();
+  }
 }

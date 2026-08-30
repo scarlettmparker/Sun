@@ -52,6 +52,18 @@ public class WikiDataFetcher {
   }
 
   /**
+   * Searches Wikipedia for closest matches.
+   *
+   * @param query the search query
+   * @return the summaries for matches
+   */
+  @DgsData(parentType = "WikiQueries", field = "wikipediaSearch")
+  @PreAuthorize("@permissions.has('graphql.briareus.wikipediaSearch')")
+  public List<Summary> wikipediaSearch(String query) {
+    return wikiGraphQLService.wikipediaSearch(query);
+  }
+
+  /**
    * Fetches related Wikipedia topics.
    *
    * @param title the page title
