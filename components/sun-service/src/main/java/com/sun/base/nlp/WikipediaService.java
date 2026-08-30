@@ -43,7 +43,7 @@ public class WikipediaService {
     String enc = encode(title.trim());
     try {
       String json = restClient.get()
-          .uri("/api/rest_v1/page/summary/{enc}", enc)
+          .uri("/api/rest_v1/page/summary/" + enc)
           .retrieve()
           .body(String.class);
       return map(json);
@@ -99,7 +99,7 @@ public class WikipediaService {
     String enc = encode(title.trim());
     try {
       String json = restClient.get()
-          .uri("/api/rest_v1/page/related/{enc}", enc)
+          .uri("/api/rest_v1/page/related/" + enc)
           .retrieve()
           .body(String.class);
       return mapRelated(json);
@@ -123,7 +123,7 @@ public class WikipediaService {
     String enc = encode(query.trim());
     try {
       String json = restClient.get()
-          .uri("/w/api.php?action=opensearch&search={enc}&limit=5&namespace=0&format=json", enc)
+          .uri("/w/api.php?action=opensearch&search=" + enc + "&limit=5&namespace=0&format=json")
           .retrieve()
           .body(String.class);
       JsonNode node = objectMapper.readTree(json);
