@@ -1,14 +1,13 @@
 import { Suspense } from "react";
-import type { BlogPost } from "~/generated/graphql";
 import KnowledgeChildren from "~/components/knowledge/knowledge-children";
 import { KnowledgeChildrenSkeleton } from "~/components/knowledge/knowledge-children/skeletons";
 import AttachedTexts from "~/components/knowledge/attached-texts";
-import { AttachedTextsSkeleton } from "~/components/knowledge/attached-texts/skeletons";
 import RelatedPosts from "~/components/knowledge/related-posts";
 import { RelatedPostsSkeleton } from "~/components/knowledge/related-posts/skeletons";
 import RelatedGallery from "~/components/knowledge/related-gallery";
 import { RelatedGallerySkeleton } from "~/components/knowledge/related-gallery/skeletons";
 import styles from "./knowledge-graph.module.css";
+import { BlogPost } from "~/generated/graphql";
 
 type KnowledgeGraphProps = {
   /**
@@ -23,17 +22,19 @@ type KnowledgeGraphProps = {
 const KnowledgeGraph = (props: KnowledgeGraphProps) => {
   const { post } = props;
   const remoteObject = post.remoteObject ?? [];
-  const blogTargets = remoteObject.filter((value) => value.startsWith("briareus:post:"));
-  const galleryTargets = remoteObject.filter((value) => value.startsWith("cerberus:gallery:"));
+  const blogTargets = remoteObject.filter((value) =>
+    value.startsWith("briareus:post:"),
+  );
+  const galleryTargets = remoteObject.filter((value) =>
+    value.startsWith("cerberus:gallery:"),
+  );
 
   return (
     <div className={styles.graph_wrapper}>
       <Suspense fallback={<KnowledgeChildrenSkeleton />}>
         <KnowledgeChildren postId={post.id} />
       </Suspense>
-      <Suspense fallback={<AttachedTextsSkeleton />}>
-        <AttachedTexts postId={post.id} />
-      </Suspense>
+      <AttachedTexts attachedTexts={post.attachedTexts ?? []} />
       <Suspense fallback={<RelatedGallerySkeleton />}>
         <RelatedGallery ids={galleryTargets} postId={post.id} />
       </Suspense>

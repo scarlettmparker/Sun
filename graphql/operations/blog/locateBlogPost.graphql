@@ -20,6 +20,13 @@ query locateBlogPost($id: ID!) {
         id
         name
       }
+      attachedTexts {
+        id
+        title
+        language
+        level
+        status
+      }
       createdAt
       updatedAt
     }

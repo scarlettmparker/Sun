@@ -18,6 +18,7 @@ import com.sun.briareus.codegen.types.IngestBlogInput;
 import com.sun.briareus.codegen.types.PagedBlogPosts;
 import com.sun.briareus.codegen.types.PaginationInput;
 import com.sun.briareus.codegen.types.QueryResult;
+import com.sun.briareus.codegen.types.ReaderText;
 
 @DgsComponent
 public class BlogDataFetcher {
@@ -148,6 +149,22 @@ public class BlogDataFetcher {
     } catch (Exception e) {
       return null;
     }
+  }
+
+  /**
+   * Resolves attached reader texts for a blog post.
+   *
+   * @param env the data-fetching environment
+   * @return the attached texts
+   */
+  @DgsData(parentType = "BlogPost", field = "attachedTexts")
+  @PreAuthorize("@permissions.has('graphql.briareus.attachedTexts')")
+  public List<ReaderText> attachedTexts(DgsDataFetchingEnvironment env) {
+    BlogPost source = env.getSource();
+    if (source == null || source.getId() == null) {
+      return List.of();
+    }
+    return blogGraphQLService.attachedTexts(source.getId());
   }
 
   /**

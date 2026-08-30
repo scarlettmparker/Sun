@@ -2,25 +2,22 @@ import { useTranslation } from "react-i18next";
 import { usePageData } from "@sun/ssr/react";
 import { Badge, Card, CardBody, CardHeader, CardTitle } from "@sun/components";
 import { CEFR_TO_KEY } from "~/utils/cefr";
-import type { LocateReaderTextsQuery } from "~/generated/graphql";
 import styles from "./attached-texts.module.css";
+import { Maybe, ReaderText } from "~/generated/graphql";
 
 type AttachedTextsProps = {
   /**
-   * Blog post id to load attachments for.
+   * Attached texts for the post.
    */
-  postId: string;
+  attachedTexts: Maybe<ReaderText[]> | undefined;
 };
 
 /**
- * Renders attached reader texts resolved via batch locateReaderTexts.
+ * Renders attached reader texts.
  */
 const AttachedTexts = (props: AttachedTextsProps) => {
-  const { postId } = props;
+  const { attachedTexts } = props;
   const { t } = useTranslation("blog");
-  const { data: attachedTexts } = usePageData<
-    NonNullable<LocateReaderTextsQuery["hadesQueries"]["locateReaderTexts"]>
-  >("attachedTexts", "blog/:id/attachedTexts", { id: postId });
   const { data: levelColours } = usePageData<Record<string, string> | null>(
     "levelColours",
     "levelColours",

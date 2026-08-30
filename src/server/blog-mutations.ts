@@ -64,7 +64,6 @@ defineMutation({
         ...data,
         invalidated: [
           makeCacheKey("blog/:id:blogPost", { id: postId }),
-          makeCacheKey("blog/:id/attachedTexts:attachedTexts", { id: postId }),
           makeCacheKey("blog/gallery:galleryItems", { ids: "*", postId: "*" }),
         ],
       };
@@ -94,7 +93,6 @@ defineMutation({
         ...data,
         invalidated: [
           makeCacheKey("blog/:id:blogPost", { id: postId }),
-          makeCacheKey("blog/:id/attachedTexts:attachedTexts", { id: postId }),
           makeCacheKey("blog/gallery:galleryItems", { ids: "*", postId: "*" }),
         ],
       };

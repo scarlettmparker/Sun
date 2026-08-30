@@ -26,7 +26,9 @@ const BlogBreadcrumbInner = (props: BlogBreadcrumbInnerProps) => {
   const paramType = searchParams.get("type");
   const typeName = post?.type?.name ?? null;
   const effectiveType = paramType ?? typeName;
-  const blogHref = effectiveType ? `/blog?type=${encodeURIComponent(effectiveType)}` : "/blog";
+  const blogHref = effectiveType
+    ? `/blog?type=${encodeURIComponent(effectiveType)}`
+    : "/blog";
 
   return (
     <nav aria-label="breadcrumb">

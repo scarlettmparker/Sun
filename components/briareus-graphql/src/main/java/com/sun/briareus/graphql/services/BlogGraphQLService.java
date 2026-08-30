@@ -12,12 +12,15 @@ import com.sun.base.util.PageRequests;
 import com.sun.briareus.codegen.types.BlogPost;
 import com.sun.briareus.codegen.types.BlogPostInput;
 import com.sun.briareus.codegen.types.BlogPostType;
+import com.sun.briareus.codegen.types.CefrLevel;
 import com.sun.briareus.codegen.types.IngestBlogInput;
 import com.sun.briareus.codegen.types.PagedBlogPosts;
 import com.sun.briareus.codegen.types.PageInfo;
 import com.sun.briareus.codegen.types.PaginationInput;
 import com.sun.briareus.codegen.types.QueryResult;
 import com.sun.briareus.codegen.types.QuerySuccess;
+import com.sun.briareus.codegen.types.ReaderText;
+import com.sun.briareus.codegen.types.ReaderTextStatus;
 import com.sun.briareus.codegen.types.SourceKind;
 import com.sun.briareus.codegen.types.StandardError;
 import com.sun.briareus.graphql.mappers.BlogPostMapper;
@@ -27,9 +30,14 @@ import com.sun.briareus.model.PostEntity;
 import com.sun.briareus.service.BlogPostTypeService;
 import com.sun.briareus.service.BriareusService;
 import com.sun.gaia.repository.ObjectShareRepository;
+import com.sun.hades.model.ReaderTextEntity;
+import com.sun.hades.repository.ReaderTextRepository;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import com.sun.gaia.service.UserContextHolder;
@@ -73,6 +81,9 @@ public class BlogGraphQLService {
 
   @Autowired
   private WiktionaryService wiktionaryService;
+
+  @Autowired
+  private ReaderTextRepository readerTextRepository;
 
   /**
    * Retrieves a page of blog posts matching the filters.
@@ -118,6 +129,69 @@ public class BlogGraphQLService {
 
     logger.info("Retrieved blog post {} with id {}", blogPost.getTitle(), blogPost.getId());
     return blogPost;
+  }
+
+  /**
+   * Returns attached reader texts for a post, ordered as in remoteObject.
+   * TODO: fix post filtering here
+   *
+   * @param postId the blog post id
+   * @return the texts
+   */
+  @Transactional(readOnly = true)
+  public List<ReaderText> attachedTexts(String postId) {
+    UUID pid;
+    try {
+      pid = UUID.fromString(postId);
+    } catch (IllegalArgumentException e) {
+      return List.of();
+    }
+    PostEntity post = briareusService.locatePost(pid).orElse(null);
+    if (post == null || post.getRemoteObject() == null) {
+      return List.of();
+    }
+    List<String> rawIds = post.getRemoteObject().stream()
+        .filter(v -> v.startsWith("hades:text:"))
+        .map(v -> v.replace("hades:text:", "").toLowerCase().trim())
+        .toList();
+    List<UUID> uuids = rawIds.stream()
+        .map(v -> {
+          try {
+            return UUID.fromString(v);
+          } catch (Exception e) {
+            return null;
+          }
+        })
+        .filter(Objects::nonNull)
+        .toList();
+    if (uuids.isEmpty()) {
+      return List.of();
+    }
+    List<ReaderTextEntity> entities = readerTextRepository.findAllById(uuids);
+    Map<UUID, ReaderTextEntity> byId = entities.stream()
+        .collect(Collectors.toMap(ReaderTextEntity::getId, Function.identity()));
+    return uuids.stream()
+        .map(byId::get)
+        .filter(Objects::nonNull)
+        .filter(e -> e.getStatus().name().equals("ACTIVE"))
+        .map(this::mapReaderText)
+        .toList();
+  }
+
+  // TODO: move to mapper
+  private ReaderText mapReaderText(ReaderTextEntity entity) {
+    return ReaderText.newBuilder()
+        .id(entity.getId().toString())
+        .title(entity.getTitle())
+        .content(entity.getContent())
+        .language(entity.getLanguage())
+        .level(CefrLevel.valueOf(entity.getLevel().name()))
+        .ownerId(entity.getOwnerId() == null ? null : entity.getOwnerId().toString())
+        .sourceId(entity.getSourceId() == null ? null : entity.getSourceId().toString())
+        .status(ReaderTextStatus.valueOf(entity.getStatus().name()))
+        .createdAt(entity.getCreatedAt())
+        .updatedAt(entity.getUpdatedAt())
+        .build();
   }
 
   /**

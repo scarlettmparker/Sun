@@ -25,7 +25,7 @@ export function groupPostsByMonthYear(
     "November",
     "December",
   ];
-  const groups = new Map<string, BlogPost[]>();
+  const groups = new Map<string, GroupedPost["posts"]>();
 
   posts.forEach((post) => {
     if (!post || !post.createdAt) return;

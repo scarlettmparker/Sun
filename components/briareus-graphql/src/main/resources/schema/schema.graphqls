@@ -18,6 +18,37 @@ type BlogPost {
   updatedAt: DateTime
 }
 
+extend type BlogPost {
+  attachedTexts: [ReaderText!]
+}
+
+enum CefrLevel {
+  A1
+  A2
+  B1
+  B2
+  C1
+  C2
+}
+
+enum ReaderTextStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+type ReaderText {
+  id: String!
+  title: String!
+  content: String!
+  language: String!
+  level: CefrLevel!
+  ownerId: ID
+  sourceId: ID
+  status: ReaderTextStatus!
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
 input BlogPostInput {
   content: String
   tags: [String!]

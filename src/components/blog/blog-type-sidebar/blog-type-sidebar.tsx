@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { useTranslation } from "react-i18next";
-import { CardHeader, CardTitle, Sidebar } from "@sun/components";
+import { CardTitle, Sidebar } from "@sun/components";
 import BlogTypeContainer from "~/components/blog/blog-type-container";
 import { BlogTypeSidebarSkeleton } from "./skeletons";
 import styles from "./blog-type-sidebar.module.css";

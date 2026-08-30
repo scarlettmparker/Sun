@@ -6,7 +6,7 @@ import {
   type LocateBlogPostQuery,
 } from "~/generated/graphql";
 
-const EMPTY_POST: BlogPost = { id: "", title: "" };
+const EMPTY_POST: BlogPost = { id: "", title: "", attachedTexts: [] };
 
 /**
  * Loads a single blog post into the page-data cache.

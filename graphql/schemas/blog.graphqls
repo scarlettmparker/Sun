@@ -20,6 +20,10 @@ type BlogPost {
   updatedAt: DateTime
 }
 
+extend type BlogPost {
+  attachedTexts: [ReaderText!]
+}
+
 input BlogPostInput {
   content: String
   tags: [String!]
