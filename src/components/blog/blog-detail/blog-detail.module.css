@@ -35,13 +35,15 @@
   overflow-y: auto;
 }
 
-.create_button {
+.actions {
   position: fixed;
   bottom: calc(var(--xl) * 2);
   right: calc(var(--xl) * 4);
+  display: flex;
+  gap: var(--md);
   z-index: 100;
 }
 
-.create_icon {
+.action_icon {
   margin-right: var(--md);
 }

@@ -119,7 +119,17 @@ defineMutation({
       return { __typename: "StandardError", message: result.error || "Failed" };
     }
     if (data.__typename === "QuerySuccess" && data.id) {
-      throw new ServerRedirectError(`/blog/${data.id}`, [makeCacheKey("blog:blogPosts", {})], data);
+      const parentId = (input as IngestBlogInput)?.parentId as string | undefined;
+      const invalidated = [
+        makeCacheKey("blog:blogPosts", {}),
+        makeCacheKey("home:home", {}),
+        makeCacheKey("blog/:id:blogPost", { id: data.id }),
+      ];
+      if (parentId) {
+        invalidated.push(makeCacheKey("blog/:id:children", { id: parentId }));
+        invalidated.push(makeCacheKey("blog/:id:blogPost", { id: parentId }));
+      }
+      throw new ServerRedirectError(`/blog/${data.id}`, invalidated, data);
     }
     return data;
   },

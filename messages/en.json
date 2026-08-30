@@ -60,8 +60,10 @@
       "empty": "No texts found",
       "attach-label": "Attach"
     },
+    "cancel": "Cancel",
     "ingest": {
       "title": "Ingest from Source",
+      "open-label": "Ingest from source",
       "title-label": "Title",
       "title-placeholder": "Enter title…",
       "type-label": "Type",

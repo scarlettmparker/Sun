@@ -16,13 +16,17 @@ type IngestBlogFormFieldsProps = {
    * Submit handler.
    */
   onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
+  /**
+   * Default type name to pre-select.
+   */
+  defaultTypeName?: string | null;
 };
 
 /**
  * Renders ingest form fields.
  */
 const IngestBlogFormFields = (props: IngestBlogFormFieldsProps) => {
-  const { sourceKind, onSourceKindChange, onSubmit } = props;
+  const { sourceKind, onSourceKindChange, onSubmit, defaultTypeName } = props;
   const { t } = useTranslation("blog");
   const { data: types } = usePageData<NonNullable<BlogPostTypesQuery["blogQueries"]["blogPostTypes"]>>(
     "types",
@@ -42,7 +46,7 @@ const IngestBlogFormFields = (props: IngestBlogFormFieldsProps) => {
       <FormField name="typeName">
         <FormLabel>{t("ingest.type-label")}</FormLabel>
         <FormItem>
-          <Select defaultValue={typeOptions[0]?.name ?? "KNOWLEDGE"}>
+          <Select defaultValue={defaultTypeName ?? typeOptions[0]?.name ?? "KNOWLEDGE"}>
             {typeOptions.map((option) => (
               <SelectOption key={option.id} value={option.name}>
                 {option.name}

@@ -68,6 +68,7 @@ input IngestBlogInput {
   typeName: String!
   sourceKind: SourceKind!
   sourceId: String!
+  parentId: ID
 }
 
 type BlogMutations {

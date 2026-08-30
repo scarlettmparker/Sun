@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { usePageData } from "@sun/ssr/react";
@@ -9,12 +10,12 @@ import {
   CardTitle,
   MarkdownViewer,
 } from "@sun/components";
-import { PlusIcon } from "@heroicons/react/24/outline";
+import { ArrowDownTrayIcon, PlusIcon } from "@heroicons/react/24/outline";
 import type { LocateBlogPostQuery } from "~/generated/graphql";
 import BlogBreadcrumb from "~/components/blog/blog-breadcrumb";
 import KnowledgeGraph from "~/components/knowledge/knowledge-graph";
 import AttachTextPicker from "~/components/blog/attach-text-picker";
-import IngestBlogForm from "~/components/blog/ingest-blog-form";
+import IngestBlogDialog from "~/components/blog/ingest-blog-dialog";
 import styles from "./blog-detail.module.css";
 
 /**
@@ -28,12 +29,19 @@ const BlogDetail = () => {
   const { data } = usePageData<
     LocateBlogPostQuery["blogQueries"]["locateBlogPost"]
   >("blogPost", "blog/:id", { id });
+  const [ingestOpen, setIngestOpen] = useState(false);
 
   if (data?.content) {
     // fall through
   } else {
     return null;
   }
+
+  const handleCreateChild = () => {
+    const typeParam =
+      data.type?.name == null ? "" : `&type=${encodeURIComponent(data.type.name)}`;
+    navigate(`/blog/create?parentId=${id}&from=${encodeURIComponent(location.pathname)}${typeParam}`);
+  };
 
   return (
     <div className={styles.detail_wrapper}>
@@ -54,26 +62,33 @@ const BlogDetail = () => {
         </div>
         <div className={styles.right_column}>
           <AttachTextPicker postId={data.id} />
-          <IngestBlogForm />
         </div>
       </div>
-      <Button
-        className={styles.create_button}
-        title={t("detail.create-child.title")}
-        aria-label={t("detail.create-child.title")}
-        onClick={() => {
-          const typeParam =
-            data.type?.name == null
-              ? ""
-              : `&type=${encodeURIComponent(data.type.name)}`;
-          navigate(
-            `/blog/create?parentId=${id}&from=${encodeURIComponent(location.pathname)}${typeParam}`,
-          );
-        }}
-      >
-        <PlusIcon className={styles.create_icon} width={16} height={16} />
-        <span>{t("form.create.label")}</span>
-      </Button>
+      <div className={styles.actions}>
+        <Button
+          variant="secondary"
+          title={t("ingest.open-label")}
+          aria-label={t("ingest.open-label")}
+          onClick={() => setIngestOpen(true)}
+        >
+          <ArrowDownTrayIcon className={styles.action_icon} width={16} height={16} />
+          <span>{t("ingest.open-label")}</span>
+        </Button>
+        <Button
+          title={t("detail.create-child.title")}
+          aria-label={t("detail.create-child.title")}
+          onClick={handleCreateChild}
+        >
+          <PlusIcon className={styles.action_icon} width={16} height={16} />
+          <span>{t("form.create.label")}</span>
+        </Button>
+      </div>
+      <IngestBlogDialog
+        open={ingestOpen}
+        onOpenChange={setIngestOpen}
+        parentId={id}
+        parentTypeName={data.type?.name ?? null}
+      />
     </div>
   );
 };

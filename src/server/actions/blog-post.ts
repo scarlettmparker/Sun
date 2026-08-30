@@ -64,6 +64,7 @@ export async function ingestBlogFromSource(input: {
   typeName: string;
   sourceKind: string;
   sourceId: string;
+  parentId?: string | null;
 }): Promise<MutationResult> {
   const result = await executeMutation("blog/ingest-source", { input });
   if (result.__typename === "Redirect") {

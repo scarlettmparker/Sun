@@ -418,6 +418,7 @@ export type HubRegistryInput = {
 };
 
 export type IngestBlogInput = {
+  parentId?: InputMaybe<Scalars['ID']['input']>;
   sourceId: Scalars['String']['input'];
   sourceKind: SourceKind;
   title: Scalars['String']['input'];
