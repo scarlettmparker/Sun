@@ -9,9 +9,10 @@ import {
   CardHeader,
   CardTitle,
   MarkdownViewer,
+  ScrollArea,
 } from "@sun/components";
 import { ArrowDownTrayIcon, PlusIcon } from "@heroicons/react/24/outline";
-import type { LocateBlogPostQuery } from "~/generated/graphql";
+import type { BlogPost, LocateBlogPostQuery } from "~/generated/graphql";
 import BlogBreadcrumb from "~/components/blog/blog-breadcrumb";
 import KnowledgeGraph from "~/components/knowledge/knowledge-graph";
 import AttachTextPicker from "~/components/blog/attach-text-picker";
@@ -39,13 +40,17 @@ const BlogDetail = () => {
 
   const handleCreateChild = () => {
     const typeParam =
-      data.type?.name == null ? "" : `&type=${encodeURIComponent(data.type.name)}`;
-    navigate(`/blog/create?parentId=${id}&from=${encodeURIComponent(location.pathname)}${typeParam}`);
+      data.type?.name == null
+        ? ""
+        : `&type=${encodeURIComponent(data.type.name)}`;
+    navigate(
+      `/blog/create?parentId=${id}&from=${encodeURIComponent(location.pathname)}${typeParam}`,
+    );
   };
 
   return (
     <div className={styles.detail_wrapper}>
-      <BlogBreadcrumb post={data} />
+      <BlogBreadcrumb post={data as BlogPost} />
       <div className={styles.columns}>
         <div className={styles.left_column}>
           <Card>
@@ -53,12 +58,14 @@ const BlogDetail = () => {
               <CardTitle>{data.title}</CardTitle>
             </CardHeader>
             <CardBody>
-              <MarkdownViewer className={styles.blog_body}>
-                {data.content}
-              </MarkdownViewer>
+              <ScrollArea maxHeight="36rem">
+                <MarkdownViewer className={styles.blog_body}>
+                  {data.content}
+                </MarkdownViewer>
+              </ScrollArea>
             </CardBody>
           </Card>
-          <KnowledgeGraph post={data} />
+          <KnowledgeGraph post={data as BlogPost} />
         </div>
         <div className={styles.right_column}>
           <AttachTextPicker postId={data.id} />
@@ -71,7 +78,11 @@ const BlogDetail = () => {
           aria-label={t("ingest.open-label")}
           onClick={() => setIngestOpen(true)}
         >
-          <ArrowDownTrayIcon className={styles.action_icon} width={16} height={16} />
+          <ArrowDownTrayIcon
+            className={styles.action_icon}
+            width={16}
+            height={16}
+          />
           <span>{t("ingest.open-label")}</span>
         </Button>
         <Button
