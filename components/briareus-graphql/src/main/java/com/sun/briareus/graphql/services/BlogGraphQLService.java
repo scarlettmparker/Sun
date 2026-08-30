@@ -9,18 +9,16 @@ import com.sun.base.permify.PermifyUtil;
 import com.sun.base.util.FilterSpec;
 import com.sun.base.util.GraphQLSupport;
 import com.sun.base.util.PageRequests;
+import com.sun.briareus.codegen.types.AttachedText;
 import com.sun.briareus.codegen.types.BlogPost;
 import com.sun.briareus.codegen.types.BlogPostInput;
 import com.sun.briareus.codegen.types.BlogPostType;
-import com.sun.briareus.codegen.types.CefrLevel;
 import com.sun.briareus.codegen.types.IngestBlogInput;
 import com.sun.briareus.codegen.types.PagedBlogPosts;
 import com.sun.briareus.codegen.types.PageInfo;
 import com.sun.briareus.codegen.types.PaginationInput;
 import com.sun.briareus.codegen.types.QueryResult;
 import com.sun.briareus.codegen.types.QuerySuccess;
-import com.sun.briareus.codegen.types.ReaderText;
-import com.sun.briareus.codegen.types.ReaderTextStatus;
 import com.sun.briareus.codegen.types.SourceKind;
 import com.sun.briareus.codegen.types.StandardError;
 import com.sun.briareus.graphql.mappers.BlogPostMapper;
@@ -32,6 +30,7 @@ import com.sun.briareus.service.BriareusService;
 import com.sun.gaia.repository.ObjectShareRepository;
 import com.sun.hades.model.ReaderTextEntity;
 import com.sun.hades.repository.ReaderTextRepository;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -132,14 +131,13 @@ public class BlogGraphQLService {
   }
 
   /**
-   * Returns attached reader texts for a post, ordered as in remoteObject.
-   * TODO: fix post filtering here
+   * Returns attached texts for a post, ordered as in remoteObject.
    *
    * @param postId the blog post id
    * @return the texts
    */
   @Transactional(readOnly = true)
-  public List<ReaderText> attachedTexts(String postId) {
+  public List<AttachedText> attachedTexts(String postId) {
     UUID pid;
     try {
       pid = UUID.fromString(postId);
@@ -174,23 +172,20 @@ public class BlogGraphQLService {
         .map(byId::get)
         .filter(Objects::nonNull)
         .filter(e -> e.getStatus().name().equals("ACTIVE"))
-        .map(this::mapReaderText)
+        .map(this::mapAttachedText)
         .toList();
   }
 
-  // TODO: move to mapper
-  private ReaderText mapReaderText(ReaderTextEntity entity) {
-    return ReaderText.newBuilder()
+  /**
+   * Maps a reader text entity to attached text.
+   */
+  private AttachedText mapAttachedText(ReaderTextEntity entity) {
+    return AttachedText.newBuilder()
         .id(entity.getId().toString())
         .title(entity.getTitle())
-        .content(entity.getContent())
         .language(entity.getLanguage())
-        .level(CefrLevel.valueOf(entity.getLevel().name()))
-        .ownerId(entity.getOwnerId() == null ? null : entity.getOwnerId().toString())
-        .sourceId(entity.getSourceId() == null ? null : entity.getSourceId().toString())
-        .status(ReaderTextStatus.valueOf(entity.getStatus().name()))
-        .createdAt(entity.getCreatedAt())
-        .updatedAt(entity.getUpdatedAt())
+        .level(entity.getLevel().name())
+        .status(entity.getStatus().name())
         .build();
   }
 

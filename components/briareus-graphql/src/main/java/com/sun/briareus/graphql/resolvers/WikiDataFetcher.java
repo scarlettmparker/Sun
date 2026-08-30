@@ -3,9 +3,11 @@ package com.sun.briareus.graphql.resolvers;
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
 import com.sun.briareus.codegen.types.Entry;
+import com.sun.briareus.codegen.types.RelatedTopic;
 import com.sun.briareus.codegen.types.Summary;
 import com.sun.briareus.codegen.types.WikiQueries;
 import com.sun.briareus.graphql.services.WikiGraphQLService;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 
@@ -47,5 +49,17 @@ public class WikiDataFetcher {
   @PreAuthorize("@permissions.has('graphql.briareus.wiktionaryEntry')")
   public Entry wiktionaryEntry(String word) {
     return wikiGraphQLService.wiktionaryEntry(word);
+  }
+
+  /**
+   * Fetches related Wikipedia topics.
+   *
+   * @param title the page title
+   * @return the related topics
+   */
+  @DgsData(parentType = "WikiQueries", field = "wikipediaRelatedTopics")
+  @PreAuthorize("@permissions.has('graphql.briareus.wikipediaRelatedTopics')")
+  public List<RelatedTopic> wikipediaRelatedTopics(String title) {
+    return wikiGraphQLService.wikipediaRelatedTopics(title);
   }
 }

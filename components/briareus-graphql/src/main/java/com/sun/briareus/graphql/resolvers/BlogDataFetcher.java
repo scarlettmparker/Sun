@@ -10,6 +10,7 @@ import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
 import com.netflix.graphql.dgs.DgsDataFetchingEnvironment;
 import com.sun.briareus.codegen.types.BlogPost;
+import com.sun.briareus.codegen.types.AttachedText;
 import com.sun.briareus.codegen.types.BlogPostType;
 import com.sun.briareus.codegen.types.BlogQueries;
 import com.sun.briareus.codegen.types.BlogMutations;
@@ -18,7 +19,6 @@ import com.sun.briareus.codegen.types.IngestBlogInput;
 import com.sun.briareus.codegen.types.PagedBlogPosts;
 import com.sun.briareus.codegen.types.PaginationInput;
 import com.sun.briareus.codegen.types.QueryResult;
-import com.sun.briareus.codegen.types.ReaderText;
 
 @DgsComponent
 public class BlogDataFetcher {
@@ -159,7 +159,7 @@ public class BlogDataFetcher {
    */
   @DgsData(parentType = "BlogPost", field = "attachedTexts")
   @PreAuthorize("@permissions.has('graphql.briareus.attachedTexts')")
-  public List<ReaderText> attachedTexts(DgsDataFetchingEnvironment env) {
+  public List<AttachedText> attachedTexts(DgsDataFetchingEnvironment env) {
     BlogPost source = env.getSource();
     if (source == null || source.getId() == null) {
       return List.of();

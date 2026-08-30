@@ -16,12 +16,17 @@ type BlogPost {
   language: String
   parentId: ID
   parent: BlogPost
+  attachedTexts: [AttachedText!]
   createdAt: DateTime
   updatedAt: DateTime
 }
 
-extend type BlogPost {
-  attachedTexts: [ReaderText!]
+type AttachedText {
+  id: String!
+  title: String!
+  language: String!
+  level: String!
+  status: String!
 }
 
 input BlogPostInput {

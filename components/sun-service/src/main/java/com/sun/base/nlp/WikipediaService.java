@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import com.sun.base.cache.CaffeineSpec;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
@@ -79,6 +81,64 @@ public class WikipediaService {
       return new WikipediaSummary(title, extract, pageUrl, thumbnailUrl);
     } catch (Exception e) {
       return null;
+    }
+  }
+
+  /**
+   * Fetches related topics for a page.
+   *
+   * @param title the page title
+   * @return the related topics, empty when not found
+   */
+  @Cacheable(value = "wikipediaRelatedTopics", key = "#title.toLowerCase().trim()")
+  @CaffeineSpec(expireAfterWrite = "24h", maximumSize = 100)
+  public List<WikipediaRelatedTopic> relatedTopics(String title) {
+    if (title == null || title.trim().isEmpty()) {
+      return List.of();
+    }
+    String enc = encode(title.trim());
+    try {
+      String json = restClient.get()
+          .uri("/api/rest_v1/page/related/{enc}", enc)
+          .retrieve()
+          .body(String.class);
+      return mapRelated(json);
+    } catch (Exception e) {
+      return List.of();
+    }
+  }
+
+  /**
+   * Maps related JSON to topics.
+   *
+   * @param json the raw JSON
+   * @return the related topics
+   */
+  private List<WikipediaRelatedTopic> mapRelated(String json) {
+    if (json == null || json.isBlank()) {
+      return List.of();
+    }
+    try {
+      JsonNode node = objectMapper.readTree(json);
+      JsonNode pages = node.path("pages");
+      if (!pages.isArray() || pages.isEmpty()) {
+        return List.of();
+      }
+      List<WikipediaRelatedTopic> out = new ArrayList<>();
+      for (JsonNode p : pages) {
+        String t = p.path("title").asText(null);
+        if (t == null || t.isBlank()) continue;
+        String pageUrl = p.path("content_urls").path("desktop").path("page").asText(null);
+        if (pageUrl == null || pageUrl.isBlank()) {
+          pageUrl = "https://en.wikipedia.org/wiki/" + encode(t);
+        }
+        String extract = p.path("extract").asText(null);
+        out.add(new WikipediaRelatedTopic(t, pageUrl, extract));
+        if (out.size() >= 5) break;
+      }
+      return out;
+    } catch (Exception e) {
+      return List.of();
     }
   }
 
