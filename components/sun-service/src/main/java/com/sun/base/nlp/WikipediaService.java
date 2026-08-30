@@ -7,6 +7,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import com.sun.base.cache.CaffeineSpec;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -16,6 +18,8 @@ import org.springframework.web.client.RestClient;
  */
 @Component
 public class WikipediaService {
+
+  private static final Logger logger = LoggerFactory.getLogger(WikipediaService.class);
 
   private final RestClient restClient;
   private final ObjectMapper objectMapper;
@@ -40,14 +44,16 @@ public class WikipediaService {
     if (title == null || title.trim().isEmpty()) {
       return null;
     }
-    String enc = encode(title.trim());
+    String trimmed = title.trim();
+    logger.info("Fetching Wikipedia summary: title='{}'", trimmed);
     try {
       String json = restClient.get()
-          .uri("/api/rest_v1/page/summary/" + enc)
+          .uri(uriBuilder -> uriBuilder.path("/api/rest_v1/page/summary/{title}").build(trimmed))
           .retrieve()
           .body(String.class);
       return map(json);
     } catch (Exception e) {
+      logger.error("Wikipedia summary failed for '{}': {}", trimmed, e.getMessage(), e);
       return null;
     }
   }
@@ -80,6 +86,7 @@ public class WikipediaService {
       String thumbnailUrl = node.path("thumbnail").path("source").asText(null);
       return new WikipediaSummary(title, extract, pageUrl, thumbnailUrl);
     } catch (Exception e) {
+      logger.error("Wikipedia map failed: {}", e.getMessage(), e);
       return null;
     }
   }
@@ -96,14 +103,16 @@ public class WikipediaService {
     if (title == null || title.trim().isEmpty()) {
       return List.of();
     }
-    String enc = encode(title.trim());
+    String trimmed = title.trim();
+    logger.info("Fetching Wikipedia related: title='{}'", trimmed);
     try {
       String json = restClient.get()
-          .uri("/api/rest_v1/page/related/" + enc)
+          .uri(uriBuilder -> uriBuilder.path("/api/rest_v1/page/related/{title}").build(trimmed))
           .retrieve()
           .body(String.class);
       return mapRelated(json);
     } catch (Exception e) {
+      logger.error("Wikipedia related failed for '{}': {}", trimmed, e.getMessage(), e);
       return List.of();
     }
   }
@@ -120,10 +129,18 @@ public class WikipediaService {
     if (query == null || query.trim().isEmpty()) {
       return List.of();
     }
-    String enc = encode(query.trim());
+    String trimmed = query.trim();
+    logger.info("Searching Wikipedia: query='{}'", trimmed);
     try {
       String json = restClient.get()
-          .uri("/w/api.php?action=opensearch&search=" + enc + "&limit=5&namespace=0&format=json")
+          .uri(uriBuilder -> uriBuilder
+              .path("/w/api.php")
+              .queryParam("action", "opensearch")
+              .queryParam("search", trimmed)
+              .queryParam("limit", 5)
+              .queryParam("namespace", 0)
+              .queryParam("format", "json")
+              .build())
           .retrieve()
           .body(String.class);
       JsonNode node = objectMapper.readTree(json);
@@ -143,6 +160,7 @@ public class WikipediaService {
       }
       return out;
     } catch (Exception e) {
+      logger.error("Wikipedia search failed for {}: {}", query, e.getMessage(), e);
       return List.of();
     }
   }
@@ -177,6 +195,7 @@ public class WikipediaService {
       }
       return out;
     } catch (Exception e) {
+      logger.error("Wikipedia mapRelated failed: {}", e.getMessage(), e);
       return List.of();
     }
   }
