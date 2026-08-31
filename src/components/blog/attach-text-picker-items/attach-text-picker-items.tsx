@@ -87,6 +87,7 @@ const AttachTextPickerItems = (props: AttachTextPickerItemsProps) => {
             </a>
             <Button
               variant="secondary"
+              size="icon"
               className={styles.attach_button}
               title={t("attach.attach-label")}
               aria-label={t("attach.attach-label")}

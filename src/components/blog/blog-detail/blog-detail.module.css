@@ -64,10 +64,6 @@
   margin-right: var(--md);
 }
 
-.menu_button {
-  padding: var(--sm) var(--sm);
-}
-
 .blog_body {
   overflow-y: auto;
 }

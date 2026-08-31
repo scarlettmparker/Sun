@@ -41,6 +41,7 @@
   cursor: pointer;
   font: inherit;
   box-shadow: none;
+  width: 100%;
 }
 
 .dropdown_menu_item:hover,

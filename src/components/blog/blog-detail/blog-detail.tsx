@@ -71,7 +71,7 @@ const BlogDetail = () => {
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="secondary"
-                    className={styles.menu_button}
+                    size="icon"
                     title={t("detail.delete-title")}
                     aria-label={t("detail.delete-title")}
                   >

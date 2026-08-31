@@ -1,9 +1,9 @@
 .button {
   padding: var(--md) var(--lg);
   border-radius: var(--sm);
-  transition: 
-    background-color var(--fast) ease, 
-    color var(--fast) ease, 
+  transition:
+    background-color var(--fast) ease,
+    color var(--fast) ease,
     box-shadow var(--fast) ease;
   box-shadow: var(--shadow-soft);
   border: none;
@@ -35,7 +35,11 @@
 }
 
 .default:disabled {
-  background-color: color-mix(in srgb, var(--primary) 50%, var(--secondary) 50%);
+  background-color: color-mix(
+    in srgb,
+    var(--primary) 50%,
+    var(--secondary) 50%
+  );
 }
 
 /* Secondary styles */
@@ -44,7 +48,8 @@
   backdrop-filter: blur(var(--sm));
 }
 
-.secondary:disabled, .secondary:disabled:hover {
+.secondary:disabled,
+.secondary:disabled:hover {
   color: var(--muted);
 }
 
@@ -59,18 +64,29 @@
 
 /* Destructive styles */
 .destructive {
-  background-color: var(--destructive);
-  color: var(--text-secondary, var(--secondary));
+  background-color: var(--destructive) !important;
+  color: var(--text-secondary, var(--secondary)) !important;
 }
 
 .destructive:hover {
-  background-color: var(--destructive-hover);
+  background-color: var(--destructive-hover) !important;
 }
 
 .destructive:active {
-  background-color: var(--destructive-active);
+  background-color: var(--destructive-active) !important;
 }
 
 .destructive:disabled {
-  background-color: color-mix(in srgb, var(--destructive) 50%, var(--secondary) 50%);
+  background-color: color-mix(
+    in srgb,
+    var(--destructive) 50%,
+    var(--secondary) 50%
+  ) !important;
+}
+
+.icon {
+  padding: var(--sm);
+  width: auto;
+  height: auto;
+  justify-content: center;
 }
