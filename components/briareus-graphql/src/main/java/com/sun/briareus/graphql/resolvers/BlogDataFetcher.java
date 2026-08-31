@@ -107,6 +107,19 @@ public class BlogDataFetcher {
   }
 
   /**
+   * Updates an existing blog post.
+   *
+   * @param id the post id
+   * @param input the update input
+   * @return the result
+   */
+  @DgsData(parentType = "BlogMutations", field = "updateBlogPost")
+  @PreAuthorize("@permissions.has('graphql.briareus.updateBlogPost')")
+  public QueryResult updateBlogPost(String id, BlogPostInput input) {
+    return blogGraphQLService.updateBlogPost(id, input);
+  }
+
+  /**
    * Creates a blog post type with a unique name.
    *
    * @param name the type name

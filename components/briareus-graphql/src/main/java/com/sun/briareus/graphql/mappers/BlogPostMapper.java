@@ -83,6 +83,33 @@ public class BlogPostMapper {
   }
 
   /**
+   * Updates an existing post from input.
+   *
+   * @param entity the existing entity
+   * @param input the update input
+   */
+  public void update(PostEntity entity, BlogPostInput input) {
+    if (input.getContent() != null) {
+      entity.setContent(input.getContent());
+    }
+    if (input.getTags() != null) {
+      entity.setTags(input.getTags());
+    }
+    if (input.getRemoteObject() != null) {
+      entity.setRemoteObject(input.getRemoteObject());
+    }
+    if (input.getLanguage() != null) {
+      entity.setLanguage(input.getLanguage());
+    }
+    if (input.getParentId() != null) {
+      entity.setParentId(UUID.fromString(input.getParentId()));
+    }
+    if (input.getTypeId() != null) {
+      entity.setType(resolveType(UUID.fromString(input.getTypeId())));
+    }
+  }
+
+  /**
    * Loads a post type by id.
    *
    * @param id the post type id

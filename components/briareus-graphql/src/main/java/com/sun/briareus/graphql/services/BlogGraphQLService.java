@@ -272,6 +272,28 @@ public class BlogGraphQLService {
   }
 
   /**
+   * Updates an existing blog post.
+   *
+   * @param id the post id
+   * @param input the update input
+   * @return the result
+   */
+  @Transactional
+  public QueryResult updateBlogPost(String id, BlogPostInput input) {
+    return mutate("updateBlogPost", () -> {
+      UUID postId = UUID.fromString(id);
+      PostEntity post = briareusService.locatePost(postId)
+          .orElseThrow(() -> new IllegalArgumentException("Post not found: " + id));
+      if (!canEdit(post)) {
+        throw new IllegalArgumentException("Not authorized to edit post: " + id);
+      }
+      blogPostMapper.update(post, input);
+      PostEntity saved = briareusService.save(post);
+      return saved.getId();
+    });
+  }
+
+  /**
    * Lists children of a parent post with pagination.
    *
    * @param parentId the parent post id
