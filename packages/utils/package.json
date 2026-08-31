@@ -1,6 +1,6 @@
 {
   "name": "@sun/utils",
-  "version": "0.1.6",
+  "version": "0.1.11",
   "description": "Shared utilities across Sun ecosystem apps",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -35,13 +35,18 @@
       "types": "./dist/posthog.d.ts",
       "import": "./dist/posthog.mjs",
       "require": "./dist/posthog.js"
+    },
+    "./nlp": {
+      "types": "./dist/nlp.d.ts",
+      "import": "./dist/nlp.mjs",
+      "require": "./dist/nlp.js"
     }
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && tsc --project tsconfig.json --emitDeclarationOnly || true && cp dist/nlp.d.ts dist/nlp.d.mts 2>/dev/null || true",
     "publish": "npm publish --ignore-scripts --registry https://registry.int.scarlettparker.co.uk"
   },
   "publishConfig": {

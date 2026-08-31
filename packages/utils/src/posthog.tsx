@@ -2,6 +2,16 @@ import { PostHogProvider as PHProvider } from "@posthog/react";
 import posthog from "posthog-js";
 import type { ReactNode } from "react";
 
+declare global {
+  /**
+   * Window augments for PostHog SSR injection.
+   */
+  interface Window {
+    __posthog_key__?: string;
+    __posthog_host__?: string;
+  }
+}
+
 type PostHogProviderProps = {
   /**
    * Check if on client.
