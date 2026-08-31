@@ -76,6 +76,17 @@ public class WikiGraphQLService {
   }
 
   /**
+   * Fetches full plaintext for a page.
+   *
+   * @param title the page title
+   * @return the plaintext or null
+   */
+  @Transactional(readOnly = true)
+  public String wikipediaPage(String title) {
+    return wikipediaService.page(title);
+  }
+
+  /**
    * Searches Wikipedia for closest matches.
    *
    * @param query the search query

@@ -64,6 +64,18 @@ public class WikiDataFetcher {
   }
 
   /**
+   * Fetches full plaintext for a page.
+   *
+   * @param title the page title
+   * @return the plaintext or null
+   */
+  @DgsData(parentType = "WikiQueries", field = "wikipediaPage")
+  @PreAuthorize("@permissions.has('graphql.briareus.wikipediaPage')")
+  public String wikipediaPage(String title) {
+    return wikiGraphQLService.wikipediaPage(title);
+  }
+
+  /**
    * Fetches related Wikipedia topics.
    *
    * @param title the page title

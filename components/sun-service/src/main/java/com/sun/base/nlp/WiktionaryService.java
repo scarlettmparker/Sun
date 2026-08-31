@@ -37,7 +37,7 @@ public class WiktionaryService {
    * @param word the headword
    * @return the entry, or null when not found
    */
-  @Cacheable(value = "wiktionaryEntry", key = "#word.toLowerCase().trim()")
+  @Cacheable(value = "wiktionaryEntry", key = "#a0 == null ? '' : #a0.toString().toLowerCase().trim()", unless = "#result == null")
   @CaffeineSpec(expireAfterWrite = "24h", maximumSize = 1000)
   public WiktionaryEntry define(String word) {
     if (word == null || word.trim().isEmpty()) {

@@ -50,7 +50,7 @@ public class WordReferenceService {
    * @param scope the parts of the page to include
    * @return the word, or null when the entry does not exist
    */
-  @Cacheable(value = "defineWord", key = "#word.toLowerCase() + ':' + #scope")
+  @Cacheable(value = "defineWord", key = "#a0 == null ? '' : #a0.toString().toLowerCase() + ':' + #a1", unless = "#result == null")
   @CaffeineSpec(expireAfterWrite = "24h", maximumSize = 2000)
   public Word defineWord(String word, List<WordScope> scope) {
     Document doc = fetch(word);

@@ -38,7 +38,7 @@ public class WikipediaService {
    * @param title the page title
    * @return the summary, or null when not found
    */
-  @Cacheable(value = "wikipediaSummary", key = "#title == null ? '' : #title.toLowerCase().trim()")
+  @Cacheable(value = "wikipediaSummary", key = "#a0 == null ? '' : #a0.toString().toLowerCase().trim()", unless = "#result == null")
   @CaffeineSpec(expireAfterWrite = "24h", maximumSize = 1000)
   public WikipediaSummary summary(String title) {
     if (title == null || title.trim().isEmpty()) {
@@ -92,12 +92,59 @@ public class WikipediaService {
   }
 
   /**
+   * Fetches full plaintext extract for a page via explaintext.
+   *
+   * @param title the page title
+   * @return the plaintext extract or null when not found
+   */
+  @Cacheable(value = "wikipediaPage", key = "#a0 == null ? '' : #a0.toString().toLowerCase().trim()", unless = "#result == null")
+  @CaffeineSpec(expireAfterWrite = "24h", maximumSize = 100)
+  public String page(String title) {
+    if (title == null || title.trim().isEmpty()) {
+      return null;
+    }
+    String trimmed = title.trim();
+    logger.info("Fetching Wikipedia page: title='{}'", trimmed);
+    try {
+      String json = restClient.get()
+          .uri(uriBuilder -> uriBuilder
+              .path("/w/api.php")
+              .queryParam("action", "query")
+              .queryParam("prop", "extracts")
+              .queryParam("explaintext", "true")
+              .queryParam("titles", trimmed)
+              .queryParam("format", "json")
+              .build())
+          .retrieve()
+          .body(String.class);
+      JsonNode root = objectMapper.readTree(json);
+      JsonNode pages = root.path("query").path("pages");
+      if (pages.isMissingNode() || pages.isEmpty()) {
+        return null;
+      }
+      for (JsonNode page : pages) {
+        if (page.has("missing")) {
+          continue;
+        }
+        String extract = page.path("extract").asText(null);
+        if (extract != null && !extract.isBlank()) {
+          return extract.length() > 12000 ? extract.substring(0, 12000) : extract;
+        }
+      }
+      return null;
+    } catch (Exception e) {
+      logger.error("Wikipedia page failed for '{}': {}", trimmed, e.getMessage(), e);
+      return null;
+    }
+  }
+
+  /**
    * Fetches related topics for a page.
    *
    * @param title the page title
    * @return the related topics, empty when not found
    */
-  @Cacheable(value = "wikipediaRelatedTopics", key = "#title == null ? '' : #title.toLowerCase().trim()")
+  @Cacheable(value = "wikipediaRelatedTopics", key = "#a0 == null ? '' : #a0.toString().toLowerCase().trim()", unless = "#result == null or #result.isEmpty()")
   @CaffeineSpec(expireAfterWrite = "24h", maximumSize = 100)
   public List<WikipediaRelatedTopic> relatedTopics(String title) {
     if (title == null || title.trim().isEmpty()) {
@@ -123,7 +170,7 @@ public class WikipediaService {
    * @param query the search query
    * @return the summaries for matches
    */
-  @Cacheable(value = "wikipediaSearch", key = "#query == null ? '' : #query.toLowerCase().trim()")
+  @Cacheable(value = "wikipediaSearch", key = "#a0 == null ? '' : #a0.toString().toLowerCase().trim()", unless = "#result == null or #result.isEmpty()")
   @CaffeineSpec(expireAfterWrite = "24h", maximumSize = 100)
   public List<WikipediaSummary> search(String query) {
     if (query == null || query.trim().isEmpty()) {
