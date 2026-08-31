@@ -52,7 +52,10 @@
       "detach": "Detach",
       "create-child": {
         "title": "Create child post"
-      }
+      },
+      "delete-title": "Delete post?",
+      "delete-body": "This will permanently delete \"{{title}}\" and all its children. This cannot be undone.",
+      "delete-submit": "Delete"
     },
     "attach": {
       "title": "Attach Text",

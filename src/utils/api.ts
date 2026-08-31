@@ -9,6 +9,9 @@ import {
   CreateBlogPostDocument,
   BlogPostInput,
   CreateBlogPostMutation,
+  DeleteBlogPostDocument,
+  type DeleteBlogPostMutation,
+  type DeleteBlogPostMutationVariables,
   HadesTextsDocument,
   type HadesTextsQuery,
   type HadesTextsQueryVariables,
@@ -96,6 +99,16 @@ export async function mutateRemoveRemoteObject(postId: string, target: string) {
   return executeDocument<RemoveRemoteObjectMutation, RemoveRemoteObjectMutationVariables>(
     RemoveRemoteObjectDocument,
     { postId, target },
+  );
+}
+
+/**
+ * Deletes a blog post and its children.
+ */
+export async function mutateDeleteBlogPost(id: string) {
+  return executeDocument<DeleteBlogPostMutation, DeleteBlogPostMutationVariables>(
+    DeleteBlogPostDocument,
+    { id },
   );
 }
 

@@ -57,6 +57,17 @@ export async function detachRemoteObject(postId: string, target: string): Promis
 }
 
 /**
+ * Deletes a blog post and its children.
+ */
+export async function deleteBlogPost(id: string): Promise<MutationResult> {
+  const result = await executeMutation("blog/delete", { id });
+  if (result.__typename === "Redirect") {
+    window.location.assign(result.redirectTo);
+  }
+  return result;
+}
+
+/**
  * Ingests a blog from a source.
  */
 export async function ingestBlogFromSource(input: {

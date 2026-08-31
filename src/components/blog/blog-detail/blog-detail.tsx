@@ -11,12 +11,13 @@ import {
   MarkdownViewer,
   ScrollArea,
 } from "@sun/components";
-import { ArrowDownTrayIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { ArrowDownTrayIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import type { BlogPost, LocateBlogPostQuery } from "~/generated/graphql";
 import BlogBreadcrumb from "~/components/blog/blog-breadcrumb";
 import KnowledgeGraph from "~/components/knowledge/knowledge-graph";
 import AttachTextPicker from "~/components/blog/attach-text-picker";
 import IngestBlogDialog from "~/components/blog/ingest-blog-dialog";
+import ConfirmDeleteBlogDialog from "~/components/blog/confirm-delete-blog-dialog";
 import styles from "./blog-detail.module.css";
 
 /**
@@ -31,6 +32,7 @@ const BlogDetail = () => {
     LocateBlogPostQuery["blogQueries"]["locateBlogPost"]
   >("blogPost", "blog/:id", { id });
   const [ingestOpen, setIngestOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   if (data?.content) {
     // fall through
@@ -86,6 +88,15 @@ const BlogDetail = () => {
           <span>{t("ingest.open-label")}</span>
         </Button>
         <Button
+          variant="secondary"
+          title={t("detail.delete-title")}
+          aria-label={t("detail.delete-title")}
+          onClick={() => setDeleteOpen(true)}
+        >
+          <TrashIcon className={styles.action_icon} width={16} height={16} />
+          <span>{t("detail.delete-submit")}</span>
+        </Button>
+        <Button
           title={t("detail.create-child.title")}
           aria-label={t("detail.create-child.title")}
           onClick={handleCreateChild}
@@ -99,6 +110,12 @@ const BlogDetail = () => {
         onOpenChange={setIngestOpen}
         parentId={id}
         parentTypeName={data.type?.name ?? null}
+      />
+      <ConfirmDeleteBlogDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        post={data as BlogPost}
+        t={t}
       />
     </div>
   );

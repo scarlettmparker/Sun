@@ -4,6 +4,10 @@
   gap: var(--lg);
   position: relative;
   margin: 0 auto;
+  max-width: 84rem;
+  width: 100%;
+  padding: 0 var(--xl);
+  box-sizing: border-box;
 }
 
 .columns {
@@ -15,14 +19,17 @@
 
 .left_column {
   min-width: 350px;
+  flex: 1 1 36rem;
+  max-width: 52rem;
   display: flex;
   flex-direction: column;
   gap: var(--lg);
 }
 
 .right_column {
-  /* TODO: won't be hardcoded width forever just not responsive rn */
   width: 22rem;
+  max-width: 22rem;
+  flex: 0 1 22rem;
   display: flex;
   flex-direction: column;
   gap: var(--lg);

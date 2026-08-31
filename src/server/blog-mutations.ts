@@ -2,6 +2,7 @@ import { defineMutation, makeCacheKey, ServerRedirectError } from "@sun/ssr";
 import type { MutationResult } from "@sun/ssr";
 import {
   mutateAddRemoteObject,
+  mutateDeleteBlogPost,
   mutateIngestBlogFromSource,
   mutateRemoveRemoteObject,
 } from "~/utils/api";
@@ -96,6 +97,28 @@ defineMutation({
           makeCacheKey("blog/gallery:galleryItems", { ids: "*", postId: "*" }),
         ],
       };
+    }
+    return data;
+  },
+});
+
+/**
+ * Deletes a blog post and its children, then redirects to blog list.
+ */
+defineMutation({
+  path: "blog/delete",
+  async handler(body: Record<string, unknown>) {
+    const id = body.id as string | undefined;
+    if (typeof id !== "string" || !id.trim()) {
+      return { __typename: "StandardError", message: "Invalid input" };
+    }
+    const result = await mutateDeleteBlogPost(id);
+    const data = result.data?.blogMutations.deleteBlogPost as MutationResult | undefined;
+    if (data == null) {
+      return { __typename: "StandardError", message: result.error || "Failed" };
+    }
+    if (data.__typename === "QuerySuccess") {
+      throw new ServerRedirectError("/blog", [makeCacheKey("blog:blogPosts", {})], data);
     }
     return data;
   },
