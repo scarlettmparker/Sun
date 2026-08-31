@@ -1,4 +1,5 @@
 import TopNavBar from "./menu/top-nav-bar";
+import { NavPortalProvider } from "./menu/top-nav-bar/nav-portal-context";
 import styles from "./layout.module.css";
 import { getBackgroundHex } from "~/utils/background-colour";
 import { useEffect, useState } from "react";
@@ -23,10 +24,12 @@ const Layout = (props: LayoutProps) => {
   }, []);
 
   return (
-    <main style={{ backgroundColor: backgroundColour }} className={styles.main}>
-      <TopNavBar />
-      {children}
-    </main>
+    <NavPortalProvider>
+      <main style={{ backgroundColor: backgroundColour }} className={styles.main}>
+        <TopNavBar />
+        {children}
+      </main>
+    </NavPortalProvider>
   );
 };
 

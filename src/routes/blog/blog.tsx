@@ -4,12 +4,15 @@ import { BreadcrumbProvider } from "@sun/components";
 import { cn } from "~/utils/cn";
 import BlogTypeSidebar from "~/components/blog/blog-type-sidebar";
 import detailStyles from "~/components/blog/blog-detail/blog-detail.module.css";
+import { useNavPortal } from "~/components/layout/menu/top-nav-bar/nav-portal-context";
 import styles from "./blog.module.css";
 
 /**
  * Blog layout with sidebar and outlet.
  */
 const BlogLayout = () => {
+  const { setOuterSlot } = useNavPortal();
+
   return (
     <BreadcrumbProvider>
       <div className={styles.blog_layout}>
@@ -23,7 +26,10 @@ const BlogLayout = () => {
         >
           <div
             id="blog-detail-nav-slot"
-            ref={(el) => el?.setAttribute("data-ref", "blog-detail-nav-slot")}
+            ref={(el) => {
+              setOuterSlot(el);
+              if (el) el.setAttribute("data-ref", "blog-detail-nav-slot");
+            }}
             className={detailStyles.nav_slot}
           />
           <Outlet />

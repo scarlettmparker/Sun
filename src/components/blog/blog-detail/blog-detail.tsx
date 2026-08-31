@@ -27,6 +27,7 @@ import KnowledgeGraph from "~/components/knowledge/knowledge-graph";
 import AttachTextPicker from "~/components/blog/attach-text-picker";
 import IngestBlogDialog from "~/components/blog/ingest-blog-dialog";
 import ConfirmDeleteBlogDialog from "~/components/blog/confirm-delete-blog-dialog";
+import { useNavPortal } from "~/components/layout/menu/top-nav-bar/nav-portal-context";
 import styles from "./blog-detail.module.css";
 
 /**
@@ -42,6 +43,7 @@ const BlogDetail = () => {
   >("blogPost", "blog/:id", { id });
   const [ingestOpen, setIngestOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const { setInnerSlot } = useNavPortal();
 
   if (data?.content) {
     // fall through
@@ -67,7 +69,10 @@ const BlogDetail = () => {
     >
       <div
         id="blog-detail-nav-slot"
-        ref={(el) => el?.setAttribute("data-ref", "blog-detail-nav-slot")}
+        ref={(el) => {
+          setInnerSlot(el);
+          if (el) el.setAttribute("data-ref", "blog-detail-nav-slot");
+        }}
         className={styles.nav_slot}
       />
       <BlogBreadcrumb post={data as BlogPost} />

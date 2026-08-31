@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useState } from "react";
+import { Suspense } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
@@ -6,6 +6,7 @@ import { Button } from "@sun/components";
 import { RoleCheck } from "@sun/ssr/react";
 import { Cog6ToothIcon } from "@heroicons/react/24/outline";
 import { cn } from "~/utils/cn";
+import { useNavPortal } from "./nav-portal-context";
 import styles from "./top-nav-bar.module.css";
 
 const NAV_ITEMS = [
@@ -24,18 +25,10 @@ const PUBLIC_PATHS = ["/login"];
 const TopNavBar = () => {
   const { t } = useTranslation("nav");
   const { pathname } = useLocation();
-  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
+  const { outerSlot, innerSlot } = useNavPortal();
   const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
   const isBlog = pathname.startsWith("/blog");
-
-  useEffect(() => {
-    if (!isBlog) {
-      setPortalTarget(null);
-      return;
-    }
-    const els = document.querySelectorAll<HTMLElement>("#blog-detail-nav-slot");
-    setPortalTarget(els.length ? (els[els.length - 1] as HTMLElement) : null);
-  }, [isBlog, pathname]);
+  const portalTarget = innerSlot ?? outerSlot;
 
   if (isPublic) {
     return null;
