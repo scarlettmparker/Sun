@@ -349,12 +349,26 @@ function wrap(cls: string, content: string) {
  */
 function processInline(text: string): string {
   // Protect existing spans first
-  const { tokenized, tokens } = extractSpans(text);
+  const { tokenized: spanTokenized, tokens: spanTokens } = extractSpans(text);
 
   // Also protect table tokens if any slipped through (defensive)
-  if (tokenized.includes("§§TABLE")) return restoreSpans(tokenized, tokens);
+  if (spanTokenized.includes("§§TABLE"))
+    return restoreSpans(spanTokenized, spanTokens);
 
-  // Patterns in priority order (lower index = higher priority)
+  // First, protect links so they can be nested inside other inline (e.g., italic)
+  const linkTokens: string[] = [];
+  let linkIdx = 0;
+  const linkTokenized = spanTokenized.replace(
+    /\[([^\]]+)\]\(([^)]+)\)/g,
+    (m) => {
+      const t = `§§LINK${linkIdx}§§`;
+      linkTokens.push(m);
+      linkIdx++;
+      return t;
+    },
+  );
+
+  // Patterns in priority order (lower index = higher priority) — link already protected
   const patterns: { name: string; regex: RegExp; cls: string }[] = [
     { name: "code", regex: /`([^`]+)`/g, cls: "md-code" },
     {
@@ -367,8 +381,21 @@ function processInline(text: string): string {
     { name: "strike", regex: /~~([^~]+)~~/g, cls: "md-strike" },
     { name: "italic-star", regex: /\*([^*]+)\*/g, cls: "md-italic" },
     { name: "italic-underscore", regex: /_([^_]+)_/g, cls: "md-italic" },
-    { name: "link", regex: /\[([^\]]+)\]\(([^)]+)\)/g, cls: "md-link" },
   ];
+
+  let tokenized = linkTokenized;
+  let tokens = [...spanTokens];
+  // Keep link tokens separate for later restore
+  const restoreLinks = (s: string): string => {
+    let out = s;
+    for (let i = 0; i < linkTokens.length; i++) {
+      out = out.replace(
+        `§§LINK${i}§§`,
+        `<span class="md-link">${linkTokens[i]}</span>`,
+      );
+    }
+    return out;
+  };
 
   type Match = {
     start: number;
@@ -398,7 +425,7 @@ function processInline(text: string): string {
   }
 
   if (candidates.length === 0) {
-    return restoreSpans(tokenized, tokens);
+    return restoreSpans(restoreLinks(tokenized), tokens);
   }
 
   // Sort candidates: by start asc, then priority asc, then longer matches
@@ -428,7 +455,7 @@ function processInline(text: string): string {
   }
   if (pos < tokenized.length) out += tokenized.slice(pos);
 
-  return restoreSpans(out, tokens);
+  return restoreSpans(restoreLinks(out), tokens);
 }
 
 /**

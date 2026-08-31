@@ -82,8 +82,7 @@ a:not(:has(button)):not(:has(.breadcrumb_item)) {
   text-decoration: underline;
   cursor: pointer;
   transition: color var(--fast) ease;
-  width: fit-content;
-  display: block;
+  display: inline;
   background: transparent;
 }
 
