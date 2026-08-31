@@ -8,10 +8,19 @@ import {
   CardBody,
   CardHeader,
   CardTitle,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
   MarkdownViewer,
   ScrollArea,
 } from "@sun/components";
-import { ArrowDownTrayIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
+import {
+  ArrowDownTrayIcon,
+  EllipsisVerticalIcon,
+  PlusIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
 import type { BlogPost, LocateBlogPostQuery } from "~/generated/graphql";
 import BlogBreadcrumb from "~/components/blog/blog-breadcrumb";
 import KnowledgeGraph from "~/components/knowledge/knowledge-graph";
@@ -56,8 +65,41 @@ const BlogDetail = () => {
       <div className={styles.columns}>
         <div className={styles.left_column}>
           <Card>
-            <CardHeader>
-              <CardTitle>{data.title}</CardTitle>
+            <CardHeader className={styles.header}>
+              <CardTitle className={styles.title}>{data.title}</CardTitle>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="secondary"
+                    className={styles.menu_button}
+                    title={t("detail.delete-title")}
+                    aria-label={t("detail.delete-title")}
+                  >
+                    <EllipsisVerticalIcon width={16} height={16} />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() => setIngestOpen(true)}>
+                    <ArrowDownTrayIcon
+                      className={styles.menu_icon}
+                      width={16}
+                      height={16}
+                    />
+                    {t("ingest.open-label")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onClick={() => setDeleteOpen(true)}
+                  >
+                    <TrashIcon
+                      className={styles.menu_icon}
+                      width={16}
+                      height={16}
+                    />
+                    {t("detail.delete-submit")}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </CardHeader>
             <CardBody>
               <ScrollArea maxHeight="36rem">
@@ -74,28 +116,6 @@ const BlogDetail = () => {
         </div>
       </div>
       <div className={styles.actions}>
-        <Button
-          variant="secondary"
-          title={t("ingest.open-label")}
-          aria-label={t("ingest.open-label")}
-          onClick={() => setIngestOpen(true)}
-        >
-          <ArrowDownTrayIcon
-            className={styles.action_icon}
-            width={16}
-            height={16}
-          />
-          <span>{t("ingest.open-label")}</span>
-        </Button>
-        <Button
-          variant="secondary"
-          title={t("detail.delete-title")}
-          aria-label={t("detail.delete-title")}
-          onClick={() => setDeleteOpen(true)}
-        >
-          <TrashIcon className={styles.action_icon} width={16} height={16} />
-          <span>{t("detail.delete-submit")}</span>
-        </Button>
         <Button
           title={t("detail.create-child.title")}
           aria-label={t("detail.create-child.title")}
