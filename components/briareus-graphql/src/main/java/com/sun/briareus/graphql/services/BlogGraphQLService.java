@@ -84,6 +84,9 @@ public class BlogGraphQLService {
   @Autowired
   private ReaderTextRepository readerTextRepository;
 
+  @Autowired
+  private com.sun.briareus.repository.PostRepository postRepository;
+
   /**
    * Retrieves a page of blog posts matching the filters.
    *
@@ -506,6 +509,39 @@ public class BlogGraphQLService {
   private boolean canEdit(PostEntity post) {
     UUID viewer = currentUserId();
     return viewer != null && post.getCreatedBy() != null && post.getCreatedBy().equals(viewer);
+  }
+
+  /**
+   * Deletes a blog post and all descendants, owner only.
+   *
+   * @param id the post id
+   * @return the result
+   */
+  @Transactional
+  public QueryResult deleteBlogPost(String id) {
+    return mutate("deleteBlogPost", () -> {
+      UUID postId = UUID.fromString(id);
+      PostEntity post = briareusService.locatePost(postId)
+          .orElseThrow(() -> new IllegalArgumentException("Post not found: " + id));
+      if (!canEdit(post)) {
+        throw new IllegalArgumentException("Not authorized to delete post: " + id);
+      }
+      deleteWithChildren(postId);
+      return postId;
+    });
+  }
+
+  /**
+   * Recursively deletes a post and its children.
+   *
+   * @param postId the root id
+   */
+  private void deleteWithChildren(UUID postId) {
+    List<PostEntity> children = postRepository.findByParentId(postId);
+    for (PostEntity child : children) {
+      deleteWithChildren(child.getId());
+    }
+    briareusService.deleteById(postId);
   }
 
   /**

@@ -96,6 +96,7 @@ type BlogMutations {
   addRemoteObject(postId: ID!, target: String!): QueryResult
   removeRemoteObject(postId: ID!, target: String!): QueryResult
   ingestBlogFromSource(input: IngestBlogInput!): QueryResult
+  deleteBlogPost(id: ID!): QueryResult
 }
 
 extend type Query {

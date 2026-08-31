@@ -217,4 +217,16 @@ public class BlogDataFetcher {
   public QueryResult ingestBlogFromSource(IngestBlogInput input) {
     return blogGraphQLService.ingestBlogFromSource(input);
   }
+
+  /**
+   * Deletes a blog post and its children, owner only.
+   *
+   * @param id the post id
+   * @return the outcome
+   */
+  @DgsData(parentType = "BlogMutations", field = "deleteBlogPost")
+  @PreAuthorize("@permissions.has('graphql.briareus.deleteBlogPost')")
+  public QueryResult deleteBlogPost(String id) {
+    return blogGraphQLService.deleteBlogPost(id);
+  }
 }

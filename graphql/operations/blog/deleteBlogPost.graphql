@@ -1,0 +1,15 @@
+mutation deleteBlogPost($id: ID!) {
+  blogMutations {
+    deleteBlogPost(id: $id) {
+      ... on QuerySuccess {
+        __typename
+        message
+        id
+      }
+      ... on StandardError {
+        __typename
+        message
+      }
+    }
+  }
+}
