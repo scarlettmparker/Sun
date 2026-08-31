@@ -17,6 +17,7 @@ const MarkdownViewer = (props: MarkdownViewerProps) => {
 
   return (
     <div
+      lang="en"
       className={cn(className, styles.markdown_viewer)}
       {...rest}
       dangerouslySetInnerHTML={{
