@@ -162,6 +162,11 @@ export function wordsMatch(
   opts?: WordsMatchOptions,
 ): boolean {
   if (token === word) return true;
+  // Pure numeric tokens (years, versions) must match exactly
+  if (/^\d+$/.test(token) && /^\d+$/.test(word)) return false;
+  if (/^\d+$/.test(word) || /^\d+$/.test(token)) {
+    return false;
+  }
   const maxDistance = opts?.maxDistance ?? (word.length <= 4 ? 1 : 2);
   if (levenshtein(token, word) <= maxDistance) return true;
   const minBigram = opts?.minBigram ?? 0.65;
