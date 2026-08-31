@@ -9,6 +9,7 @@ export default defineConfig({
     "src/date.ts",
     "src/posthog.tsx",
     "src/nlp.ts",
+    "src/cidr.ts",
   ],
   format: ["cjs", "esm"],
   dts: false,

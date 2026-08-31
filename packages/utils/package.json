@@ -1,6 +1,6 @@
 {
   "name": "@sun/utils",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "description": "Shared utilities across Sun ecosystem apps",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -40,13 +40,18 @@
       "types": "./dist/nlp.d.ts",
       "import": "./dist/nlp.mjs",
       "require": "./dist/nlp.js"
+    },
+    "./cidr": {
+      "types": "./dist/cidr.d.ts",
+      "import": "./dist/cidr.mjs",
+      "require": "./dist/cidr.js"
     }
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsup && tsc --project tsconfig.json --emitDeclarationOnly || true && cp dist/nlp.d.ts dist/nlp.d.mts 2>/dev/null || true",
+    "build": "tsup && tsc --project tsconfig.json",
     "publish": "npm publish --ignore-scripts --registry https://registry.int.scarlettparker.co.uk"
   },
   "publishConfig": {
