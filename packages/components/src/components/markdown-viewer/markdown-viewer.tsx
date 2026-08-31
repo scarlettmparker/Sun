@@ -1,6 +1,6 @@
 import React from "react";
 import { cn } from "~/utils/cn";
-import { highlightMarkdown, stripMarkdown } from "~/utils/markdown";
+import { renderMarkdown } from "~/utils/markdown";
 import styles from "./markdown-viewer.module.css";
 
 type MarkdownViewerProps = React.HTMLAttributes<HTMLDivElement>;
@@ -21,7 +21,7 @@ const MarkdownViewer = (props: MarkdownViewerProps) => {
       className={cn(className, styles.markdown_viewer)}
       {...rest}
       dangerouslySetInnerHTML={{
-        __html: stripMarkdown(highlightMarkdown(children)),
+        __html: renderMarkdown(children),
       }}
     />
   );

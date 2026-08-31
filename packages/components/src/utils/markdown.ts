@@ -1,6 +1,263 @@
 /**
- * Markdown processing utilities for highlighting and stripping syntax.
+ * Markdown helpers for viewer and editor.
  */
+
+/**
+ * Renders markdown directly to viewer HTML.
+ *
+ * @param text - raw markdown
+ * @returns viewer HTML
+ */
+export const renderMarkdown = (text: string): string => {
+  const lines = text.split("\n");
+  const blocks: string[] = [];
+
+  for (let i = 0; i < lines.length; ) {
+    if (
+      isTableRow(lines[i]) &&
+      i + 1 < lines.length &&
+      isDelimiterRow(lines[i + 1])
+    ) {
+      const { html, nextIndex } = parseTableBlockViewer(lines, i);
+      blocks.push(html);
+      i = nextIndex;
+    } else if (isHrRow(lines[i])) {
+      blocks.push("<hr>");
+      i += 1;
+    } else {
+      blocks.push(renderLine(lines[i]));
+      i += 1;
+    }
+  }
+
+  return blocks.join("\n").replace(/\n/g, "<br>\n");
+};
+
+/**
+ * Renders a single line.
+ *
+ * @param line - raw line
+ * @returns HTML for the line
+ */
+function renderLine(line: string): string {
+  if (line.startsWith("# ")) return `<span class="md-h1">${renderInline(line.slice(2))}</span>`;
+  if (line.startsWith("## ")) return `<span class="md-h2">${renderInline(line.slice(3))}</span>`;
+  if (line.startsWith("### ")) return `<span class="md-h3">${renderInline(line.slice(4))}</span>`;
+  if (line.startsWith("#### ")) return `<span class="md-h4">${renderInline(line.slice(5))}</span>`;
+  if (line.startsWith("##### ")) return `<span class="md-h5">${renderInline(line.slice(6))}</span>`;
+  if (line.startsWith("###### ")) return `<span class="md-h6">${renderInline(line.slice(7))}</span>`;
+  if (line.startsWith("- ") || line.startsWith("* ") || line.startsWith("+ ")) {
+    const rest = line.slice(2);
+    return `<span class="md-list">•</span> ${renderInline(rest)}`;
+  }
+  if (line.startsWith("> ")) {
+    return `<span class="md-quote">${renderInline(line.slice(2))}</span>`;
+  }
+  return renderInline(line);
+}
+
+/**
+ * Parses a table block for the viewer.
+ *
+ * @param lines - all lines
+ * @param start - start index
+ * @returns HTML and next index
+ */
+function parseTableBlockViewer(
+  lines: string[],
+  start: number,
+): { html: string; nextIndex: number } {
+  const headerLine = lines[start];
+  const delimiterLine = lines[start + 1];
+  const alignments = parseAlignments(delimiterLine);
+  const headerCells = splitRow(headerLine);
+  const colCount = headerCells.length;
+  const headHtml = `<thead><tr>${headerCells
+    .map(
+      (cell, idx) =>
+        `<th${alignAttr(alignments[idx])}>${renderInline(cell.trim())}</th>`,
+    )
+    .join("")}</tr></thead>`;
+  const bodyRows: string[] = [];
+  let idx = start + 2;
+  while (
+    idx < lines.length &&
+    isTableRow(lines[idx]) &&
+    !isDelimiterRow(lines[idx])
+  ) {
+    const cells = splitRow(lines[idx]);
+    while (cells.length < colCount) cells.push("");
+    if (cells.length > colCount) cells.length = colCount;
+    const rowHtml = `<tr>${cells
+      .map(
+        (cell, cIdx) =>
+          `<td${alignAttr(alignments[cIdx])}>${renderInline(cell.trim())}</td>`,
+      )
+      .join("")}</tr>`;
+    bodyRows.push(rowHtml);
+    idx += 1;
+  }
+  const bodyHtml = bodyRows.length ? `<tbody>${bodyRows.join("")}</tbody>` : "";
+  return { html: `<table class="md-table">${headHtml}${bodyHtml}</table>`, nextIndex: idx };
+}
+
+/**
+ * Renders inline markup.
+ *
+ * @param text - inline text
+ * @returns HTML
+ */
+function renderInline(text: string): string {
+  let out = "";
+  let i = 0;
+  while (i < text.length) {
+    if (text[i] === "`") {
+      const end = text.indexOf("`", i + 1);
+      if (end !== -1) {
+        const inner = text.slice(i + 1, end);
+        out += `<span class="md-code">${escapeHtml(inner)}</span>`;
+        i = end + 1;
+        continue;
+      }
+    }
+    if (text.startsWith("***", i)) {
+      const end = text.indexOf("***", i + 3);
+      if (end !== -1) {
+        const inner = text.slice(i + 3, end);
+        out += `<span class="md-bold-italic">${renderInline(inner)}</span>`;
+        i = end + 3;
+        continue;
+      }
+    }
+    if (text.startsWith("**", i)) {
+      const end = text.indexOf("**", i + 2);
+      if (end !== -1) {
+        const inner = text.slice(i + 2, end);
+        out += `<span class="md-bold">${renderInline(inner)}</span>`;
+        i = end + 2;
+        continue;
+      }
+    }
+    if (text.startsWith("__", i)) {
+      const end = text.indexOf("__", i + 2);
+      if (end !== -1) {
+        const inner = text.slice(i + 2, end);
+        out += `<span class="md-underline">${renderInline(inner)}</span>`;
+        i = end + 2;
+        continue;
+      }
+    }
+    if (text.startsWith("~~", i)) {
+      const end = text.indexOf("~~", i + 2);
+      if (end !== -1) {
+        const inner = text.slice(i + 2, end);
+        out += `<span class="md-strike">${renderInline(inner)}</span>`;
+        i = end + 2;
+        continue;
+      }
+    }
+    if (text[i] === "[") {
+      const link = tryParseLink(text, i);
+      if (link) {
+        out += `<a href="${escapeAttr(link.url)}" target="_blank" class="md-link">${escapeHtml(link.title)}</a>`;
+        i = link.end;
+        continue;
+      }
+    }
+    if (text[i] === "*") {
+      if (text.startsWith("**", i) || text.startsWith("***", i)) {
+        out += escapeHtml(text[i]);
+        i++;
+        continue;
+      }
+      const end = text.indexOf("*", i + 1);
+      if (end !== -1) {
+        const inner = text.slice(i + 1, end);
+        if (inner.length > 0) {
+          out += `<span class="md-italic">${renderInline(inner)}</span>`;
+          i = end + 1;
+          continue;
+        }
+      }
+    }
+    if (text[i] === "_") {
+      if (text.startsWith("__", i)) {
+        out += escapeHtml(text[i]);
+        i++;
+        continue;
+      }
+      const end = text.indexOf("_", i + 1);
+      if (end !== -1) {
+        const inner = text.slice(i + 1, end);
+        if (inner.length > 0) {
+          out += `<span class="md-italic">${renderInline(inner)}</span>`;
+          i = end + 1;
+          continue;
+        }
+      }
+    }
+    const ch = text[i];
+    if (ch === "&") out += "&amp;";
+    else if (ch === "<") out += "&lt;";
+    else if (ch === ">") out += "&gt;";
+    else out += ch;
+    i++;
+  }
+  return out;
+}
+
+/**
+ * Parses a balanced link at a position.
+ *
+ * @param text - full text
+ * @param pos - index of [
+ * @returns link or null
+ */
+function tryParseLink(
+  text: string,
+  pos: number,
+): { title: string; url: string; end: number } | null {
+  const close = text.indexOf("]", pos + 1);
+  if (close === -1 || text[close + 1] !== "(") return null;
+  const title = text.slice(pos + 1, close);
+  if (title.includes("\n")) return null;
+  let depth = 1;
+  let j = close + 2;
+  while (j < text.length && depth > 0) {
+    const ch = text[j];
+    if (ch === "(") depth++;
+    else if (ch === ")") depth--;
+    j++;
+  }
+  if (depth !== 0) return null;
+  const url = text.slice(close + 2, j - 1);
+  if (!url) return null;
+  return { title, url, end: j };
+}
+
+/**
+ * Escapes HTML entities.
+ *
+ * @param s - raw text
+ * @returns escaped text
+ */
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+/**
+ * Escapes an attribute value.
+ *
+ * @param s - raw text
+ * @returns escaped text
+ */
+function escapeAttr(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
 
 /**
  * Converts markdown text to HTML with styled spans for syntax highlighting.
@@ -266,10 +523,7 @@ export const stripMarkdown = (html: string): string => {
     /<span class="md-italic">_([^_]+)_<\/span>/g,
     '<span class="md-italic">$1</span>',
   );
-  result = result.replace(
-    /<span class="md-link">\[([^\]]+)\]\(([^)]+)\)<\/span>/g,
-    '<a href="$2" target="_blank" class="md-link">$1</a>',
-  );
+  result = replaceSpanLinks(result);
 
   // Protect block elements from <br> insertion, then replace remaining newlines
   const tableTokens: string[] = [];
@@ -300,10 +554,10 @@ export const stripMarkdown = (html: string): string => {
 };
 
 /**
- * Processes a single line of markdown text, wrapping headers, lists, and quotes with styled spans.
+ * Processes a single line.
  *
- * @param line - Line of text to process.
- * @returns Processed line with HTML spans for styling.
+ * @param line - raw line
+ * @returns HTML for the line
  */
 function processLine(line: string): string {
   if (line.startsWith("# ")) return wrap("md-h1", line);
@@ -341,11 +595,10 @@ function wrap(cls: string, content: string) {
 }
 
 /**
- * Processes inline markdown elements within text, wrapping them with styled spans.
- * Handles overlapping matches by prioritizing patterns and using greedy selection.
+ * Processes inline markup.
  *
- * @param text - Text to process for inline elements.
- * @returns Processed text with HTML spans for inline styling.
+ * @param text - inline text
+ * @returns HTML
  */
 function processInline(text: string): string {
   // Protect existing spans first
@@ -356,17 +609,15 @@ function processInline(text: string): string {
     return restoreSpans(spanTokenized, spanTokens);
 
   // First, protect links so they can be nested inside other inline (e.g., italic)
+  // Balanced paren URLs like Shadow_(psychology) need depth counting, not [^)]+
   const linkTokens: string[] = [];
   let linkIdx = 0;
-  const linkTokenized = spanTokenized.replace(
-    /\[([^\]]+)\]\(([^)]+)\)/g,
-    (m) => {
-      const t = `§§LINK${linkIdx}§§`;
-      linkTokens.push(m);
-      linkIdx++;
-      return t;
-    },
-  );
+  const linkTokenized = replaceLinksBalanced(spanTokenized, (raw) => {
+    const t = `§§LINK${linkIdx}§§`;
+    linkTokens.push(raw);
+    linkIdx++;
+    return t;
+  });
 
   // Patterns in priority order (lower index = higher priority) — link already protected
   const patterns: { name: string; regex: RegExp; cls: string }[] = [
@@ -459,10 +710,10 @@ function processInline(text: string): string {
 }
 
 /**
- * Replaces existing span elements with tokens to protect them during processing.
+ * Protects existing spans.
  *
- * @param input - Input string containing spans.
- * @returns Object with tokenized string and array of original spans.
+ * @param input - HTML with spans
+ * @returns tokenized string and tokens
  */
 function extractSpans(input: string) {
   const tokens: string[] = [];
@@ -477,10 +728,11 @@ function extractSpans(input: string) {
 }
 
 /**
- * Restores the original span elements from tokens.
- * @param input - String with tokens to replace.
- * @param tokens - Array of original span strings.
- * @returns String with spans restored.
+ * Restores protected spans.
+ *
+ * @param input - string with tokens
+ * @param tokens - original spans
+ * @returns restored HTML
  */
 function restoreSpans(input: string, tokens: string[]) {
   let out = input;
@@ -488,4 +740,111 @@ function restoreSpans(input: string, tokens: string[]) {
     out = out.replace(`§§SPAN${i}§§`, tokens[i]);
   }
   return out;
+}
+
+/**
+ * Replaces links with balanced handling.
+ *
+ * @param text - text to scan
+ * @param replacer - called with raw link
+ * @returns text with links replaced
+ */
+function replaceLinksBalanced(
+  text: string,
+  replacer: (raw: string) => string,
+): string {
+  let out = "";
+  let i = 0;
+  while (i < text.length) {
+    const open = text.indexOf("[", i);
+    if (open === -1) {
+      out += text.slice(i);
+      break;
+    }
+    const close = text.indexOf("]", open + 1);
+    if (close === -1 || text[close + 1] !== "(") {
+      out += text.slice(i, close === -1 ? open + 1 : close + 1);
+      i = close === -1 ? open + 1 : close + 1;
+      continue;
+    }
+    let depth = 1;
+    let j = close + 2;
+    while (j < text.length && depth > 0) {
+      const ch = text[j];
+      if (ch === "(") depth++;
+      else if (ch === ")") depth--;
+      j++;
+    }
+    if (depth !== 0) {
+      out += text.slice(i, close + 1);
+      i = close + 1;
+      continue;
+    }
+    const raw = text.slice(open, j);
+    out += text.slice(i, open) + replacer(raw);
+    i = j;
+  }
+  return out;
+}
+
+/**
+ * Replaces span links with anchors.
+ *
+ * @param html - HTML with span links
+ * @returns HTML with anchors
+ */
+function replaceSpanLinks(html: string): string {
+  const prefix = '<span class="md-link">';
+  const suffix = "</span>";
+  let out = "";
+  let i = 0;
+  while (i < html.length) {
+    const start = html.indexOf(prefix, i);
+    if (start === -1) {
+      out += html.slice(i);
+      break;
+    }
+    out += html.slice(i, start);
+    const innerStart = start + prefix.length;
+    const end = html.indexOf(suffix, innerStart);
+    if (end === -1) {
+      out += html.slice(start);
+      break;
+    }
+    const inner = html.slice(innerStart, end);
+    const link = extractLinkBalanced(inner);
+    if (link) {
+      out += `<a href="${link.url}" target="_blank" class="md-link">${link.title}</a>`;
+    } else {
+      out += html.slice(start, end + suffix.length);
+    }
+    i = end + suffix.length;
+  }
+  return out;
+}
+
+/**
+ * Extracts link title and url with balanced parens.
+ *
+ * @param text - raw [title](url)
+ * @returns title and url or null
+ */
+function extractLinkBalanced(
+  text: string,
+): { title: string; url: string } | null {
+  const open = text.indexOf("[");
+  const close = text.indexOf("]", open + 1);
+  if (open === -1 || close === -1 || text[close + 1] !== "(") return null;
+  const title = text.slice(open + 1, close);
+  let depth = 1;
+  let j = close + 2;
+  while (j < text.length && depth > 0) {
+    const ch = text[j];
+    if (ch === "(") depth++;
+    else if (ch === ")") depth--;
+    j++;
+  }
+  if (depth !== 0) return null;
+  const url = text.slice(close + 2, j - 1);
+  return { title, url };
 }
