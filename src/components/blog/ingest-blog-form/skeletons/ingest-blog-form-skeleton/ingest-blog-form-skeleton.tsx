@@ -1,4 +1,10 @@
-import { Card, CardBody, CardHeader, CardTitle, Skeleton } from "@sun/components";
+import {
+  Card,
+  CardBody,
+  CardHeader,
+  CardTitle,
+  Skeleton,
+} from "@sun/components";
 import styles from "./ingest-blog-form-skeleton.module.css";
 
 /**

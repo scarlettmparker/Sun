@@ -119,7 +119,9 @@ export interface MutationDefinition<TBody, TResult = MutationResult> {
 export function defineMutation<TBody, TResult = MutationResult>(
   definition: MutationDefinition<TBody, TResult>,
 ): void {
-  registerMutationHandler(definition.path, async (body, context) =>
-    definition.handler(body as TBody, context) as unknown as MutationResult,
+  registerMutationHandler(
+    definition.path,
+    async (body, context) =>
+      definition.handler(body as TBody, context) as unknown as MutationResult,
   );
 }

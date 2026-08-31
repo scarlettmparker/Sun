@@ -60,7 +60,16 @@ const BlogDetail = () => {
   };
 
   return (
-    <div className={styles.detail_wrapper}>
+    <div
+      id="blog-detail-wrapper"
+      ref={(el) => el?.setAttribute("data-ref", "blog-detail-wrapper")}
+      className={styles.detail_wrapper}
+    >
+      <div
+        id="blog-detail-nav-slot"
+        ref={(el) => el?.setAttribute("data-ref", "blog-detail-nav-slot")}
+        className={styles.nav_slot}
+      />
       <BlogBreadcrumb post={data as BlogPost} />
       <div className={styles.columns}>
         <div className={styles.left_column}>

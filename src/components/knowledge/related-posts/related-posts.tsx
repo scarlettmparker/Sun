@@ -19,8 +19,12 @@ const RelatedPosts = (props: RelatedPostsProps) => {
   const { ids } = props;
   const { t } = useTranslation("blog");
   const { data: relatedPosts } = usePageData<
-    NonNullable<ListBlogPostsByRemoteObjectsQuery["blogQueries"]["listByRemoteObjects"]>
-  >("relatedPosts", "blog/relatedPosts", { ids: JSON.stringify(ids) } as unknown as Record<string, string>);
+    NonNullable<
+      ListBlogPostsByRemoteObjectsQuery["blogQueries"]["listByRemoteObjects"]
+    >
+  >("relatedPosts", "blog/relatedPosts", {
+    ids: JSON.stringify(ids),
+  } as unknown as Record<string, string>);
 
   if (ids.length === 0) {
     return null;
@@ -42,7 +46,11 @@ const RelatedPosts = (props: RelatedPostsProps) => {
               return null;
             }
             return (
-              <Link key={post.id} to={`/blog/${post.id}`} className={styles.row_link}>
+              <Link
+                key={post.id}
+                to={`/blog/${post.id}`}
+                className={styles.row_link}
+              >
                 <span className={styles.row_title}>{post.title}</span>
               </Link>
             );

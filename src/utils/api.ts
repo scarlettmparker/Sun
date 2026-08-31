@@ -76,59 +76,64 @@ export async function fetchWiktionaryEntry(word: string) {
  * Ingests a blog from a source.
  */
 export async function mutateIngestBlogFromSource(input: IngestBlogInput) {
-  return executeDocument<IngestBlogFromSourceMutation, IngestBlogFromSourceMutationVariables>(
-    IngestBlogFromSourceDocument,
-    { input },
-  );
+  return executeDocument<
+    IngestBlogFromSourceMutation,
+    IngestBlogFromSourceMutationVariables
+  >(IngestBlogFromSourceDocument, { input });
 }
 
 /**
  * Adds a remote-object edge to a blog post.
  */
 export async function mutateAddRemoteObject(postId: string, target: string) {
-  return executeDocument<AddRemoteObjectMutation, AddRemoteObjectMutationVariables>(
-    AddRemoteObjectDocument,
-    { postId, target },
-  );
+  return executeDocument<
+    AddRemoteObjectMutation,
+    AddRemoteObjectMutationVariables
+  >(AddRemoteObjectDocument, { postId, target });
 }
 
 /**
  * Removes a remote-object edge from a blog post.
  */
 export async function mutateRemoveRemoteObject(postId: string, target: string) {
-  return executeDocument<RemoveRemoteObjectMutation, RemoveRemoteObjectMutationVariables>(
-    RemoveRemoteObjectDocument,
-    { postId, target },
-  );
+  return executeDocument<
+    RemoveRemoteObjectMutation,
+    RemoveRemoteObjectMutationVariables
+  >(RemoveRemoteObjectDocument, { postId, target });
 }
 
 /**
  * Deletes a blog post and its children.
  */
 export async function mutateDeleteBlogPost(id: string) {
-  return executeDocument<DeleteBlogPostMutation, DeleteBlogPostMutationVariables>(
-    DeleteBlogPostDocument,
-    { id },
-  );
+  return executeDocument<
+    DeleteBlogPostMutation,
+    DeleteBlogPostMutationVariables
+  >(DeleteBlogPostDocument, { id });
 }
 
 /**
  * Locates reader texts by ids in batch.
  */
 export async function fetchLocateReaderTexts(ids: string[]) {
-  return executeDocument<LocateReaderTextsQuery, LocateReaderTextsQueryVariables>(
-    LocateReaderTextsDocument,
-    { ids },
-  );
+  return executeDocument<
+    LocateReaderTextsQuery,
+    LocateReaderTextsQueryVariables
+  >(LocateReaderTextsDocument, { ids });
 }
 
 /**
  * Lists hades texts with pagination.
  */
-export async function fetchHadesTexts(pagination?: HadesTextsQueryVariables["pagination"]) {
-  return executeDocument<HadesTextsQuery, HadesTextsQueryVariables>(HadesTextsDocument, {
-    pagination,
-  });
+export async function fetchHadesTexts(
+  pagination?: HadesTextsQueryVariables["pagination"],
+) {
+  return executeDocument<HadesTextsQuery, HadesTextsQueryVariables>(
+    HadesTextsDocument,
+    {
+      pagination,
+    },
+  );
 }
 
 /**

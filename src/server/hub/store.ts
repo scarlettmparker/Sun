@@ -33,19 +33,17 @@ function toGqlMode(mode: HubMode): GqlHubMode {
 function toGqlRegistry(registry: HubRegistry): HubRegistryInput {
   return {
     mode: toGqlMode(registry.mode),
-    apps: registry.apps.map(
-      (app): HubAppInput => ({
-        key: app.key,
-        name: app.name,
-        dir: app.dir,
-        devPort: app.devPort,
-        prodPort: app.prodPort,
-        url: app.url,
-        description: app.description,
-        enabled: app.enabled,
-        self: app.self === true,
-      }),
-    ),
+    apps: registry.apps.map((app): HubAppInput => ({
+      key: app.key,
+      name: app.name,
+      dir: app.dir,
+      devPort: app.devPort,
+      prodPort: app.prodPort,
+      url: app.url,
+      description: app.description,
+      enabled: app.enabled,
+      self: app.self === true,
+    })),
   };
 }
 
@@ -55,19 +53,17 @@ function toGqlRegistry(registry: HubRegistry): HubRegistryInput {
 function fromGqlRegistry(registry: GqlHubRegistry): HubRegistry {
   return {
     mode: toNodeMode(registry.mode),
-    apps: registry.apps.map(
-      (app: GqlHubApp): HubAppConfig => ({
-        key: app.key,
-        name: app.name,
-        dir: app.dir,
-        devPort: app.devPort,
-        prodPort: app.prodPort,
-        url: app.url,
-        description: app.description,
-        enabled: app.enabled,
-        self: app.self,
-      }),
-    ),
+    apps: registry.apps.map((app: GqlHubApp): HubAppConfig => ({
+      key: app.key,
+      name: app.name,
+      dir: app.dir,
+      devPort: app.devPort,
+      prodPort: app.prodPort,
+      url: app.url,
+      description: app.description,
+      enabled: app.enabled,
+      self: app.self,
+    })),
   };
 }
 

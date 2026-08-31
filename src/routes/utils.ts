@@ -10,7 +10,9 @@ import {
  * @param ids foreign ids for input
  * @returns promise resolving to page data
  */
-export async function getGalleryItemsByRemoteObjects(ids: string[]): Promise<Record<string, unknown> | null> {
+export async function getGalleryItemsByRemoteObjects(
+  ids: string[],
+): Promise<Record<string, unknown> | null> {
   try {
     const result = await executeDocument<ListGalleryItemsByRemoteObjectsQuery>(
       ListGalleryItemsByRemoteObjectsDocument,
@@ -18,8 +20,8 @@ export async function getGalleryItemsByRemoteObjects(ids: string[]): Promise<Rec
     );
     if (result.success && result.data) {
       return {
-        galleryItems: (result.data as ListGalleryItemsByRemoteObjectsQuery).galleryQueries
-          .listByRemoteObjects,
+        galleryItems: (result.data as ListGalleryItemsByRemoteObjectsQuery)
+          .galleryQueries.listByRemoteObjects,
       };
     }
     return {

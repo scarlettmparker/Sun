@@ -53,9 +53,7 @@ function verifyToken(token) {
   }
 
   try {
-    const payload = JSON.parse(
-      Buffer.from(parts[1], "base64url").toString(),
-    );
+    const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString());
     if (payload.exp && payload.exp * 1000 < Date.now()) return null;
     return payload;
   } catch {
@@ -78,7 +76,9 @@ export function setupRoutes(app, vite) {
     if (!token) return reply.redirect("/login?error=1");
     reply.header("Set-Cookie", buildAuthCookie(token));
     const redirectTo =
-      typeof request.query?.redirect === "string" ? request.query.redirect : "/";
+      typeof request.query?.redirect === "string"
+        ? request.query.redirect
+        : "/";
     return reply.redirect(redirectTo);
   });
 

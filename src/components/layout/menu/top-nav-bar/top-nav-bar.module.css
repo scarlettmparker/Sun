@@ -14,6 +14,11 @@
   z-index: 501;
 }
 
+.top_nav_bar_portalled {
+  position: static;
+  transform: none;
+}
+
 .divider {
   width: 1px;
   height: 1.25rem;

@@ -30,11 +30,9 @@ type BlogTypeListProps = {
 const BlogTypeList = (props: BlogTypeListProps) => {
   const { selectedType, onSelect } = props;
   const { t } = useTranslation("blog");
-  const { data: types } = usePageData<BlogPostTypesQuery["blogQueries"]["blogPostTypes"]>(
-    "types",
-    "home",
-    {},
-  );
+  const { data: types } = usePageData<
+    BlogPostTypesQuery["blogQueries"]["blogPostTypes"]
+  >("types", "home", {});
 
   return (
     <>

@@ -17,8 +17,12 @@ export const highlightMarkdown = (text: string): string => {
   const lines = escaped.split("\n");
   const out: string[] = [];
 
-  for (let i = 0; i < lines.length; ) {
-    if (isTableRow(lines[i]) && i + 1 < lines.length && isDelimiterRow(lines[i + 1])) {
+  for (let i = 0; i < lines.length;) {
+    if (
+      isTableRow(lines[i]) &&
+      i + 1 < lines.length &&
+      isDelimiterRow(lines[i + 1])
+    ) {
       const { html, nextIndex } = parseTableBlock(lines, i);
       out.push(html);
       i = nextIndex;
@@ -73,7 +77,11 @@ function isDelimiterRow(line: string): boolean {
  */
 function isHrRow(line: string): boolean {
   const trimmed = line.trim();
-  return /^(-\s*){3,}$/.test(trimmed) || /^(\*\s*){3,}$/.test(trimmed) || /^(_\s*){3,}$/.test(trimmed);
+  return (
+    /^(-\s*){3,}$/.test(trimmed) ||
+    /^(\*\s*){3,}$/.test(trimmed) ||
+    /^(_\s*){3,}$/.test(trimmed)
+  );
 }
 
 /**
@@ -94,7 +102,10 @@ function isTableHtml(html: string): boolean {
  * @param start - Start index of header row.
  * @returns HTML and next index after block.
  */
-function parseTableBlock(lines: string[], start: number): { html: string; nextIndex: number } {
+function parseTableBlock(
+  lines: string[],
+  start: number,
+): { html: string; nextIndex: number } {
   const headerLine = lines[start];
   const delimiterLine = lines[start + 1];
   const alignments = parseAlignments(delimiterLine);
@@ -103,19 +114,29 @@ function parseTableBlock(lines: string[], start: number): { html: string; nextIn
   const colCount = headerCells.length;
 
   const headHtml = `<thead><tr>${headerCells
-    .map((cell, idx) => `<th${alignAttr(alignments[idx])}>${processInline(cell.trim())}</th>`)
+    .map(
+      (cell, idx) =>
+        `<th${alignAttr(alignments[idx])}>${processInline(cell.trim())}</th>`,
+    )
     .join("")}</tr></thead>`;
 
   const bodyRows: string[] = [];
   let idx = start + 2;
-  while (idx < lines.length && isTableRow(lines[idx]) && !isDelimiterRow(lines[idx])) {
+  while (
+    idx < lines.length &&
+    isTableRow(lines[idx]) &&
+    !isDelimiterRow(lines[idx])
+  ) {
     const cells = splitRow(lines[idx]);
     // Pad/truncate to colCount
     while (cells.length < colCount) cells.push("");
     if (cells.length > colCount) cells.length = colCount;
 
     const rowHtml = `<tr>${cells
-      .map((cell, cIdx) => `<td${alignAttr(alignments[cIdx])}>${processInline(cell.trim())}</td>`)
+      .map(
+        (cell, cIdx) =>
+          `<td${alignAttr(alignments[cIdx])}>${processInline(cell.trim())}</td>`,
+      )
       .join("")}</tr>`;
     bodyRows.push(rowHtml);
     idx += 1;
@@ -140,7 +161,9 @@ function splitRow(row: string): string[] {
   const placeholder = "§§PIPE§§";
   const protectedRow = inner.replace(/\\\|/g, placeholder);
   const rawCells = protectedRow.split("|");
-  return rawCells.map((c) => c.replace(new RegExp(placeholder, "g"), "|").trim());
+  return rawCells.map((c) =>
+    c.replace(new RegExp(placeholder, "g"), "|").trim(),
+  );
 }
 
 /**
@@ -149,7 +172,9 @@ function splitRow(row: string): string[] {
  * @param delimiter - Delimiter line.
  * @returns Alignments.
  */
-function parseAlignments(delimiter: string): Array<"left" | "center" | "right" | null> {
+function parseAlignments(
+  delimiter: string,
+): Array<"left" | "center" | "right" | null> {
   const cells = splitRow(delimiter);
   return cells.map((cell) => {
     const t = cell.trim();

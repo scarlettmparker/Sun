@@ -56,7 +56,8 @@ defineMutation({
       return { __typename: "StandardError", message: "Invalid input" };
     }
     const result = await mutateAddRemoteObject(postId, target);
-    const data = result.data?.blogMutations.addRemoteObject as MutationResult | undefined;
+    const data = result.data?.blogMutations.addRemoteObject as
+      MutationResult | undefined;
     if (data == null) {
       return { __typename: "StandardError", message: result.error || "Failed" };
     }
@@ -85,7 +86,8 @@ defineMutation({
       return { __typename: "StandardError", message: "Invalid input" };
     }
     const result = await mutateRemoveRemoteObject(postId, target);
-    const data = result.data?.blogMutations.removeRemoteObject as MutationResult | undefined;
+    const data = result.data?.blogMutations.removeRemoteObject as
+      MutationResult | undefined;
     if (data == null) {
       return { __typename: "StandardError", message: result.error || "Failed" };
     }
@@ -113,12 +115,17 @@ defineMutation({
       return { __typename: "StandardError", message: "Invalid input" };
     }
     const result = await mutateDeleteBlogPost(id);
-    const data = result.data?.blogMutations.deleteBlogPost as MutationResult | undefined;
+    const data = result.data?.blogMutations.deleteBlogPost as
+      MutationResult | undefined;
     if (data == null) {
       return { __typename: "StandardError", message: result.error || "Failed" };
     }
     if (data.__typename === "QuerySuccess") {
-      throw new ServerRedirectError("/blog", [makeCacheKey("blog:blogPosts", {})], data);
+      throw new ServerRedirectError(
+        "/blog",
+        [makeCacheKey("blog:blogPosts", {})],
+        data,
+      );
     }
     return data;
   },
@@ -131,16 +138,22 @@ defineMutation({
   path: "blog/ingest-source",
   async handler(body: Record<string, unknown>) {
     const input = body.input as IngestBlogInput | undefined;
-    if (input == null || typeof input.title !== "string" || typeof input.sourceId !== "string") {
+    if (
+      input == null ||
+      typeof input.title !== "string" ||
+      typeof input.sourceId !== "string"
+    ) {
       return { __typename: "StandardError", message: "Invalid input" };
     }
     const result = await mutateIngestBlogFromSource(input);
-    const data = result.data?.blogMutations.ingestBlogFromSource as MutationResult | undefined;
+    const data = result.data?.blogMutations.ingestBlogFromSource as
+      MutationResult | undefined;
     if (data == null) {
       return { __typename: "StandardError", message: result.error || "Failed" };
     }
     if (data.__typename === "QuerySuccess" && data.id) {
-      const parentId = (input as IngestBlogInput)?.parentId as string | undefined;
+      const parentId = (input as IngestBlogInput)?.parentId as
+        string | undefined;
       const invalidated = [
         makeCacheKey("blog:blogPosts", {}),
         makeCacheKey("home:home", {}),

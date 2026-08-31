@@ -45,14 +45,20 @@ export async function createBlogPost(
 /**
  * Attaches a remote object to a post.
  */
-export async function attachRemoteObject(postId: string, target: string): Promise<MutationResult> {
+export async function attachRemoteObject(
+  postId: string,
+  target: string,
+): Promise<MutationResult> {
   return executeMutation("blog/add-remote-object", { postId, target });
 }
 
 /**
  * Detaches a remote object from a post.
  */
-export async function detachRemoteObject(postId: string, target: string): Promise<MutationResult> {
+export async function detachRemoteObject(
+  postId: string,
+  target: string,
+): Promise<MutationResult> {
   return executeMutation("blog/remove-remote-object", { postId, target });
 }
 

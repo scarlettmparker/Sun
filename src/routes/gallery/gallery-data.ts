@@ -1,6 +1,9 @@
 import { defineLoader } from "@sun/ssr";
 import { executeDocument } from "@sun/api";
-import { ListGalleryItemsDocument, type ListGalleryItemsQuery } from "~/generated/graphql";
+import {
+  ListGalleryItemsDocument,
+  type ListGalleryItemsQuery,
+} from "~/generated/graphql";
 
 /**
  * Loads the gallery items into the page-data cache.
@@ -9,9 +12,13 @@ defineLoader({
   pattern: "gallery",
   async loader() {
     try {
-      const result = await executeDocument<ListGalleryItemsQuery>(ListGalleryItemsDocument, {});
+      const result = await executeDocument<ListGalleryItemsQuery>(
+        ListGalleryItemsDocument,
+        {},
+      );
       const galleryItems = result.success
-        ? (result.data as ListGalleryItemsQuery | undefined)?.galleryQueries?.list
+        ? (result.data as ListGalleryItemsQuery | undefined)?.galleryQueries
+            ?.list
         : null;
       return { galleryItems: galleryItems ?? [] };
     } catch {

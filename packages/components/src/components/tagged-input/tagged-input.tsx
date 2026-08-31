@@ -27,7 +27,15 @@ type TaggedInputProps = React.HTMLAttributes<HTMLDivElement> & {
  */
 const TaggedInput = forwardRef<HTMLInputElement, TaggedInputProps>(
   (props, ref) => {
-    const { children, value, onChange, placeholder, onKeyDown, className, ...rest } = props;
+    const {
+      children,
+      value,
+      onChange,
+      placeholder,
+      onKeyDown,
+      className,
+      ...rest
+    } = props;
     const hasChildren = Array.isArray(children)
       ? children.length > 0
       : children != null && children !== false;
@@ -38,7 +46,9 @@ const TaggedInput = forwardRef<HTMLInputElement, TaggedInputProps>(
         <Input
           ref={ref}
           value={value}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            onChange(e.target.value)
+          }
           onKeyDown={onKeyDown}
           placeholder={hasChildren ? undefined : placeholder}
           className={styles.input}

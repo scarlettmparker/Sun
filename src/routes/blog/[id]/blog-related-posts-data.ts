@@ -19,7 +19,11 @@ defineLoader({
       ids = JSON.parse(rawIds) as string[];
     }
     if (!ids.length) {
-      return { relatedPosts: [] as NonNullable<ListBlogPostsByRemoteObjectsQuery["blogQueries"]["listByRemoteObjects"]> };
+      return {
+        relatedPosts: [] as NonNullable<
+          ListBlogPostsByRemoteObjectsQuery["blogQueries"]["listByRemoteObjects"]
+        >,
+      };
     }
     try {
       const result = await executeDocument<ListBlogPostsByRemoteObjectsQuery>(
@@ -27,11 +31,16 @@ defineLoader({
         { ids },
       );
       const relatedPosts = result.success
-        ? (result.data as ListBlogPostsByRemoteObjectsQuery | undefined)?.blogQueries?.listByRemoteObjects ?? []
+        ? ((result.data as ListBlogPostsByRemoteObjectsQuery | undefined)
+            ?.blogQueries?.listByRemoteObjects ?? [])
         : [];
       return { relatedPosts: relatedPosts ?? [] };
     } catch {
-      return { relatedPosts: [] as NonNullable<ListBlogPostsByRemoteObjectsQuery["blogQueries"]["listByRemoteObjects"]> };
+      return {
+        relatedPosts: [] as NonNullable<
+          ListBlogPostsByRemoteObjectsQuery["blogQueries"]["listByRemoteObjects"]
+        >,
+      };
     }
   },
 });

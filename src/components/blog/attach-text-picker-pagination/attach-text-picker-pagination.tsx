@@ -31,20 +31,24 @@ const AttachTextPickerPagination = (props: AttachTextPickerPaginationProps) => {
       : undefined,
   };
 
-  const { data } = usePageData<NonNullable<HadesTextsQuery["hadesQueries"]["texts"]>>(
-    "hadesSearch",
-    "blog/hadesSearch",
-    {
-      pagination: JSON.stringify(pagination),
-    } as unknown as Record<string, string>,
-  );
+  const { data } = usePageData<
+    NonNullable<HadesTextsQuery["hadesQueries"]["texts"]>
+  >("hadesSearch", "blog/hadesSearch", {
+    pagination: JSON.stringify(pagination),
+  } as unknown as Record<string, string>);
   const pageInfo = data?.pageInfo;
 
   if (pageInfo == null || pageInfo.totalPages <= 1) {
     return null;
   }
 
-  return <Pagination page={page + 1} totalPages={pageInfo.totalPages} onPageChange={onPageChange} />;
+  return (
+    <Pagination
+      page={page + 1}
+      totalPages={pageInfo.totalPages}
+      onPageChange={onPageChange}
+    />
+  );
 };
 
 export default AttachTextPickerPagination;

@@ -9,7 +9,10 @@ defineLoader({
   pattern: "stem-player",
   async loader() {
     try {
-      const result = await executeDocument<ListSongsQuery>(ListSongsDocument, {});
+      const result = await executeDocument<ListSongsQuery>(
+        ListSongsDocument,
+        {},
+      );
       const songs = result.success
         ? (result.data as ListSongsQuery | undefined)?.stemPlayerQueries?.list
         : null;

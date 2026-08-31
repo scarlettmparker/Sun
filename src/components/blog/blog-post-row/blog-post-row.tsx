@@ -19,7 +19,10 @@ const BlogPostRow = (props: BlogPostRowProps) => {
   const isActive = pathname === `/blog/${post.id}`;
 
   return (
-    <Link to={`/blog/${post.id}${search}`} className={cn(styles.item, isActive && styles.item_active)}>
+    <Link
+      to={`/blog/${post.id}${search}`}
+      className={cn(styles.item, isActive && styles.item_active)}
+    >
       <span className={styles.item_title}>{post.title}</span>
     </Link>
   );

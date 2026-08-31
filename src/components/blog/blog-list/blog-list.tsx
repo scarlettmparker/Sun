@@ -21,7 +21,11 @@ const BlogList = (props: BlogListProps) => {
   const { t } = useTranslation("blog");
   const filters = [];
   if (selectedType) {
-    filters.push({ field: "type.name", operator: "EQUALS" as const, value: selectedType });
+    filters.push({
+      field: "type.name",
+      operator: "EQUALS" as const,
+      value: selectedType,
+    });
   }
   const pagination = {
     page: 0,
@@ -51,7 +55,11 @@ const BlogList = (props: BlogListProps) => {
   return (
     <div className={styles.groups}>
       {groupedPosts.map((group) => (
-        <BlogMonthGroup key={group.monthYear} monthYear={group.monthYear} posts={group.posts} />
+        <BlogMonthGroup
+          key={group.monthYear}
+          monthYear={group.monthYear}
+          posts={group.posts}
+        />
       ))}
     </div>
   );

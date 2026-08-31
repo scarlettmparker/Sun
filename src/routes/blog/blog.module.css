@@ -7,6 +7,5 @@
 
 .blog_main {
   min-width: 350px;
-  padding-top: calc(var(--xl) * 4);
   margin: 0 auto;
 }

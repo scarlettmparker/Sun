@@ -1,6 +1,9 @@
 import { defineLoader } from "@sun/ssr";
 import { executeDocument } from "@sun/api";
-import { PropertySetDocument, type PropertySetQuery } from "~/generated/graphql";
+import {
+  PropertySetDocument,
+  type PropertySetQuery,
+} from "~/generated/graphql";
 
 /**
  * Loads the configurable level-to-colour map from gaia.
@@ -10,9 +13,8 @@ async function loadLevelColours(): Promise<Record<string, string>> {
     ownerKey: "ReactApp",
     name: "reader-level-colours",
   });
-  const entries = (result.data as PropertySetQuery | undefined)?.gaiaQueries?.propertySet as
-    | Record<string, { colour?: string }>
-    | undefined;
+  const entries = (result.data as PropertySetQuery | undefined)?.gaiaQueries
+    ?.propertySet as Record<string, { colour?: string }> | undefined;
   if (!entries) {
     return {};
   }

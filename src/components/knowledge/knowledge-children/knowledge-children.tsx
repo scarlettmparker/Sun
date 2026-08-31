@@ -26,11 +26,9 @@ const KnowledgeChildren = (props: KnowledgeChildrenProps) => {
       { field: "title", dir: "ASC" as const },
     ],
   };
-  const { data: children } = usePageData<ChildrenQuery["blogQueries"]["children"]>(
-    "children",
-    "blog/:id/children",
-    { id: postId, pagination },
-  );
+  const { data: children } = usePageData<
+    ChildrenQuery["blogQueries"]["children"]
+  >("children", "blog/:id/children", { id: postId, pagination });
 
   if ((children?.items?.length ?? 0) === 0) {
     return null;
@@ -44,7 +42,11 @@ const KnowledgeChildren = (props: KnowledgeChildrenProps) => {
       <CardBody>
         <div className={styles.list_body}>
           {(children?.items ?? []).map((child) => (
-            <Link key={child.id} to={`/blog/${child.id}`} className={styles.row_link}>
+            <Link
+              key={child.id}
+              to={`/blog/${child.id}`}
+              className={styles.row_link}
+            >
               <span className={styles.row_title}>{child.title}</span>
             </Link>
           ))}

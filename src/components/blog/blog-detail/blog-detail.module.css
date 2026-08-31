@@ -64,14 +64,23 @@
   margin-right: var(--md);
 }
 
+.nav_slot {
+  width: 100%;
+  min-height: 0;
+}
+
+.nav_slot:empty {
+  display: none;
+}
+
 .blog_body {
   overflow-y: auto;
 }
 
 .actions {
   position: fixed;
-  bottom: calc(var(--xl) * 2);
-  right: calc(var(--xl) * 4);
+  bottom: var(--xl);
+  right: calc(var(--xl) * 2);
   display: flex;
   gap: var(--md);
   z-index: 100;

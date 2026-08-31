@@ -1,7 +1,9 @@
 import { Suspense } from "react";
 import { Outlet } from "react-router-dom";
 import { BreadcrumbProvider } from "@sun/components";
+import { cn } from "~/utils/cn";
 import BlogTypeSidebar from "~/components/blog/blog-type-sidebar";
+import detailStyles from "~/components/blog/blog-detail/blog-detail.module.css";
 import styles from "./blog.module.css";
 
 /**
@@ -14,7 +16,16 @@ const BlogLayout = () => {
         <Suspense fallback={null}>
           <BlogTypeSidebar />
         </Suspense>
-        <div className={styles.blog_main}>
+        <div
+          id="blog-detail-wrapper"
+          ref={(el) => el?.setAttribute("data-ref", "blog-detail-wrapper")}
+          className={cn(styles.blog_main, detailStyles.detail_wrapper)}
+        >
+          <div
+            id="blog-detail-nav-slot"
+            ref={(el) => el?.setAttribute("data-ref", "blog-detail-nav-slot")}
+            className={detailStyles.nav_slot}
+          />
           <Outlet />
         </div>
       </div>

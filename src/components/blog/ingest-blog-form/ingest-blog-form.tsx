@@ -12,7 +12,9 @@ import styles from "./ingest-blog-form.module.css";
 const IngestBlogForm = () => {
   const { t } = useTranslation("blog");
   const [isPending, startTransition] = useTransition();
-  const [sourceKind, setSourceKind] = useState<"WIKIPEDIA" | "WIKTIONARY">("WIKIPEDIA");
+  const [sourceKind, setSourceKind] = useState<"WIKIPEDIA" | "WIKTIONARY">(
+    "WIKIPEDIA",
+  );
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -53,8 +55,12 @@ const IngestBlogForm = () => {
         <Button
           type="submit"
           form="ingest-blog-form"
-          title={isPending ? t("ingest.submitting-label") : t("ingest.submit-label")}
-          aria-label={isPending ? t("ingest.submitting-label") : t("ingest.submit-label")}
+          title={
+            isPending ? t("ingest.submitting-label") : t("ingest.submit-label")
+          }
+          aria-label={
+            isPending ? t("ingest.submitting-label") : t("ingest.submit-label")
+          }
           disabled={isPending}
         >
           {isPending ? t("ingest.submitting-label") : t("ingest.submit-label")}
