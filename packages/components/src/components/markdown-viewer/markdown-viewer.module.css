@@ -3,4 +3,5 @@
 .markdown_viewer {
   font-family: inherit;
   font-size: inherit;
+  overflow-x: auto;
 }

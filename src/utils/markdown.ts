@@ -14,8 +14,163 @@ export const highlightMarkdown = (text: string): string => {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 
-  return escaped.split("\n").map(processLine).map(processInline).join("\n");
+  const lines = escaped.split("\n");
+  const out: string[] = [];
+
+  for (let i = 0; i < lines.length; ) {
+    if (isTableRow(lines[i]) && i + 1 < lines.length && isDelimiterRow(lines[i + 1])) {
+      const { html, nextIndex } = parseTableBlock(lines, i);
+      out.push(html);
+      i = nextIndex;
+    } else if (isHrRow(lines[i])) {
+      out.push("<hr>");
+      i += 1;
+    } else {
+      out.push(processLine(lines[i]));
+      i += 1;
+    }
+  }
+
+  return out
+    .map((line) => (isTableHtml(line) ? line : processInline(line)))
+    .join("\n");
 };
+
+/**
+ * Checks whether a line looks like a table row.
+ *
+ * @param line - Line to check.
+ * @returns True if it contains at least one pipe and a cell.
+ */
+function isTableRow(line: string): boolean {
+  const trimmed = line.trim();
+  if (!trimmed.includes("|")) return false;
+  // Must have at least one pipe and not be just delimiter
+  return /^\s*\|?.*\|.*\|?\s*$/.test(trimmed);
+}
+
+/**
+ * Checks whether a line is a GFM delimiter row.
+ *
+ * @param line - Line to check.
+ * @returns True if it is a separator like |---|---| or |:---|:---:|
+ */
+function isDelimiterRow(line: string): boolean {
+  const trimmed = line.trim();
+  // Remove leading/trailing pipe for parsing
+  const inner = trimmed.replace(/^\|/, "").replace(/\|$/, "").trim();
+  if (!inner) return false;
+  const cells = inner.split("|");
+  if (cells.length === 0) return false;
+  return cells.every((cell) => /^\s*:?-+:?\s*$/.test(cell));
+}
+
+/**
+ * Checks whether a line is a horizontal rule.
+ *
+ * @param line - Line to check.
+ * @returns True if it is ---, *** or ___.
+ */
+function isHrRow(line: string): boolean {
+  const trimmed = line.trim();
+  return /^(-\s*){3,}$/.test(trimmed) || /^(\*\s*){3,}$/.test(trimmed) || /^(_\s*){3,}$/.test(trimmed);
+}
+
+/**
+ * Checks whether a string is already table HTML or hr.
+ *
+ * @param html - String to check.
+ * @returns True if it is block HTML.
+ */
+function isTableHtml(html: string): boolean {
+  const t = html.trim();
+  return t.startsWith('<table class="md-table"') || t === "<hr>";
+}
+
+/**
+ * Parses a contiguous table block starting at index.
+ *
+ * @param lines - All lines.
+ * @param start - Start index of header row.
+ * @returns HTML and next index after block.
+ */
+function parseTableBlock(lines: string[], start: number): { html: string; nextIndex: number } {
+  const headerLine = lines[start];
+  const delimiterLine = lines[start + 1];
+  const alignments = parseAlignments(delimiterLine);
+
+  const headerCells = splitRow(headerLine);
+  const colCount = headerCells.length;
+
+  const headHtml = `<thead><tr>${headerCells
+    .map((cell, idx) => `<th${alignAttr(alignments[idx])}>${processInline(cell.trim())}</th>`)
+    .join("")}</tr></thead>`;
+
+  const bodyRows: string[] = [];
+  let idx = start + 2;
+  while (idx < lines.length && isTableRow(lines[idx]) && !isDelimiterRow(lines[idx])) {
+    const cells = splitRow(lines[idx]);
+    // Pad/truncate to colCount
+    while (cells.length < colCount) cells.push("");
+    if (cells.length > colCount) cells.length = colCount;
+
+    const rowHtml = `<tr>${cells
+      .map((cell, cIdx) => `<td${alignAttr(alignments[cIdx])}>${processInline(cell.trim())}</td>`)
+      .join("")}</tr>`;
+    bodyRows.push(rowHtml);
+    idx += 1;
+  }
+
+  const bodyHtml = bodyRows.length ? `<tbody>${bodyRows.join("")}</tbody>` : "";
+  const html = `<table class="md-table">${headHtml}${bodyHtml}</table>`;
+  return { html, nextIndex: idx };
+}
+
+/**
+ * Splits a table row into cells, respecting escaped pipes.
+ *
+ * @param row - Raw row line.
+ * @returns Cell strings.
+ */
+function splitRow(row: string): string[] {
+  const trimmed = row.trim();
+  // Remove leading/trailing pipe
+  const inner = trimmed.replace(/^\|/, "").replace(/\|$/, "");
+  // Protect escaped pipes
+  const placeholder = "§§PIPE§§";
+  const protectedRow = inner.replace(/\\\|/g, placeholder);
+  const rawCells = protectedRow.split("|");
+  return rawCells.map((c) => c.replace(new RegExp(placeholder, "g"), "|").trim());
+}
+
+/**
+ * Parses delimiter row into alignment per column.
+ *
+ * @param delimiter - Delimiter line.
+ * @returns Alignments.
+ */
+function parseAlignments(delimiter: string): Array<"left" | "center" | "right" | null> {
+  const cells = splitRow(delimiter);
+  return cells.map((cell) => {
+    const t = cell.trim();
+    const left = t.startsWith(":");
+    const right = t.endsWith(":");
+    if (left && right) return "center";
+    if (right) return "right";
+    if (left) return "left";
+    return null;
+  });
+}
+
+/**
+ * Returns align attribute string.
+ *
+ * @param align - Alignment or null.
+ * @returns Attribute string.
+ */
+function alignAttr(align: "left" | "center" | "right" | null): string {
+  return align ? ` align="${align}"` : "";
+}
 
 /**
  * Strips markdown syntax from the highlighted HTML, leaving only styled spans.
@@ -91,7 +246,30 @@ export const stripMarkdown = (html: string): string => {
     '<a href="$2" target="_blank" class="md-link">$1</a>',
   );
 
+  // Protect block elements from <br> insertion, then replace remaining newlines
+  const tableTokens: string[] = [];
+  result = result.replace(/<table class="md-table">[\s\S]*?<\/table>/g, (m) => {
+    const token = `§§TABLE${tableTokens.length}§§`;
+    tableTokens.push(m);
+    return token;
+  });
+
+  const hrTokens: string[] = [];
+  result = result.replace(/<hr>/g, (m) => {
+    const token = `§§HR${hrTokens.length}§§`;
+    hrTokens.push(m);
+    return token;
+  });
+
   result = result.replace(/\n/g, "<br>\n");
+
+  for (let i = 0; i < hrTokens.length; i++) {
+    result = result.replace(`§§HR${i}§§`, hrTokens[i]);
+  }
+
+  for (let i = 0; i < tableTokens.length; i++) {
+    result = result.replace(`§§TABLE${i}§§`, tableTokens[i]);
+  }
 
   return result;
 };
@@ -147,6 +325,9 @@ function wrap(cls: string, content: string) {
 function processInline(text: string): string {
   // Protect existing spans first
   const { tokenized, tokens } = extractSpans(text);
+
+  // Also protect table tokens if any slipped through (defensive)
+  if (tokenized.includes("§§TABLE")) return restoreSpans(tokenized, tokens);
 
   // Patterns in priority order (lower index = higher priority)
   const patterns: { name: string; regex: RegExp; cls: string }[] = [

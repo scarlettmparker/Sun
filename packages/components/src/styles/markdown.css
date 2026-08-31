@@ -104,3 +104,29 @@ a:not(:has(button)):not(:has(.breadcrumb_item)):hover {
   color: var(--text-primary, var(--primary));
   font-weight: bold;
 }
+
+.md-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--md) 0;
+  font-size: var(--text-md);
+  border: 1px solid var(--muted-foreground);
+  border-radius: var(--sm);
+  overflow: hidden;
+}
+
+.md-table th,
+.md-table td {
+  border: 1px solid var(--muted-foreground);
+  padding: var(--md) var(--lg);
+  text-align: left;
+  vertical-align: top;
+  word-break: break-word;
+}
+
+.md-table th {
+  background: rgb(from var(--secondary) r g b / var(--visible));
+  backdrop-filter: blur(var(--sm));
+  font-weight: var(--bold);
+  color: var(--text-primary, var(--primary));
+}

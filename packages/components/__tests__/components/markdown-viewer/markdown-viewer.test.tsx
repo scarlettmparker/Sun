@@ -163,4 +163,49 @@ Some text with **bold**, *italic*, and \`code\`.
     expect(viewer.innerHTML).toContain('<span class="md-bold">bold2</span>');
     expect(viewer.innerHTML).toContain('<span class="md-italic">italic</span>');
   });
+
+  it("renders GFM tables", () => {
+    const markdown = `| # | Q | My answer | Correct | Explain |
+|---|---|---|---|---|
+| 1 | What is X? | myAns | [x] Paris | wiki span |`;
+    render(<MarkdownViewer data-testid="viewer">{markdown}</MarkdownViewer>);
+    const viewer = screen.getByTestId("viewer");
+    expect(viewer.innerHTML).toContain('<table class="md-table">');
+    expect(viewer.innerHTML).toContain("<th>#</th>");
+    expect(viewer.innerHTML).toContain("<th>Q</th>");
+    expect(viewer.innerHTML).toContain("<td>1</td>");
+    expect(viewer.innerHTML).toContain("<td>myAns</td>");
+    expect(viewer.innerHTML).not.toContain("| # |");
+  });
+
+  it("renders tables with alignment and escaped pipes", () => {
+    const markdown = `| Name | Value |
+| :--- | ---: |
+| a \\| b | **bold** |`;
+    render(<MarkdownViewer data-testid="viewer">{markdown}</MarkdownViewer>);
+    const viewer = screen.getByTestId("viewer");
+    expect(viewer.innerHTML).toContain('<table class="md-table">');
+    expect(viewer.innerHTML).toContain('align="left"');
+    expect(viewer.innerHTML).toContain('align="right"');
+    expect(viewer.innerHTML).toContain("a | b");
+    expect(viewer.innerHTML).toContain('<span class="md-bold">bold</span>');
+  });
+
+  it("renders tables with inline links", () => {
+    const markdown = `| Title | Link |
+|---|---|
+| Foo | [Bar](http://example.com) |`;
+    render(<MarkdownViewer data-testid="viewer">{markdown}</MarkdownViewer>);
+    const viewer = screen.getByTestId("viewer");
+    expect(viewer.innerHTML).toContain('<a href="http://example.com"');
+    expect(viewer.innerHTML).toContain(">Bar</a>");
+  });
+
+  it("does not break non-table pipes", () => {
+    const markdown = "a | b | c";
+    render(<MarkdownViewer data-testid="viewer">{markdown}</MarkdownViewer>);
+    const viewer = screen.getByTestId("viewer");
+    expect(viewer.innerHTML).toContain("a | b | c");
+    expect(viewer.innerHTML).not.toContain('<table class="md-table">');
+  });
 });
