@@ -56,11 +56,11 @@ class AnswerMapperTest {
   }
 
   @Test
-  @DisplayName("mapInput should handle nulls")
+  @DisplayName("mapInput should handle null strings")
   void mapInput_shouldHandleNulls() {
     UUID questionId = UUID.randomUUID();
     var input = AnswerInput.newBuilder()
-        .myAnswer(null).correct(null).correctAnswer(null).build();
+        .myAnswer(null).correct(false).correctAnswer(null).build();
 
     AnswerEntity result = mapper.mapInput(questionId.toString(), input);
 

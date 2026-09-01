@@ -38,7 +38,7 @@ public class AnswerMapper {
     AnswerEntity e = new AnswerEntity();
     e.setQuestionId(UUID.fromString(questionId));
     e.setMyAnswer(input.getMyAnswer() == null ? "" : input.getMyAnswer());
-    e.setCorrect(input.getCorrect() != null && input.getCorrect());
+    e.setCorrect(input.getCorrect());
     e.setCorrectAnswer(input.getCorrectAnswer() == null ? "" : input.getCorrectAnswer());
     return e;
   }
