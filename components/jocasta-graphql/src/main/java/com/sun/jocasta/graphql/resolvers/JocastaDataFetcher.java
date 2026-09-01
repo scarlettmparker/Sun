@@ -6,6 +6,7 @@ import com.netflix.graphql.dgs.InputArgument;
 import com.sun.jocasta.codegen.types.PagedAnswers;
 import com.sun.jocasta.codegen.types.PagedQuestions;
 import com.sun.jocasta.codegen.types.PaginationInput;
+import com.sun.jocasta.codegen.types.AnswerInput;
 import com.sun.jocasta.codegen.types.Question;
 import com.sun.jocasta.codegen.types.QuestionInput;
 import com.sun.jocasta.codegen.types.QueryResult;
@@ -86,17 +87,15 @@ public class JocastaDataFetcher {
   }
 
   /**
-   * Submits an answer attempt.
+   * Submits an answer attempt for a question located by questionId.
    *
    * @param questionId - question id
-   * @param myAnswer - learner answer
-   * @param correct - whether correct
-   * @param correctAnswer - correct text
+   * @param input - answer input containing myAnswer, correct, correctAnswer
    * @return result
    */
   @DgsData(parentType = "QuestionMutations", field = "submitAnswer")
-  public QueryResult submitAnswer(@InputArgument String questionId, @InputArgument String myAnswer, @InputArgument Boolean correct, @InputArgument String correctAnswer) {
-    return service.submitAnswer(questionId, myAnswer, correct, correctAnswer);
+  public QueryResult submitAnswer(@InputArgument String questionId, @InputArgument("input") AnswerInput input) {
+    return service.submitAnswer(questionId, input);
   }
 
   /**

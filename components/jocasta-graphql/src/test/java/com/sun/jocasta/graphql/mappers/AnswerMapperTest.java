@@ -2,6 +2,7 @@ package com.sun.jocasta.graphql.mappers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.sun.jocasta.codegen.types.AnswerInput;
 import com.sun.jocasta.model.AnswerEntity;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -43,8 +44,10 @@ class AnswerMapperTest {
   @DisplayName("mapInput should map all fields")
   void mapInput_shouldMapAllFields() {
     UUID questionId = UUID.randomUUID();
+    var input = AnswerInput.newBuilder()
+        .myAnswer("my").correct(true).correctAnswer("corr").build();
 
-    AnswerEntity result = mapper.mapInput(questionId.toString(), "my", true, "corr");
+    AnswerEntity result = mapper.mapInput(questionId.toString(), input);
 
     assertThat(result.getQuestionId()).isEqualTo(questionId);
     assertThat(result.getMyAnswer()).isEqualTo("my");
@@ -56,8 +59,10 @@ class AnswerMapperTest {
   @DisplayName("mapInput should handle nulls")
   void mapInput_shouldHandleNulls() {
     UUID questionId = UUID.randomUUID();
+    var input = AnswerInput.newBuilder()
+        .myAnswer(null).correct(null).correctAnswer(null).build();
 
-    AnswerEntity result = mapper.mapInput(questionId.toString(), null, null, null);
+    AnswerEntity result = mapper.mapInput(questionId.toString(), input);
 
     assertThat(result.getMyAnswer()).isEqualTo("");
     assertThat(result.isCorrect()).isFalse();

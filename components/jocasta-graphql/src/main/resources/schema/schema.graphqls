@@ -39,9 +39,15 @@ type QuestionQueries {
   listAnswers(questionId: ID!, pagination: PaginationInput): PagedAnswers!
 }
 
+input AnswerInput {
+  myAnswer: String!
+  correct: Boolean!
+  correctAnswer: String!
+}
+
 type QuestionMutations {
   bulkCreateQuestions(inputs: [QuestionInput!]!): QueryResult
-  submitAnswer(questionId: ID!, myAnswer: String!, correct: Boolean!, correctAnswer: String!): QueryResult
+  submitAnswer(questionId: ID!, input: AnswerInput!): QueryResult
   linkQuestion(questionId: ID!, target: String!): QueryResult
 }
 

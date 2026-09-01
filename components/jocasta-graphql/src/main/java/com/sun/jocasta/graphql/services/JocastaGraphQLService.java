@@ -9,6 +9,7 @@ import com.sun.jocasta.codegen.types.PageInfo;
 import com.sun.jocasta.codegen.types.PaginationInput;
 import com.sun.jocasta.codegen.types.QueryResult;
 import com.sun.jocasta.codegen.types.QuerySuccess;
+import com.sun.jocasta.codegen.types.AnswerInput;
 import com.sun.jocasta.codegen.types.Question;
 import com.sun.jocasta.codegen.types.QuestionInput;
 import com.sun.jocasta.codegen.types.StandardError;
@@ -131,26 +132,15 @@ public class JocastaGraphQLService {
    * Submits an answer attempt for a question.
    *
    * @param questionId - question id
-   * @param myAnswer - learner answer
-   * @param correct - whether correct
-   * @param correctAnswer - correct answer text
-   * @return result
-   */
-  /**
-   * Submits an answer attempt for a question.
-   *
-   * @param questionId - question id
-   * @param myAnswer - learner answer
-   * @param correct - whether correct
-   * @param correctAnswer - correct answer text
+   * @param input - answer input containing myAnswer, correct, correctAnswer
    * @return result
    */
   @Transactional
-  public QueryResult submitAnswer(String questionId, String myAnswer, Boolean correct, String correctAnswer) {
+  public QueryResult submitAnswer(String questionId, AnswerInput input) {
     return mutate("submitAnswer", () -> {
       UUID qid = UUID.fromString(questionId);
       questionService.findById(qid).orElseThrow(() -> new IllegalArgumentException("Question not found: " + questionId));
-      AnswerEntity e = answerMapper.mapInput(questionId, myAnswer, correct, correctAnswer);
+      AnswerEntity e = answerMapper.mapInput(questionId, input);
       AnswerEntity saved = answerService.submit(e);
       return saved.getId();
     });

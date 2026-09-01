@@ -5,6 +5,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.sun.jocasta.codegen.types.Answer;
+import com.sun.jocasta.codegen.types.AnswerInput;
 import com.sun.jocasta.codegen.types.PagedAnswers;
 import com.sun.jocasta.codegen.types.PagedQuestions;
 import com.sun.jocasta.codegen.types.Question;
@@ -125,17 +127,18 @@ class JocastaGraphQLServiceTest {
     QuestionEntity q = new QuestionEntity();
     q.setId(qid);
     when(questionService.findById(qid)).thenReturn(Optional.of(q));
+    AnswerInput input = AnswerInput.newBuilder().myAnswer("my").correct(true).correctAnswer("corr").build();
     AnswerEntity mapped = new AnswerEntity();
     mapped.setQuestionId(qid);
-    when(answerMapper.mapInput(qid.toString(), "my", true, "corr")).thenReturn(mapped);
+    when(answerMapper.mapInput(qid.toString(), input)).thenReturn(mapped);
     AnswerEntity saved = new AnswerEntity();
     saved.setId(UUID.randomUUID());
     when(answerService.submit(mapped)).thenReturn(saved);
 
-    var result = service.submitAnswer(qid.toString(), "my", true, "corr");
+    var result = service.submitAnswer(qid.toString(), input);
 
     assertThat(result).isInstanceOf(QuerySuccess.class);
-    verify(answerMapper).mapInput(qid.toString(), "my", true, "corr");
+    verify(answerMapper).mapInput(qid.toString(), input);
     verify(answerService).submit(mapped);
   }
 
@@ -144,8 +147,9 @@ class JocastaGraphQLServiceTest {
   void submitAnswer_returnsErrorWhenQuestionMissing() {
     UUID qid = UUID.randomUUID();
     when(questionService.findById(qid)).thenReturn(Optional.empty());
+    AnswerInput input = AnswerInput.newBuilder().myAnswer("my").correct(true).correctAnswer("corr").build();
 
-    var result = service.submitAnswer(qid.toString(), "my", true, "corr");
+    var result = service.submitAnswer(qid.toString(), input);
 
     assertThat(result).isInstanceOf(StandardError.class);
   }
@@ -172,7 +176,7 @@ class JocastaGraphQLServiceTest {
     entity.setQuestionId(qid);
     Page<AnswerEntity> page = new PageImpl<>(List.of(entity), PageRequest.of(0, 20), 1);
     when(answerService.listByQuestion(qid, any())).thenReturn(page);
-    com.sun.jocasta.codegen.types.Answer mapped = com.sun.jocasta.codegen.types.Answer.newBuilder()
+    Answer mapped = Answer.newBuilder()
         .id(entity.getId().toString()).questionId(qid.toString()).myAnswer("my").correct(true).correctAnswer("c").build();
     when(answerMapper.map(entity)).thenReturn(mapped);
 

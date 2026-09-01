@@ -1,6 +1,7 @@
 package com.sun.jocasta.graphql.mappers;
 
 import com.sun.jocasta.codegen.types.Answer;
+import com.sun.jocasta.codegen.types.AnswerInput;
 import com.sun.jocasta.model.AnswerEntity;
 import org.springframework.stereotype.Component;
 import java.time.ZoneOffset;
@@ -30,17 +31,15 @@ public class AnswerMapper {
    * Maps answer submission to entity.
    *
    * @param questionId - question id
-   * @param myAnswer - learner answer
-   * @param correct - whether correct
-   * @param correctAnswer - correct text
+   * @param input - answer input
    * @return entity
    */
-  public AnswerEntity mapInput(String questionId, String myAnswer, Boolean correct, String correctAnswer) {
+  public AnswerEntity mapInput(String questionId, AnswerInput input) {
     AnswerEntity e = new AnswerEntity();
     e.setQuestionId(UUID.fromString(questionId));
-    e.setMyAnswer(myAnswer == null ? "" : myAnswer);
-    e.setCorrect(correct != null && correct);
-    e.setCorrectAnswer(correctAnswer == null ? "" : correctAnswer);
+    e.setMyAnswer(input.getMyAnswer() == null ? "" : input.getMyAnswer());
+    e.setCorrect(input.getCorrect() != null && input.getCorrect());
+    e.setCorrectAnswer(input.getCorrectAnswer() == null ? "" : input.getCorrectAnswer());
     return e;
   }
 }
