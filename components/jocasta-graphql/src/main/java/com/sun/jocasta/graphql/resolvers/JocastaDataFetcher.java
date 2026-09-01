@@ -14,6 +14,7 @@ import com.sun.jocasta.codegen.types.QuestionQueries;
 import com.sun.jocasta.codegen.types.QueryResult;
 import com.sun.jocasta.graphql.services.JocastaGraphQLService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.List;
 
 @DgsComponent
@@ -50,6 +51,7 @@ public class JocastaDataFetcher {
    * @return paged questions
    */
   @DgsData(parentType = "QuestionQueries", field = "listQuestions")
+  @PreAuthorize("@permissions.has('graphql.jocasta.listQuestions')")
   public PagedQuestions listQuestions(@InputArgument String remoteObject, @InputArgument PaginationInput pagination) {
     return service.listQuestions(remoteObject, pagination);
   }
@@ -61,6 +63,7 @@ public class JocastaDataFetcher {
    * @return question
    */
   @DgsData(parentType = "QuestionQueries", field = "locateQuestion")
+  @PreAuthorize("@permissions.has('graphql.jocasta.locateQuestion')")
   public Question locateQuestion(@InputArgument String id) {
     return service.locateQuestion(id);
   }
@@ -73,6 +76,7 @@ public class JocastaDataFetcher {
    * @return paged answers
    */
   @DgsData(parentType = "QuestionQueries", field = "listAnswers")
+  @PreAuthorize("@permissions.has('graphql.jocasta.listAnswers')")
   public PagedAnswers listAnswers(@InputArgument String questionId, @InputArgument PaginationInput pagination) {
     return service.listAnswers(questionId, pagination);
   }
@@ -84,6 +88,7 @@ public class JocastaDataFetcher {
    * @return result
    */
   @DgsData(parentType = "QuestionMutations", field = "bulkCreateQuestions")
+  @PreAuthorize("@permissions.has('graphql.jocasta.bulkCreateQuestions')")
   public QueryResult bulkCreateQuestions(@InputArgument List<QuestionInput> inputs) {
     return service.bulkCreateQuestions(inputs);
   }
@@ -96,6 +101,7 @@ public class JocastaDataFetcher {
    * @return result
    */
   @DgsData(parentType = "QuestionMutations", field = "submitAnswer")
+  @PreAuthorize("@permissions.has('graphql.jocasta.submitAnswer')")
   public QueryResult submitAnswer(@InputArgument String questionId, @InputArgument("input") AnswerInput input) {
     return service.submitAnswer(questionId, input);
   }
@@ -108,6 +114,7 @@ public class JocastaDataFetcher {
    * @return result
    */
   @DgsData(parentType = "QuestionMutations", field = "linkQuestion")
+  @PreAuthorize("@permissions.has('graphql.jocasta.linkQuestion')")
   public QueryResult linkQuestion(@InputArgument String questionId, @InputArgument String target) {
     return service.linkQuestion(questionId, target);
   }

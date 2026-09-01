@@ -7,4 +7,5 @@ com.sun.echo.config.EchoConfig
 com.sun.fates.config.FatesConfig
 com.sun.hades.config.HadesConfig
 com.sun.icarus.config.IcarusConfig
+com.sun.jocasta.config.JocastaConfig
 com.sun.narcissus.config.NarcissusConfig
