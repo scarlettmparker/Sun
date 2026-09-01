@@ -9,6 +9,8 @@ import com.sun.jocasta.codegen.types.PaginationInput;
 import com.sun.jocasta.codegen.types.AnswerInput;
 import com.sun.jocasta.codegen.types.Question;
 import com.sun.jocasta.codegen.types.QuestionInput;
+import com.sun.jocasta.codegen.types.QuestionMutations;
+import com.sun.jocasta.codegen.types.QuestionQueries;
 import com.sun.jocasta.codegen.types.QueryResult;
 import com.sun.jocasta.graphql.services.JocastaGraphQLService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,21 +25,21 @@ public class JocastaDataFetcher {
   /**
    * Exposes questionQueries root.
    *
-   * @return placeholder
+   * @return question queries placeholder
    */
   @DgsData(parentType = "Query", field = "questionQueries")
-  public Object questionQueries() {
-    return new Object();
+  public QuestionQueries questionQueries() {
+    return QuestionQueries.newBuilder().build();
   }
 
   /**
    * Exposes questionMutations root.
    *
-   * @return placeholder
+   * @return question mutations placeholder
    */
   @DgsData(parentType = "Mutation", field = "questionMutations")
-  public Object questionMutations() {
-    return new Object();
+  public QuestionMutations questionMutations() {
+    return QuestionMutations.newBuilder().build();
   }
 
   /**
