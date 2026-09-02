@@ -70,6 +70,7 @@ export {
   FormLabel,
 } from "./components/form";
 export { default as Input } from "./components/input";
+export { default as JsonTextArea } from "./components/json-text-area";
 export { default as Label } from "./components/label";
 export { default as MarkdownEditor } from "./components/markdown-editor";
 export { default as MarkdownViewer } from "./components/markdown-viewer";
