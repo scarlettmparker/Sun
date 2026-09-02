@@ -118,6 +118,7 @@ type GaiaQueries {
   propertySet(ownerKey: String!, name: String!, entry: String): JSON
   propertySets(ownerKey: String!, name: String!): [PropertySetEntry!]!
   propertySetSchema(ownerKey: String!, name: String!): PropertySetSchema
+  propertySetSchemas(ownerKey: String): [PropertySetSchema!]!
   configurations: [Configuration!]!
   configuration(id: ID!): Configuration
   ipWhitelistEntries: [IpWhitelistEntry!]!

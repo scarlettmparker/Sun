@@ -10,4 +10,9 @@ public interface PropertySetSchemaRepository extends BaseRepository<PropertySetS
   Optional<PropertySetSchemaEntity> findByOwnerKeyAndName(String ownerKey, String name);
 
   List<PropertySetSchemaEntity> findByOwnerKeyAndConfigurableTrue(String ownerKey);
+
+  List<PropertySetSchemaEntity> findByOwnerKey(String ownerKey);
+
+  List<PropertySetSchemaEntity> findByStatus(
+      com.sun.gaia.model.enums.EntryStatus status);
 }

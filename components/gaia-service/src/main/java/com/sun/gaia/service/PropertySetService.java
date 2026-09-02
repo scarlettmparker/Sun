@@ -158,6 +158,21 @@ public class PropertySetService extends BaseService<PropertySetEntryEntity> {
   }
 
   /**
+   * Lists schemas, filtered by owner when provided.
+   *
+   * @param ownerKey the owner key, or null for all owners
+   * @return the active schemas
+   */
+  public List<PropertySetSchemaEntity> listSchemas(String ownerKey) {
+    if (ownerKey == null || ownerKey.isBlank()) {
+      return schemaRepository.findByStatus(EntryStatus.ACTIVE);
+    }
+    return schemaRepository.findByOwnerKey(ownerKey).stream()
+        .filter(s -> s.getStatus() == EntryStatus.ACTIVE)
+        .toList();
+  }
+
+  /**
    * Active entries accessible to a remote user by permission.
    *
    * @param remoteUserId the Discord snowflake

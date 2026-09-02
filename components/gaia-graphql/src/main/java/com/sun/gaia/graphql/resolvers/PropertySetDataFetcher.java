@@ -64,6 +64,18 @@ public class PropertySetDataFetcher {
     return propertySetGraphQLService.propertySetSchema(ownerKey, name);
   }
 
+  /**
+   * Lists schemas for an owner, or all owners when null.
+   *
+   * @param ownerKey the owner key, or null for all
+   * @return the schemas
+   */
+  @DgsData(parentType = "GaiaQueries", field = "propertySetSchemas")
+  @PreAuthorize("permitAll()")
+  public List<PropertySetSchema> propertySetSchemas(String ownerKey) {
+    return propertySetGraphQLService.propertySetSchemas(ownerKey);
+  }
+
    /**
     * Property-set entries the remote user may execute.
     */

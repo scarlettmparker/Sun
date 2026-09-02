@@ -86,6 +86,19 @@ public class PropertySetGraphQLService {
   }
 
   /**
+   * Lists schemas, optionally filtered by owner.
+   *
+   * @param ownerKey the owner key, or null for all owners
+   * @return the schemas
+   */
+  @Transactional(readOnly = true)
+  public List<PropertySetSchema> propertySetSchemas(String ownerKey) {
+    return propertySetService.listSchemas(ownerKey).stream()
+        .map(propertySetMapper::map)
+        .collect(Collectors.toList());
+  }
+
+  /**
    * Creates or replaces a property-set entry.
    *
    * @param ownerKey the owner key
