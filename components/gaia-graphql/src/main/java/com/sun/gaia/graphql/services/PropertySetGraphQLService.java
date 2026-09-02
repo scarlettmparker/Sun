@@ -3,7 +3,10 @@ package com.sun.gaia.graphql.services;
 import com.sun.gaia.codegen.types.PropertySetEntry;
 import com.sun.gaia.codegen.types.PropertySetSchema;
 import com.sun.gaia.codegen.types.PropertySetSchemaInput;
+import com.sun.gaia.codegen.types.QueryResult;
+import com.sun.gaia.codegen.types.QuerySuccess;
 import com.sun.gaia.codegen.types.RemoteUserType;
+import com.sun.gaia.codegen.types.StandardError;
 import com.sun.gaia.graphql.mappers.PropertySetMapper;
 import com.sun.gaia.graphql.services.support.GaiaGraphQLSupport;
 import com.sun.gaia.model.PropertySetEntryEntity;
@@ -143,6 +146,23 @@ public class PropertySetGraphQLService {
         input.getOwnerKey(), input.getName(),
         input.getConfigurable() != null && input.getConfigurable(),
         GaiaGraphQLSupport.asMap(input.getProperties())));
+  }
+
+  /**
+   * Deletes a property-set entry.
+   *
+   * @param ownerKey the owner key
+   * @param name the property set name
+   * @param entry the entry name
+   * @return the result
+   */
+  @Transactional
+  public QueryResult deletePropertyEntry(String ownerKey, String name, String entry) {
+    boolean deleted = propertySetService.deleteEntry(ownerKey, name, entry);
+    if (deleted) {
+      return QuerySuccess.newBuilder().message("Entry deleted").id(entry).build();
+    }
+    return StandardError.newBuilder().message("Entry not found").build();
   }
 
   /**

@@ -164,6 +164,7 @@ type GaiaMutations {
     input: SetPropertyInput!
   ): PropertySetEntry
   registerPropertySetSchema(input: PropertySetSchemaInput!): PropertySetSchema
+  deletePropertyEntry(ownerKey: String!, name: String!, entry: String!): QueryResult
   issueApiKey(accountUsername: String!, name: String!): IssuedApiKey
   revokeApiKey(id: ID!): QueryResult
   rotateApiKey(id: ID!): IssuedApiKey

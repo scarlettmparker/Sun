@@ -109,4 +109,38 @@ class PropertySetDataFetcherTest {
     assertThat(result).isEqualTo(schema);
     verify(service).registerPropertySetSchema(input);
   }
+
+  @Test
+  void propertySetSchemas_shouldDelegate() {
+    PropertySetSchema schema = PropertySetSchema.newBuilder().id("id1").name("set").build();
+    when(service.propertySetSchemas("owner")).thenReturn(List.of(schema));
+
+    List<PropertySetSchema> result = fetcher.propertySetSchemas("owner");
+
+    assertThat(result).containsExactly(schema);
+    verify(service).propertySetSchemas("owner");
+  }
+
+  @Test
+  void propertySetSchemas_shouldDelegateWithNullOwner() {
+    PropertySetSchema schema = PropertySetSchema.newBuilder().id("id1").name("set").build();
+    when(service.propertySetSchemas(null)).thenReturn(List.of(schema));
+
+    List<PropertySetSchema> result = fetcher.propertySetSchemas(null);
+
+    assertThat(result).containsExactly(schema);
+    verify(service).propertySetSchemas(null);
+  }
+
+  @Test
+  void deletePropertyEntry_shouldDelegate() {
+    com.sun.gaia.codegen.types.QuerySuccess success =
+        com.sun.gaia.codegen.types.QuerySuccess.newBuilder().message("Entry deleted").id("entry").build();
+    when(service.deletePropertyEntry("owner", "set", "entry")).thenReturn(success);
+
+    var result = fetcher.deletePropertyEntry("owner", "set", "entry");
+
+    assertThat(result).isEqualTo(success);
+    verify(service).deletePropertyEntry("owner", "set", "entry");
+  }
 }

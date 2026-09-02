@@ -5,6 +5,7 @@ import com.netflix.graphql.dgs.DgsData;
 import com.sun.gaia.codegen.types.PropertySetEntry;
 import com.sun.gaia.codegen.types.PropertySetSchema;
 import com.sun.gaia.codegen.types.PropertySetSchemaInput;
+import com.sun.gaia.codegen.types.QueryResult;
 import com.sun.gaia.codegen.types.RemoteUserType;
 import com.sun.gaia.codegen.types.SetPropertyInput;
 import com.sun.gaia.codegen.types.UpsertPropertyEntryInput;
@@ -131,5 +132,19 @@ public class PropertySetDataFetcher {
   @PreAuthorize("@permissions.has('graphql.gaia.registerPropertySetSchema')")
   public PropertySetSchema registerPropertySetSchema(PropertySetSchemaInput input) {
     return propertySetGraphQLService.registerPropertySetSchema(input);
+  }
+
+  /**
+   * Deletes a property-set entry.
+   *
+   * @param ownerKey the owner key
+   * @param name the property set name
+   * @param entry the entry name
+   * @return the result
+   */
+  @DgsData(parentType = "GaiaMutations", field = "deletePropertyEntry")
+  @PreAuthorize("@permissions.has('graphql.gaia.deletePropertyEntry')")
+  public QueryResult deletePropertyEntry(String ownerKey, String name, String entry) {
+    return propertySetGraphQLService.deletePropertyEntry(ownerKey, name, entry);
   }
 }

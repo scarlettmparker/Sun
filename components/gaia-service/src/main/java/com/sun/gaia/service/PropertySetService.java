@@ -173,6 +173,29 @@ public class PropertySetService extends BaseService<PropertySetEntryEntity> {
   }
 
   /**
+   * Archives a property-set entry.
+   *
+   * @param ownerKey the owner key
+   * @param propertySet the property set name
+   * @param entryName the entry name
+   * @return true if archived
+   */
+  public boolean deleteEntry(String ownerKey, String propertySet, String entryName) {
+    Optional<PropertySetEntryEntity> existing = entryRepository.findEntry(ownerKey, propertySet,
+        entryName);
+    if (existing.isEmpty()) {
+      return false;
+    }
+    PropertySetEntryEntity entry = existing.get();
+    if (entry.getStatus() != EntryStatus.ACTIVE) {
+      return false;
+    }
+    entry.setStatus(EntryStatus.ARCHIVED);
+    save(entry);
+    return true;
+  }
+
+  /**
    * Active entries accessible to a remote user by permission.
    *
    * @param remoteUserId the Discord snowflake
