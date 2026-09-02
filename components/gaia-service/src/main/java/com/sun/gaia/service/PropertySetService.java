@@ -6,6 +6,7 @@ import com.sun.gaia.model.PropertySetSchemaEntity;
 import com.sun.gaia.model.enums.EntryStatus;
 import com.sun.gaia.repository.PropertySetEntryRepository;
 import com.sun.gaia.repository.PropertySetSchemaRepository;
+import com.sun.gaia.service.validation.PropertySetValidationFactory;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,13 +22,16 @@ public class PropertySetService extends BaseService<PropertySetEntryEntity> {
   private final PropertySetEntryRepository entryRepository;
   private final PropertySetSchemaRepository schemaRepository;
   private final PropertySetValidator validator;
+  private final PropertySetValidationFactory validationFactory;
 
   public PropertySetService(PropertySetEntryRepository entryRepository,
-      PropertySetSchemaRepository schemaRepository, PropertySetValidator validator) {
+      PropertySetSchemaRepository schemaRepository, PropertySetValidator validator,
+      PropertySetValidationFactory validationFactory) {
     super(entryRepository);
     this.entryRepository = entryRepository;
     this.schemaRepository = schemaRepository;
     this.validator = validator;
+    this.validationFactory = validationFactory;
   }
 
   /**
@@ -177,5 +181,6 @@ public class PropertySetService extends BaseService<PropertySetEntryEntity> {
       Map<String, Object> values) {
     getSchemaEntity(ownerKey, propertySet)
         .ifPresent(schema -> validator.validate(schema.getProperties(), values));
+    validationFactory.validate(ownerKey, propertySet, values);
   }
 }
