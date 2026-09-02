@@ -8,6 +8,8 @@ import com.sun.gaia.codegen.types.PropertySetEntry;
 import com.sun.gaia.codegen.types.PropertySetSchema;
 import com.sun.gaia.codegen.types.PropertySetSchemaInput;
 import com.sun.gaia.codegen.types.RemoteUserType;
+import com.sun.gaia.codegen.types.SetPropertyInput;
+import com.sun.gaia.codegen.types.UpsertPropertyEntryInput;
 import com.sun.gaia.graphql.services.PropertySetGraphQLService;
 import java.util.List;
 import java.util.Map;
@@ -74,9 +76,11 @@ class PropertySetDataFetcherTest {
   void upsertPropertyEntry_shouldDelegate() {
     PropertySetEntry entry = PropertySetEntry.newBuilder().id("id1").build();
     Object values = Map.of("k", "v");
+    UpsertPropertyEntryInput input =
+        UpsertPropertyEntryInput.newBuilder().values(values).build();
     when(service.upsertPropertyEntry("owner", "set", "entry", values)).thenReturn(entry);
 
-    PropertySetEntry result = fetcher.upsertPropertyEntry("owner", "set", "entry", values);
+    PropertySetEntry result = fetcher.upsertPropertyEntry("owner", "set", "entry", input);
 
     assertThat(result).isEqualTo(entry);
     verify(service).upsertPropertyEntry("owner", "set", "entry", values);
@@ -85,9 +89,10 @@ class PropertySetDataFetcherTest {
   @Test
   void setProperty_shouldDelegate() {
     PropertySetEntry entry = PropertySetEntry.newBuilder().id("id1").build();
+    SetPropertyInput input = SetPropertyInput.newBuilder().property("prop").value("val").build();
     when(service.setProperty("owner", "set", "entry", "prop", "val")).thenReturn(entry);
 
-    PropertySetEntry result = fetcher.setProperty("owner", "set", "entry", "prop", "val");
+    PropertySetEntry result = fetcher.setProperty("owner", "set", "entry", input);
 
     assertThat(result).isEqualTo(entry);
     verify(service).setProperty("owner", "set", "entry", "prop", "val");

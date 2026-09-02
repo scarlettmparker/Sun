@@ -154,14 +154,13 @@ type GaiaMutations {
     ownerKey: String!
     name: String!
     entry: String!
-    values: JSON!
+    input: UpsertPropertyEntryInput!
   ): PropertySetEntry
   setProperty(
     ownerKey: String!
     name: String!
     entry: String!
-    property: String!
-    value: JSON!
+    input: SetPropertyInput!
   ): PropertySetEntry
   registerPropertySetSchema(input: PropertySetSchemaInput!): PropertySetSchema
   issueApiKey(accountUsername: String!, name: String!): IssuedApiKey
@@ -231,6 +230,15 @@ input PropertySetSchemaInput {
   name: String!
   configurable: Boolean
   properties: JSON!
+}
+
+input UpsertPropertyEntryInput {
+  values: JSON!
+}
+
+input SetPropertyInput {
+  property: String!
+  value: JSON!
 }
 
 type IpWhitelistEntry {

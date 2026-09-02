@@ -6,6 +6,8 @@ import com.sun.gaia.codegen.types.PropertySetEntry;
 import com.sun.gaia.codegen.types.PropertySetSchema;
 import com.sun.gaia.codegen.types.PropertySetSchemaInput;
 import com.sun.gaia.codegen.types.RemoteUserType;
+import com.sun.gaia.codegen.types.SetPropertyInput;
+import com.sun.gaia.codegen.types.UpsertPropertyEntryInput;
 import com.sun.gaia.graphql.services.PropertySetGraphQLService;
 import java.util.List;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -80,14 +82,14 @@ public class PropertySetDataFetcher {
    * @param ownerKey the owner key
    * @param name the property set name
    * @param entry the entry name
-   * @param values the values to store
+   * @param input the values to store
    * @return the saved entry
    */
   @DgsData(parentType = "GaiaMutations", field = "upsertPropertyEntry")
   @PreAuthorize("@permissions.has('graphql.gaia.upsertPropertyEntry')")
   public PropertySetEntry upsertPropertyEntry(String ownerKey, String name, String entry,
-      Object values) {
-    return propertySetGraphQLService.upsertPropertyEntry(ownerKey, name, entry, values);
+      UpsertPropertyEntryInput input) {
+    return propertySetGraphQLService.upsertPropertyEntry(ownerKey, name, entry, input.getValues());
   }
 
   /**
@@ -96,15 +98,15 @@ public class PropertySetDataFetcher {
    * @param ownerKey the owner key
    * @param name the property set name
    * @param entry the entry name
-   * @param property the property name
-   * @param value the property value
+   * @param input the property and value
    * @return the saved entry
    */
   @DgsData(parentType = "GaiaMutations", field = "setProperty")
   @PreAuthorize("@permissions.has('graphql.gaia.setProperty')")
-  public PropertySetEntry setProperty(String ownerKey, String name, String entry, String property,
-      Object value) {
-    return propertySetGraphQLService.setProperty(ownerKey, name, entry, property, value);
+  public PropertySetEntry setProperty(String ownerKey, String name, String entry,
+      SetPropertyInput input) {
+    return propertySetGraphQLService.setProperty(ownerKey, name, entry, input.getProperty(),
+        input.getValue());
   }
 
   /**
