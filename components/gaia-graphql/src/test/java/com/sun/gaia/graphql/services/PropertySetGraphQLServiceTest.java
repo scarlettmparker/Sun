@@ -191,13 +191,13 @@ class PropertySetGraphQLServiceTest {
   void propertySetSchemas_returnsMapped() {
     PropertySetSchemaEntity entity = new PropertySetSchemaEntity();
     PropertySetSchema mapped = PropertySetSchema.newBuilder().name("review-attributes").build();
-    when(propertySetService.listSchemas("Knowledge")).thenReturn(List.of(entity));
+    when(propertySetService.listSchemas("Blog")).thenReturn(List.of(entity));
     when(propertySetMapper.map(entity)).thenReturn(mapped);
 
-    List<PropertySetSchema> result = service.propertySetSchemas("Knowledge");
+    List<PropertySetSchema> result = service.propertySetSchemas("Blog");
 
     assertThat(result).containsExactly(mapped);
-    verify(propertySetService).listSchemas("Knowledge");
+    verify(propertySetService).listSchemas("Blog");
   }
 
   @Test
@@ -214,20 +214,20 @@ class PropertySetGraphQLServiceTest {
 
   @Test
   void deletePropertyEntry_returnsSuccessWhenDeleted() {
-    when(propertySetService.deleteEntry("Knowledge", "review-attributes", "entry1"))
+    when(propertySetService.deleteEntry("Blog", "review-attributes", "entry1"))
         .thenReturn(true);
 
-    var result = service.deletePropertyEntry("Knowledge", "review-attributes", "entry1");
+    var result = service.deletePropertyEntry("Blog", "review-attributes", "entry1");
 
     assertThat(result).isInstanceOf(com.sun.gaia.codegen.types.QuerySuccess.class);
   }
 
   @Test
   void deletePropertyEntry_returnsErrorWhenNotFound() {
-    when(propertySetService.deleteEntry("Knowledge", "review-attributes", "missing"))
+    when(propertySetService.deleteEntry("Blog", "review-attributes", "missing"))
         .thenReturn(false);
 
-    var result = service.deletePropertyEntry("Knowledge", "review-attributes", "missing");
+    var result = service.deletePropertyEntry("Blog", "review-attributes", "missing");
 
     assertThat(result).isInstanceOf(com.sun.gaia.codegen.types.StandardError.class);
   }

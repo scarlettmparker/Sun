@@ -4,21 +4,21 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 
 /**
- * Validates Knowledge review-attributes rating range.
+ * Validates Blog review-attributes rating range.
  */
 @Component
-public class KnowledgeReviewAttributesValidation implements PropertySetValidation {
+public class BlogReviewAttributesValidation implements PropertySetValidation {
 
   /**
-   * Returns true for Knowledge review-attributes.
+   * Returns true for Blog review-attributes.
    *
    * @param ownerKey the owner key
    * @param propertySet the property set name
-   * @return true if Knowledge review-attributes
+   * @return true if Blog review-attributes
    */
   @Override
   public boolean supports(String ownerKey, String propertySet) {
-    return "Knowledge".equals(ownerKey) && "review-attributes".equals(propertySet);
+    return "Blog".equals(ownerKey) && "review-attributes".equals(propertySet);
   }
 
   /**

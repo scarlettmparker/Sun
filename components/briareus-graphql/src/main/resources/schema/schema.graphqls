@@ -41,12 +41,52 @@ type PagedBlogPosts {
   pageInfo: PageInfo!
 }
 
+type BlogPropertySetSchema {
+  id: ID!
+  ownerKey: String
+  name: String!
+  properties: JSON
+}
+
+type BlogPropertySet {
+  schema: BlogPropertySetSchema
+  values: JSON
+  entryName: String!
+}
+
+type BlogGalleryItem {
+  id: ID!
+  title: String
+  imagePath: String
+  remoteObject: [String!]
+}
+
+type BlogDetail {
+  post: BlogPost!
+  propertySet: BlogPropertySet
+  galleryItems: [BlogGalleryItem!]!
+  attachedTexts: [AttachedText!]!
+  linkedPosts: [BlogPost!]!
+}
+
+input BlogWithPropertiesInput {
+  title: String!
+  content: String!
+  typeId: ID!
+  parentId: ID
+  language: String
+  tags: [String!]
+  remoteObject: [String!]
+  propertySet: JSON
+}
+
 type BlogQueries {
   listBlogPosts(pagination: PaginationInput): PagedBlogPosts!
   locateBlogPost(id: ID!): BlogPost
   listByRemoteObjects(ids: [String!]!): [BlogPost]
   blogPostTypes: [BlogPostType!]!
   children(parentId: ID!, pagination: PaginationInput): PagedBlogPosts!
+  blogDetail(id: ID!): BlogDetail!
 }
 
 enum SourceKind {
@@ -97,6 +137,8 @@ type BlogMutations {
   removeRemoteObject(postId: ID!, target: String!): QueryResult
   ingestBlogFromSource(input: IngestBlogInput!): QueryResult
   deleteBlogPost(id: ID!): QueryResult
+  createBlogWithProperties(input: BlogWithPropertiesInput!): QueryResult!
+  updateBlogWithProperties(id: ID!, input: BlogWithPropertiesInput!): QueryResult!
 }
 
 extend type Query {

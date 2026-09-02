@@ -94,7 +94,7 @@ class BlogGraphQLServiceTest {
     List<PostEntity> postEntities = Arrays.asList(postEntity1, postEntity2);
     Page<PostEntity> page = new PageImpl<>(postEntities, PageRequest.of(0, 10, Sort.by("title")), 2);
 
-    when(briareusService.listPostsPaged(any(), any(Pageable.class))).thenReturn(page);
+    when(briareusService.listPostsPaged(any(), any(Pageable.class), any())).thenReturn(page);
     when(blogPostMapper.map(postEntity1)).thenReturn(blogPost1);
     when(blogPostMapper.map(postEntity2)).thenReturn(blogPost2);
 
@@ -107,7 +107,7 @@ class BlogGraphQLServiceTest {
   @Test
   void listBlogPosts_shouldReturnEmptyPageWhenNoPosts() {
     Page<PostEntity> page = new PageImpl<>(List.of(), PageRequest.of(0, 10), 0);
-    when(briareusService.listPostsPaged(any(), any(Pageable.class))).thenReturn(page);
+    when(briareusService.listPostsPaged(any(), any(Pageable.class), any())).thenReturn(page);
 
     PagedBlogPosts result = blogGraphQLService.listBlogPosts(null);
 
@@ -117,6 +117,9 @@ class BlogGraphQLServiceTest {
 
   @Test
   void locateBlogPost_shouldReturnMappedBlogPost() {
+    BlogPostTypeEntity type = new BlogPostTypeEntity();
+    type.setName("BOT_FAQ");
+    postEntity1.setType(type);
     when(briareusService.locatePost(postEntity1.getId())).thenReturn(Optional.of(postEntity1));
     when(blogPostMapper.map(postEntity1)).thenReturn(blogPost1);
 

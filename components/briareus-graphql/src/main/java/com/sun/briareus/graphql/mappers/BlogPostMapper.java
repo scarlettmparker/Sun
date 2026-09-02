@@ -3,6 +3,7 @@ package com.sun.briareus.graphql.mappers;
 import java.time.ZoneOffset;
 import com.sun.briareus.codegen.types.BlogPost;
 import com.sun.briareus.codegen.types.BlogPostInput;
+import com.sun.briareus.codegen.types.BlogWithPropertiesInput;
 import com.sun.briareus.model.BlogPostTypeEntity;
 import com.sun.briareus.model.PostEntity;
 import com.sun.briareus.service.BlogPostTypeService;
@@ -107,6 +108,23 @@ public class BlogPostMapper {
     if (input.getTypeId() != null) {
       entity.setType(resolveType(UUID.fromString(input.getTypeId())));
     }
+  }
+
+  /**
+   * Converts blog-with-properties input to blog post input.
+   *
+   * @param input the aggregate input
+   * @return the post input
+   */
+  public BlogPostInput toPostInput(BlogWithPropertiesInput input) {
+    BlogPostInput postInput = new BlogPostInput();
+    postInput.setContent(input.getContent());
+    postInput.setTags(input.getTags());
+    postInput.setRemoteObject(input.getRemoteObject());
+    postInput.setLanguage(input.getLanguage());
+    postInput.setTypeId(input.getTypeId());
+    postInput.setParentId(input.getParentId());
+    return postInput;
   }
 
   /**
