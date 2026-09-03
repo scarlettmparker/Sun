@@ -12,7 +12,7 @@ export const renderMarkdown = (text: string): string => {
   const lines = text.split("\n");
   const blocks: string[] = [];
 
-  for (let i = 0; i < lines.length; ) {
+  for (let i = 0; i < lines.length;) {
     if (
       isTableRow(lines[i]) &&
       i + 1 < lines.length &&
@@ -40,12 +40,18 @@ export const renderMarkdown = (text: string): string => {
  * @returns HTML for the line
  */
 function renderLine(line: string): string {
-  if (line.startsWith("# ")) return `<span class="md-h1">${renderInline(line.slice(2))}</span>`;
-  if (line.startsWith("## ")) return `<span class="md-h2">${renderInline(line.slice(3))}</span>`;
-  if (line.startsWith("### ")) return `<span class="md-h3">${renderInline(line.slice(4))}</span>`;
-  if (line.startsWith("#### ")) return `<span class="md-h4">${renderInline(line.slice(5))}</span>`;
-  if (line.startsWith("##### ")) return `<span class="md-h5">${renderInline(line.slice(6))}</span>`;
-  if (line.startsWith("###### ")) return `<span class="md-h6">${renderInline(line.slice(7))}</span>`;
+  if (line.startsWith("# "))
+    return `<span class="md-h1">${renderInline(line.slice(2))}</span>`;
+  if (line.startsWith("## "))
+    return `<span class="md-h2">${renderInline(line.slice(3))}</span>`;
+  if (line.startsWith("### "))
+    return `<span class="md-h3">${renderInline(line.slice(4))}</span>`;
+  if (line.startsWith("#### "))
+    return `<span class="md-h4">${renderInline(line.slice(5))}</span>`;
+  if (line.startsWith("##### "))
+    return `<span class="md-h5">${renderInline(line.slice(6))}</span>`;
+  if (line.startsWith("###### "))
+    return `<span class="md-h6">${renderInline(line.slice(7))}</span>`;
   if (line.startsWith("- ") || line.startsWith("* ") || line.startsWith("+ ")) {
     const rest = line.slice(2);
     return `<span class="md-list">•</span> ${renderInline(rest)}`;
@@ -98,7 +104,10 @@ function parseTableBlockViewer(
     idx += 1;
   }
   const bodyHtml = bodyRows.length ? `<tbody>${bodyRows.join("")}</tbody>` : "";
-  return { html: `<table class="md-table">${headHtml}${bodyHtml}</table>`, nextIndex: idx };
+  return {
+    html: `<table class="md-table">${headHtml}${bodyHtml}</table>`,
+    nextIndex: idx,
+  };
 }
 
 /**
@@ -619,7 +628,7 @@ function processInline(text: string): string {
     return t;
   });
 
-  // Patterns in priority order (lower index = higher priority) — link already protected
+  // Patterns in priority order (lower index = higher priority) - link already protected
   const patterns: { name: string; regex: RegExp; cls: string }[] = [
     { name: "code", regex: /`([^`]+)`/g, cls: "md-code" },
     {

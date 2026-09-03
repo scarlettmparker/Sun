@@ -5,7 +5,6 @@ import { usePageData } from "@sun/ssr/react";
 import {
   Button,
   Card,
-  CardBody,
   CardDescription,
   CardFooter,
   CardHeader,
@@ -82,21 +81,9 @@ const UserMenuContent = () => {
             />
             <div className={styles.header_text}>
               <CardTitle>{currentUser.username}</CardTitle>
-              <CardDescription>
-                <a
-                  href="https://github.com/scarlettmparker"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={styles.github_link}
-                >
-                  {t("profile.github-label")}
-                </a>
-              </CardDescription>
+              <CardDescription>@{currentUser.username}</CardDescription>
             </div>
           </CardHeader>
-          <CardBody className={styles.body}>
-            <p className={styles.tbd}>{t("profile.tbd")}</p>
-          </CardBody>
           <CardFooter className={styles.footer}>
             <Link to="/profile" onClick={(e) => e.stopPropagation()}>
               <Button
