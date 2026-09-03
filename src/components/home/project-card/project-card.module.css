@@ -33,5 +33,6 @@
   gap: var(--md);
   flex-wrap: wrap;
   margin-top: auto;
+  margin-left: auto;
   padding-top: var(--lg);
 }

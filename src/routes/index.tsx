@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ScrollArea } from "@sun/components";
 import HeroCard from "~/components/home/hero-card";
 import SpotifyCard from "~/components/home/spotify-card";
 import ExperienceSection from "~/components/home/experience-section";
@@ -18,27 +19,29 @@ const HomePage = () => {
   const [selected, setSelected] = useState<Project | null>(null);
 
   return (
-    <div className={styles.home_wrapper}>
-      <div className={styles.hero_row}>
-        <HeroCard className={styles.hero_card} />
-        <SpotifyCard className={styles.spotify_card} />
+    <ScrollArea maxHeight="100vh" className={styles.scroll_area}>
+      <div className={styles.home_wrapper}>
+        <div className={styles.hero_row}>
+          <HeroCard className={styles.hero_card} />
+          <SpotifyCard className={styles.spotify_card} />
+        </div>
+        <ExperienceSection />
+        <ProjectGrid
+          titleKey="projects.personal-title"
+          projects={personalProjects}
+          onReadMore={setSelected}
+        />
+        <ProjectGrid
+          titleKey="projects.internal-title"
+          projects={internalProjects}
+          onReadMore={setSelected}
+        />
+        <ProjectDetailDialog
+          project={selected}
+          onOpenChange={(open) => !open && setSelected(null)}
+        />
       </div>
-      <ExperienceSection />
-      <ProjectGrid
-        titleKey="projects.personal-title"
-        projects={personalProjects}
-        onReadMore={setSelected}
-      />
-      <ProjectGrid
-        titleKey="projects.internal-title"
-        projects={internalProjects}
-        onReadMore={setSelected}
-      />
-      <ProjectDetailDialog
-        project={selected}
-        onOpenChange={(open) => !open && setSelected(null)}
-      />
-    </div>
+    </ScrollArea>
   );
 };
 

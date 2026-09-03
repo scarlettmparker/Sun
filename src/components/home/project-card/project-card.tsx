@@ -36,9 +36,7 @@ const ProjectCard = (props: ProjectCardProps) => {
         <CardTitle className={styles.title_row}>
           <span>{project.title}</span>
           {project.disabled ? (
-            <Badge className={styles.badge}>
-              {t("projects.you-are-here")}
-            </Badge>
+            <Badge className={styles.badge}>{t("projects.you-are-here")}</Badge>
           ) : (
             project.visitHref &&
             project.visitHref !== project.href && (
@@ -76,7 +74,6 @@ const ProjectCard = (props: ProjectCardProps) => {
       <CardFooter className={styles.footer}>
         <Button
           variant="secondary"
-          title={t("projects.read-more")}
           aria-label={t("projects.read-more")}
           onClick={() => onReadMore(project)}
         >
