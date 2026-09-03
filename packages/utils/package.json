@@ -1,6 +1,6 @@
 {
   "name": "@sun/utils",
-  "version": "0.1.16",
+  "version": "0.1.18",
   "description": "Shared utilities across Sun ecosystem apps",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -11,45 +11,10 @@
       "import": "./dist/index.mjs",
       "require": "./dist/index.js"
     },
-    "./cn": {
-      "types": "./dist/cn.d.ts",
-      "import": "./dist/cn.mjs",
-      "require": "./dist/cn.js"
-    },
-    "./background-colour": {
-      "types": "./dist/background-colour.d.ts",
-      "import": "./dist/background-colour.mjs",
-      "require": "./dist/background-colour.js"
-    },
-    "./css-inlining": {
-      "types": "./dist/css-inlining.d.ts",
-      "import": "./dist/css-inlining.mjs",
-      "require": "./dist/css-inlining.js"
-    },
-    "./date": {
-      "types": "./dist/date.d.ts",
-      "import": "./dist/date.mjs",
-      "require": "./dist/date.js"
-    },
-    "./posthog": {
-      "types": "./dist/posthog.d.ts",
-      "import": "./dist/posthog.mjs",
-      "require": "./dist/posthog.js"
-    },
-    "./nlp": {
-      "types": "./dist/nlp.d.ts",
-      "import": "./dist/nlp.mjs",
-      "require": "./dist/nlp.js"
-    },
-    "./cidr": {
-      "types": "./dist/cidr.d.ts",
-      "import": "./dist/cidr.mjs",
-      "require": "./dist/cidr.js"
-    },
-    "./avatar-colour": {
-      "types": "./dist/avatar-colour.d.ts",
-      "import": "./dist/avatar-colour.mjs",
-      "require": "./dist/avatar-colour.js"
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "import": "./dist/*.mjs",
+      "require": "./dist/*.js"
     }
   },
   "files": [

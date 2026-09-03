@@ -8,7 +8,14 @@ import {
   THEME_APPLIED_EVENT,
   type ThemeOption,
 } from "@sun/themes";
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useReducer, useState } from "react";
+import {
+  makeCacheKey,
+  peekPageData,
+  refetchEntry,
+  subscribeDataInvalidation,
+} from "@sun/ssr";
+import type { ResolvedTheme } from "@sun/utils/property-set";
 
 type LayoutProps = React.PropsWithChildren;
 
@@ -24,6 +31,28 @@ const Layout = (props: LayoutProps) => {
     undefined,
   );
   const [themes, setThemes] = useState<ThemeOption[]>([]);
+  const cacheKey = makeCacheKey("themes:themes", {});
+  const [, forceUpdate] = useReducer((x: number) => x + 1, 0);
+
+  useEffect(() => {
+    return subscribeDataInvalidation((affected) => {
+      if (!affected || affected.includes(cacheKey)) {
+        forceUpdate();
+      }
+    });
+  }, [cacheKey]);
+
+  const themesData = peekPageData<ResolvedTheme>("themes", "themes", {}) as
+    | ResolvedTheme
+    | null;
+
+  useEffect(() => {
+    if (themesData == null) {
+      refetchEntry("themes", "themes", {}, forceUpdate);
+    } else {
+      setThemes(themesData.all as ThemeOption[]);
+    }
+  }, [themesData]);
 
   useIsomorphicLayoutEffect(() => {
     const update = () => setBackgroundColour(getBackgroundHex());
@@ -34,10 +63,6 @@ const Layout = (props: LayoutProps) => {
       clearInterval(interval);
       window.removeEventListener(THEME_APPLIED_EVENT, update);
     };
-  }, []);
-
-  useEffect(() => {
-    setThemes(window.__themes__ ?? []);
   }, []);
 
   return (

@@ -11,6 +11,7 @@ export default defineConfig({
     "src/nlp.ts",
     "src/cidr.ts",
     "src/avatar-colour.ts",
+    "src/property-set.ts",
   ],
   format: ["cjs", "esm"],
   dts: false,

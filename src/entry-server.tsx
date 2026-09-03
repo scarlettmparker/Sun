@@ -10,7 +10,6 @@ import {
   type RouteMeta,
 } from "@sun/ssr/server";
 import { createI18nInstance } from "./utils/i18n";
-import { fetchPropertySet } from "./utils/api";
 import { configureApi } from "@sun/api";
 import { AUTH_COOKIE } from "./utils/auth";
 import { clientId, clientSecret, base } from "../config.js";
@@ -55,21 +54,6 @@ const renderer = createRenderer({
     });
   },
   async resolveTheme() {
-    const result = await fetchPropertySet("ReactApp", "themes");
-    const map = result?.success
-      ? (result.data as { gaiaQueries?: { propertySet?: unknown } })
-          ?.gaiaQueries?.propertySet
-      : null;
-    if (map && typeof map === "object") {
-      const themeMap = map as Record<string, Record<string, string>>;
-      return {
-        current: themeMap["sea"] ?? null,
-        all: Object.entries(themeMap).map(([name, values]) => ({
-          name,
-          values,
-        })),
-      };
-    }
     return { current: null, all: [] };
   },
 });

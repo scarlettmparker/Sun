@@ -163,5 +163,7 @@ export async function fetchPropertySet(ownerKey: string, name: string) {
       ownerKey,
       name,
     },
+    undefined,
+    { retries: [], timeoutMs: 2000 },
   );
 }
