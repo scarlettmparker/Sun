@@ -1,14 +1,12 @@
-import { Suspense } from "react";
 import { Outlet } from "react-router-dom";
 import { BreadcrumbProvider } from "@sun/components";
 import { cn } from "~/utils/cn";
-import BlogTypeSidebar from "~/components/blog/blog-type-sidebar";
 import detailStyles from "~/components/blog/blog-detail/blog-detail.module.css";
 import { useNavPortal } from "~/components/layout/menu/top-nav-bar/nav-portal-context";
 import styles from "./blog.module.css";
 
 /**
- * Blog layout with sidebar and outlet.
+ * Blog layout with outlet.
  */
 const BlogLayout = () => {
   const { setOuterSlot } = useNavPortal();
@@ -16,9 +14,6 @@ const BlogLayout = () => {
   return (
     <BreadcrumbProvider>
       <div className={styles.blog_layout}>
-        <Suspense fallback={null}>
-          <BlogTypeSidebar />
-        </Suspense>
         <div
           id="blog-detail-wrapper"
           ref={(el) => el?.setAttribute("data-ref", "blog-detail-wrapper")}

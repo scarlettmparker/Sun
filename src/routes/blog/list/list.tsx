@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@sun/components";
 import { ArrowDownTrayIcon, PlusIcon } from "@heroicons/react/24/outline";
 import BlogList from "~/components/blog/blog-list";
+import BlogTypeContainer from "~/components/blog/blog-type-container";
 import { BlogListSkeleton } from "~/components/blog/skeletons";
 import IngestBlogDialog from "~/components/blog/ingest-blog-dialog";
 import styles from "./list.module.css";
@@ -29,6 +30,11 @@ const BlogListPage = () => {
       <Suspense fallback={<BlogListSkeleton />}>
         <BlogList selectedType={selectedType} />
       </Suspense>
+      <div className={styles.filter_bar}>
+        <Suspense fallback={null}>
+          <BlogTypeContainer variant="horizontal" />
+        </Suspense>
+      </div>
       <div className={styles.actions}>
         <Button
           variant="secondary"

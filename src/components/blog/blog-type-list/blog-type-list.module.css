@@ -12,6 +12,14 @@
   text-align: left;
 }
 
+.type_button_horizontal {
+  display: flex;
+  align-items: center;
+  gap: var(--lg);
+  width: auto;
+  text-align: left;
+}
+
 .type_icon {
   flex-shrink: 0;
 }

@@ -22,13 +22,17 @@ type BlogTypeListProps = {
    * Called when a type is selected.
    */
   onSelect: (type: string | null) => void;
+  /**
+   * Layout variant.
+   */
+  variant?: "vertical" | "horizontal";
 };
 
 /**
  * Renders type filter buttons.
  */
 const BlogTypeList = (props: BlogTypeListProps) => {
-  const { selectedType, onSelect } = props;
+  const { selectedType, onSelect, variant = "vertical" } = props;
   const { t } = useTranslation("blog");
   const { data: types } = usePageData<
     BlogPostTypesQuery["blogQueries"]["blogPostTypes"]
@@ -37,9 +41,15 @@ const BlogTypeList = (props: BlogTypeListProps) => {
   return (
     <>
       <Button
-        className={styles.type_button}
+        className={
+          variant === "horizontal"
+            ? styles.type_button_horizontal
+            : styles.type_button
+        }
         variant={selectedType == null ? "default" : "secondary"}
         onClick={() => onSelect(null)}
+        title={t("filter.all")}
+        aria-label={t("filter.all")}
       >
         <Squares2X2Icon className={styles.type_icon} width={16} height={16} />
         <span className={styles.type_name}>{t("filter.all")}</span>
@@ -49,9 +59,19 @@ const BlogTypeList = (props: BlogTypeListProps) => {
         return (
           <Button
             key={postType.id}
-            className={styles.type_button}
+            className={
+              variant === "horizontal"
+                ? styles.type_button_horizontal
+                : styles.type_button
+            }
             variant={selectedType === postType.name ? "default" : "secondary"}
             onClick={() => onSelect(postType.name)}
+            title={t(`types.${postType.name}`, {
+              defaultValue: postType.name,
+            })}
+            aria-label={t(`types.${postType.name}`, {
+              defaultValue: postType.name,
+            })}
           >
             <Icon className={styles.type_icon} width={16} height={16} />
             <span className={styles.type_name}>

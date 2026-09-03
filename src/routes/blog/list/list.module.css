@@ -17,6 +17,18 @@
   z-index: 100;
 }
 
+.filter_bar {
+  position: fixed;
+  bottom: calc(var(--xl) * 4);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: var(--md);
+  z-index: 100;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
 .action_icon {
   margin-right: var(--md);
 }
