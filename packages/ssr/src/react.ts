@@ -9,6 +9,7 @@ import {
 import {
   getPageData,
   makeCacheKey,
+  peekPageData,
   refetchEntry,
   subscribeDataInvalidation,
 } from "./page-data";
@@ -65,10 +66,29 @@ export const RoleCheck = ({
   children,
 }: RoleCheckProps) => {
   if (!roles.length) return null;
-  const { data: userRoles } = getPageData<string[]>(
+  const cacheKey = makeCacheKey("currentRoles:currentRoles", {});
+  const [, forceUpdate] = useReducer((x: number) => x + 1, 0);
+
+  useEffect(() => {
+    return subscribeDataInvalidation((affected) => {
+      if (!affected || affected.includes(cacheKey)) {
+        forceUpdate();
+      }
+    });
+  }, [cacheKey]);
+
+  const userRoles = peekPageData<string[]>(
     "currentRoles",
     "currentRoles",
-  );
+    {},
+  ) as string[] | null;
+
+  useEffect(() => {
+    if (userRoles == null) {
+      refetchEntry("currentRoles", "currentRoles", {}, forceUpdate);
+    }
+  }, [userRoles == null]);
+
   if (!userRoles || !userRoles.length) return null;
   const has =
     match === "all"

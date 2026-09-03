@@ -2,6 +2,6 @@ import { configurePageData } from "@sun/ssr";
 
 configurePageData({
   perPatternTtl: {
-    "/currentRoles": Infinity,
+    "/currentRoles": 60000,
   },
 });

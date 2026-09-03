@@ -46,6 +46,7 @@ defineLoader({
         MyRolesDocument,
         {},
         token,
+        { retries: [], timeoutMs: 2000 },
       );
       return { currentRoles: res.data?.gaiaQueries?.myRoles ?? [] };
     } catch {

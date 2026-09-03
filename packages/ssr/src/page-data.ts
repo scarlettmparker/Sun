@@ -484,6 +484,78 @@ export function getPageData<T>(
   return { data: (record.result as Record<string, unknown>)?.[key] as T };
 }
 
+/**
+ * Returns cached data without suspending.
+ *
+ * @param key data key
+ * @param pattern route pattern
+ * @param params loader params
+ */
+export function peekPageData<T>(
+  key: string,
+  pattern: string,
+  params?: Record<string, unknown>,
+): T | null {
+  const cacheKey = makeCacheKey(`${pattern}:${key}`, params);
+  let record = activeCache().get(cacheKey);
+
+  if (
+    record &&
+    record.status === "resolved" &&
+    isCacheExpired(record, pattern)
+  ) {
+    const stale = record.result?.[key] as T | undefined;
+    refetchEntry(key, pattern, params, () => {});
+    return stale ?? null;
+  }
+
+  if (
+    record &&
+    record.status === "rejected" &&
+    record.errorAt &&
+    Date.now() - record.errorAt > REJECTED_RETRY_MS
+  ) {
+    activeCache().delete(cacheKey);
+    record = undefined;
+  }
+
+  if (!record) {
+    const legacyKey = makeCacheKey(pattern, params);
+    const legacy = activeCache().get(legacyKey);
+    if (legacy && legacy.status === "resolved") {
+      if (isCacheExpired(legacy, pattern)) {
+        refetchEntry(key, pattern, params, () => {});
+      }
+      return (legacy.result as Record<string, unknown>)?.[key] as T ?? null;
+    }
+  }
+
+  if (!record) {
+    try {
+      readPageData<T>(key, pattern, params);
+    } catch (e) {
+      if (e instanceof Promise) {
+        return null;
+      }
+      throw e;
+    }
+    record = activeCache().get(cacheKey);
+    if (!record || record.status !== "resolved") {
+      return null;
+    }
+  }
+
+  if (record.status === "pending") {
+    return null;
+  }
+
+  if (record.status === "rejected") {
+    return null;
+  }
+
+  return (record.result as Record<string, unknown>)?.[key] as T ?? null;
+}
+
 function parseInvalidationPatterns(cookieValue: string): string[] {
   try {
     const decoded = decodeURIComponent(cookieValue);
