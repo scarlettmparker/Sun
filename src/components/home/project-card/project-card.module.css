@@ -1,0 +1,27 @@
+.title_row {
+  display: flex;
+  gap: var(--md);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.badge {
+  margin-left: auto;
+}
+
+.meta {
+  display: flex;
+  gap: var(--md);
+  align-items: center;
+}
+
+.github_link {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.footer {
+  display: flex;
+  gap: var(--md);
+  flex-wrap: wrap;
+}

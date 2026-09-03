@@ -1,4 +1,5 @@
 import TopNavBar from "./menu/top-nav-bar";
+import UserMenu from "./user-menu";
 import { NavPortalProvider } from "./menu/top-nav-bar/nav-portal-context";
 import styles from "./layout.module.css";
 import { getBackgroundHex } from "~/utils/background-colour";
@@ -27,6 +28,7 @@ const Layout = (props: LayoutProps) => {
     <NavPortalProvider>
       <main style={{ backgroundColor: backgroundColour }} className={styles.main}>
         <TopNavBar />
+        <UserMenu />
         {children}
       </main>
     </NavPortalProvider>

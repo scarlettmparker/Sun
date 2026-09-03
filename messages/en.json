@@ -110,12 +110,52 @@
       "title": "Profile",
       "tbd": "More here soon.",
       "login": "Log in",
+      "cancel": "Cancel",
+      "manage": "Manage profile",
       "github-label": "GitHub",
       "logout": "Log out",
       "delete": "Delete account",
       "deleting": "Deleting…",
       "delete-title": "Delete account?",
       "delete-body": "This will permanently delete your account. This cannot be undone."
+    },
+    "experience": {
+      "title": "Experience",
+      "certus": {
+        "company": "Certus Technology",
+        "date": "Since 10 March 2025",
+        "body": "TBD — your time at Certus, what you worked on, and what you learned."
+      }
+    },
+    "projects": {
+      "visit": "Visit",
+      "you-are-here": "You are here",
+      "read-more": "Read more",
+      "close": "Close",
+      "detail-placeholder": "TBD — add a longer write-up, links, and maybe a demo gif.",
+      "personal-title": "Personal projects",
+      "internal-title": "Internal-only projects",
+      "sun": {
+        "description": "TBD — Sun itself, this site. You are here, so this card is disabled."
+      },
+      "guided-reader": {
+        "description": "TBD — Guided Reader, language learning app."
+      },
+      "niece-scarlett": {
+        "description": "TBD — Niece Scarlett."
+      },
+      "learner": {
+        "description": "TBD — Learner, something you are building."
+      },
+      "trash-munchers": {
+        "description": "TBD — Trash Munchers, game jam project."
+      },
+      "filestore": {
+        "description": "TBD — Filestore, internal file storage."
+      },
+      "checklist": {
+        "description": "TBD — Checklist, internal task tracker."
+      }
     }
   },
   "hub": {

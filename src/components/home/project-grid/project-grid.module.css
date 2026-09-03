@@ -1,0 +1,9 @@
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--lg);
+}
+
+.card {
+  flex: 1 1 16rem;
+}

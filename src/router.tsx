@@ -17,6 +17,7 @@ const BlogPostPage = lazy(() => import("~/routes/blog/[id]"));
 const CreateBlogPostPage = lazy(() => import("~/routes/blog/create"));
 const HubPage = lazy(() => import("~/routes/hub"));
 const Login = lazy(() => import("~/routes/login"));
+const Profile = lazy(() => import("~/routes/profile"));
 
 /**
  * Per-route SEO metadata, keyed by the composed route path.
@@ -49,6 +50,10 @@ export const routeMeta: Record<string, RouteMeta> = {
   login: {
     title: "Login | Scarlet Sun",
     description: "Sign in to continue.",
+  },
+  profile: {
+    title: "Profile | Scarlet Sun",
+    description: "Manage your profile.",
   },
 };
 
@@ -113,6 +118,14 @@ export const routes: RouteObject[] = [
     element: (
       <Suspense fallback={null}>
         <Login />
+      </Suspense>
+    ),
+  },
+  {
+    path: "profile",
+    element: (
+      <Suspense fallback={null}>
+        <Profile />
       </Suspense>
     ),
   },

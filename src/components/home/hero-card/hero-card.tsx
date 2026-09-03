@@ -28,8 +28,8 @@ const HeroCard = (props: HeroCardProps) => {
             src="/art.jpg"
             alt="Scarlett Parker"
             className={styles.avatar}
-            width={96}
-            height={96}
+            width={64}
+            height={64}
           />
           <div className={styles.header_text}>
             <CardTitle>{t("hero.name")}</CardTitle>

@@ -1,25 +1,39 @@
-import { useTranslation } from "react-i18next";
-import { Card, CardBody, CardHeader, CardTitle } from "@sun/components";
+import { useState } from "react";
+import HeroCard from "~/components/home/hero-card";
+import ExperienceSection from "~/components/home/experience-section";
+import ProjectGrid from "~/components/home/project-grid";
+import ProjectDetailDialog from "~/components/home/project-detail-dialog";
+import {
+  internalProjects,
+  personalProjects,
+  type Project,
+} from "~/components/home/projects/projects-config";
 import styles from "./index.module.css";
 
 /**
  * Home landing page.
  */
 const HomePage = () => {
-  const { t } = useTranslation("home");
+  const [selected, setSelected] = useState<Project | null>(null);
 
   return (
     <div className={styles.home_wrapper}>
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("title")}</CardTitle>
-        </CardHeader>
-        <CardBody>
-          <div className={styles.list_body}>
-            <p className={styles.welcome}>{t("welcome")}</p>
-          </div>
-        </CardBody>
-      </Card>
+      <HeroCard />
+      <ExperienceSection />
+      <ProjectGrid
+        titleKey="projects.personal-title"
+        projects={personalProjects}
+        onReadMore={setSelected}
+      />
+      <ProjectGrid
+        titleKey="projects.internal-title"
+        projects={internalProjects}
+        onReadMore={setSelected}
+      />
+      <ProjectDetailDialog
+        project={selected}
+        onOpenChange={(open) => !open && setSelected(null)}
+      />
     </div>
   );
 };

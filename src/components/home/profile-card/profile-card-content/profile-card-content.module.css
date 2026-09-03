@@ -1,0 +1,40 @@
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--lg);
+}
+
+.header_avatar {
+  flex-shrink: 0;
+}
+
+.header_text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sm);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lg);
+}
+
+.tbd {
+  margin: 0;
+}
+
+.github_link {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.footer {
+  display: flex;
+  gap: var(--md);
+  flex-wrap: wrap;
+}
+
+.logout_form {
+  display: contents;
+}
