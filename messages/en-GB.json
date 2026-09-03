@@ -100,7 +100,7 @@
       "location": "Exeter, United Kingdom",
       "github-label": "GitHub",
       "birthday-label": "Born 21 February 2003",
-      "bio-prefix": "Web developer",
+      "bio-prefix": "Artist, Web developer",
       "age_one": "{{count}} year old",
       "age_other": "{{count}} years old",
       "bio-suffix": "",
@@ -130,6 +130,9 @@
       }
     },
     "spotify": {
+      "title": "Today's pick",
+      "subtitle": "cute - dancing under the sun",
+      "body": "Second single for \"dancing under the sun\", released 21 Jun 2026",
       "listen": "Listen on spotify",
       "image-alt": "cute - dancing under the sun cover art"
     },

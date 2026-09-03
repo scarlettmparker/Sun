@@ -8,3 +8,26 @@
   padding: calc(var(--lg) * 2);
   padding-top: calc(var(--xl) * 4);
 }
+
+.hero_row {
+  display: flex;
+  gap: var(--lg);
+  align-items: stretch;
+}
+
+.hero_card {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.spotify_card {
+  flex: 0 0 18rem;
+  max-width: 22rem;
+  width: 100%;
+}
+
+@media (max-width: 700px) {
+  .spotify_card {
+    display: none;
+  }
+}
