@@ -1,28 +1,5 @@
-/** Reads a theme value from the loaded theme, if available. */
-function getThemeVar(cssVar: string, themeKey: string): string | undefined {
-  if (typeof window !== "undefined") {
-    const winTheme = (window as unknown as { __theme__?: Record<string, string> })
-      .__theme__;
-    if (winTheme?.[themeKey]) {
-      return winTheme[themeKey];
-    }
-    const stored = window.localStorage.getItem("sun:theme");
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored) as Record<string, string>;
-        if (parsed[themeKey]) {
-          return parsed[themeKey];
-        }
-      } catch {
-        // ignore malformed
-      }
-    }
-  }
-  return readCssVar(cssVar);
-}
-
-/** Background opacity as a 0-255 alpha channel value (10% ≈ 26). */
-const BACKGROUND_ALPHA = 26;
+const DAY_RGB = { r: 255, g: 250, b: 244 };
+const NIGHT_RGB = { r: 253, g: 239, b: 242 };
 
 /**
  * Reads a CSS custom property from the document root.
@@ -51,39 +28,24 @@ function getSecondsOfDay(): number {
 }
 
 /**
- * Get the background colour for the current time of day from the loaded theme.
+ * Get the background colour for the current time of day.
  *
- * @param theme the loaded theme values, or null to read from CSS/storage
- * @returns The interpolated hex colour with alpha.
+ * @returns The interpolated hex colour.
  */
-export function getBackgroundHex(
-  theme?: Record<string, string> | null,
-): string {
-  const override = theme?.["background"] ?? readCssVar("--background");
-  if (override) {
-    return override;
-  }
-
+export function getBackgroundHex(): string {
   const seconds = getSecondsOfDay();
   const ratio = seconds / 86400;
 
-  // 1 at midday (pure primary), 0 at midnight (pure accent).
   const dayWeight = 1 - 2 * Math.abs(ratio - 0.5);
 
-  const themePrimary = theme?.["primary"] ?? getThemeVar("--primary", "primary");
-  const themeAccent = theme?.["accent"] ?? getThemeVar("--accent", "accent");
-  if (!themePrimary) {
-    return "transparent";
-  }
-  const primaryHex = themePrimary;
-  const primary = toRgb(primaryHex);
-  const accent = toRgb(themeAccent ?? primaryHex);
+  const primary = DAY_RGB;
+  const accent = NIGHT_RGB;
 
   const r = Math.round(primary.r * dayWeight + accent.r * (1 - dayWeight));
   const g = Math.round(primary.g * dayWeight + accent.g * (1 - dayWeight));
   const b = Math.round(primary.b * dayWeight + accent.b * (1 - dayWeight));
 
-  return `#${toHex(r)}${toHex(g)}${toHex(b)}${toHex(BACKGROUND_ALPHA)}`;
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
 /**

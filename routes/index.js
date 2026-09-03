@@ -5,61 +5,19 @@
 import { renderApp } from "@sun/ssr/server";
 import { base, isProduction, manifestPath } from "../config.js";
 import { Buffer } from "buffer";
-import { createHmac, timingSafeEqual } from "crypto";
 import { getCookieValue } from "@sun/api";
 import {
   AUTH_COOKIE,
+  getCurrentUser,
   loginViaGaia,
+  logoutViaBackend,
   buildAuthCookie,
   clearAuthCookie,
 } from "../src/utils/auth.ts";
+import { seedPageData } from "../src/utils/seed-page-data.ts";
 import { registerHubRoutes } from "../src/server/hub/routes.ts";
 
 const PUBLIC_PAGES = new Set(["/login", "/"]);
-
-/**
- * Verifies a JWT's HMAC-SHA256 signature using the configured secret.
- * Returns the decoded payload if valid, null otherwise.
- */
-function verifyToken(token) {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    try {
-      const payload = JSON.parse(
-        Buffer.from(token.split(".")[1], "base64url").toString(),
-      );
-      if (payload.exp && payload.exp * 1000 < Date.now()) return null;
-      return payload;
-    } catch {
-      return {};
-    }
-  }
-
-  const parts = token.split(".");
-  if (parts.length !== 3) return null;
-
-  const data = parts[0] + "." + parts[1];
-  const expectedSig = createHmac("sha256", secret)
-    .update(data)
-    .digest("base64url");
-
-  const expectedBuf = Buffer.from(expectedSig);
-  const actualBuf = Buffer.from(parts[2]);
-  if (
-    expectedBuf.length !== actualBuf.length ||
-    !timingSafeEqual(expectedBuf, actualBuf)
-  ) {
-    return null;
-  }
-
-  try {
-    const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString());
-    if (payload.exp && payload.exp * 1000 < Date.now()) return null;
-    return payload;
-  } catch {
-    return null;
-  }
-}
 
 /**
  * Sets up routes for the Fastify application.
@@ -75,19 +33,50 @@ export function setupRoutes(app, vite) {
     const token = await loginViaGaia(username, password);
     if (!token) return reply.redirect("/login?error=1");
     reply.header("Set-Cookie", buildAuthCookie(token));
-    const redirectTo =
-      typeof request.query?.redirect === "string"
-        ? request.query.redirect
-        : "/";
-    return reply.redirect(redirectTo);
+    return reply.redirect("/");
   });
 
-  app.post("/__logout", async (_request, reply) => {
+  app.post("/__logout", async (request, reply) => {
+    const token = getCookieValue(request.headers.cookie, AUTH_COOKIE);
+    await logoutViaBackend(token);
     reply.header("Set-Cookie", clearAuthCookie());
     return reply.redirect("/login");
   });
 
   app.setNotFoundHandler({ method: ["GET"] }, async (request, reply) => {
+    const requestUrl = new URL(request.raw.url, "http://localhost");
+    const pathname = requestUrl.pathname;
+    if (/\.[^/]+$/.test(pathname)) {
+      return reply.callNotFound();
+    }
+
+    const normalizedPath =
+      pathname.length > 1 && pathname.endsWith("/")
+        ? pathname.replace(/\/+$/, "")
+        : pathname;
+    const isPublic = PUBLIC_PAGES.has(normalizedPath);
+
+    const token = getCookieValue(request.headers.cookie, AUTH_COOKIE);
+    let user = null;
+    let isDeadSession = false;
+    let isTransient = false;
+    try {
+      user = await getCurrentUser(token);
+      isDeadSession = !user && !!token;
+    } catch (_) {
+      isTransient = !!token;
+      isDeadSession = false;
+    }
+
+    if (isDeadSession) {
+      reply.header("Set-Cookie", clearAuthCookie());
+    }
+
+    if (!user && !isPublic && !isTransient) return reply.redirect("/login");
+    if (user && normalizedPath === "/login") return reply.redirect("/");
+
+    await seedPageData(user);
+
     const mutationPayloadCookie = getCookieValue(
       request.headers.cookie,
       "mutation_payload",
@@ -106,35 +95,6 @@ export function setupRoutes(app, vite) {
         // Do nothing
       }
     }
-
-    const requestUrl = new URL(request.raw.url, "http://localhost");
-    const pathname = requestUrl.pathname;
-    if (/\.[^/]+$/.test(pathname)) {
-      return reply.callNotFound();
-    }
-
-    const token = getCookieValue(request.headers.cookie, AUTH_COOKIE);
-    if (token) {
-      const payload = verifyToken(token);
-      if (!payload) {
-        reply.header("Set-Cookie", clearAuthCookie());
-        return reply.redirect(
-          `/login?redirect=${encodeURIComponent(request.raw.url)}`,
-        );
-      }
-    }
-
-    const normalizedPath =
-      pathname.length > 1 && pathname.endsWith("/")
-        ? pathname.replace(/\/+$/, "")
-        : pathname;
-    const isPublic = PUBLIC_PAGES.has(normalizedPath);
-
-    if (!token && !isPublic)
-      return reply.redirect(
-        `/login?redirect=${encodeURIComponent(request.raw.url)}`,
-      );
-    if (token && normalizedPath === "/login") return reply.redirect("/");
 
     let url = pathname.replace(base, "");
     if (!url.startsWith("/")) url = "/" + url;

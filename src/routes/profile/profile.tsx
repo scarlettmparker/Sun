@@ -1,11 +1,6 @@
-import { useEffect, useReducer, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  makeCacheKey,
-  peekPageData,
-  refetchEntry,
-  subscribeDataInvalidation,
-} from "@sun/ssr";
+import { usePageData } from "@sun/ssr/react";
 import {
   Button,
   Card,
@@ -27,28 +22,11 @@ type CurrentUser = NonNullable<MeQuery["gaiaQueries"]["me"]>;
  */
 const ProfilePage = () => {
   const { t } = useTranslation("home");
-  const cacheKey = makeCacheKey("currentUser:currentUser", {});
-  const [, forceUpdate] = useReducer((x: number) => x + 1, 0);
-
-  useEffect(() => {
-    return subscribeDataInvalidation((affected) => {
-      if (!affected || affected.includes(cacheKey)) {
-        forceUpdate();
-      }
-    });
-  }, [cacheKey]);
-
-  const currentUser = peekPageData<CurrentUser | null>(
+  const { data: currentUser } = usePageData<CurrentUser | null>(
     "currentUser",
     "currentUser",
     {},
-  ) as CurrentUser | null;
-
-  useEffect(() => {
-    if (currentUser == null) {
-      refetchEntry("currentUser", "currentUser", {}, forceUpdate);
-    }
-  }, []);
+  );
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
