@@ -79,6 +79,7 @@ export { default as ScrollArea } from "./components/scroll-area";
 export { default as SearchBar } from "./components/search-bar";
 export { default as Select, SelectOption } from "./components/select";
 export { default as Separator } from "./components/separator";
+export { default as SeededAvatar } from "./components/seeded-avatar";
 export { default as Sidebar } from "./components/sidebar";
 export { default as Skeleton } from "./components/skeleton";
 export { default as TaggedInput } from "./components/tagged-input";

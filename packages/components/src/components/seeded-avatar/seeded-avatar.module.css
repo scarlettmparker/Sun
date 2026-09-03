@@ -1,0 +1,13 @@
+.avatar {
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-weight: var(--bold);
+  user-select: none;
+}
+
+.initial {
+  line-height: 1;
+}

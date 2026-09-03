@@ -1,6 +1,6 @@
 {
   "name": "@sun/utils",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "description": "Shared utilities across Sun ecosystem apps",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
