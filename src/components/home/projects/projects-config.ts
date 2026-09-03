@@ -12,6 +12,10 @@ export type Project = {
    */
   href: string | null;
   /**
+   * Visit href for live site when different from github.
+   */
+  visitHref?: string | null;
+  /**
    * i18n key for description.
    */
   descriptionKey: string;
@@ -29,7 +33,7 @@ export const personalProjects: Project[] = [
   {
     key: "sun",
     title: "Sun",
-    href: null,
+    href: "https://github.com/scarlettmparker/Sun",
     descriptionKey: "projects.sun.description",
     rank: 10,
     disabled: true,
@@ -37,14 +41,15 @@ export const personalProjects: Project[] = [
   {
     key: "guided-reader",
     title: "Guided Reader",
-    href: "https://reader.scarlettparker.co.uk",
+    href: "https://github.com/scarlettmparker/Guided-Reader",
+    visitHref: "https://reader.scarlettparker.co.uk",
     descriptionKey: "projects.guided-reader.description",
     rank: 20,
   },
   {
     key: "niece-scarlett",
     title: "Niece Scarlett",
-    href: "https://niece.scarlettparker.co.uk",
+    href: "https://github.com/scarlettmparker/Niece-Scarlett",
     descriptionKey: "projects.niece-scarlett.description",
     rank: 30,
   },

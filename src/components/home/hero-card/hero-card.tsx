@@ -59,7 +59,6 @@ const HeroCard = (props: HeroCardProps) => {
             >
               {t("hero.age", { count: age })}
             </span>
-            {t("hero.bio-suffix")}
           </p>
           <p className={styles.bio_detail}>{t("hero.bio-detail")}</p>
         </div>

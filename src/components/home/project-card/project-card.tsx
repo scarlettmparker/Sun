@@ -35,26 +35,38 @@ const ProjectCard = (props: ProjectCardProps) => {
       <CardHeader>
         <CardTitle className={styles.title_row}>
           <span>{project.title}</span>
-          {project.disabled && (
+          {project.disabled ? (
             <Badge className={styles.badge}>
               {t("projects.you-are-here")}
             </Badge>
-          )}
-        </CardTitle>
-        <CardDescription>
-          <span>{t(project.descriptionKey)}</span>
-          {project.href && !project.disabled && (
-            <>
-              {" · "}
+          ) : (
+            project.visitHref &&
+            project.visitHref !== project.href && (
               <a
-                href={project.href}
+                href={project.visitHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={styles.github_link}
+                className={styles.visit_link}
               >
                 {t("projects.visit")}
               </a>
-            </>
+            )
+          )}
+        </CardTitle>
+        <CardDescription>
+          {project.href?.includes("github.com") ? (
+            <a
+              href={project.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.github_link}
+              title={t("projects.visit-github")}
+              aria-label={t("projects.visit-github")}
+            >
+              {project.href}
+            </a>
+          ) : (
+            <span>{t(project.descriptionKey)}</span>
           )}
         </CardDescription>
       </CardHeader>

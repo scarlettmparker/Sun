@@ -9,6 +9,14 @@
   margin-left: auto;
 }
 
+.visit_link {
+  margin-left: auto;
+  color: var(--primary);
+  text-decoration: underline;
+  font-size: var(--text-md);
+  font-weight: var(--normal);
+}
+
 .meta {
   display: flex;
   gap: var(--md);
@@ -16,7 +24,7 @@
 }
 
 .github_link {
-  color: var(--primary);
+  color: var(--muted) !important;
   text-decoration: underline;
 }
 
