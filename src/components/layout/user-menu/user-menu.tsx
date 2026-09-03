@@ -1,7 +1,12 @@
-import { Suspense } from "react";
+import { useEffect, useReducer } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { usePageData } from "@sun/ssr/react";
+import {
+  makeCacheKey,
+  peekPageData,
+  refetchEntry,
+  subscribeDataInvalidation,
+} from "@sun/ssr";
 import {
   Button,
   Card,
@@ -35,20 +40,35 @@ const UserMenu = () => {
 
   return (
     <div className={styles.menu}>
-      <Suspense fallback={null}>
-        <UserMenuContent />
-      </Suspense>
+      <UserMenuContent />
     </div>
   );
 };
 
 const UserMenuContent = () => {
   const { t } = useTranslation("home");
-  const { data: currentUser } = usePageData<CurrentUser | null>(
+  const cacheKey = makeCacheKey("currentUser:currentUser", {});
+  const [, forceUpdate] = useReducer((x: number) => x + 1, 0);
+
+  useEffect(() => {
+    return subscribeDataInvalidation((affected) => {
+      if (!affected || affected.includes(cacheKey)) {
+        forceUpdate();
+      }
+    });
+  }, [cacheKey]);
+
+  const currentUser = peekPageData<CurrentUser | null>(
     "currentUser",
     "currentUser",
     {},
-  );
+  ) as CurrentUser | null;
+
+  useEffect(() => {
+    if (currentUser == null) {
+      refetchEntry("currentUser", "currentUser", {}, forceUpdate);
+    }
+  }, []);
 
   if (!currentUser) {
     return (

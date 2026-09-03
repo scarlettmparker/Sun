@@ -10,13 +10,18 @@ import {
 } from "~/generated/graphql";
 
 /**
- * Loads the configurable level-to-colour map from gaia.
+ * Loads the configurable level-to-colour map from gaia with a short timeout.
  */
 async function loadLevelColours(): Promise<Record<string, string>> {
-  const result = await executeDocument<PropertySetQuery>(PropertySetDocument, {
-    ownerKey: "ReactApp",
-    name: "reader-level-colours",
-  });
+  const result = await executeDocument<PropertySetQuery>(
+    PropertySetDocument,
+    {
+      ownerKey: "ReactApp",
+      name: "reader-level-colours",
+    },
+    undefined,
+    { retries: [], timeoutMs: 2000 },
+  );
   const entries = (result.data as PropertySetQuery | undefined)?.gaiaQueries
     ?.propertySet as Record<string, { colour?: string }> | undefined;
   if (!entries) {

@@ -101,7 +101,7 @@ defineLoader({
     const cookie = (context as { cookie?: string } | undefined)?.cookie;
     const token = getCookieValue(cookie, AUTH_COOKIE);
     if (!token) {
-      throw new Error("Unauthorized");
+      return { hubRegistry: { apps: [], mode: "serve" as const } };
     }
     return { hubRegistry: await getRegistry() };
   },

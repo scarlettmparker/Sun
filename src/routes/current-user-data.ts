@@ -9,7 +9,10 @@ defineLoader({
   pattern: "currentUser",
   async loader() {
     try {
-      const result = await executeDocument<MeQuery>(MeDocument, {});
+      const result = await executeDocument<MeQuery>(MeDocument, {}, undefined, {
+        retries: [],
+        timeoutMs: 2000,
+      });
       const me = result.success
         ? (result.data as MeQuery | undefined)?.gaiaQueries.me ?? null
         : null;
