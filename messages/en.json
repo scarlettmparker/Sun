@@ -104,7 +104,7 @@
       "age_one": "{{count}} year old",
       "age_other": "{{count}} years old",
       "bio-suffix": "",
-      "bio-detail": "I build things for the web. This site is where I keep track of them.",
+      "bio-detail": "I build things for the web. This site is where I keep track of them. Built with React + Vite.",
       "experience-label": "Since 10 March 2025",
       "experience": "{{count}} YoE"
     },
@@ -126,8 +126,12 @@
       "certus": {
         "company": "Certus Technology",
         "date": "Since 10 March 2025",
-        "body": "TBD - your time at Certus, what you worked on, and what you learned."
+        "body": "TBD - time at Certus, what I worked on, and what I learned."
       }
+    },
+    "spotify": {
+      "listen": "Listen on spotify",
+      "image-alt": "cute - dancing under the sun cover art"
     },
     "projects": {
       "visit": "Visit",

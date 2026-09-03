@@ -64,11 +64,7 @@ const HeroCard = (props: HeroCardProps) => {
               {experience}
             </span>
             {" | "}
-            <span
-              className={styles.age}
-              title={birthdayLabel}
-              aria-label={birthdayLabel}
-            >
+            <span title={birthdayLabel} aria-label={birthdayLabel}>
               {t("hero.age", { count: age })}
             </span>
           </p>
