@@ -10,6 +10,7 @@ export default defineConfig({
     "src/posthog.tsx",
     "src/nlp.ts",
     "src/cidr.ts",
+    "src/avatar-colour.ts",
   ],
   format: ["cjs", "esm"],
   dts: false,

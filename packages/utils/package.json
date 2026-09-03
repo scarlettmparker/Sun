@@ -45,6 +45,11 @@
       "types": "./dist/cidr.d.ts",
       "import": "./dist/cidr.mjs",
       "require": "./dist/cidr.js"
+    },
+    "./avatar-colour": {
+      "types": "./dist/avatar-colour.d.ts",
+      "import": "./dist/avatar-colour.mjs",
+      "require": "./dist/avatar-colour.js"
     }
   },
   "files": [
