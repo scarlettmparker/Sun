@@ -10,7 +10,7 @@
   gap: var(--lg);
   padding: var(--md) var(--lg);
   border-radius: var(--sm);
-  width: calc(100% - var(--lg) * 2);
+  width: calc(100% - var(--lg) * 4);
 }
 
 .row:hover {
