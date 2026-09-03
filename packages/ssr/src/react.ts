@@ -4,7 +4,6 @@ import {
   type ReactNode,
   useEffect,
   useReducer,
-  useState,
 } from "react";
 import {
   getPageData,
@@ -101,10 +100,7 @@ export const RoleCheck = ({
  * Hidden form field carrying the CSRF token for native (PRG) form posts.
  */
 export function CsrfField() {
-  const [token, setToken] = useState("");
-  useEffect(() => {
-    setToken(getCsrfToken() ?? "");
-  }, []);
+  const token = getCsrfToken() ?? "";
   return createElement("input", {
     type: "hidden",
     name: CSRF_FIELD,
