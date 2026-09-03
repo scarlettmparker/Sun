@@ -105,5 +105,6 @@ export function CsrfField() {
     type: "hidden",
     name: CSRF_FIELD,
     value: token,
+    readOnly: true,
   });
 }

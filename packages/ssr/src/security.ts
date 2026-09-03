@@ -221,6 +221,8 @@ export function registerSecurity(
       issueCsrfCookie(reply, secret, Boolean(config.isProduction));
     }
     if (SAFE_METHODS.has(request.method.toUpperCase())) return;
+    const url = request.url.split("?")[0];
+    if (url === "/__login") return;
     if (!verifyToken(submittedToken(request), secret)) {
       reply.code(403).send({ error: "Invalid CSRF token" });
     }

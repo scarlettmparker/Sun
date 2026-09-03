@@ -23,6 +23,9 @@ import {
   LocateReaderTextsDocument,
   type LocateReaderTextsQuery,
   type LocateReaderTextsQueryVariables,
+  PropertySetDocument,
+  type PropertySetQuery,
+  type PropertySetQueryVariables,
   RemoveRemoteObjectDocument,
   type RemoveRemoteObjectMutation,
   type RemoveRemoteObjectMutationVariables,
@@ -148,4 +151,17 @@ export async function fetchHubRegistry() {
  */
 export async function saveHubRegistry(input: HubRegistryInput) {
   return executeDocument<SaveRegistryMutation>(SaveRegistryDocument, { input });
+}
+
+/**
+ * Fetches a property set's entries as a name-to-values map.
+ */
+export async function fetchPropertySet(ownerKey: string, name: string) {
+  return executeDocument<PropertySetQuery, PropertySetQueryVariables>(
+    PropertySetDocument,
+    {
+      ownerKey,
+      name,
+    },
+  );
 }

@@ -20,6 +20,14 @@ export declare global {
      */
     __translations__?: Record<string, unknown>;
     /**
+     * Server-rendered theme values keyed by property name.
+     */
+    __theme__?: Record<string, string>;
+    /**
+     * All available themes for the switcher.
+     */
+    __themes__?: { name: string; values: Record<string, string> }[];
+    /**
      * Posthog Key.
      */
     __posthog_key__?: string;
