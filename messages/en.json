@@ -94,7 +94,29 @@
   "home": {
     "title": "Home",
     "welcome": "Welcome to Scarlet Sun.",
-    "empty": "No types yet"
+    "empty": "No types yet",
+    "hero": {
+      "name": "Scarlett Parker",
+      "location": "Exeter, United Kingdom",
+      "github-label": "GitHub",
+      "birthday-label": "Born 21 February 2003",
+      "bio-prefix": "Web developer — ",
+      "age_one": "{{count}} year old",
+      "age_other": "{{count}} years old",
+      "bio-suffix": ".",
+      "bio-detail": "I build things for the web. This site is where I keep track of them."
+    },
+    "profile": {
+      "title": "Profile",
+      "tbd": "More here soon.",
+      "login": "Log in",
+      "github-label": "GitHub",
+      "logout": "Log out",
+      "delete": "Delete account",
+      "deleting": "Deleting…",
+      "delete-title": "Delete account?",
+      "delete-body": "This will permanently delete your account. This cannot be undone."
+    }
   },
   "hub": {
     "title": "Ecosystem Hub",

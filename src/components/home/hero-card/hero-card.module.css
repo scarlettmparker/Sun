@@ -1,0 +1,43 @@
+.header_row {
+  display: flex;
+  gap: var(--xl);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.avatar {
+  width: 6rem;
+  height: 6rem;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.header_text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sm);
+}
+
+.github_link {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lg);
+}
+
+.bio {
+  margin: 0;
+}
+
+.bio_detail {
+  margin: 0;
+}
+
+.age {
+  color: var(--primary);
+}
