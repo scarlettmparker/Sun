@@ -8,8 +8,10 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
+  Form,
   SeededAvatar,
 } from "@sun/components";
+import { CsrfField } from "@sun/ssr/react";
 import type { MeQuery } from "~/generated/graphql";
 import ConfirmDeleteAccountDialog from "../confirm-delete-account-dialog";
 import styles from "./profile-card-content.module.css";
@@ -98,7 +100,8 @@ const ProfileCardContent = () => {
         </div>
       </CardBody>
       <CardFooter className={styles.footer}>
-        <form action="/__logout" method="post" className={styles.logout_form}>
+        <Form action="/__logout" method="post" className={styles.logout_form}>
+          <CsrfField />
           <Button
             type="submit"
             variant="secondary"
@@ -107,7 +110,7 @@ const ProfileCardContent = () => {
           >
             {t("profile.logout")}
           </Button>
-        </form>
+        </Form>
         <Button
           variant="destructive"
           title={t("profile.delete")}

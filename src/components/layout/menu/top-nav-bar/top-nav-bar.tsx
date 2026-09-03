@@ -10,16 +10,17 @@ import { useNavPortal } from "./nav-portal-context";
 import styles from "./top-nav-bar.module.css";
 
 const NAV_ITEMS = [
-  { labelKey: "home", href: "/" },
-  { labelKey: "blog", href: "/blog" },
-  { labelKey: "gallery", href: "/gallery" },
-  { labelKey: "stem-player", href: "/stem-player" },
+  { labelKey: "home", href: "/", role: null },
+  { labelKey: "blog", href: "/blog", role: null },
+  // TODO: sort out permissions
+  { labelKey: "hub", href: "/hub", role: "Super Admin" },
+  { labelKey: "gallery", href: "/gallery", role: "Super Admin" },
+  { labelKey: "stem-player", href: "/stem-player", role: "Super Admin" },
 ] as const;
 
 const PUBLIC_PATHS = ["/login"];
 
 /**
- * Top navigation: page links on the left.
  * When on any blog page, portals into #blog-detail-nav-slot inside the detail wrapper.
  */
 const TopNavBar = () => {
@@ -48,7 +49,7 @@ const TopNavBar = () => {
       {NAV_ITEMS.map((item) => {
         const active =
           item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
-        return (
+        const link = (
           <Link
             key={item.href}
             to={item.href}
@@ -58,6 +59,14 @@ const TopNavBar = () => {
               {t(item.labelKey)}
             </Button>
           </Link>
+        );
+        if (!item.role) {
+          return link;
+        }
+        return (
+          <Suspense key={item.href} fallback={null}>
+            <RoleCheck roles={[item.role]}>{link}</RoleCheck>
+          </Suspense>
         );
       })}
       <Suspense fallback={null}>

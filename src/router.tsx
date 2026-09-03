@@ -5,6 +5,7 @@ import BlogSkeleton from "./_components/blog/skeleton/blog-skeleton";
 import { BlogDetailSkeleton } from "./components/blog/blog-detail/skeletons";
 import { BlogListSkeleton } from "./components/blog/skeletons";
 import HubSkeleton from "./_components/hub/skeleton/hub-skeleton";
+import ProfileSkeleton from "./routes/profile/skeletons";
 import Gallery from "./routes/gallery";
 
 const Index = lazy(() => import("~/routes/index"));
@@ -124,7 +125,7 @@ export const routes: RouteObject[] = [
   {
     path: "profile",
     element: (
-      <Suspense fallback={null}>
+      <Suspense fallback={<ProfileSkeleton />}>
         <Profile />
       </Suspense>
     ),

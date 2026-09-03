@@ -1,6 +1,10 @@
 import { defineLoader } from "@sun/ssr";
 import { executeDocument } from "@sun/api";
+import { getCookieValue } from "@sun/api";
+import { AUTH_COOKIE } from "./auth";
 import {
+  MyRolesDocument,
+  type MyRolesQuery,
   PropertySetDocument,
   type PropertySetQuery,
 } from "~/generated/graphql";
@@ -29,15 +33,24 @@ async function loadLevelColours(): Promise<Record<string, string>> {
 
 /**
  * Resolves the current user's role key strings.
- *
- * TODO: wire to gaiaQueries.myRoles once gaia schema is vendored
- * into Sun's graphql/schemas. For now return empty so RoleCheck
- * gracefully hides admin-only UI.
  */
 defineLoader({
   pattern: "currentRoles",
-  async loader() {
-    return { currentRoles: [] as string[] };
+  async loader(_params, context) {
+    const token = getCookieValue(context?.cookie, AUTH_COOKIE);
+    if (!token) {
+      return { currentRoles: [] as string[] };
+    }
+    try {
+      const res = await executeDocument<MyRolesQuery>(
+        MyRolesDocument,
+        {},
+        token,
+      );
+      return { currentRoles: res.data?.gaiaQueries?.myRoles ?? [] };
+    } catch {
+      return { currentRoles: [] as string[] };
+    }
   },
 });
 

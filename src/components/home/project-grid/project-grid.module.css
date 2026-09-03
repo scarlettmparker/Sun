@@ -1,3 +1,11 @@
+.section_title {
+  font-size: var(--text-xl);
+  color: var(--text-primary, var(--primary));
+  font-weight: var(--bold);
+  margin: 0;
+  padding-bottom: var(--lg);
+}
+
 .grid {
   display: flex;
   flex-wrap: wrap;

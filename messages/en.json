@@ -100,9 +100,10 @@
       "location": "Exeter, United Kingdom",
       "github-label": "GitHub",
       "birthday-label": "Born 21 February 2003",
-      "bio-prefix": "Web developer - ",
+      "bio-prefix": "Web developer | ",
       "age_one": "{{count}} year old",
       "age_other": "{{count}} years old",
+      "bio-suffix": "",
       "bio-detail": "I build things for the web. This site is where I keep track of them."
     },
     "profile": {
@@ -226,6 +227,7 @@
   "nav": {
     "home": "Home",
     "blog": "Blog",
+    "hub": "Hub",
     "gallery": "Gallery",
     "stem-player": "Stem Player",
     "admin": "Admin"

@@ -1,5 +1,4 @@
 import { useTranslation } from "react-i18next";
-import { Card, CardHeader, CardTitle } from "@sun/components";
 import ProjectCard from "../project-card";
 import type { Project } from "../projects/projects-config";
 import styles from "./project-grid.module.css";
@@ -31,11 +30,7 @@ const ProjectGrid = (props: ProjectGridProps) => {
 
   return (
     <div className={className} {...rest}>
-      <Card>
-        <CardHeader>
-          <CardTitle>{t(titleKey)}</CardTitle>
-        </CardHeader>
-      </Card>
+      <h2 className={styles.section_title}>{t(titleKey)}</h2>
       <div className={styles.grid}>
         {sorted.map((project) => (
           <ProjectCard
