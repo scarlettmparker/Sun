@@ -9,7 +9,6 @@ import {
   type ThemeOption,
 } from "@sun/themes";
 import { applyTheme } from "@sun/themes";
-import { cn } from "@sun/utils/cn";
 import { useEffect, useLayoutEffect, useReducer, useState } from "react";
 import {
   makeCacheKey,
@@ -32,8 +31,11 @@ const Layout = (props: LayoutProps) => {
   const [backgroundColour, setBackgroundColour] = useState<string>(() =>
     getBackgroundHex(),
   );
-  const [ready, setReady] = useState(false);
-  const [themes, setThemes] = useState<ThemeOption[]>([]);
+  const [themes, setThemes] = useState<ThemeOption[]>(() =>
+    typeof window !== "undefined"
+      ? ((window as unknown as { __themes__?: ThemeOption[] }).__themes__ ?? [])
+      : [],
+  );
   const cacheKey = makeCacheKey("themes:themes", {});
   const [, forceUpdate] = useReducer((x: number) => x + 1, 0);
 
@@ -50,8 +52,15 @@ const Layout = (props: LayoutProps) => {
     | null;
 
   useEffect(() => {
+    const windowThemes = (window as unknown as { __themes__?: ThemeOption[] })
+      .__themes__;
+    if (windowThemes?.length) {
+      setThemes(windowThemes);
+    }
     if (themesData == null) {
-      refetchEntry("themes", "themes", {}, forceUpdate);
+      if (!windowThemes?.length) {
+        refetchEntry("themes", "themes", {}, forceUpdate);
+      }
     } else {
       setThemes(themesData.all as ThemeOption[]);
       if (
@@ -65,24 +74,35 @@ const Layout = (props: LayoutProps) => {
   }, [themesData]);
 
   useIsomorphicLayoutEffect(() => {
-    const update = () => setBackgroundColour(getBackgroundHex());
-    update();
-    const frame = requestAnimationFrame(() => setReady(true));
-    const interval = setInterval(update, 5000);
-    window.addEventListener(THEME_APPLIED_EVENT, update);
-    return () => {
-      cancelAnimationFrame(frame);
-      clearInterval(interval);
-      window.removeEventListener(THEME_APPLIED_EVENT, update);
+    const getCurrentTheme = (): Record<string, string> | null => {
+      if (typeof window === "undefined") return null;
+      const stored = window.localStorage.getItem("sun:theme");
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored) as Record<string, string>;
+          if (parsed?.["primary"]) return parsed;
+        } catch {
+          // ignore
+        }
+      }
+      const winTheme = (window as unknown as { __theme__?: Record<string, string> })
+        .__theme__;
+      if (winTheme?.["primary"]) return winTheme;
+      if (themesData?.current) {
+        return themesData.current as unknown as Record<string, string>;
+      }
+      return null;
     };
-  }, []);
+    const update = () => setBackgroundColour(getBackgroundHex(getCurrentTheme()));
+    update();
+    const handleTheme = () => setBackgroundColour(getBackgroundHex(getCurrentTheme()));
+    window.addEventListener(THEME_APPLIED_EVENT, handleTheme);
+    return () => window.removeEventListener(THEME_APPLIED_EVENT, handleTheme);
+  }, [themesData]);
 
   return (
     <NavPortalProvider>
-      <main
-        style={{ backgroundColor: backgroundColour }}
-        className={cn(styles.main, ready && styles.main_ready)}
-      >
+      <main style={{ backgroundColor: backgroundColour }} className={styles.main}>
         <TopNavBar />
         <UserMenu />
         {children}

@@ -105,7 +105,7 @@
       "age_other": "{{count}} years old",
       "bio-suffix": "",
       "bio-detail": "I build things for the web. This site is where I keep track of them.",
-      "experience-label": "As of 10 March 2025",
+      "experience-label": "Since 10 March 2025",
       "experience": "{{count}} YoE"
     },
     "profile": {

@@ -2,10 +2,6 @@
   min-height: 100vh;
 }
 
-.main_ready {
-  transition: background-color 5s linear;
-}
-
 .switcher {
   position: fixed;
   bottom: var(--lg);

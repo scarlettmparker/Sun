@@ -10,6 +10,8 @@ import {
   type RouteMeta,
 } from "@sun/ssr/server";
 import { createI18nInstance } from "./utils/i18n";
+import { fetchPropertySet } from "./utils/api";
+import { parseThemes } from "@sun/utils/property-set";
 import { configureApi } from "@sun/api";
 import { AUTH_COOKIE } from "./utils/auth";
 import { clientId, clientSecret, base } from "../config.js";
@@ -54,7 +56,16 @@ const renderer = createRenderer({
     });
   },
   async resolveTheme() {
-    return { current: null, all: [] };
+    try {
+      const result = await fetchPropertySet("ReactApp", "themes");
+      const propertySet = result.success
+        ? (result.data as { gaiaQueries?: { propertySet?: unknown } })
+            ?.gaiaQueries?.propertySet
+        : null;
+      return parseThemes(propertySet);
+    } catch {
+      return { current: null, all: [] };
+    }
   },
 });
 
