@@ -45,16 +45,6 @@
   justify-content: center;
 }
 
-.tbd {
-  margin: 0;
-  color: var(--muted);
-}
-
-.github_link {
-  color: var(--primary);
-  text-decoration: underline;
-}
-
 .footer {
   display: flex;
   justify-content: flex-end;

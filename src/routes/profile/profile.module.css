@@ -39,11 +39,6 @@
   margin: 0;
 }
 
-.github_link {
-  color: var(--primary);
-  text-decoration: underline;
-}
-
 .danger_footer {
   display: flex;
   justify-content: flex-end;

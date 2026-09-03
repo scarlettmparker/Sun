@@ -59,21 +59,9 @@ const ProfilePage = () => {
           />
           <div className={styles.header_text}>
             <CardTitle>{currentUser.username}</CardTitle>
-            <CardDescription>
-              <a
-                href="https://github.com/scarlettmparker"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.github_link}
-              >
-                {t("profile.github-label")}
-              </a>
-            </CardDescription>
+            <CardDescription>@{currentUser.username}</CardDescription>
           </div>
         </CardHeader>
-        <CardBody>
-          <p className={styles.tbd}>{t("profile.tbd")}</p>
-        </CardBody>
       </Card>
       <Card className={styles.danger_card}>
         <CardHeader>
