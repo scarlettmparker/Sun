@@ -2,6 +2,12 @@
   width: 100%;
 }
 
+:global(html):has(.scroll_area),
+:global(body):has(.scroll_area) {
+  overflow: hidden;
+  height: 100%;
+}
+
 .home_wrapper {
   margin: 0 auto;
   display: flex;

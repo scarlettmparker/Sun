@@ -19,7 +19,7 @@ const HomePage = () => {
   const [selected, setSelected] = useState<Project | null>(null);
 
   return (
-    <ScrollArea maxHeight="100vh" className={styles.scroll_area}>
+    <ScrollArea maxHeight="100dvh" className={styles.scroll_area}>
       <div className={styles.home_wrapper}>
         <div className={styles.hero_row}>
           <HeroCard className={styles.hero_card} />

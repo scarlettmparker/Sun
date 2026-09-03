@@ -28,13 +28,22 @@ const HeroCard = (props: HeroCardProps) => {
     <Card {...props}>
       <CardHeader>
         <div className={styles.header_row}>
-          <img
-            src="/art.jpg"
-            alt="Scarlett Parker"
-            className={styles.avatar}
-            width={64}
-            height={64}
-          />
+          <a
+            href="https://open.spotify.com/track/2vEgk5YyoPKzR9eOIs9SFF"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.avatar_link}
+            title={t("hero.listen")}
+            aria-label={t("hero.listen")}
+          >
+            <img
+              src="/art.jpg"
+              alt="Scarlett Parker"
+              className={styles.avatar}
+              width={64}
+              height={64}
+            />
+          </a>
           <div className={styles.header_text}>
             <CardTitle>{t("hero.name")}</CardTitle>
             <CardDescription>

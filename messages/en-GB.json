@@ -106,7 +106,8 @@
       "bio-suffix": "",
       "bio-detail": "I build things for the web. This site is where I keep track of them. Built with React + Vite.",
       "experience-label": "Since 10 March 2025",
-      "experience": "{{count}} YoE"
+      "experience": "{{count}} YoE",
+      "listen": "Listen to fell in again"
     },
     "profile": {
       "title": "Profile",

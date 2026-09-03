@@ -39,7 +39,31 @@ const ScrollArea = ({
 
   useLayoutEffect(() => {
     measure();
-  }, []);
+  }, [measure]);
+
+  /**
+   * Measure on resize and when the inner container's content changes.
+   */
+  useLayoutEffect(() => {
+    const el = innerRef.current;
+    if (!el) return;
+
+    const ro = new ResizeObserver(() => {
+      requestAnimationFrame(measure);
+    });
+    ro.observe(el);
+    if (el.firstElementChild) {
+      ro.observe(el.firstElementChild as Element);
+    }
+
+    const onResize = () => requestAnimationFrame(measure);
+    window.addEventListener("resize", onResize);
+
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", onResize);
+    };
+  }, [measure]);
 
   /**
    * Updates scroll state on user scroll.

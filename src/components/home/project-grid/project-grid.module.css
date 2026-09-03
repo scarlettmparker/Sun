@@ -1,6 +1,6 @@
 .section_title {
   font-size: var(--text-xl);
-  color: var(--text-primary, var(--primary));
+  color: var(--text-primary, var(--tertiary));
   font-weight: var(--bold);
   margin: 0;
   padding-bottom: var(--lg);

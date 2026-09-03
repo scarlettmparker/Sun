@@ -5,12 +5,19 @@
   flex-wrap: wrap;
 }
 
+.avatar_link {
+  display: block;
+  flex-shrink: 0;
+  border-radius: 50%;
+  line-height: 0;
+}
+
 .avatar {
   width: 4rem;
   height: 4rem;
   border-radius: 50%;
   object-fit: cover;
-  flex-shrink: 0;
+  display: block;
 }
 
 .header_text {
