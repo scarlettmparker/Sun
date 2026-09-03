@@ -100,11 +100,13 @@
       "location": "Exeter, United Kingdom",
       "github-label": "GitHub",
       "birthday-label": "Born 21 February 2003",
-      "bio-prefix": "Web developer | ",
+      "bio-prefix": "Web developer",
       "age_one": "{{count}} year old",
       "age_other": "{{count}} years old",
       "bio-suffix": "",
-      "bio-detail": "I build things for the web. This site is where I keep track of them."
+      "bio-detail": "I build things for the web. This site is where I keep track of them.",
+      "experience-label": "As of 10 March 2025",
+      "experience": "{{count}} YoE"
     },
     "profile": {
       "title": "Profile",

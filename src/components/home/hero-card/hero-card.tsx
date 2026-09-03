@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@sun/components";
-import { getAge } from "~/utils/age";
+import { getAge, getExperienceYoE } from "~/utils/age";
 import styles from "./hero-card.module.css";
 
 type HeroCardProps = React.HTMLAttributes<HTMLDivElement>;
@@ -19,6 +19,10 @@ const HeroCard = (props: HeroCardProps) => {
   const dob = new Date(2003, 1, 21);
   const age = getAge(dob);
   const birthdayLabel = t("hero.birthday-label");
+  const start = new Date(2025, 2, 10);
+  const yoe = getExperienceYoE(start);
+  const experience = t("hero.experience", { count: yoe });
+  const experienceLabel = t("hero.experience-label");
 
   return (
     <Card {...props}>
@@ -51,7 +55,15 @@ const HeroCard = (props: HeroCardProps) => {
       <CardBody>
         <div className={styles.body}>
           <p className={styles.bio}>
-            {t("hero.bio-prefix")}{" "}
+            {t("hero.bio-prefix")} |{" "}
+            <span
+              className={styles.age}
+              title={experienceLabel}
+              aria-label={experienceLabel}
+            >
+              {experience}
+            </span>
+            {" | "}
             <span
               className={styles.age}
               title={birthdayLabel}
