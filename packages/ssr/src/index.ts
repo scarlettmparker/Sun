@@ -1,5 +1,6 @@
 export {
   getPageData,
+  peekPageData,
   makeCacheKey,
   hydratePageData,
   suspenseCache,
