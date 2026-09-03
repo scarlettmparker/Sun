@@ -15,7 +15,7 @@ import {
 } from "../src/utils/auth.ts";
 import { registerHubRoutes } from "../src/server/hub/routes.ts";
 
-const PUBLIC_PAGES = new Set(["/login"]);
+const PUBLIC_PAGES = new Set(["/login", "/"]);
 
 /**
  * Verifies a JWT's HMAC-SHA256 signature using the configured secret.
@@ -134,7 +134,7 @@ export function setupRoutes(app, vite) {
       return reply.redirect(
         `/login?redirect=${encodeURIComponent(request.raw.url)}`,
       );
-    if (token && isPublic) return reply.redirect("/");
+    if (token && normalizedPath === "/login") return reply.redirect("/");
 
     let url = pathname.replace(base, "");
     if (!url.startsWith("/")) url = "/" + url;

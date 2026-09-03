@@ -1,6 +1,7 @@
 node_modules/
 dist/
-public/
+public/*
+!public/art.jpg
 .env
 
 # Generated
