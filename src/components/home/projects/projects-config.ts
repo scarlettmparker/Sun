@@ -63,7 +63,7 @@ export const personalProjects: Project[] = [
   {
     key: "learner",
     title: "Learner",
-    href: "https://github.com/scarlettmparker/learner",
+    href: "https://github.com/scarlettmparker/Learner",
     descriptionKey: "projects.learner.description",
     detailKey: "projects.learner.detail",
     rank: 40,
