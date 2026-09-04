@@ -127,7 +127,7 @@
       "certus": {
         "company": "Certus Technology",
         "date": "Since 10 March 2025",
-        "body": "Front-end lead on a Next.js monorepo with 5 apps on the App Router and T3 stack. Built GraphQL APIs against a Spring Boot backend and kept the repo tidy across apps. A good lesson in sharing packages and keeping routing sane at scale."
+        "body": "Front-end lead for a Next.js monorepo using the App Router and T3 stack. Built GraphQL APIs against a Spring Boot backend."
       }
     },
     "spotify": {
