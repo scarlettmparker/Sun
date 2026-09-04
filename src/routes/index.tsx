@@ -2,7 +2,6 @@ import { useState } from "react";
 import { ScrollArea } from "@sun/components";
 import HeroCard from "~/components/home/hero-card";
 import SpotifyCard from "~/components/home/spotify-card";
-import ExperienceSection from "~/components/home/experience-section";
 import ProjectGrid from "~/components/home/project-grid";
 import ProjectDetailDialog from "~/components/home/project-detail-dialog";
 import {
@@ -25,7 +24,6 @@ const HomePage = () => {
           <HeroCard className={styles.hero_card} />
           <SpotifyCard className={styles.spotify_card} />
         </div>
-        <ExperienceSection />
         <ProjectGrid
           titleKey="projects.personal-title"
           projects={[...personalProjects, ...internalProjects]}
