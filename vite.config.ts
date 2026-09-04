@@ -25,6 +25,9 @@ export default defineConfig(() => {
       stringify: true,
     },
     build: {
+      target: "es2022",
+      cssTarget: "es2022",
+      minify: "esbuild",
       manifest: true,
       rollupOptions: {
         input: {

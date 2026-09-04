@@ -42,11 +42,16 @@ const HeroCard = (props: HeroCardProps) => {
             aria-label={t("hero.listen")}
           >
             <img
-              src="/art.jpg"
+              src="/art-64.webp"
+              srcSet="/art-64.webp 1x, /art-128.webp 2x"
+              sizes="64px"
               alt="Scarlett Parker"
               className={styles.avatar}
               width={64}
               height={64}
+              loading="eager"
+              decoding="async"
+              fetchPriority="high"
             />
           </a>
           <div className={styles.header_text}>

@@ -1,5 +1,5 @@
 import { PostHogProvider as PHProvider } from "@posthog/react";
-import posthog from "posthog-js";
+import { useEffect, useState } from "react";
 
 type PostHogProviderProps = {
   /**
@@ -9,42 +9,39 @@ type PostHogProviderProps = {
 } & React.PropsWithChildren;
 
 /**
- * Creates PostHog provider and initialises posthog.
+ * Creates PostHog provider and initialises posthog after idle.
  */
 const PostHogProvider = (props: PostHogProviderProps) => {
   const { children, client } = props;
+  const [posthogClient, setPosthogClient] = useState<unknown | null>(null);
 
-  // Don't initialize if client-only prop is set but we're on server
+  useEffect(() => {
+    const key = window.__posthog_key__ || process.env.POSTHOG_API_KEY || "";
+    const host = window.__posthog_host__ || process.env.POSTHOG_HOST || "";
+    if (!key || !host) return;
+    const init = async () => {
+      const { default: posthog } = await import("posthog-js");
+      if (!posthog.__loaded) {
+        posthog.init(key, { api_host: host });
+      }
+      setPosthogClient(posthog);
+    };
+    if (window.requestIdleCallback) {
+      window.requestIdleCallback(init);
+    } else {
+      setTimeout(init, 1);
+    }
+  }, []);
+
   if (client && typeof window === "undefined") {
     return children;
   }
 
-  let posthogKey: string;
-  let posthogHost: string;
-
-  // Get configuration based on environment
-  if (typeof window !== "undefined") {
-    // Client-side
-    posthogKey = window.__posthog_key__ || "";
-    posthogHost = window.__posthog_host__ || "";
-  } else {
-    // Server-side
-    posthogKey = process.env.POSTHOG_API_KEY || "";
-    posthogHost = process.env.POSTHOG_HOST || "";
-  }
-
-  if (!posthogKey || !posthogHost) {
+  if (!posthogClient) {
     return children;
   }
 
-  // Initialize posthog if not yet loaded
-  if (!posthog.__loaded) {
-    posthog.init(posthogKey, {
-      api_host: posthogHost,
-    });
-  }
-
-  return <PHProvider client={posthog}>{children}</PHProvider>;
+  return <PHProvider client={posthogClient as never}>{children}</PHProvider>;
 };
 
 export { PostHogProvider };

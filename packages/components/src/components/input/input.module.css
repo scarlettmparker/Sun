@@ -14,7 +14,6 @@
 .vertical {
   writing-mode: vertical-lr;
   direction: rtl;
-  appearance: slider-vertical;
   vertical-align: bottom;
 }
 

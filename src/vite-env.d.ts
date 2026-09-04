@@ -44,5 +44,16 @@ export declare global {
         rules: { createHTML?: (html: string) => string },
       ): { createHTML: (html: string) => string };
     };
+    /**
+     * Idle callback for deferring non-critical work.
+     */
+    requestIdleCallback?: (
+      callback: () => void,
+      options?: { timeout: number },
+    ) => number;
+    /**
+     * Cancels an idle callback.
+     */
+    cancelIdleCallback?: (id: number) => void;
   }
 }

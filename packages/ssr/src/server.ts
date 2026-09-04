@@ -163,15 +163,40 @@ export async function createServer(
     });
     app.use(vite.middlewares as unknown as MiddieHandler);
   } else {
+    // Hashed assets (JS/CSS with content hash) are immutable for 1 year
+    await app.register(fastifyStatic, {
+      root: path.resolve("dist/client/assets"),
+      prefix: "/assets/",
+      decorateReply: false,
+      maxAge: "1y",
+      immutable: true,
+    });
+    // Fonts are also immutable (hashed or stable woff2)
+    await app.register(fastifyStatic, {
+      root: path.resolve("dist/client/fonts"),
+      prefix: "/fonts/",
+      decorateReply: false,
+      maxAge: "1y",
+      immutable: true,
+    });
+    // Everything else in dist/client (favicon, og images, etc.) lasts 1 day
     await app.register(fastifyStatic, {
       root: path.resolve("dist/client"),
       prefix: "/",
       decorateReply: false,
+      maxAge: "1d",
+      immutable: false,
+      setHeaders(res, filePath) {
+        if (filePath.endsWith(".html")) {
+          res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
+        }
+      },
     });
     await app.register(fastifyStatic, {
       root: path.resolve("./messages"),
       prefix: "/messages/",
       decorateReply: false,
+      maxAge: "1h",
     });
   }
 

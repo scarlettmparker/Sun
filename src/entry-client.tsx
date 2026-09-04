@@ -42,4 +42,7 @@ initClientBootstrap({ i18n }).then(() => {
       </BrowserRouter>
     </PostHogProvider>,
   );
+  if (typeof performance !== "undefined" && performance.mark) {
+    performance.mark("router:ready");
+  }
 });

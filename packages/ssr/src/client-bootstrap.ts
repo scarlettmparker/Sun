@@ -53,6 +53,9 @@ export async function initClientBootstrap(opts: {
    */
   translations?: Record<string, unknown>;
 }): Promise<void> {
+  if (typeof performance !== "undefined" && performance.mark) {
+    performance.mark("ssr:hydrateStart");
+  }
   window.hydratePageDataFromPostlude = hydratePageData;
   const serverCacheData = window.__serverCacheData__ ?? {};
   if (Object.keys(serverCacheData).length > 0) {
@@ -70,4 +73,7 @@ export async function initClientBootstrap(opts: {
       react: { useSuspense: true },
     }),
   );
+  if (typeof performance !== "undefined" && performance.mark) {
+    performance.mark("ssr:bootstrapReady");
+  }
 }

@@ -36,11 +36,16 @@ const SpotifyCard = (props: SpotifyCardProps) => {
             aria-label={t("spotify.listen")}
           >
             <img
-              src="/cute.png"
+              src="/cute-64.webp"
+              srcSet="/cute-64.webp 1x, /cute-128.webp 2x"
+              sizes="64px"
               alt={t("spotify.image-alt")}
               className={styles.art}
               width={64}
               height={64}
+              loading="eager"
+              decoding="async"
+              fetchPriority="high"
             />
           </a>
         </div>

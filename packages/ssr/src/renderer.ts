@@ -376,7 +376,9 @@ async function renderApp(
           nonce,
         });
         const headers: Record<string, string> = {
-          "Content-Type": "text/html",
+          "Content-Type": "text/html; charset=utf-8",
+          "Cache-Control": "public, max-age=0, must-revalidate",
+          Vary: "Accept-Encoding",
           ...securityHeaders,
         };
         if (shouldDeleteCookie) {
@@ -403,6 +405,10 @@ async function renderApp(
           )
           .join("\n              ");
 
+        const imagePreload =
+          options.url === "/"
+            ? `<link rel="preload" as="image" href="/art-64.webp" imagesrcset="/art-64.webp 1x, /art-128.webp 2x" imagesizes="64px" />`
+            : "";
         const prelude = `<!DOCTYPE html>
           <html lang="${escapeAttr(locale)}">
             <head>
@@ -410,6 +416,8 @@ async function renderApp(
               <meta name="viewport" content="width=device-width, initial-scale=1.0" />
               ${cssTag}
               ${themeStyle(currentTheme, nonce)}
+              <link rel="preload" href="/fonts/open-sans-latin.woff2" as="font" type="font/woff2" crossorigin />
+              ${imagePreload}
               <link rel="modulepreload" href="${clientJs}" />
               ${metaTags(meta, config.title, { siteUrl: config.siteUrl, url: options.url, defaultOgImage: config.defaultOgImage, locale })}
             </head>

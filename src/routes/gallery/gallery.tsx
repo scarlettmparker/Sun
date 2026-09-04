@@ -40,6 +40,8 @@ const Gallery = () => {
                   title={galleryItem.title}
                   className={styles.gallery_item}
                   draggable={false}
+                  loading="lazy"
+                  decoding="async"
                 />
                 {galleryItem?.content && (
                   <Card className={styles.gallery_content}>
