@@ -51,8 +51,8 @@ const ProjectCard = (props: ProjectCardProps) => {
             )
           )}
         </CardTitle>
-        <CardDescription>
-          {project.href?.includes("github.com") ? (
+        {project.href?.includes("github.com") && (
+          <CardDescription>
             <a
               href={project.href}
               target="_blank"
@@ -63,10 +63,8 @@ const ProjectCard = (props: ProjectCardProps) => {
             >
               {project.href}
             </a>
-          ) : (
-            <span>{t(project.descriptionKey)}</span>
-          )}
-        </CardDescription>
+          </CardDescription>
+        )}
       </CardHeader>
       <CardBody>
         <p className={styles.description}>{t(project.descriptionKey)}</p>

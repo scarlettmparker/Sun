@@ -3,6 +3,7 @@ import {
   Button,
   Dialog,
   DialogBody,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -37,7 +38,34 @@ const ProjectDetailDialog = (props: ProjectDetailDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange} className={styles.dialog}>
       <DialogHeader>
-        <DialogTitle>{project?.title ?? ""}</DialogTitle>
+        <DialogTitle className={styles.title_row}>
+          <span>{project?.title ?? ""}</span>
+          {project?.visitHref &&
+            project.visitHref !== project.href && (
+              <a
+                href={project.visitHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.visit_link}
+              >
+                {t("projects.visit")}
+              </a>
+            )}
+        </DialogTitle>
+        {project?.href?.includes("github.com") && project.href && (
+          <DialogDescription>
+            <a
+              href={project.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.github_link}
+              title={t("projects.visit-github")}
+              aria-label={t("projects.visit-github")}
+            >
+              {project.href}
+            </a>
+          </DialogDescription>
+        )}
       </DialogHeader>
       <DialogBody>
         <ScrollArea maxHeight="60vh" className={styles.scroll_area}>
