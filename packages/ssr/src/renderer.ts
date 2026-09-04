@@ -6,6 +6,7 @@ import { inlineCss, generateCssTag } from "@sun/utils/css-inlining";
 import { getRequestCache, invalidateCache } from "./page-data";
 import type { MutationResult } from "./client-mutation";
 import { getCspNonce } from "./csp-nonce";
+import { buildSecurityHeaders } from "@sun/security";
 
 /** Locale candidates tried, in order, when loading the consolidated messages file. */
 const LOCALE_FALLBACK = ["en-GB", "en"];
@@ -361,16 +362,23 @@ async function renderApp(
   return new Promise((resolve) => {
     let resolved = false;
     let postludeData = "";
-    const nonce = getCspNonce();
-    const nonceAttr = nonce ? ` nonce="${nonce}"` : "";
+    const nonce = getCspNonce() ?? "fallback-nonce";
+    const nonceAttr = ` nonce="${nonce}"`;
 
     // Never pass bootstrapModules: it lands before the postlude fills
     // window.__serverCacheData__, so the client boots too early on first load.
     const stream = renderToPipeableStream(app, {
       onShellReady() {
         const rawCssTag = generateCssTag(isProduction, cssContent, clientCss);
-        const cssTag = nonce ? rawCssTag.replace("<style>", `<style nonce="${nonce}">`) : rawCssTag;
-        const headers: Record<string, string> = { "Content-Type": "text/html" };
+        const cssTag = rawCssTag.replace("<style>", `<style nonce="${nonce}">`);
+        const securityHeaders = buildSecurityHeaders({
+          isProduction,
+          nonce,
+        });
+        const headers: Record<string, string> = {
+          "Content-Type": "text/html",
+          ...securityHeaders,
+        };
         if (shouldDeleteCookie) {
           headers["Set-Cookie"] =
             "invalidate_cache=; Path=/; Max-Age=0; SameSite=Lax;";

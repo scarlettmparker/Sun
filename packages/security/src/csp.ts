@@ -18,8 +18,8 @@ export function generateCspNonce(): string {
 export function buildCspHeader(nonce: string): string {
   const directives = [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https:`,
-    `style-src 'self' 'nonce-${nonce}' https:`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https: 'unsafe-inline'`,
+    `style-src 'self' 'nonce-${nonce}' https: 'unsafe-inline'`,
     "font-src 'self' data: https:",
     "img-src 'self' data: https: blob:",
     "media-src 'self' https: blob:",
