@@ -1,3 +1,4 @@
+import { memo, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import ProjectCard from "../project-card";
 import type { Project } from "../projects/projects-config";
@@ -24,9 +25,7 @@ type ProjectGridProps = React.HTMLAttributes<HTMLDivElement> & {
 const ProjectGrid = (props: ProjectGridProps) => {
   const { titleKey, projects, onReadMore, className, ...rest } = props;
   const { t } = useTranslation("home");
-  const sorted = [...projects].sort(
-    (a, b) => a.rank - b.rank,
-  );
+  const sorted = useMemo(() => [...projects].sort((a, b) => a.rank - b.rank), [projects]);
 
   return (
     <div className={className} {...rest}>
@@ -45,4 +44,4 @@ const ProjectGrid = (props: ProjectGridProps) => {
   );
 };
 
-export default ProjectGrid;
+export default memo(ProjectGrid);

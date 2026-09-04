@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { ScrollArea } from "@sun/components";
 import HeroCard from "~/components/home/hero-card";
 import SpotifyCard from "~/components/home/spotify-card";
@@ -17,6 +17,12 @@ import styles from "./index.module.css";
 const HomePage = () => {
   const [selected, setSelected] = useState<Project | null>(null);
 
+  const projects = useMemo(() => [...personalProjects, ...internalProjects], []);
+
+  const handleOpenChange = useCallback((open: boolean) => {
+    if (!open) setSelected(null);
+  }, []);
+
   return (
     <ScrollArea maxHeight="100dvh" className={styles.scroll_area}>
       <div className={styles.home_wrapper}>
@@ -24,15 +30,8 @@ const HomePage = () => {
           <HeroCard className={styles.hero_card} />
           <SpotifyCard className={styles.spotify_card} />
         </div>
-        <ProjectGrid
-          titleKey="projects.personal-title"
-          projects={[...personalProjects, ...internalProjects]}
-          onReadMore={setSelected}
-        />
-        <ProjectDetailDialog
-          project={selected}
-          onOpenChange={(open) => !open && setSelected(null)}
-        />
+        <ProjectGrid titleKey="projects.personal-title" projects={projects} onReadMore={setSelected} />
+        <ProjectDetailDialog project={selected} onOpenChange={handleOpenChange} />
       </div>
     </ScrollArea>
   );

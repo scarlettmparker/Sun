@@ -1,3 +1,4 @@
+import { memo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Badge,
@@ -29,6 +30,10 @@ type ProjectCardProps = React.HTMLAttributes<HTMLDivElement> & {
 const ProjectCard = (props: ProjectCardProps) => {
   const { project, onReadMore, className, ...rest } = props;
   const { t } = useTranslation("home");
+
+  const handleClick = useCallback(() => {
+    onReadMore(project);
+  }, [onReadMore, project]);
 
   return (
     <Card className={className} {...rest}>
@@ -70,11 +75,7 @@ const ProjectCard = (props: ProjectCardProps) => {
         <p className={styles.description}>{t(project.descriptionKey)}</p>
       </CardBody>
       <CardFooter className={styles.footer}>
-        <Button
-          variant="secondary"
-          aria-label={t("projects.read-more")}
-          onClick={() => onReadMore(project)}
-        >
+        <Button variant="secondary" aria-label={t("projects.read-more")} onClick={handleClick}>
           {t("projects.read-more")}
         </Button>
       </CardFooter>
@@ -82,4 +83,4 @@ const ProjectCard = (props: ProjectCardProps) => {
   );
 };
 
-export default ProjectCard;
+export default memo(ProjectCard);

@@ -1,3 +1,4 @@
+import { memo, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Badge,
@@ -34,7 +35,11 @@ const ProjectDetailDialog = (props: ProjectDetailDialogProps) => {
 
   const open = project != null;
   const detailKey = project?.detailKey ?? "";
-  const markdown = detailKey ? t(detailKey) : "";
+  const markdown = useMemo(() => (detailKey ? t(detailKey) : ""), [t, detailKey]);
+
+  const handleClose = useCallback(() => {
+    onOpenChange(false);
+  }, [onOpenChange]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange} className={styles.dialog}>
@@ -78,12 +83,7 @@ const ProjectDetailDialog = (props: ProjectDetailDialogProps) => {
         </ScrollArea>
       </DialogBody>
       <DialogFooter>
-        <Button
-          variant="secondary"
-          title={t("projects.close")}
-          aria-label={t("projects.close")}
-          onClick={() => onOpenChange(false)}
-        >
+        <Button variant="secondary" title={t("projects.close")} aria-label={t("projects.close")} onClick={handleClose}>
           {t("projects.close")}
         </Button>
       </DialogFooter>
@@ -91,4 +91,4 @@ const ProjectDetailDialog = (props: ProjectDetailDialogProps) => {
   );
 };
 
-export default ProjectDetailDialog;
+export default memo(ProjectDetailDialog);

@@ -1,3 +1,4 @@
+import { memo, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { FileText } from "lucide-react";
 import {
@@ -17,13 +18,13 @@ type HeroCardProps = React.HTMLAttributes<HTMLDivElement>;
  */
 const HeroCard = (props: HeroCardProps) => {
   const { t } = useTranslation("home");
-  const dob = new Date(2003, 1, 21);
-  const age = getAge(dob);
-  const birthdayLabel = t("hero.birthday-label");
-  const start = new Date(2025, 2, 10);
-  const yoe = getExperienceYoE(start);
-  const experience = t("hero.experience", { count: yoe });
-  const experienceLabel = t("hero.experience-label");
+  const dob = useMemo(() => new Date(2003, 1, 21), []);
+  const age = useMemo(() => getAge(dob), [dob]);
+  const birthdayLabel = useMemo(() => t("hero.birthday-label"), [t]);
+  const start = useMemo(() => new Date(2025, 2, 10), []);
+  const yoe = useMemo(() => getExperienceYoE(start), [start]);
+  const experience = useMemo(() => t("hero.experience", { count: yoe }), [t, yoe]);
+  const experienceLabel = useMemo(() => t("hero.experience-label"), [t]);
 
   return (
     <Card {...props}>
@@ -98,4 +99,4 @@ const HeroCard = (props: HeroCardProps) => {
   );
 };
 
-export default HeroCard;
+export default memo(HeroCard);

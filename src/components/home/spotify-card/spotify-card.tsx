@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Card,
@@ -66,4 +67,4 @@ const SpotifyCard = (props: SpotifyCardProps) => {
   );
 };
 
-export default SpotifyCard;
+export default memo(SpotifyCard);

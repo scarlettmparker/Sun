@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { cn } from "~/utils/cn";
 import styles from "./scroll-area.module.css";
 
@@ -12,27 +12,23 @@ type ScrollAreaProps = {
 /**
  * Custom-scrollbar container with a thin overlay thumb in the primary colour.
  */
-const ScrollArea = ({
-  maxHeight,
-  className,
-  children,
-  ...rest
-}: ScrollAreaProps) => {
+const ScrollArea = (props: ScrollAreaProps) => {
+  const { maxHeight, className, children, ...rest } = props;
   const innerRef = useRef<HTMLDivElement>(null);
-  const [scrollTop, setScrollTop] = useState(0);
+  const thumbRef = useRef<HTMLDivElement>(null);
   const [scrollHeight, setScrollHeight] = useState(0);
   const [clientHeight, setClientHeight] = useState(0);
   const dragging = useRef(false);
+  const rafRef = useRef<number | null>(null);
 
-  const innerStyle = maxHeight ? { maxHeight } : undefined;
+  const innerStyle = useMemo(() => (maxHeight ? { maxHeight } : undefined), [maxHeight]);
 
   /**
-   * Reads the current scroll metrics from the inner container.
+   * Reads dimensions without touching scrollTop to avoid re-renders on scroll.
    */
   const measure = useCallback(() => {
     const el = innerRef.current;
-    if (!el) return;
-    setScrollTop(el.scrollTop);
+    if (el == null) return;
     setScrollHeight(el.scrollHeight);
     setClientHeight(el.clientHeight);
   }, []);
@@ -46,7 +42,7 @@ const ScrollArea = ({
    */
   useLayoutEffect(() => {
     const el = innerRef.current;
-    if (!el) return;
+    if (el == null) return;
 
     const ro = new ResizeObserver(() => {
       requestAnimationFrame(measure);
@@ -65,26 +61,50 @@ const ScrollArea = ({
     };
   }, [measure]);
 
-  /**
-   * Updates scroll state on user scroll.
-   */
-  const handleScroll = useCallback(() => {
-    measure();
-  }, [measure]);
-
   const thumbVisible = scrollHeight > clientHeight;
 
-  let thumbHeight = 0;
-  let thumbTop = 0;
-  if (thumbVisible) {
-    thumbHeight = (clientHeight / scrollHeight) * clientHeight;
-    const trackHeight = clientHeight;
-    const maxThumbTop = trackHeight - thumbHeight;
-    const scrollable = scrollHeight - clientHeight;
-    if (maxThumbTop > 0 && scrollable > 0) {
-      thumbTop = (scrollTop / scrollable) * maxThumbTop;
-    }
-  }
+  const thumbHeight = useMemo(() => {
+    if (!thumbVisible) return 0;
+    return (clientHeight / scrollHeight) * clientHeight;
+  }, [thumbVisible, clientHeight, scrollHeight]);
+
+  /**
+   * Syncs thumb position directly via DOM without React state.
+   */
+  const syncThumbPosition = useCallback(() => {
+    const el = innerRef.current;
+    const thumb = thumbRef.current;
+    if (el == null || thumb == null) return;
+    const sh = el.scrollHeight;
+    const ch = el.clientHeight;
+    if (sh <= ch) return;
+    const th = (ch / sh) * ch;
+    const maxThumbTop = ch - th;
+    const scrollable = sh - ch;
+    if (maxThumbTop <= 0 || scrollable <= 0) return;
+    const top = (el.scrollTop / scrollable) * maxThumbTop;
+    thumb.style.top = `${top}px`;
+  }, []);
+
+  useLayoutEffect(() => {
+    syncThumbPosition();
+  }, [thumbHeight, thumbVisible, syncThumbPosition]);
+
+  useLayoutEffect(() => {
+    return () => {
+      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
+
+  /**
+   * Updates thumb position on scroll without triggering React render.
+   */
+  const handleScroll = useCallback(() => {
+    if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => {
+      syncThumbPosition();
+    });
+  }, [syncThumbPosition]);
 
   /**
    * Starts drag-scrolling when the user presses the thumb.
@@ -97,11 +117,17 @@ const ScrollArea = ({
       const startScrollTop = innerRef.current?.scrollTop ?? 0;
 
       const onMove = (ev: MouseEvent) => {
-        if (!dragging.current || !innerRef.current) return;
+        const el = innerRef.current;
+        if (!dragging.current || el == null) return;
         const delta = ev.clientY - startY;
-        const scrollable = scrollHeight - clientHeight;
-        const dragRatio = scrollable / (clientHeight - thumbHeight);
-        innerRef.current.scrollTop = startScrollTop + delta * dragRatio;
+        const sh = el.scrollHeight;
+        const ch = el.clientHeight;
+        const th = (ch / sh) * ch;
+        const scrollable = sh - ch;
+        const dragRange = ch - th;
+        if (dragRange <= 0) return;
+        const dragRatio = scrollable / dragRange;
+        el.scrollTop = startScrollTop + delta * dragRatio;
       };
 
       const onUp = () => {
@@ -113,28 +139,24 @@ const ScrollArea = ({
       document.addEventListener("mousemove", onMove);
       document.addEventListener("mouseup", onUp);
     },
-    [scrollHeight, clientHeight, thumbHeight],
+    [],
   );
 
   return (
     <div className={cn(styles.outer, className)} {...rest}>
-      <div
-        ref={innerRef}
-        className={styles.inner}
-        style={innerStyle}
-        onScroll={handleScroll}
-      >
+      <div ref={innerRef} className={styles.inner} style={innerStyle} onScroll={handleScroll}>
         {children}
       </div>
-      {thumbVisible && (
+      {thumbVisible ? (
         <div className={styles.track}>
           <div
+            ref={thumbRef}
             className={styles.thumb}
-            style={{ height: thumbHeight, top: thumbTop }}
+            style={{ height: thumbHeight, top: 0 }}
             onMouseDown={handleThumbMouseDown}
           />
         </div>
-      )}
+      ) : null}
     </div>
   );
 };

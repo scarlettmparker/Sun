@@ -50,7 +50,7 @@
     "@heroicons/react": "^2.2.0",
     "@posthog/react": "^1.9.0",
     "@sun/api": "^0.2.8",
-    "@sun/components": "^0.12.1",
+    "@sun/components": "^0.12.2",
     "@sun/events": "^0.1.1",
     "@sun/shared": "^0.2.12",
     "@sun/ssr": "^0.5.33",
