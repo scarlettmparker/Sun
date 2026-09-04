@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import {
+  Badge,
   Button,
   Dialog,
   DialogBody,
@@ -40,7 +41,10 @@ const ProjectDetailDialog = (props: ProjectDetailDialogProps) => {
       <DialogHeader>
         <DialogTitle className={styles.title_row}>
           <span>{project?.title ?? ""}</span>
-          {project?.visitHref &&
+          {project?.disabled ? (
+            <Badge className={styles.badge}>{t("projects.you-are-here")}</Badge>
+          ) : (
+            project?.visitHref &&
             project.visitHref !== project.href && (
               <a
                 href={project.visitHref}
@@ -50,7 +54,8 @@ const ProjectDetailDialog = (props: ProjectDetailDialogProps) => {
               >
                 {t("projects.visit")}
               </a>
-            )}
+            )
+          )}
         </DialogTitle>
         {project?.href?.includes("github.com") && project.href && (
           <DialogDescription>

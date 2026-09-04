@@ -26,6 +26,29 @@
   gap: var(--sm);
 }
 
+.title_row {
+  display: flex;
+  gap: var(--md);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.cv_link {
+  display: inline-flex !important;
+  align-items: center;
+  gap: var(--sm);
+  color: var(--primary);
+  text-decoration: underline;
+  font-size: var(--text-md);
+  font-weight: var(--normal);
+}
+
+.cv_icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
 .github_link {
   color: var(--primary);
   text-decoration: underline;

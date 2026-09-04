@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { FileText } from "lucide-react";
 import {
   Card,
   CardBody,
@@ -45,7 +46,20 @@ const HeroCard = (props: HeroCardProps) => {
             />
           </a>
           <div className={styles.header_text}>
-            <CardTitle>{t("hero.name")}</CardTitle>
+            <CardTitle className={styles.title_row}>
+              <span>{t("hero.name")}</span>
+              <a
+                href="/SPCV%20anon.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.cv_link}
+                title="Open CV"
+                aria-label="Open CV"
+              >
+                <FileText className={styles.cv_icon} aria-hidden="true" />
+                CV
+              </a>
+            </CardTitle>
             <CardDescription>
               <span>{t("hero.location")}</span>
               {" · "}

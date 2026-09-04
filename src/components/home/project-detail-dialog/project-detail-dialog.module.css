@@ -18,6 +18,10 @@
   font-weight: var(--normal);
 }
 
+.badge {
+  margin-left: auto;
+}
+
 .github_link {
   color: var(--muted) !important;
   text-decoration: underline;

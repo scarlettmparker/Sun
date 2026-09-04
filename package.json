@@ -55,7 +55,7 @@
     "@sun/shared": "^0.2.12",
     "@sun/ssr": "^0.5.32",
     "@sun/themes": "^0.2.10",
-    "@sun/utils": "^0.1.22",
+    "@sun/utils": "^0.1.24",
     "cross-env": "^7.0.3",
     "dotenv": "^16.5.0",
     "fastify": "^5.9.0",
