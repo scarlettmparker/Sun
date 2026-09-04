@@ -7,21 +7,36 @@ export function buildTrustedTypesPolicy(policyName = "default"): string {
   return `trusted-types ${policyName} dompurify`;
 }
 
+let defaultPolicyCreated = false;
+
 /**
- * Creates a Trusted Types policy for HTML sanitization if the browser supports it.
+ * Creates the default Trusted Types policy once per page load.
  *
- * @param html - Raw HTML string to sanitize.
+ * @param createHTML - Optional transform applied to HTML strings.
+ */
+export function ensureDefaultTrustedPolicy(
+  createHTML: (html: string) => string = (html) => html,
+): void {
+  if (typeof window === "undefined" || !window.trustedTypes) {
+    return;
+  }
+  if (defaultPolicyCreated) {
+    return;
+  }
+  try {
+    window.trustedTypes.createPolicy("default", { createHTML });
+  } catch {
+    // Policy already exists (strict mode remount, HMR).
+  }
+  defaultPolicyCreated = true;
+}
+
+/**
+ * Passes HTML through the default Trusted Types policy.
+ *
+ * @param html - Raw HTML string to trust.
  */
 export function createTrustedHtml(html: string): string {
-  if (typeof window !== "undefined" && window.trustedTypes) {
-    try {
-      const policy = window.trustedTypes.createPolicy("default", {
-        createHTML: (s: string) => s,
-      });
-      return policy.createHTML(html);
-    } catch {
-      return html;
-    }
-  }
+  ensureDefaultTrustedPolicy();
   return html;
 }

@@ -1,6 +1,6 @@
 {
   "name": "@sun/security",
-  "version": "0.1.5",
+  "version": "0.1.7",
   "description": "Shared security headers for Sun ecosystem (CSP/HSTS/COOP/Trusted Types)",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -10,6 +10,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
       "require": "./dist/index.js"
+    },
+    "./trusted-types": {
+      "types": "./dist/trusted-types.d.ts",
+      "import": "./dist/trusted-types.mjs",
+      "require": "./dist/trusted-types.js"
     }
   },
   "files": [
