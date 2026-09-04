@@ -26,7 +26,8 @@ const Profile = lazy(() => import("~/routes/profile"));
 export const routeMeta: Record<string, RouteMeta> = {
   "/": {
     title: "Scarlet Sun | Home",
-    description: "Scarlett Parker — artist and web developer in Exeter. Personal knowledge hub for Sun, Guided Reader, Learner and more.",
+    description:
+      "Scarlett Parker - artist and web developer in Exeter. Personal portfolio and hub.",
     ogImage: "/og-default.png",
   },
   blog: {
