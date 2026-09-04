@@ -53,7 +53,7 @@
     "@sun/components": "^0.12.4",
     "@sun/events": "^0.1.1",
     "@sun/shared": "^0.2.12",
-    "@sun/ssr": "^0.5.33",
+    "@sun/ssr": "^0.5.34",
     "@sun/themes": "^0.2.11",
     "@sun/utils": "^0.1.25",
     "cross-env": "^7.0.3",

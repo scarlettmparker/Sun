@@ -1,0 +1,111 @@
+.home_wrapper {
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--xl);
+  width: calc(100% - var(--lg) * 4);
+  max-width: 44rem;
+  padding: calc(var(--lg) * 2);
+  padding-top: calc(var(--xl) * 4);
+}
+
+.hero_row {
+  display: flex;
+  gap: var(--lg);
+  align-items: stretch;
+}
+
+.hero_card {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.spotify_card {
+  flex: 0 0 18rem;
+  max-width: 22rem;
+  width: 100%;
+}
+
+@media (max-width: 700px) {
+  .spotify_card {
+    display: none;
+  }
+}
+
+.hero_header {
+  display: flex;
+  gap: var(--xl);
+  align-items: center;
+}
+
+.avatar {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.hero_text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sm);
+  flex: 1;
+}
+
+.hero_title {
+  width: 8rem;
+  height: 1.25rem;
+}
+
+.hero_subtitle {
+  width: 6rem;
+  height: 1rem;
+}
+
+.hero_bio {
+  width: 100%;
+  height: 3rem;
+}
+
+.spotify_title {
+  width: 7rem;
+  height: 1.25rem;
+}
+
+.spotify_body {
+  width: 100%;
+  height: 3rem;
+}
+
+.grid_section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lg);
+}
+
+.section_title {
+  width: 8rem;
+  height: 1.5rem;
+}
+
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--lg);
+}
+
+.card {
+  flex: 1 1 16rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.card_title {
+  width: 6rem;
+  height: 1.25rem;
+}
+
+.card_body {
+  width: 100%;
+  height: 4rem;
+}

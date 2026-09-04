@@ -21,7 +21,7 @@ const useIsomorphicLayoutEffect =
 const Layout = (props: LayoutProps) => {
   const { children } = props;
   const [backgroundColour, setBackgroundColour] = useState<string | undefined>(
-    undefined,
+    () => (typeof window !== "undefined" ? getBackgroundHex() : undefined),
   );
   const [themes, setThemes] = useState<ThemeOption[]>([]);
 

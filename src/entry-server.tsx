@@ -97,7 +97,11 @@ export async function render(options: {
     <React.StrictMode>
       <StaticRouter location={options.url}>
         <Layout>
-          <Suspense fallback={null}>
+          <Suspense
+            fallback={
+              <div style={{ height: "50vh", width: "100%" }} aria-hidden />
+            }
+          >
             <Router />
           </Suspense>
         </Layout>

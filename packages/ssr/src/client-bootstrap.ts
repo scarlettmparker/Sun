@@ -54,6 +54,11 @@ export async function initClientBootstrap(opts: {
   translations?: Record<string, unknown>;
 }): Promise<void> {
   window.hydratePageDataFromPostlude = hydratePageData;
+  const serverCacheData = window.__serverCacheData__ ?? {};
+  if (Object.keys(serverCacheData).length > 0) {
+    hydratePageData(serverCacheData);
+    window.__serverCacheData__ = {};
+  }
   const locale = opts.locale ?? window.__locale__ ?? "en";
   const translations = opts.translations ?? window.__translations__ ?? {};
 
@@ -65,9 +70,4 @@ export async function initClientBootstrap(opts: {
       react: { useSuspense: true },
     }),
   );
-  const serverCacheData = window.__serverCacheData__ ?? {};
-  if (Object.keys(serverCacheData).length > 0) {
-    hydratePageData(serverCacheData);
-    window.__serverCacheData__ = {};
-  }
 }

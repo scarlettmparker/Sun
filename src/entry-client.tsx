@@ -30,7 +30,11 @@ initClientBootstrap({ i18n }).then(() => {
       <BrowserRouter>
         <Layout>
           <ErrorBoundary>
-            <Suspense fallback={null}>
+            <Suspense
+              fallback={
+                <div style={{ height: "50vh", width: "100%" }} aria-hidden />
+              }
+            >
               <Router />
             </Suspense>
           </ErrorBoundary>

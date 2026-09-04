@@ -6,6 +6,8 @@ import { BlogDetailSkeleton } from "./components/blog/blog-detail/skeletons";
 import { BlogListSkeleton } from "./components/blog/skeletons";
 import HubSkeleton from "./_components/hub/skeleton/hub-skeleton";
 import ProfileSkeleton from "./routes/profile/skeletons";
+import HomeSkeleton from "./components/home/skeletons/home-skeleton";
+import LoginSkeleton from "./routes/login/skeletons/login-skeleton";
 import Gallery from "./routes/gallery";
 
 const Index = lazy(() => import("~/routes/index"));
@@ -73,7 +75,11 @@ export const routeMeta: Record<string, RouteMeta> = {
 export const routes: RouteObject[] = [
   {
     path: "/",
-    element: <Index />,
+    element: (
+      <Suspense fallback={<HomeSkeleton />}>
+        <Index />
+      </Suspense>
+    ),
   },
   {
     path: "blog",
@@ -126,7 +132,7 @@ export const routes: RouteObject[] = [
   {
     path: "login",
     element: (
-      <Suspense fallback={null}>
+      <Suspense fallback={<LoginSkeleton />}>
         <Login />
       </Suspense>
     ),
