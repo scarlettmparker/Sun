@@ -18,7 +18,6 @@
     "test": "jest --maxWorkers=50%",
     "publish": "npm publish --ignore-scripts --registry https://registry.int.scarlettparker.co.uk"
   },
-  "dependencies": {},
   "devDependencies": {
     "@sun/components": "^0.11.35",
     "@swc/core": "^1.15.33",
@@ -27,6 +26,7 @@
     "@types/react": "^19.1.2",
     "jest": "^30.2.0",
     "jest-environment-jsdom": "^30.2.0",
+    "lightningcss": "^1.33.0",
     "tsup": "^8.3.5",
     "typescript": "^5.7.2"
   },

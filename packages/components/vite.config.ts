@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import dts from "vite-plugin-dts";
 
 export default defineConfig({
+  css: { transformer: "lightningcss" },
   plugins: [
     react(),
     dts({
@@ -17,6 +18,7 @@ export default defineConfig({
       fileName: (format) => `index.${format === "es" ? "mjs" : "js"}`,
     },
     cssCodeSplit: false,
+    cssMinify: "lightningcss",
     rollupOptions: {
       external: ["react", "react-dom", "react/jsx-runtime"],
     },
