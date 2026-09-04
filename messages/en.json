@@ -104,7 +104,7 @@
       "age_one": "{{count}} year old",
       "age_other": "{{count}} years old",
       "bio-suffix": "",
-      "bio-detail": "I build things for the web. This site is my portfolio and homelab hub - React + Vite up front, Spring Boot behind it, plus a few bots and CLIs on the side.",
+      "bio-detail": "I build things for the web. This site is where I keep track of them. Built with React + Vite.",
       "experience-label": "Since 10 March 2025",
       "experience": "{{count}} YoE",
       "listen": "Listen to fell in again"
