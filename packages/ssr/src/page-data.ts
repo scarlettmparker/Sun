@@ -393,11 +393,16 @@ function readPageData<T>(
 
     const promise = loadPromise
       .then((merged) => {
-        if (!merged || merged[key] == null) {
-          record!.status = "rejected";
-          record!.error = new Error(`No data returned for key: ${key}`);
-          record!.errorAt = Date.now();
-          return null;
+        if (!merged || !(key in merged)) {
+          record!.status = "resolved";
+          record!.result = merged ?? { [key]: null };
+          if (record!.result![key] === undefined)
+            record!.result![key] = null as unknown as Record<
+              string,
+              unknown
+            >[string];
+          record!.timestamp = Date.now();
+          return record!.result![key];
         }
 
         record!.status = "resolved";
@@ -407,10 +412,12 @@ function readPageData<T>(
       })
       .catch((err) => {
         console.error(`Error fetching page data for ${key} (${pattern}):`, err);
-        record!.status = "rejected";
-        record!.error = err;
-        record!.errorAt = Date.now();
-        throw err;
+        record!.status = "resolved";
+        record!.result = { [key]: null };
+        record!.timestamp = Date.now();
+        record!.error = undefined;
+        record!.errorAt = undefined;
+        return null;
       });
 
     record.promise = promise;
@@ -526,7 +533,7 @@ export function peekPageData<T>(
       if (isCacheExpired(legacy, pattern)) {
         refetchEntry(key, pattern, params, () => {});
       }
-      return (legacy.result as Record<string, unknown>)?.[key] as T ?? null;
+      return ((legacy.result as Record<string, unknown>)?.[key] as T) ?? null;
     }
   }
 
@@ -553,7 +560,7 @@ export function peekPageData<T>(
     return null;
   }
 
-  return (record.result as Record<string, unknown>)?.[key] as T ?? null;
+  return ((record.result as Record<string, unknown>)?.[key] as T) ?? null;
 }
 
 function parseInvalidationPatterns(cookieValue: string): string[] {
