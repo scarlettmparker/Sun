@@ -28,12 +28,7 @@ const HomePage = () => {
         <ExperienceSection />
         <ProjectGrid
           titleKey="projects.personal-title"
-          projects={personalProjects}
-          onReadMore={setSelected}
-        />
-        <ProjectGrid
-          titleKey="projects.internal-title"
-          projects={internalProjects}
+          projects={[...personalProjects, ...internalProjects]}
           onReadMore={setSelected}
         />
         <ProjectDetailDialog

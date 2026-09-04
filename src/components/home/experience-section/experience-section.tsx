@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import {
   Card,
   CardBody,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from "@sun/components";
@@ -17,26 +18,18 @@ const ExperienceSection = (props: ExperienceSectionProps) => {
   const { t } = useTranslation("home");
 
   return (
-    <Card className={className} {...rest}>
-      <CardHeader>
-        <CardTitle>{t("experience.title")}</CardTitle>
-      </CardHeader>
-      <CardBody>
-        <div className={styles.list}>
-          <div className={styles.item}>
-            <div className={styles.item_header}>
-              <span className={styles.company}>
-                {t("experience.certus.company")}
-              </span>
-              <span className={styles.date}>
-                {t("experience.certus.date")}
-              </span>
-            </div>
-            <p className={styles.body}>{t("experience.certus.body")}</p>
-          </div>
-        </div>
-      </CardBody>
-    </Card>
+    <div className={className} {...rest}>
+      <h2 className={styles.section_title}>{t("experience.title")}</h2>
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("experience.certus.company")}</CardTitle>
+          <CardDescription>{t("experience.certus.date")}</CardDescription>
+        </CardHeader>
+        <CardBody>
+          <p className={styles.body}>{t("experience.certus.body")}</p>
+        </CardBody>
+      </Card>
+    </div>
   );
 };
 

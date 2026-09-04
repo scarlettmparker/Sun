@@ -77,7 +77,7 @@ export const internalProjects: Project[] = [
     href: "https://github.com/scarlettmparker/Filestore",
     descriptionKey: "projects.filestore.description",
     detailKey: "projects.filestore.detail",
-    rank: 10,
+    rank: 50,
   },
   {
     key: "checklist",
@@ -85,6 +85,6 @@ export const internalProjects: Project[] = [
     href: "https://github.com/scarlettmparker/Checklist",
     descriptionKey: "projects.checklist.description",
     detailKey: "projects.checklist.detail",
-    rank: 20,
+    rank: 60,
   },
 ];

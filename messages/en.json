@@ -148,7 +148,7 @@
       "internal-title": "Internal-only projects",
       "sun": {
         "description": "This site - my portfolio and hub for the whole ecosystem.",
-        "detail": "This site is the hub for everything I build.\n\nIt runs on a custom `React` + `Vite` setup with my own component library and a self-hosted `Verdaccio` registry. The back end is a `Spring Boot` monolith with `Hibernate`, `Postgres` and `Redis`, deployed behind `Nginx` on a VPS with `Pi-hole` + `Nginx` at home for local routing."
+        "detail": "This site is the hub for everything I build.\n\nIt's a custom `React` + `Vite` front end with my own component library and a private `Verdaccio` registry.\n\n- Back end is a `Spring Boot` monolith with `Hibernate`, `Postgres` and `Redis`\n- Deployed behind `Nginx` on a `VPS` with `Pi-hole` + `Nginx` at home for local routing."
       },
       "guided-reader": {
         "description": "App for learners of Modern Greek. Read at your level with community help.",

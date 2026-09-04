@@ -1,28 +1,9 @@
-.list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--lg);
-}
-
-.item {
-  display: flex;
-  flex-direction: column;
-  gap: var(--md);
-}
-
-.item_header {
-  display: flex;
-  gap: var(--lg);
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.company {
+.section_title {
+  font-size: var(--text-xl);
+  color: var(--text-primary, var(--tertiary));
   font-weight: var(--bold);
-}
-
-.date {
-  color: var(--muted);
+  margin: 0;
+  padding-bottom: var(--lg);
 }
 
 .body {

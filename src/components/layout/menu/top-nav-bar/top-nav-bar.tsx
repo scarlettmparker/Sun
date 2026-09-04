@@ -11,8 +11,8 @@ import styles from "./top-nav-bar.module.css";
 
 const NAV_ITEMS = [
   { labelKey: "home", href: "/", role: null },
-  { labelKey: "blog", href: "/blog", role: null },
   // TODO: sort out permissions
+  { labelKey: "blog", href: "/blog", role: "Super Admin" },
   { labelKey: "hub", href: "/hub", role: "Super Admin" },
   { labelKey: "gallery", href: "/gallery", role: "Super Admin" },
   { labelKey: "stem-player", href: "/stem-player", role: "Super Admin" },
