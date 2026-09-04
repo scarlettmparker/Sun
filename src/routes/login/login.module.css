@@ -36,6 +36,8 @@
   border-radius: var(--radius);
   border: 1px solid var(--border);
   font-weight: 500;
+  display: flex !important;
+  width: fit-content;
 }
 
 .discord:hover {

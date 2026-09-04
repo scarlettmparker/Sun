@@ -6,8 +6,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  MarkdownViewer,
+  ScrollArea,
 } from "@sun/components";
 import type { Project } from "../projects/projects-config";
+import styles from "./project-detail-dialog.module.css";
 
 type ProjectDetailDialogProps = {
   /**
@@ -21,21 +24,25 @@ type ProjectDetailDialogProps = {
 };
 
 /**
- * Placeholder dialog for project details.
+ * Dialog showing markdown detail for a project.
  */
 const ProjectDetailDialog = (props: ProjectDetailDialogProps) => {
   const { project, onOpenChange } = props;
   const { t } = useTranslation("home");
 
   const open = project != null;
+  const detailKey = project?.detailKey ?? "";
+  const markdown = detailKey ? t(detailKey) : "";
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange} className={styles.dialog}>
       <DialogHeader>
         <DialogTitle>{project?.title ?? ""}</DialogTitle>
       </DialogHeader>
       <DialogBody>
-        <p>{t("projects.detail-placeholder")}</p>
+        <ScrollArea maxHeight="60vh" className={styles.scroll_area}>
+          <MarkdownViewer>{markdown}</MarkdownViewer>
+        </ScrollArea>
       </DialogBody>
       <DialogFooter>
         <Button

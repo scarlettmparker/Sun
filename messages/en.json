@@ -100,11 +100,11 @@
       "location": "Exeter, United Kingdom",
       "github-label": "GitHub",
       "birthday-label": "Born 21 February 2003",
-      "bio-prefix": "Artist, Web developer",
+      "bio-prefix": "Artist, Web Developer",
       "age_one": "{{count}} year old",
       "age_other": "{{count}} years old",
       "bio-suffix": "",
-      "bio-detail": "I build things for the web. This site is where I keep track of them. Built with React + Vite.",
+      "bio-detail": "I build things for the web. This site is my portfolio and homelab hub - React + Vite up front, Spring Boot behind it, plus a few bots and CLIs on the side.",
       "experience-label": "Since 10 March 2025",
       "experience": "{{count}} YoE",
       "listen": "Listen to fell in again"
@@ -127,7 +127,7 @@
       "certus": {
         "company": "Certus Technology",
         "date": "Since 10 March 2025",
-        "body": "TBD - time at Certus, what I worked on, and what I learned."
+        "body": "Front-end lead on a Next.js monorepo with 5 apps on the App Router and T3 stack. Built GraphQL APIs against a Spring Boot backend and kept the repo tidy across apps. A good lesson in sharing packages and keeping routing sane at scale."
       }
     },
     "spotify": {
@@ -147,25 +147,28 @@
       "personal-title": "Personal projects",
       "internal-title": "Internal-only projects",
       "sun": {
-        "description": "TBD - Sun itself, this site. You are here, so this card is disabled."
+        "description": "This site - my portfolio and hub for the whole ecosystem.",
+        "detail": "This site is the hub for everything I build.\n\nIt runs on a custom `React` + `Vite` setup with my own component library and a self-hosted `Verdaccio` registry. The back end is a `Spring Boot` monolith with `Hibernate`, `Postgres` and `Redis`, deployed behind `Nginx` on a VPS with `Pi-hole` + `Nginx` at home for local routing.\n\nWhat it ties together:\n\n- Blog, Gallery, Stem Player and Hub\n- Shared auth, themes and translations\n\nYou're looking at it. [Source on GitHub](https://github.com/scarlettmparker/Sun)"
       },
       "guided-reader": {
-        "description": "TBD - Guided Reader, language learning app."
+        "description": "App for learners of Modern Greek - read at your level with community help.",
+        "detail": "App for learners of Modern Greek. Pick a text at your level, read with community annotations, and leave your own.\n\nBuilt with the same `React` + `Vite` setup as Sun.\n\n- Browse texts by level (A1-C2) with colour coding\n- Highlight any range to create an annotation with comments, votes and private notes\n- Dictionary lookup via `WordReference` and `Forvo` audio\n- Sign in with `Discord` or a password, tested with `Cypress` and running live alongside Sun\n\n[GitHub](https://github.com/scarlettmparker/Guided-Reader) · [Live site](https://reader.scarlettparker.co.uk)"
       },
       "niece-scarlett": {
-        "description": "TBD - Niece Scarlett."
+        "description": "Discord bot that sits beside Guided Reader.",
+        "detail": "Discord bot that sits beside Guided Reader. Talk to it like you would a person.\n\nListens for `niece scarlett` / `ns` and slash commands. Uses `Machine Learning` to grade texts by `CEFR` level and an intent-based command setup for natural phrasing.\n\n- Nine commands: `classify`, `define`, `text`, `texts`, `annotations`, `pronounce`, `lt`, `help`, `reload`\n- Understands natural phrasing with fuzzy matching and typo tolerance\n- `define` uses `WordReference`, `pronounce` uses `Forvo`, `texts` supports filters like `has B1 sort by level`\n\n[GitHub](https://github.com/scarlettmparker/Niece-Scarlett)"
       },
       "learner": {
-        "description": "TBD - Learner, something you are building."
-      },
-      "trash-munchers": {
-        "description": "TBD - Trash Munchers, game jam project."
+        "description": "CLI that turns Wikipedia into scored quizzes.",
+        "detail": "CLI that turns `Wikipedia` into a quiz you can actually learn from.\n\n`npx sun-learn learn \"Immanuel Kant\" --questions 10` pulls the topic from `Wikipedia` and related internal sources, builds questions, and runs the quiz in your terminal.\n\n- Types: multiple choice, fill in the blank and short answer\n- Pulls data from `Sun` and `Wikimedia` and generates interactive quizzes\n- Saves each run with what was researched, answers and gaps\n- Stores results for spaced repetition and `Anki` deck generation\n\n[GitHub](https://github.com/scarlettmparker/learner)"
       },
       "filestore": {
-        "description": "TBD - Filestore, internal file storage."
+        "description": "Front end for a self-hosted Garage instance.",
+        "detail": "Front end for a self-hosted `Garage` instance. Think `S3`, but generically attached to files like images and videos.\n\nBuckets and keys are browsed by prefix. Uploads go direct to storage via presigned `PUT`s, downloads via presigned `GET`s.\n\n- Create, rename, delete and move keys and folders\n- Viewers for images, video, `PDF` and auto-transcoded `mp4`\n- Torrent ingestion - paste a magnet or `.torrent` or search through `Jackett`\n- Admin areas for accounts, `IP` whitelist and `Tailscale`\n\n[GitHub](https://github.com/scarlettmparker/Filestore)"
       },
       "checklist": {
-        "description": "TBD - Checklist, internal task tracker."
+        "description": "Highly over-engineered checklist.",
+        "detail": "Frontend for a checklist service. `Items` are reusable tasks, `Templates` group them in order, `Entries` are dated checklists you work through.\n\n- Create entries blank, from one template, or from several at once\n- Each entry has a `Garage`-backed gallery for images\n- Mark items complete, failed or not needed as you go\n\n[GitHub](https://github.com/scarlettmparker/Checklist)"
       }
     }
   },

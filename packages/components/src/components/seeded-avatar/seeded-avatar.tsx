@@ -1,8 +1,4 @@
-import { useEffect, useState } from "react";
-import {
-  seedInitial,
-  usernameToAvatarColour,
-} from "@sun/utils/avatar-colour";
+import { seedInitial, hashToHue } from "@sun/utils/avatar-colour";
 import { cn } from "~/utils/cn";
 import styles from "./seeded-avatar.module.css";
 
@@ -23,17 +19,9 @@ type SeededAvatarProps = React.HTMLAttributes<HTMLDivElement> & {
 const SeededAvatar = (props: SeededAvatarProps) => {
   const { username, size = 32, className, style, ...rest } = props;
   const initial = seedInitial(username);
-  const [colours, setColours] = useState(() =>
-    usernameToAvatarColour(username),
-  );
-
-  useEffect(() => {
-    setColours(usernameToAvatarColour(username));
-    const handler = () => setColours(usernameToAvatarColour(username));
-    window.addEventListener("sun:theme-applied", handler);
-
-    return () => window.removeEventListener("sun:theme-applied", handler);
-  }, [username]);
+  const hue = hashToHue(username || "?");
+  const background = `hsl(${hue} 70% 45%)`;
+  const foreground = "#ffffff";
 
   return (
     <div
@@ -42,8 +30,8 @@ const SeededAvatar = (props: SeededAvatarProps) => {
       style={{
         width: size,
         height: size,
-        background: colours.background,
-        color: colours.foreground,
+        background,
+        color: foreground,
         ...style,
       }}
       aria-label={username}

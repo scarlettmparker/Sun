@@ -69,7 +69,7 @@ const ProjectCard = (props: ProjectCardProps) => {
         </CardDescription>
       </CardHeader>
       <CardBody>
-        <div className={styles.meta} />
+        <p className={styles.description}>{t(project.descriptionKey)}</p>
       </CardBody>
       <CardFooter className={styles.footer}>
         <Button

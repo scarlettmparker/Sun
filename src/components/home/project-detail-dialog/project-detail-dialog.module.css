@@ -1,0 +1,8 @@
+.dialog {
+  max-width: 36rem;
+  width: calc(100vw - var(--xl) * 2);
+}
+
+.scroll_area {
+  width: 100%;
+}

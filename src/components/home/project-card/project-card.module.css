@@ -23,6 +23,13 @@
   align-items: center;
 }
 
+.description {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-md);
+  line-height: 1.5;
+}
+
 .github_link {
   color: var(--muted) !important;
   text-decoration: underline;

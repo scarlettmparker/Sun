@@ -20,6 +20,10 @@ export type Project = {
    */
   descriptionKey: string;
   /**
+   * i18n key for markdown detail shown in dialog.
+   */
+  detailKey: string;
+  /**
    * Sort rank.
    */
   rank: number;
@@ -35,6 +39,7 @@ export const personalProjects: Project[] = [
     title: "Sun",
     href: "https://github.com/scarlettmparker/Sun",
     descriptionKey: "projects.sun.description",
+    detailKey: "projects.sun.detail",
     rank: 10,
     disabled: true,
   },
@@ -44,6 +49,7 @@ export const personalProjects: Project[] = [
     href: "https://github.com/scarlettmparker/Guided-Reader",
     visitHref: "https://reader.scarlettparker.co.uk",
     descriptionKey: "projects.guided-reader.description",
+    detailKey: "projects.guided-reader.detail",
     rank: 20,
   },
   {
@@ -51,6 +57,7 @@ export const personalProjects: Project[] = [
     title: "Niece Scarlett",
     href: "https://github.com/scarlettmparker/Niece-Scarlett",
     descriptionKey: "projects.niece-scarlett.description",
+    detailKey: "projects.niece-scarlett.detail",
     rank: 30,
   },
   {
@@ -58,14 +65,8 @@ export const personalProjects: Project[] = [
     title: "Learner",
     href: "https://github.com/scarlettmparker/learner",
     descriptionKey: "projects.learner.description",
+    detailKey: "projects.learner.detail",
     rank: 40,
-  },
-  {
-    key: "trash-munchers",
-    title: "Trash Munchers",
-    href: "https://github.com/whoisEllie/trash-muncher-frontend",
-    descriptionKey: "projects.trash-munchers.description",
-    rank: 50,
   },
 ];
 
@@ -75,6 +76,7 @@ export const internalProjects: Project[] = [
     title: "Filestore",
     href: "https://github.com/scarlettmparker/Filestore",
     descriptionKey: "projects.filestore.description",
+    detailKey: "projects.filestore.detail",
     rank: 10,
   },
   {
@@ -82,6 +84,7 @@ export const internalProjects: Project[] = [
     title: "Checklist",
     href: "https://github.com/scarlettmparker/Checklist",
     descriptionKey: "projects.checklist.description",
+    detailKey: "projects.checklist.detail",
     rank: 20,
   },
 ];

@@ -567,11 +567,18 @@ const MenuContent = (
 
   /**
    * Stops click events from propagating through the portal to elements
-   * beneath it.
+   * beneath it. Does not preventDefault for submit buttons so forms
+   * inside menus (e.g. sign-out) still submit.
    */
   const handleClick = useCallback(
     (e: MouseEvent<HTMLDivElement>) => {
-      e.preventDefault();
+      const target = e.target as HTMLElement;
+      const isSubmit =
+        target.closest('button[type="submit"]') != null ||
+        target.closest('form') != null;
+      if (!isSubmit) {
+        e.preventDefault();
+      }
       e.stopPropagation();
       rest.onClick?.(e);
     },

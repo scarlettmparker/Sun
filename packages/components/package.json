@@ -1,6 +1,6 @@
 {
   "name": "@sun/components",
-  "version": "0.11.35",
+  "version": "0.12.0",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -49,7 +49,7 @@
   },
   "dependencies": {
     "@sun/shared": "^0.2.0",
-    "@sun/utils": "^0.1.14"
+    "@sun/utils": "^0.1.21"
   },
   "publishConfig": {
     "registry": "https://registry.int.scarlettparker.co.uk"
