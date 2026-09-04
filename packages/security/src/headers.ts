@@ -32,7 +32,24 @@ export function buildSecurityHeaders(
   const { isProduction, nonce, allowCoopPopups, useCredentiallessCoep } =
     options;
 
-  const csp = `${buildCspHeader(nonce)}; ${buildTrustedTypesDirective()}`;
+  // In dev, allow Vite HMR (unsafe-inline/eval, ws) - strict CSP would break it.
+  const csp = isProduction
+    ? `${buildCspHeader(nonce)}; ${buildTrustedTypesDirective()}`
+    : [
+        "default-src 'self'",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https: http: ws: wss:",
+        "style-src 'self' 'unsafe-inline' https:",
+        "font-src 'self' data: https:",
+        "img-src 'self' data: https: blob:",
+        "media-src 'self' https: blob:",
+        "connect-src 'self' https: ws: wss: http:",
+        "frame-src 'self' https://open.spotify.com",
+        "frame-ancestors 'none'",
+        "base-uri 'none'",
+        "form-action 'self'",
+        "object-src 'none'",
+      ].join("; ");
+
   const headers: Record<string, string> = {
     "Content-Security-Policy": csp,
     "Cross-Origin-Opener-Policy": buildCoopHeader(allowCoopPopups),

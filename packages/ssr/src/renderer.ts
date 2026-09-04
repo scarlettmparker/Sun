@@ -5,6 +5,7 @@ import { renderToPipeableStream } from "react-dom/server";
 import { inlineCss, generateCssTag } from "@sun/utils/css-inlining";
 import { getRequestCache, invalidateCache } from "./page-data";
 import type { MutationResult } from "./client-mutation";
+import { getCspNonce } from "./csp-nonce";
 
 /** Locale candidates tried, in order, when loading the consolidated messages file. */
 const LOCALE_FALLBACK = ["en-GB", "en"];
@@ -273,18 +274,20 @@ function metaTags(
   return tags.join("\n              ");
 }
 
-function themeStyle(theme: Record<string, string> | null): string {
+function themeStyle(theme: Record<string, string> | null, nonce?: string): string {
   if (!theme) return "";
   const body = Object.entries(theme)
     .map(([key, value]) => `--${key}:${value};`)
     .join("");
-  return `<style>:root{${body}}</style>`;
+  const nonceAttr = nonce ? ` nonce="${nonce}"` : "";
+  return `<style${nonceAttr}>:root{${body}}</style>`;
 }
 
-function refreshPreamble(isProduction: boolean): string {
+function refreshPreamble(isProduction: boolean, nonce?: string): string {
   if (isProduction) return "";
   const base = process.env.VITE_SERVER_BASE ?? "";
-  return `<script type="module">
+  const nonceAttr = nonce ? ` nonce="${nonce}"` : "";
+  return `<script type="module"${nonceAttr}>
               import RefreshRuntime from '${base}/@react-refresh'
               RefreshRuntime.injectIntoGlobalHook(window)
               window.$RefreshReg$ = () => {}
@@ -358,12 +361,15 @@ async function renderApp(
   return new Promise((resolve) => {
     let resolved = false;
     let postludeData = "";
+    const nonce = getCspNonce();
+    const nonceAttr = nonce ? ` nonce="${nonce}"` : "";
 
     // Never pass bootstrapModules: it lands before the postlude fills
     // window.__serverCacheData__, so the client boots too early on first load.
     const stream = renderToPipeableStream(app, {
       onShellReady() {
-        const cssTag = generateCssTag(isProduction, cssContent, clientCss);
+        const rawCssTag = generateCssTag(isProduction, cssContent, clientCss);
+        const cssTag = nonce ? rawCssTag.replace("<style>", `<style nonce="${nonce}">`) : rawCssTag;
         const headers: Record<string, string> = { "Content-Type": "text/html" };
         if (shouldDeleteCookie) {
           headers["Set-Cookie"] =
@@ -395,12 +401,12 @@ async function renderApp(
               <meta charset="UTF-8" />
               <meta name="viewport" content="width=device-width, initial-scale=1.0" />
               ${cssTag}
-              ${themeStyle(currentTheme)}
+              ${themeStyle(currentTheme, nonce)}
               <link rel="modulepreload" href="${clientJs}" />
               ${metaTags(meta, config.title, { siteUrl: config.siteUrl, url: options.url, defaultOgImage: config.defaultOgImage, locale })}
             </head>
-            ${refreshPreamble(isProduction)}
-            <script>
+            ${refreshPreamble(isProduction, nonce)}
+            <script${nonceAttr}>
               ${globals}
             </script>
             <body>
@@ -424,7 +430,7 @@ async function renderApp(
           }
         }
         postludeData = `</div>
-          <script>
+          <script${nonceAttr}>
           if (window.__serverCacheData__ !== undefined) {
             Object.assign(window.__serverCacheData__, ${JSON.stringify(serverCacheData)});
             if (window.hydratePageDataFromPostlude) {
@@ -432,7 +438,7 @@ async function renderApp(
             }
           }
           </script>
-          <script type="module" src="${clientJs}"></script>
+          <script type="module" src="${clientJs}"${nonceAttr}></script>
         </body>
       </html>`;
       },

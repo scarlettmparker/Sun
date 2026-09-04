@@ -1,6 +1,6 @@
 {
   "name": "@sun/security",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Shared security headers for Sun ecosystem (CSP/HSTS/COOP/Trusted Types)",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",

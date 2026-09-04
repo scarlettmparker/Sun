@@ -15,6 +15,14 @@ import {
   setRequestIpProvider,
 } from "./page-data";
 import type { CacheRecord } from "./page-data";
+import {
+  buildSecurityHeaders,
+  buildHstsHeader,
+  buildCoopHeader,
+  buildCoepHeader,
+  buildCorpHeader,
+} from "@sun/security";
+import { enterCspNonce, getCspNonce } from "./csp-nonce";
 
 export { handleQuery } from "./query";
 export type { QueryFetchResult } from "./query";
@@ -174,6 +182,58 @@ export async function createServer(
     requestCacheAls.enterWith(new Map());
     requestCookieAls.enterWith(request.headers.cookie);
     requestIpAls.enterWith(request.ip);
+    enterCspNonce();
+  });
+
+  // Reusable security headers (HSTS, COOP, CSP via @sun/security). Applied to
+  // every response so a package upgrade fixes all apps without app code changes.
+  // CSP is only set for HTML responses to avoid polluting static assets.
+  app.addHook("onSend", async (request, reply, payload) => {
+    const isHtml = (() => {
+      const ct = String(reply.getHeader("content-type") ?? "");
+      if (ct.includes("text/html")) return true;
+      // Fallback: check payload for HTML doctype when header not yet set (stream)
+      if (typeof payload === "string" && payload.includes("<!DOCTYPE html>")) return true;
+      if (request.url === "/" || request.url.startsWith("/?")) return true;
+      return false;
+    })();
+
+    const nonce = getCspNonce();
+    if (nonce && isHtml) {
+      const headers = buildSecurityHeaders({
+        isProduction: config.isProduction,
+        nonce,
+      });
+      for (const [key, value] of Object.entries(headers)) {
+        // Don't overwrite CSP if already set by renderer (should be same nonce)
+        if (key === "Content-Security-Policy" && reply.getHeader(key)) continue;
+        reply.header(key, value);
+      }
+    } else if (nonce) {
+      // For non-HTML (JS/CSS/fonts), set only non-CSP headers
+      if (config.isProduction) {
+        reply.header("Strict-Transport-Security", buildHstsHeader());
+      }
+      reply.header("Cross-Origin-Opener-Policy", buildCoopHeader(false));
+      reply.header("Cross-Origin-Embedder-Policy", buildCoepHeader(true));
+      reply.header("Cross-Origin-Resource-Policy", buildCorpHeader("same-site"));
+      reply.header("X-Content-Type-Options", "nosniff");
+      reply.header("X-Frame-Options", "DENY");
+      reply.header("Referrer-Policy", "strict-origin-when-cross-origin");
+      reply.header("Permissions-Policy", "geolocation=(), camera=(), microphone=(), payment=()");
+    } else {
+      // Fallback for requests where nonce wasn't set (shouldn't happen)
+      if (config.isProduction) {
+        reply.header("Strict-Transport-Security", buildHstsHeader());
+      }
+      reply.header("Cross-Origin-Opener-Policy", buildCoopHeader(false));
+      reply.header("Cross-Origin-Embedder-Policy", buildCoepHeader(true));
+      reply.header("Cross-Origin-Resource-Policy", buildCorpHeader("same-site"));
+      reply.header("X-Content-Type-Options", "nosniff");
+      reply.header("X-Frame-Options", "DENY");
+      reply.header("Referrer-Policy", "strict-origin-when-cross-origin");
+      reply.header("Permissions-Policy", "geolocation=(), camera=(), microphone=(), payment=()");
+    }
   });
 
   // App-layer gzip for buffered (string/Buffer) JSON/text responses.
