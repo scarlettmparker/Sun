@@ -1,6 +1,7 @@
 import fs from "fs/promises";
 import { statSync } from "fs";
 import path from "path";
+import { transform } from "lightningcss";
 
 /**
  * Inlines CSS content for production builds by reading global styles and manifest CSS files.
@@ -84,6 +85,17 @@ export async function inlineCss(
   } catch (error) {
     console.warn("Failed to read CSS files for inlining:", error);
     return cssContent;
+  }
+
+  try {
+    const { code } = transform({
+      filename: "inline.css",
+      code: Buffer.from(cssContent),
+      minify: true,
+    });
+    cssContent = code.toString();
+  } catch (error) {
+    console.warn("Failed to minify inlined CSS:", error);
   }
 
   if (key) {

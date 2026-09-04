@@ -25,5 +25,6 @@ export default defineConfig({
     "@posthog/react",
     "posthog-js",
     "posthog-node",
+    "lightningcss",
   ],
 });

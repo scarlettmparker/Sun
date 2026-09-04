@@ -1,4 +1,5 @@
 import fs from "fs";
+import path from "path";
 import { defineConfig } from "tsup";
 import { transform } from "lightningcss";
 
@@ -10,20 +11,18 @@ export default defineConfig({
   minify: false,
   sourcemap: true,
   injectStyle: false,
-  esbuildPlugins: [
-    {
-      name: "lightningcss-minify",
-      setup(build) {
-        build.onLoad({ filter: /\.css$/ }, async (args) => {
-          const css = await fs.promises.readFile(args.path, "utf8");
-          const { code } = transform({
-            filename: args.path,
-            code: Buffer.from(css),
-            minify: true,
-          });
-          return { contents: code.toString(), loader: "css" };
-        });
-      },
-    },
-  ],
+  async onSuccess() {
+    const out = path.resolve("dist/index.css");
+    if (!fs.existsSync(out)) return;
+    const raw = await fs.promises.readFile(out, "utf8");
+    const stripped = raw.replace(/\/\*# sourceMappingURL=.*?\*\//g, "").trim();
+    const { code } = transform({
+      filename: "index.css",
+      code: Buffer.from(stripped),
+      minify: true,
+    });
+    await fs.promises.writeFile(out, code.toString());
+    const mapPath = `${out}.map`;
+    if (fs.existsSync(mapPath)) await fs.promises.unlink(mapPath);
+  },
 });

@@ -10,7 +10,6 @@ export default defineConfig(() => {
       .filter(Boolean) ?? [];
 
   return {
-    css: { transformer: "lightningcss" },
     plugins: [react()],
     resolve: {
       alias: {
@@ -68,7 +67,6 @@ export default defineConfig(() => {
       },
       outDir: "dist/client",
       cssCodeSplit: true,
-      cssMinify: "lightningcss",
     },
     ssr: {
       noExternal: ["react-router-dom"],
