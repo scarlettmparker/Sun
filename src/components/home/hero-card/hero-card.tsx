@@ -49,7 +49,7 @@ const HeroCard = (props: HeroCardProps) => {
             <CardTitle className={styles.title_row}>
               <span>{t("hero.name")}</span>
               <a
-                href="/SPCV%20anon.pdf"
+                href="/cv.pdf"
                 target="_blank"
                 rel="noopener noreferrer"
                 className={styles.cv_link}

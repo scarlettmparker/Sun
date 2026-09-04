@@ -45,6 +45,8 @@ function matchMeta(url: string): RouteMeta | undefined {
 
 const renderer = createRenderer({
   title: "Scarlet Sun",
+  siteUrl: "https://sun.scarlettparker.co.uk",
+  defaultOgImage: "/og-default.png",
   initI18n(locale, translations) {
     const i18n = createI18nInstance();
     return i18n.init({

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://sun.scarlettparker.co.uk/sitemap.xml

@@ -26,35 +26,43 @@ const Profile = lazy(() => import("~/routes/profile"));
 export const routeMeta: Record<string, RouteMeta> = {
   "/": {
     title: "Scarlet Sun | Home",
-    description: "Personal knowledge hub.",
+    description: "Scarlett Parker — artist and web developer in Exeter. Personal knowledge hub for Sun, Guided Reader, Learner and more.",
+    ogImage: "/og-default.png",
   },
   blog: {
     title: "Blog | Scarlet Sun",
     description: "Browse knowledge, reviews and documentation.",
+    ogImage: "/og-default.png",
   },
   "blog/:id": {
     title: "Post | Scarlet Sun",
     description: "Read a blog post.",
+    ogImage: "/og-default.png",
   },
   gallery: {
     title: "Gallery | Scarlet Sun",
     description: "Browse gallery items.",
+    ogImage: "/og-default.png",
   },
   "stem-player": {
     title: "Stem Player | Scarlet Sun",
     description: "Play and isolate stems.",
+    ogImage: "/og-default.png",
   },
   admin: {
     title: "Admin | Scarlet Sun",
     description: "Manage the ecosystem hub.",
+    ogImage: "/og-default.png",
   },
   login: {
     title: "Login | Scarlet Sun",
     description: "Sign in to continue.",
+    ogImage: "/og-default.png",
   },
   profile: {
     title: "Profile | Scarlet Sun",
     description: "Manage your profile.",
+    ogImage: "/og-default.png",
   },
 };
 

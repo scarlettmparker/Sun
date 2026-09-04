@@ -104,6 +104,14 @@ export type AppRenderConfig = {
    */
   title: string;
   /**
+   * Canonical site URL, e.g. https://sun.scarlettparker.co.uk
+   */
+  siteUrl?: string;
+  /**
+   * Default OG image path, e.g. /og-default.png
+   */
+  defaultOgImage?: string;
+  /**
    * Optional theme resolver; returning null skips theme inlining.
    */
   resolveTheme?: (opts: {
@@ -173,28 +181,77 @@ function loadTranslations(locale: string): Record<string, unknown> {
 }
 
 function escapeAttr(value: string): string {
-  return value.replace(/"/g, "&quot;");
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
 
-function metaTags(meta: RouteMeta | undefined, fallbackTitle: string): string {
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function toAbsoluteUrl(url: string, siteUrl?: string): string {
+  if (/^https?:\/\//.test(url)) return url;
+  if (url.startsWith("/") && siteUrl) {
+    return siteUrl.replace(/\/$/, "") + url;
+  }
+  return url;
+}
+
+function metaTags(
+  meta: RouteMeta | undefined,
+  fallbackTitle: string,
+  opts: { siteUrl?: string; url?: string; defaultOgImage?: string; locale?: string } = {},
+): string {
   const title = meta?.title ?? fallbackTitle;
-  const tags = [`<title>${title}</title>`];
-  if (meta?.description) {
-    const desc = escapeAttr(meta.description);
+  const description = meta?.description ?? undefined;
+  const ogImageRaw = meta?.ogImage ?? opts.defaultOgImage;
+  const canonical = opts.siteUrl && opts.url ? toAbsoluteUrl(opts.url, opts.siteUrl) : undefined;
+  const ogImage = ogImageRaw ? toAbsoluteUrl(ogImageRaw, opts.siteUrl) : undefined;
+  const locale = opts.locale ?? "en_GB";
+
+  const tags: string[] = [];
+  tags.push(`<title>${escapeHtml(title)}</title>`);
+  if (description) {
+    const desc = escapeAttr(description);
     tags.push(`<meta name="description" content="${desc}" />`);
     tags.push(`<meta property="og:description" content="${desc}" />`);
+    tags.push(`<meta name="twitter:description" content="${desc}" />`);
   }
-  if (meta?.ogImage) {
-    tags.push(
-      `<meta property="og:image" content="${escapeAttr(meta.ogImage)}" />`,
-    );
+  // canonical
+  if (canonical) {
+    tags.push(`<link rel="canonical" href="${escapeAttr(canonical)}" />`);
+    tags.push(`<meta property="og:url" content="${escapeAttr(canonical)}" />`);
   }
-  if (meta?.title) {
-    tags.push(
-      `<meta property="og:title" content="${escapeAttr(meta.title)}" />`,
-    );
-  }
+  // title for OG/Twitter
+  tags.push(`<meta property="og:title" content="${escapeAttr(title)}" />`);
+  tags.push(`<meta name="twitter:title" content="${escapeAttr(title)}" />`);
+  tags.push(`<meta property="og:site_name" content="${escapeAttr(fallbackTitle)}" />`);
+  tags.push(`<meta property="og:locale" content="${escapeAttr(locale.replace("-", "_"))}" />`);
   tags.push(`<meta property="og:type" content="website" />`);
+  // image
+  if (ogImage) {
+    tags.push(`<meta property="og:image" content="${escapeAttr(ogImage)}" />`);
+    tags.push(`<meta property="og:image:width" content="1200" />`);
+    tags.push(`<meta property="og:image:height" content="630" />`);
+    tags.push(`<meta property="og:image:alt" content="${escapeAttr(title)}" />`);
+    tags.push(`<meta property="og:image:type" content="image/png" />`);
+    tags.push(`<meta name="twitter:card" content="summary_large_image" />`);
+    tags.push(`<meta name="twitter:image" content="${escapeAttr(ogImage)}" />`);
+    tags.push(`<meta name="twitter:image:alt" content="${escapeAttr(title)}" />`);
+  } else {
+    tags.push(`<meta name="twitter:card" content="summary" />`);
+  }
+  // favicon & theme
+  tags.push(`<link rel="icon" href="/favicon.ico" sizes="any" />`);
+  tags.push(`<link rel="apple-touch-icon" href="/favicon.ico" />`);
+  tags.push(`<meta name="theme-color" content="#000000" />`);
   return tags.join("\n              ");
 }
 
@@ -315,14 +372,14 @@ async function renderApp(
           .join("\n              ");
 
         const prelude = `<!DOCTYPE html>
-          <html lang="en">
+          <html lang="${escapeAttr(locale)}">
             <head>
               <meta charset="UTF-8" />
               <meta name="viewport" content="width=device-width, initial-scale=1.0" />
               ${cssTag}
               ${themeStyle(currentTheme)}
               <link rel="modulepreload" href="${clientJs}" />
-              ${metaTags(meta, config.title)}
+              ${metaTags(meta, config.title, { siteUrl: config.siteUrl, url: options.url, defaultOgImage: config.defaultOgImage, locale })}
             </head>
             ${refreshPreamble(isProduction)}
             <script>
