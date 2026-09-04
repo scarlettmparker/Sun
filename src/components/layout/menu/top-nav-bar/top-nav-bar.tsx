@@ -50,11 +50,7 @@ const TopNavBar = () => {
         const active =
           item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
         const link = (
-          <Link
-            key={item.href}
-            to={item.href}
-            style={{ textDecoration: "none" }}
-          >
+          <Link key={item.href} to={item.href}>
             <Button variant={active ? "default" : "secondary"}>
               {t(item.labelKey)}
             </Button>
@@ -71,7 +67,7 @@ const TopNavBar = () => {
       })}
       <Suspense fallback={null}>
         <RoleCheck roles={["Admin", "Super Admin"]} match="any">
-          <Link to="/admin" style={{ textDecoration: "none" }}>
+          <Link to="/admin">
             <Button
               variant="secondary"
               title={t("admin")}

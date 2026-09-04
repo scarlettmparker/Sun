@@ -52,7 +52,7 @@ const UserMenuContent = () => {
 
   if (!currentUser) {
     return (
-      <Link to="/login" style={{ textDecoration: "none" }}>
+      <Link to="/login">
         <Button
           variant="secondary"
           title={t("profile.login")}

@@ -1,5 +1,6 @@
 .main {
   min-height: 100vh;
+  background-color: rgb(from var(--primary) r g b / 0.1);
 }
 
 .switcher {

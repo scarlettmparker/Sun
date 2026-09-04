@@ -16,8 +16,8 @@ const PostHogProvider = (props: PostHogProviderProps) => {
   const [posthogClient, setPosthogClient] = useState<unknown | null>(null);
 
   useEffect(() => {
-    const key = window.__posthog_key__ || process.env.POSTHOG_API_KEY || "";
-    const host = window.__posthog_host__ || process.env.POSTHOG_HOST || "";
+    const key = window.__posthog_key__ || "";
+    const host = window.__posthog_host__ || "";
     if (!key || !host) return;
     const init = async () => {
       const { default: posthog } = await import("posthog-js");

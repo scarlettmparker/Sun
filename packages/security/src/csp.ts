@@ -10,16 +10,19 @@ export function generateCspNonce(): string {
 /**
  * Builds a strict Content-Security-Policy header value using a nonce.
  *
- * Allows self, nonce for inline scripts/styles, strict-dynamic for modern
- * browsers, and explicit allowances for PostHog and Spotify embeds.
+ * Script-src uses a per-request nonce with strict-dynamic. Style-src
+ * intentionally omits the nonce: per the CSP spec 'unsafe-inline' is
+ * ignored whenever a nonce is present, which blocks React style
+ * attributes and library internals (Skeleton, ScrollArea). Styles
+ * therefore allow 'unsafe-inline' without a nonce.
  *
- * @param nonce - Per-request base64 nonce to allow inline scripts and styles.
+ * @param nonce - Per-request base64 nonce to allow inline scripts.
  */
 export function buildCspHeader(nonce: string): string {
   const directives = [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https: 'unsafe-inline'`,
-    `style-src 'self' 'nonce-${nonce}' https: 'unsafe-inline' 'unsafe-hashes'`,
+    "style-src 'self' https: 'unsafe-inline'",
     "font-src 'self' data: https:",
     "img-src 'self' data: https: blob:",
     "media-src 'self' https: blob:",

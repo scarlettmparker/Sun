@@ -16,6 +16,7 @@ import { configureApi } from "@sun/api";
 import { AUTH_COOKIE } from "./utils/auth";
 import { clientId, clientSecret, base } from "../config.js";
 import "./utils/configure-framework";
+import styles from "./suspense-fallback.module.css";
 
 configureApi({
   authCookie: AUTH_COOKIE,
@@ -103,11 +104,7 @@ export async function render(options: {
     <React.StrictMode>
       <StaticRouter location={options.url}>
         <Layout>
-          <Suspense
-            fallback={
-              <div style={{ height: "50vh", width: "100%" }} aria-hidden />
-            }
-          >
+          <Suspense fallback={<div className={styles.fallback} aria-hidden />}> 
             <Router />
           </Suspense>
         </Layout>

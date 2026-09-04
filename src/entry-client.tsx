@@ -12,6 +12,7 @@ import { PostHogProvider } from "./utils/hooks/posthog";
 import "./utils/configure-framework";
 import "@sun/components/style.css";
 import "@sun/themes/style.css";
+import styles from "./suspense-fallback.module.css";
 
 // Apply the server-rendered theme before mount so there is no flash; a
 // persisted user choice takes precedence.
@@ -31,9 +32,7 @@ initClientBootstrap({ i18n }).then(() => {
         <Layout>
           <ErrorBoundary>
             <Suspense
-              fallback={
-                <div style={{ height: "50vh", width: "100%" }} aria-hidden />
-              }
+              fallback={<div className={styles.fallback} aria-hidden />}
             >
               <Router />
             </Suspense>
