@@ -21,7 +21,7 @@ const useIsomorphicLayoutEffect =
 const Layout = (props: LayoutProps) => {
   const { children } = props;
   const [backgroundColour, setBackgroundColour] = useState<string | undefined>(
-    () => (typeof window !== "undefined" ? getBackgroundHex() : undefined),
+    undefined,
   );
   const [themes, setThemes] = useState<ThemeOption[]>([]);
 
@@ -42,7 +42,10 @@ const Layout = (props: LayoutProps) => {
 
   return (
     <NavPortalProvider>
-      <main style={{ backgroundColor: backgroundColour }} className={styles.main}>
+      <main
+        style={{ backgroundColor: backgroundColour }}
+        className={styles.main}
+      >
         <TopNavBar />
         <UserMenu />
         {children}
