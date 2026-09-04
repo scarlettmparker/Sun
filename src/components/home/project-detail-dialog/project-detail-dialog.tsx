@@ -35,7 +35,10 @@ const ProjectDetailDialog = (props: ProjectDetailDialogProps) => {
 
   const open = project != null;
   const detailKey = project?.detailKey ?? "";
-  const markdown = useMemo(() => (detailKey ? t(detailKey) : ""), [t, detailKey]);
+  const markdown = useMemo(
+    () => (detailKey ? t(detailKey) : ""),
+    [t, detailKey],
+  );
 
   const handleClose = useCallback(() => {
     onOpenChange(false);
@@ -83,7 +86,12 @@ const ProjectDetailDialog = (props: ProjectDetailDialogProps) => {
         </ScrollArea>
       </DialogBody>
       <DialogFooter>
-        <Button variant="secondary" title={t("projects.close")} aria-label={t("projects.close")} onClick={handleClose}>
+        <Button
+          variant="secondary"
+          title={t("projects.close")}
+          aria-label={t("projects.close")}
+          onClick={handleClose}
+        >
           {t("projects.close")}
         </Button>
       </DialogFooter>

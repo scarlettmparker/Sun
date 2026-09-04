@@ -23,7 +23,10 @@ const HeroCard = (props: HeroCardProps) => {
   const birthdayLabel = useMemo(() => t("hero.birthday-label"), [t]);
   const start = useMemo(() => new Date(2025, 2, 10), []);
   const yoe = useMemo(() => getExperienceYoE(start), [start]);
-  const experience = useMemo(() => t("hero.experience", { count: yoe }), [t, yoe]);
+  const experience = useMemo(
+    () => t("hero.experience", { count: yoe }),
+    [t, yoe],
+  );
   const experienceLabel = useMemo(() => t("hero.experience-label"), [t]);
 
   return (

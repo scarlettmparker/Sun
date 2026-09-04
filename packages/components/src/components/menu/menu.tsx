@@ -575,7 +575,7 @@ const MenuContent = (
       const target = e.target as HTMLElement;
       const isSubmit =
         target.closest('button[type="submit"]') != null ||
-        target.closest('form') != null;
+        target.closest("form") != null;
       if (!isSubmit) {
         e.preventDefault();
       }

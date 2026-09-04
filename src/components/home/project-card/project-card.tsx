@@ -75,7 +75,11 @@ const ProjectCard = (props: ProjectCardProps) => {
         <p className={styles.description}>{t(project.descriptionKey)}</p>
       </CardBody>
       <CardFooter className={styles.footer}>
-        <Button variant="secondary" aria-label={t("projects.read-more")} onClick={handleClick}>
+        <Button
+          variant="secondary"
+          aria-label={t("projects.read-more")}
+          onClick={handleClick}
+        >
           {t("projects.read-more")}
         </Button>
       </CardFooter>

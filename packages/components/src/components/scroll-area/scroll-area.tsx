@@ -21,7 +21,10 @@ const ScrollArea = (props: ScrollAreaProps) => {
   const dragging = useRef(false);
   const rafRef = useRef<number | null>(null);
 
-  const innerStyle = useMemo(() => (maxHeight ? { maxHeight } : undefined), [maxHeight]);
+  const innerStyle = useMemo(
+    () => (maxHeight ? { maxHeight } : undefined),
+    [maxHeight],
+  );
 
   /**
    * Reads dimensions without touching scrollTop to avoid re-renders on scroll.
@@ -109,42 +112,44 @@ const ScrollArea = (props: ScrollAreaProps) => {
   /**
    * Starts drag-scrolling when the user presses the thumb.
    */
-  const handleThumbMouseDown = useCallback(
-    (e: React.MouseEvent) => {
-      e.preventDefault();
-      dragging.current = true;
-      const startY = e.clientY;
-      const startScrollTop = innerRef.current?.scrollTop ?? 0;
+  const handleThumbMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    dragging.current = true;
+    const startY = e.clientY;
+    const startScrollTop = innerRef.current?.scrollTop ?? 0;
 
-      const onMove = (ev: MouseEvent) => {
-        const el = innerRef.current;
-        if (!dragging.current || el == null) return;
-        const delta = ev.clientY - startY;
-        const sh = el.scrollHeight;
-        const ch = el.clientHeight;
-        const th = (ch / sh) * ch;
-        const scrollable = sh - ch;
-        const dragRange = ch - th;
-        if (dragRange <= 0) return;
-        const dragRatio = scrollable / dragRange;
-        el.scrollTop = startScrollTop + delta * dragRatio;
-      };
+    const onMove = (ev: MouseEvent) => {
+      const el = innerRef.current;
+      if (!dragging.current || el == null) return;
+      const delta = ev.clientY - startY;
+      const sh = el.scrollHeight;
+      const ch = el.clientHeight;
+      const th = (ch / sh) * ch;
+      const scrollable = sh - ch;
+      const dragRange = ch - th;
+      if (dragRange <= 0) return;
+      const dragRatio = scrollable / dragRange;
+      el.scrollTop = startScrollTop + delta * dragRatio;
+    };
 
-      const onUp = () => {
-        dragging.current = false;
-        document.removeEventListener("mousemove", onMove);
-        document.removeEventListener("mouseup", onUp);
-      };
+    const onUp = () => {
+      dragging.current = false;
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
 
-      document.addEventListener("mousemove", onMove);
-      document.addEventListener("mouseup", onUp);
-    },
-    [],
-  );
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+  }, []);
 
   return (
     <div className={cn(styles.outer, className)} {...rest}>
-      <div ref={innerRef} className={styles.inner} style={innerStyle} onScroll={handleScroll}>
+      <div
+        ref={innerRef}
+        className={styles.inner}
+        style={innerStyle}
+        onScroll={handleScroll}
+      >
         {children}
       </div>
       {thumbVisible ? (

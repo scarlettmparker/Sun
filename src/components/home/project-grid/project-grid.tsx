@@ -25,7 +25,10 @@ type ProjectGridProps = React.HTMLAttributes<HTMLDivElement> & {
 const ProjectGrid = (props: ProjectGridProps) => {
   const { titleKey, projects, onReadMore, className, ...rest } = props;
   const { t } = useTranslation("home");
-  const sorted = useMemo(() => [...projects].sort((a, b) => a.rank - b.rank), [projects]);
+  const sorted = useMemo(
+    () => [...projects].sort((a, b) => a.rank - b.rank),
+    [projects],
+  );
 
   return (
     <div className={className} {...rest}>

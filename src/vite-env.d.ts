@@ -35,5 +35,14 @@ export declare global {
      * Posthog Host.
      */
     __posthog_host__?: string;
+    /**
+     * Trusted Types factory when the browser supports it.
+     */
+    trustedTypes?: {
+      createPolicy(
+        name: string,
+        rules: { createHTML?: (html: string) => string },
+      ): { createHTML: (html: string) => string };
+    };
   }
 }

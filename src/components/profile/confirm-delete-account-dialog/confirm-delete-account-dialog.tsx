@@ -30,9 +30,7 @@ type ConfirmDeleteAccountDialogProps = {
 /**
  * Confirmation dialog for deleting the current account.
  */
-const ConfirmDeleteAccountDialog = (
-  props: ConfirmDeleteAccountDialogProps,
-) => {
+const ConfirmDeleteAccountDialog = (props: ConfirmDeleteAccountDialogProps) => {
   const { open, onOpenChange, isPending, onConfirm } = props;
   const { t } = useTranslation("home");
 

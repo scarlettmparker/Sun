@@ -1,0 +1,29 @@
+{
+  "name": "@sun/security",
+  "version": "0.1.0",
+  "description": "Shared security headers for Sun ecosystem (CSP/HSTS/COOP/Trusted Types)",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "publish": "npm publish --ignore-scripts --registry https://registry.int.scarlettparker.co.uk"
+  },
+  "publishConfig": {
+    "registry": "https://registry.int.scarlettparker.co.uk"
+  },
+  "devDependencies": {
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2"
+  }
+}

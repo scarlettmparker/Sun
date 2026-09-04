@@ -17,7 +17,10 @@ import styles from "./index.module.css";
 const HomePage = () => {
   const [selected, setSelected] = useState<Project | null>(null);
 
-  const projects = useMemo(() => [...personalProjects, ...internalProjects], []);
+  const projects = useMemo(
+    () => [...personalProjects, ...internalProjects],
+    [],
+  );
 
   const handleOpenChange = useCallback((open: boolean) => {
     if (!open) setSelected(null);
@@ -30,8 +33,15 @@ const HomePage = () => {
           <HeroCard className={styles.hero_card} />
           <SpotifyCard className={styles.spotify_card} />
         </div>
-        <ProjectGrid titleKey="projects.personal-title" projects={projects} onReadMore={setSelected} />
-        <ProjectDetailDialog project={selected} onOpenChange={handleOpenChange} />
+        <ProjectGrid
+          titleKey="projects.personal-title"
+          projects={projects}
+          onReadMore={setSelected}
+        />
+        <ProjectDetailDialog
+          project={selected}
+          onOpenChange={handleOpenChange}
+        />
       </div>
     </ScrollArea>
   );

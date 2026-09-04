@@ -134,8 +134,7 @@ export async function executeDocument<T, V = Record<string, unknown>>(
 
   try {
     return await retryWithBackoff(async () => {
-      const controller =
-        timeoutMs != null ? new AbortController() : undefined;
+      const controller = timeoutMs != null ? new AbortController() : undefined;
       const timeoutId =
         controller && timeoutMs != null
           ? setTimeout(() => controller.abort(), timeoutMs)

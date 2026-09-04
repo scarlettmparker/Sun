@@ -207,13 +207,23 @@ function toAbsoluteUrl(url: string, siteUrl?: string): string {
 function metaTags(
   meta: RouteMeta | undefined,
   fallbackTitle: string,
-  opts: { siteUrl?: string; url?: string; defaultOgImage?: string; locale?: string } = {},
+  opts: {
+    siteUrl?: string;
+    url?: string;
+    defaultOgImage?: string;
+    locale?: string;
+  } = {},
 ): string {
   const title = meta?.title ?? fallbackTitle;
   const description = meta?.description ?? undefined;
   const ogImageRaw = meta?.ogImage ?? opts.defaultOgImage;
-  const canonical = opts.siteUrl && opts.url ? toAbsoluteUrl(opts.url, opts.siteUrl) : undefined;
-  const ogImage = ogImageRaw ? toAbsoluteUrl(ogImageRaw, opts.siteUrl) : undefined;
+  const canonical =
+    opts.siteUrl && opts.url
+      ? toAbsoluteUrl(opts.url, opts.siteUrl)
+      : undefined;
+  const ogImage = ogImageRaw
+    ? toAbsoluteUrl(ogImageRaw, opts.siteUrl)
+    : undefined;
   const locale = opts.locale ?? "en_GB";
 
   const tags: string[] = [];
@@ -232,19 +242,27 @@ function metaTags(
   // title for OG/Twitter
   tags.push(`<meta property="og:title" content="${escapeAttr(title)}" />`);
   tags.push(`<meta name="twitter:title" content="${escapeAttr(title)}" />`);
-  tags.push(`<meta property="og:site_name" content="${escapeAttr(fallbackTitle)}" />`);
-  tags.push(`<meta property="og:locale" content="${escapeAttr(locale.replace("-", "_"))}" />`);
+  tags.push(
+    `<meta property="og:site_name" content="${escapeAttr(fallbackTitle)}" />`,
+  );
+  tags.push(
+    `<meta property="og:locale" content="${escapeAttr(locale.replace("-", "_"))}" />`,
+  );
   tags.push(`<meta property="og:type" content="website" />`);
   // image
   if (ogImage) {
     tags.push(`<meta property="og:image" content="${escapeAttr(ogImage)}" />`);
     tags.push(`<meta property="og:image:width" content="1200" />`);
     tags.push(`<meta property="og:image:height" content="630" />`);
-    tags.push(`<meta property="og:image:alt" content="${escapeAttr(title)}" />`);
+    tags.push(
+      `<meta property="og:image:alt" content="${escapeAttr(title)}" />`,
+    );
     tags.push(`<meta property="og:image:type" content="image/png" />`);
     tags.push(`<meta name="twitter:card" content="summary_large_image" />`);
     tags.push(`<meta name="twitter:image" content="${escapeAttr(ogImage)}" />`);
-    tags.push(`<meta name="twitter:image:alt" content="${escapeAttr(title)}" />`);
+    tags.push(
+      `<meta name="twitter:image:alt" content="${escapeAttr(title)}" />`,
+    );
   } else {
     tags.push(`<meta name="twitter:card" content="summary" />`);
   }

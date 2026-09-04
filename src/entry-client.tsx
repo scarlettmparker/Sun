@@ -17,8 +17,8 @@ import "@sun/themes/style.css";
 // persisted user choice takes precedence.
 if (window.localStorage.getItem("sun:theme")) {
   loadPersistedTheme();
-} else if ((window as unknown as { __theme__?: unknown }).__theme__) {
-  applyTheme((window as unknown as { __theme__: unknown }).__theme__ as never);
+} else if (window.__theme__) {
+  applyTheme(window.__theme__ as never);
 }
 
 i18n.use(initReactI18next);
