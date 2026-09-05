@@ -60,25 +60,13 @@ const renderer = createRenderer({
   },
   async resolveTheme() {
     try {
-      // Sun loads its theme from the "sun" property set, defaulting to "sea"
+      // Sun loads its themes from the "themes" property set.
       let propertySet: unknown = null;
-      const sunResult = await fetchPropertySet("ReactApp", "sun");
-      if (sunResult.success) {
+      const themesResult = await fetchPropertySet("ReactApp", "themes");
+      if (themesResult.success) {
         propertySet = (
-          sunResult.data as { gaiaQueries?: { propertySet?: unknown } }
+          themesResult.data as { gaiaQueries?: { propertySet?: unknown } }
         )?.gaiaQueries?.propertySet;
-      }
-      if (
-        !propertySet ||
-        typeof propertySet !== "object" ||
-        !Object.keys(propertySet as object).length
-      ) {
-        const fallback = await fetchPropertySet("ReactApp", "themes");
-        if (fallback.success) {
-          propertySet = (
-            fallback.data as { gaiaQueries?: { propertySet?: unknown } }
-          )?.gaiaQueries?.propertySet;
-        }
       }
       return parseThemes(propertySet);
     } catch {
@@ -104,7 +92,7 @@ export async function render(options: {
     <React.StrictMode>
       <StaticRouter location={options.url}>
         <Layout>
-          <Suspense fallback={<div className={styles.fallback} aria-hidden />}> 
+          <Suspense fallback={<div className={styles.fallback} aria-hidden />}>
             <Router />
           </Suspense>
         </Layout>

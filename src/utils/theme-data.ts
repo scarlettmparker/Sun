@@ -10,23 +10,11 @@ defineLoader({
   async loader(): Promise<{ themes: ResolvedTheme }> {
     try {
       let propertySet: unknown = null;
-      const sunResult = await fetchPropertySet("ReactApp", "sun");
-      if (sunResult.success) {
+      const themesResult = await fetchPropertySet("ReactApp", "themes");
+      if (themesResult.success) {
         propertySet = (
-          sunResult.data as { gaiaQueries?: { propertySet?: unknown } }
+          themesResult.data as { gaiaQueries?: { propertySet?: unknown } }
         )?.gaiaQueries?.propertySet;
-      }
-      if (
-        !propertySet ||
-        typeof propertySet !== "object" ||
-        !Object.keys(propertySet as object).length
-      ) {
-        const fallback = await fetchPropertySet("ReactApp", "themes");
-        if (fallback.success) {
-          propertySet = (
-            fallback.data as { gaiaQueries?: { propertySet?: unknown } }
-          )?.gaiaQueries?.propertySet;
-        }
       }
       return { themes: parseThemes(propertySet) };
     } catch {
