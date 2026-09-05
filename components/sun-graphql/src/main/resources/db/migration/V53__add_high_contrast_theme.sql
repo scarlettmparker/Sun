@@ -15,7 +15,11 @@ SELECT gen_random_uuid(), 'ReactApp', 'themes', 'contrast',
     "tertiary": "#111111",
     "tertiary-hover": "#333333",
     "muted": "#595959",
-    "muted-foreground": "#737373"
+    "muted-foreground": "#737373",
+    "very-visible": "1",
+    "visible": ".8",
+    "somewhat-visible": ".6",
+    "barely-visible": ".4"
   }'::jsonb,
   true, 'ACTIVE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 WHERE NOT EXISTS (
@@ -35,7 +39,11 @@ SET values = '{
     "tertiary": "#111111",
     "tertiary-hover": "#333333",
     "muted": "#595959",
-    "muted-foreground": "#737373"
+    "muted-foreground": "#737373",
+    "very-visible": "1",
+    "visible": ".8",
+    "somewhat-visible": ".6",
+    "barely-visible": ".4"
   }'::jsonb,
     configurable = true,
     status = 'ACTIVE',
