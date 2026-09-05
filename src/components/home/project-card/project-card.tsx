@@ -63,8 +63,10 @@ const ProjectCard = (props: ProjectCardProps) => {
               target="_blank"
               rel="noopener noreferrer"
               className={styles.github_link}
-              title={t("projects.visit-github")}
-              aria-label={t("projects.visit-github")}
+              title={t("projects.visit-github-repo", { title: project.title })}
+              aria-label={t("projects.visit-github-repo", {
+                title: project.title,
+              })}
             >
               {project.href}
             </a>

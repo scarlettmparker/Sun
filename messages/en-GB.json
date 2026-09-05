@@ -140,6 +140,7 @@
     "projects": {
       "visit": "Visit",
       "visit-github": "Visit GitHub",
+      "visit-github-repo": "Visit {{title}} on GitHub",
       "you-are-here": "You are here",
       "read-more": "Read more",
       "close": "Close",
