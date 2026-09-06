@@ -14,6 +14,7 @@ import com.sun.hades.codegen.types.ReaderText;
 import com.sun.hades.codegen.types.ReaderTextInput;
 import com.sun.hades.codegen.types.TextLevelAssessment;
 import com.sun.hades.codegen.types.Word;
+import com.sun.hades.codegen.types.WordDictionary;
 import com.sun.hades.codegen.types.WordScope;
 import com.sun.hades.graphql.services.ReaderTextGraphQLService;
 import com.sun.hades.graphql.services.WordReferenceService;
@@ -100,12 +101,24 @@ class ReaderTextDataFetcherTest {
   void defineWord_shouldDelegateToService() {
     Word word = Word.newBuilder().term("hello").build();
     List<WordScope> scope = List.of(WordScope.ALL_TRANSLATIONS);
-    when(wordReferenceService.defineWord("hello", scope)).thenReturn(word);
+    when(wordReferenceService.defineWord("hello", scope, null)).thenReturn(word);
 
-    Word result = fetcher.defineWord("hello", scope);
+    Word result = fetcher.defineWord("hello", scope, null);
 
     assertThat(result).isEqualTo(word);
-    verify(wordReferenceService).defineWord("hello", scope);
+    verify(wordReferenceService).defineWord("hello", scope, null);
+  }
+
+  @Test
+  void defineWord_withDictionary_shouldDelegateToService() {
+    Word word = Word.newBuilder().term("hello").build();
+    List<WordScope> scope = List.of(WordScope.EXAMPLES);
+    when(wordReferenceService.defineWord("hello", scope, WordDictionary.ENGLISH)).thenReturn(word);
+
+    Word result = fetcher.defineWord("hello", scope, WordDictionary.ENGLISH);
+
+    assertThat(result).isEqualTo(word);
+    verify(wordReferenceService).defineWord("hello", scope, WordDictionary.ENGLISH);
   }
 
   @Test

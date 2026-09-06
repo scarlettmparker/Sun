@@ -1,0 +1,1511 @@
+
+
+<!DOCTYPE html>
+<html class="chrome desktop windows" lang="en" translate="no">
+<head>
+    
+
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+<title>hello - WordReference.com Dictionary of English</title>
+<meta name="description" content="hello - WordReference English dictionary, questions, discussion and forums. All Free.">
+<meta http-equiv="Content-Language" content="en">
+<link title="definition" rel="search" type="application/opensearchdescription+xml" href="https://www.wordreference.com/home/OpenSearch?dict=enen">
+<link rel="canonical" href="https://www.wordreference.com/definition/hello">
+<meta name="robots" content="notranslate">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=4, minimum-scale=0.1, user-scalable=yes">
+<meta property="og:image" content="https://cdnawsw.wordreference.net/images/WR_fbicon_200x200.png" />
+
+<meta name="cc" content="GB" />
+
+
+
+    <script>
+    // Define dataLayer and the gtag function.
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+
+    // Set default consent to 'denied' as a placeholder
+    // Determine actual values based on your own requirements
+</script>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-WV46ZWEMKW"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    // 1. SET USER PROPERTIES (Before config)
+    gtag('set', 'user_properties', {
+        'visitor_country': "GB",
+    });
+
+    // 2. SEND DATA
+    gtag('config', 'G-WV46ZWEMKW');
+
+    // 3. SEND CUSTOM EVENT FOR WR Dictionary
+    var pathParts = window.location.pathname.split('/').filter(Boolean);
+    var gaDictionary = pathParts[0] || '';
+
+    // Conjugator pages use /conj/<dict>.aspx so extract the actual dictionary key.
+    if (gaDictionary.toLowerCase() === 'conj' && pathParts.length > 1) {
+        gaDictionary = pathParts[1].replace(/\.aspx$/i, '');
+    }
+
+    gtag('event', 'wr_dictionary', {
+        'folder': gaDictionary,
+    });
+</script>
+<script>
+    window.onerror = function (message, file, line) {
+        var sFormattedMessage = new Date().toLocaleString() + ' - [' + file + ' (' + line + ')][' + window.navigator.userAgent + '] ' + message;
+        sFormattedMessage = sFormattedMessage.length > 150 ? sFormattedMessage.substring(0, 150) : sFormattedMessage;
+        gtag('event', 'exception', {
+            'description': sFormattedMessage,
+            'fatal': false
+        });
+    }
+</script>
+
+
+
+
+<script>
+    //Prepare the server object to collect diagnostic data
+    var wrserver = {};
+
+    //#1376: This function write messages to the browser's console but it checked first if they are allowed
+
+            var consoleDebug = function(){};
+        
+
+            //This will send an event to GA
+            var sendGAEvent = sendGAEvent || function (category, action, label, value, callback){
+                gtag('event', action, {
+                    'event_category': category,
+                    'event_label': label,
+                    'value': value,
+                    'non_interaction': true,
+                    'event_callback': function() {
+                            callback();
+                        }
+                });
+            };
+        
+
+            var googletag = googletag || {};
+            googletag.cmd = googletag.cmd || [];
+        </script>
+
+
+
+
+
+
+    
+
+
+        <script>
+            var googletag = googletag || {};
+            googletag.cmd = googletag.cmd || [];
+        </script>        
+        <script data-cfasync="false">
+            const isMobile = window.innerWidth <= 768;
+            window.snigelPubConf = {
+                adengine: {
+                    activeLots: [
+                        { placement: "adngin-top_leaderboard-0", adUnit: "top_leaderboard" }
+                        ,
+                        { placement: "adngin-side_mpu_1-0", adUnit: "side_mpu_1" }
+                        ,
+                        { placement: "adngin-side_mpu_2-0", adUnit: "side_mpu_2" }
+                    ]
+                }
+            };
+        </script>
+        <script async data-cfasync="false" src="https://cdn.snigelweb.com/adengine/wordreference.com/loader.js"></script>
+        
+    <script>
+
+            //This will send an event to GA
+            function sendGAEvent(category, action, label, value, callback){
+                gtag('event', action, {
+                    'event_category': category,
+                    'event_label': label,
+                    'value': value,
+                    'non_interaction': true,
+                    'event_callback': function() {
+                            callback();
+                        }
+                });
+            }
+
+            var consentReady = false;
+            var consentExec = function() {
+                window.wrconsent = window.wrconsent || {};
+                window.wrconsent.gdpr = window.wrconsent.gdpr || {};
+                window.wrconsent.ccpa = window.wrconsent.ccpa || {};
+
+                //Set personalized ads value 
+                //More here: https://developers.google.com/publisher-tag/reference#googletag.privacysettingsconfig
+                function setPersonalizedAds(value){
+                  var googletag = googletag || {};
+                  googletag.cmd = googletag.cmd || [];
+                  googletag.cmd.push(function() {
+                      // Set privacy settings for CCPA compliance
+                      // No need to use 'nonPersonalizedAds', it will be redundant since we already have CMP implemented
+                      googletag.pubads().setPrivacySettings({
+                        'restrictDataProcessing': !value,       //to comply with CCPA regulations, ensuring that personal data is not used for personalized advertising or other purposes that involve data processing
+                      });
+
+                      // Set request for non-personalized ads (0 for personalized, 1 for non-personalized)
+                      googletag.pubads().setRequestNonPersonalizedAds(!value ? 1 : 0);
+                  });
+                }   
+
+                // Make sure that the properties exist on the window.
+                window.googlefc = window.googlefc || {};
+                window.googlefc.ccpa = window.googlefc.ccpa || {}
+                window.googlefc.callbackQueue = window.googlefc.callbackQueue || [];
+
+            
+                //Get the user consent            
+                var consents = {};
+                var legitimateInterests = {};
+                var personalizedAdsAccepted = false, nonPersonalizedAdsAccepted = false, limitedAdsAccepted = false;
+                //setPersonalizedAds(false);    //Useless in TCF v2: GPT will gather the consent string automatically
+
+                //Set the user consent
+                const checkGDPRConsent = (tcData, success) => {   
+                  consoleDebug("*** GDPR applies");           
+                  consoleDebug('++* tcData', tcData, success);
+                  if(success && tcData.gdprApplies &&
+                    (tcData.eventStatus === 'useractioncomplete' || tcData.eventStatus === 'tcloaded')) {
+                    window.wrconsent.gdpr.gdprApplies = true;
+                    // do something with tcData.tcString
+                    consents = tcData.purpose.consents;
+                    legitimateInterests = tcData.purpose.legitimateInterests;
+                    consoleDebug('++ consents', consents);
+
+                    //Set the personalized ads for DFP
+                    // More: https://support.google.com/admanager/answer/9805023
+                    personalizedAdsAccepted = consents[1] && consents[3] && consents[4]
+                                              && ((legitimateInterests[2] || consents[2]) && 
+                                                  (legitimateInterests[7] || consents[7]) && 
+                                                  (legitimateInterests[9] || consents[9]) && 
+                                                  (legitimateInterests[10] || consents[10]));
+                    nonPersonalizedAdsAccepted = consents[1]
+                                                 && ((legitimateInterests[2] || consents[2]) && 
+                                                     (legitimateInterests[7] || consents[7]) && 
+                                                     (legitimateInterests[9] || consents[9]) && 
+                                                     (legitimateInterests[10] || consents[10]));
+                    limitedAdsAccepted = !consents[1] 
+                                         && ((legitimateInterests[2] || consents[2]) && 
+                                             (legitimateInterests[7] || consents[7]) && 
+                                             (legitimateInterests[9] || consents[9]) && 
+                                             (legitimateInterests[10] || consents[10]));
+
+                    //Update Google Consent Mode
+
+                    if(personalizedAdsAccepted){
+                      consoleDebug('++ Personalized ads accepted by the user.');
+                    } else if (nonPersonalizedAdsAccepted){
+                      consoleDebug('++ Non personalized ads accepted by the user.');
+                    } else if (limitedAdsAccepted) {
+                      //consoleDebug('++ Limited ads accepted by the user.');
+                    } else {
+                      consoleDebug('++ Ads are not accepted by the user.');
+                    }
+
+                    consentReady = true;    //Ad requests can start
+                    consoleDebug('++* Call startAuction from GDPR section.');
+                    googletag.cmd.push(function(){
+	                    pbjs.que.push(function() {
+                            startAuction();         //Start the auction
+                    	});
+                    });
+                    window.wrconsent.auctionStarted = true;
+
+                    //These variables are used for stats
+                    var GDPRnoCookie = true;
+                    var GDPRconsent = personalizedAdsAccepted;
+                    var GDPRnoConsent = !personalizedAdsAccepted;
+                    var GDPRconsentAllAccepted = consents[1] && consents[2] && consents[3] && consents[4] && consents[5] && consents[6] && consents[7] && consents[8] && consents[9] && consents[10];
+                    var GDPRconsentAllRejected = !consents[1] && !consents[2] && !consents[3] && !consents[4] && !consents[5] && !consents[6] && !consents[7] && !consents[8] && !consents[9] && !consents[10];
+                
+                    //Report the euconsent cookie state (only for EU users)
+                    if(GDPRconsent)
+                        sendGAEvent('GDPR', 'GDPR-consent', 'GDPR-consent-' + GDPRconsent, (GDPRconsent ? '1' : '0'), function() { consoleDebug(":> GDPR: GDPR-consent-"  + GDPRconsent + " -> GA"); });
+                    if(GDPRnoConsent)
+                        sendGAEvent('GDPR', 'GDPR-noConsent', 'GDPR-noConsent-' + GDPRnoConsent, (GDPRnoConsent ? '1' : '0'), function() { consoleDebug(":> GDPR: GDPR-noConsent-"  + GDPRnoConsent + " -> GA"); });
+                    if(GDPRnoCookie)
+                        sendGAEvent('GDPR', 'GDPR-noCookie', 'GDPR-noCookie-' + GDPRnoCookie, (GDPRnoCookie ? '1' : '0'), function() { consoleDebug(":> GDPR: GDPR-noCookie-"  + GDPRnoCookie + " -> GA"); });
+                    if(GDPRconsentAllAccepted)
+                        sendGAEvent('GDPR', 'GDPR-consentAllAccepted', 'GDPR-consentAllAccepted-' + GDPRconsentAllAccepted, (GDPRconsentAllAccepted ? '1' : '0'), function() { consoleDebug(":> GDPR: GDPR-consentAllAccepted-"  + GDPRconsentAllAccepted + " -> GA"); });
+                    if(GDPRconsentAllRejected)
+                        sendGAEvent('GDPR', 'GDPR-consentAllRejected', 'GDPR-consentAllRejected-' + GDPRconsentAllRejected, (GDPRconsentAllRejected ? '1' : '0'), function() { consoleDebug(":> GDPR: GDPR-consentAllRejected-"  + GDPRconsentAllRejected + " -> GA"); });
+
+                    // remove the event handler to not get called more than once
+                    __tcfapi('removeEventListener', 2.2, (success) => {
+                      if(success) {
+                        // oh good...
+                        consoleDebug('++ CMP listener removed.');
+                      }
+                    }, tcData.listenerId);
+
+                    //If the user did not accept at least purpose 1 and Google, ads won't show up
+                    var isGoogleConsented = (tcData.vendor.consents[755] && tcData.vendor.legitimateInterests[755]) || false;
+                    var isPurposeOneConsented = consents[1] || false;
+                    consoleDebug('** isPurposeOneConsented:', isPurposeOneConsented);
+                    consoleDebug('** isGoogleConsented:', isGoogleConsented);
+
+                    //Fill wrconsent.gdpr and decide weather ads are consented or not
+                    window.wrconsent.gdpr.consents = consents;
+                    window.wrconsent.gdpr.legitimateInterests = legitimateInterests;
+                    window.wrconsent.gdpr.isGoogleVendorConsented = isGoogleConsented;
+                    window.wrconsent.gdpr.isPurposeOneConsented = isPurposeOneConsented;
+                    window.wrconsent.gdpr.personalizedAdsAccepted = personalizedAdsAccepted;
+                    window.wrconsent.gdpr.nonPersonalizedAdsAccepted = nonPersonalizedAdsAccepted;
+                    window.wrconsent.gdpr.limitedAdsAccepted = limitedAdsAccepted;
+                    window.wrconsent.gdpr.adsAllowed = (!window.wrconsent.gdpr.gdprApplies || 
+                                                       (isGoogleConsented && personalizedAdsAccepted) || 
+                                                       //(limitedAdsAccepted) || 
+                                                       (isGoogleConsented && nonPersonalizedAdsAccepted));
+                    window.wrconsent.isPremiumUser = false;
+
+                    //Save consent status
+                    saveWRConsentStatus();
+                  }
+                  else if (success && !tcData.gdprApplies){
+                      window.wrconsent.gdpr.gdprApplies = false;
+                      consoleDebug('++ GDPR does not apply.');
+                      noConsentNeeded();
+                  }
+                }            
+
+                const checkUSPConsent = (uspData, success) => { 
+                  //consoleDebug("*** CCPA applies");
+                  consoleDebug('++* uspData', uspData);
+              
+                  //uspConsent parsing
+                  var CCPAArray = uspData.uspString.split("");
+                  var CCPAApplies = (uspData.uspString !== "1---");
+                  var CCPANotice = (CCPAArray[1] === 'Y');
+                  var CCPAOptOut = (CCPAArray[2] === 'Y');
+
+                  setPersonalizedAds(!CCPAOptOut);
+                  if(CCPAOptOut)
+                    consoleDebug('++* Don\'t show personalized ads.');
+                  else
+                    consoleDebug('++* Show personalized ads.');
+              
+                  //Report the CCPA consent state (only for US CA users)
+                  if(CCPAApplies){
+                      sendGAEvent('CCPA', 'CCPA-applicable', 'CCPA-applicable-' + CCPAApplies, (CCPAApplies ? '1' : '0'), function() { consoleDebug(":> CCPA: CCPA-applicable-"  + CCPAApplies + " -> GA"); });
+                      sendGAEvent('CCPA', 'CCPA-notice', 'CCPA-notice-' + CCPANotice, (CCPANotice ? '1' : '0'), function() { consoleDebug(":> CCPA: CCPA-Notice-"  + CCPANotice + " -> GA"); });
+                      sendGAEvent('CCPA', 'CCPA-OptOut', 'CCPA-OptOut-' + CCPAOptOut, (CCPAOptOut ? '1' : '0'), function() { consoleDebug(":> CCPA: CCPA-OptOut-"  + CCPAOptOut + " -> GA"); });
+                  }
+
+                  consentReady = true;    //Ad requests can start
+                  consoleDebug('++* Call startAuction from USP section.');
+                  googletag.cmd.push(function(){
+	                    pbjs.que.push(function() {
+                            startAuction();         //Start the auction
+                  	    });
+                  });
+                  window.wrconsent.auctionStarted = true;
+                }
+
+                const noConsentNeeded = () => { 
+                    //Both ccpa and gdpr should be checked first
+                    consoleDebug('++* No consent is needed');
+                    if(window.wrconsent.gdprApplies || window.wrconsent.ccpaApplies){      //Set personalized ads in the case of ccpa only
+                        consoleDebug('++* Something wrong happened. Don\'t show personalized ads.');
+                        if(!window.wrconsent.gdprApplies) {       //In GDPR case, personalized ads is set automatically through TCF
+                            consoleDebug('++* Don\'t show personalized ads.');
+                            setPersonalizedAds(false);
+                        }
+                    } else {
+                        consoleDebug('++* Show personalized ads.');
+                        setPersonalizedAds(true);
+                    }
+                    consoleDebug('++* Call startAuction from noConsentNeeded');
+                    consentReady = true;    //Ad request can start                        
+                    googletag.cmd.push(function(){
+	                    pbjs.que.push(function() {
+                            startAuction();         //Start the auction
+                    	});
+                    });
+                    window.wrconsent.auctionStarted = true;
+                }            
+
+                // Queue the callback on the callbackQueue.
+
+                    googlefc.callbackQueue.push({
+                            'CONSENT_DATA_READY':
+                            () => __tcfapi('addEventListener', 2.2, (data, success) => {
+                                if(success) {
+                                    if(data.gdprApplies) {
+                                        window.wrconsent.gdpr.gdprApplies = true;
+                                        checkGDPRConsent(data, success);
+                                    } else {
+                                        window.wrconsent.gdpr.gdprApplies = false;
+                                        noConsentNeeded();
+                                    }
+                                } else {
+                                    //Set personnalized ads to false and try to start the auction
+                                    window.wrconsent.gdpr.gdprApplies = false;
+                                    noConsentNeeded();
+                                }
+                            })
+                        }); 
+                    window.wrconsent.ccpa.ccpaApplies = false;
+                    window.wrconsent.ccpa.uspString = "1---";
+                                }
+
+            //If inside an iframe, don't check the consent and don't run the Auction (no ads)
+            document.addEventListener("DOMContentLoaded", function(event) {
+                //Use a timer to reduce the Total Blocking Time (web vitals)
+                if (!inIframe())
+                    consentExec(); //Show the Ads
+            });   
+                </script>
+
+        <script>
+            gtag('event', 'Snigel-Inserted', {
+                'event_category': 'Snigel',
+                'event_label': 'Snigel-Inserted',
+                'value': '1',
+                'non_interaction': true,
+                'event_callback': function() {
+                        consoleDebug(":> Snigel: Snigel-Inserted" + " -> GA");
+                    }
+            });
+        </script>
+
+    <script>console.log(">> Snigel custom code inserted.")</script>
+
+
+
+
+
+    <style type="text/css">
+        :root{--main-color:#5e58c7;--red-color:#f00;--bg-color:#fff;--body-text-color:#222;--body-highlighted-text-color:#039;--sentences-color:rgba(0,0,0,.65);--link-color:#0645ad;--visited-link-color:#819;--bold-color:#039;--gray-color:#707070;--highlight-color:#f2f2f7;--row-color:#dcdcdc;--tag-border-color:#c5c5c5;--border-color:#dcdcdc;--search-input-border-color:var(--border-color);--search-btn-border-color:var(--border-color);--warnnote-main-border-color:#e5e4e4;--warnnote-border-color:#ccc;--close-icon-stroke:#fff;--close-icon-circle-stroke:#c8c8c8;--rulebox-border-color:#b2aef4;--content-bg-color:#f9f9f9;--ad-bg-color:#f9f9f9;--header-tabs-bg-color:#f9f9fa;--search-bg-color:#ebebf2;--search-btn-bg-color:#d7d7d7;--warnnote-bg-color:#f4f4f4;--dict-translation-hover-bg-color:#dfdfdf;--heavy-user-bg-color:#ffffc8;--ad-placeholder-bg:#353535;--rulebox-bg-color:#dbe1fa;--placeholder-color:#b3b3b3;--placeholder-focus-color:#fff;--term-copy-color:#f66;--try-me-msg-color:#666;--more-pron-trigger-color:#666;--dark-mode-icon-path-fill-color:#666;--dark-mode-icon-path-fill-first-time-color:#b90701;--header-text-color:#f8f7ff;--header-link-color:#f8f7ff;--header-link-span-color:#b2aef4;--header-link-h1-color:#e5e3ff;--header-hover-color:#ddf;--select-bg-color:var(--search-btn-bg-color);--select-border-color:var(--border-color);--select-option-bg-color:var(--search-btn-bg-color);--custom-select-focus-box-shadow:#ccc;--status-3xx-color:#5e58c6;--status-4xx-color:#666;--rowhighlight-color:#ffd700;--audio-controls-hover-color:#000;--heavy-user-hover-border-color:#6f6e6e;--selected-term-arrow-color:#000;--warnnote-icon-color:#000;--box-shadow-color:rgba(0,0,0,.12);--loader-border-top-color:rgba(0,0,0,.2);--input-placeholder-color:rgba(0,5,143,.4);--header-tabs-selected-border-color:var(--body-text-color);--sticky-search-box-shadow:#00000075;--copy-ctmenu-border:#000;--copy-ctmenu-label-color:#000;--left-col-title1-color:#777;--explanatory-border-color:#e9e4da;--explanatory-background-color:#fffaf0;--modal-background-color:rgba(0,0,0,.4);--modal-fallback-background-color:#000;--modal-content-background-color:#fefefe;--modal-border-color:#888;--modal-box-shadow-color:rgba(0,0,0,.26);--close-button-color:#aaa;--close-button-hover-focus-color:#000;--key-background-color:#000;--key-color:#ccc;--code-background-color:#dddcdc;--code-color:#000;--announcement-text-color:var(--body-text-color);--announcement-border-color:#dcdce6;--announcement-background-color:#f2f2f7;--announcement-important-text-color:var(--body-text-color);--announcement-important-border-color:#000;--announcement-important-background-color:#fadb4e;--BOXW_warning-color:#fff;--BOXW_warning-bg-color:#999;--strk-st-color1:red;--strk-st-color2:red;--button-border-color:var(--border-color);--button-bg-color:#d7d7d7;--button-hover-border-color:#afaeae;--button-hover-bg-color:#dedede;--swiper-spinner-border-color:rgba(0,0,0,.1);--swiper-spinner-border-left-color:#09f;--swiper-error-color:#f00;--swiper-pagination-bullet-background:#000;--swiper-pagination-bullet-hover-background:#5e58c7;--swiper-header-tabs-background-color:#f8f8f8;--swiper-header-tabs-border-bottom-color:#ddd;--swiper-header-tabs-color:#555;--swiper-header-tabs-hover-background-color:#eee;--swiper-header-tabs-selected-color:#7068f2;--swiper-header-tabs-selected-hover-color:#7068f2;--swiper-header-tabs-selected-border-bottom-color:var(--main-color);--swiper-scrollbar-thumb-background:#ccc;--swiper-scrollbar-thumb-hover-background:#aaa;--swiper-scrollbar-track-background:#f8f8f8;--conj-header-bg-color:#e0e0e8;--conj-temp-header-bg-color:#bcbcbc;--conj-pron-header-bg-color:#e0e0e8;--conj-body-highlighted-text-color:#66f;--conj-link-color:var(--link-color);--conj-visited-link-color:var(--visited-link-color);--index-link-color:#a0a0a0;--index-link-hover-color:#555;--index-section-header-bg-color:#ebebf2;--index-section-header-text-color:#124b94;--index-section-bg-color:#f6f6f8;--index-section-text-color:#9d9d9d;--index-section-border-color:#ccc;--index-section-separator-color:#ccc;--index-control-special-bg-color:inherit;--index-navbar-text-color:#eee;--index-navbar-bg-color:var(--main-color);--index-navbar-link-hover-color:#fff;--index-navbar-menu-bg-color:#fff;--index-navbar-menu-element-bg-color:#fff;--index-navbar-menu-separator-color:#eee;--index-navbar-link-color:#555;--index-navbar-menu-element-hover-color:#eee;--index-navbar-submenu-link-hover:#124b94;--index-footer-menu-header-color:#124b94;--index-footer-menu-border-top-color:rgba(255,255,255,.1);--index-footer-menu-border-bottom-color:rgba(0,0,0,.3);--index-footer-menu-element-color:#124b94;--index-footer-menu-bg-color:#fff;--index-footer-menu-separator-color:rgba(0,0,0,.1);--virt-footer-bg-color:var(--index-navbar-bg-color);--virt-table-border-color:var(--gray-color);--virt-table-text-color:#727272;--virt-table-hover-bg-color:var(--rowhighlight-color);--virt-table-same-color:var(--row-color);--virt-highlight-color:var(--highlight-color);--virt-link-color:var(--link-color);--virt-link-hover-color:var(--index-link-hover-color);--forum-no-results-border-color:#d6dde4;--forum-no-results-left-border-color:#007bff;--forum-no-results-bg-color:#f8f9fa;--forum-no-results-text-color:var(--body-text-color);--tooltip-bg-color:#111;--tooltip-text-color:#f1f1f1;--tooltip-link-color:#7fd4ff;--tooltip-link-hover-color:#b8ebff;--tooltip-shadow-color:rgba(0,0,0,.2)}.dark-mode{--main-color:#5e58c7;--red-color:#f66;--bg-color:#121212;--body-text-color:#ddd;--body-highlighted-text-color:#6e66ff;--sentences-color:#ddd;--link-color:#a0a0a0;--visited-link-color:#888;--bold-color:#bbb;--gray-color:#c1c1c1;--highlight-color:#2a2a2a;--row-color:#555;--tag-border-color:#444;--border-color:#555;--search-input-border-color:var(--border-color);--search-btn-border-color:var(--border-color);--warnnote-main-border-color:#444;--warnnote-border-color:#555;--close-icon-stroke:#ddd;--close-icon-circle-stroke:#555;--rulebox-border-color:#747272;--content-bg-color:#1e1e1e;--ad-bg-color:#333;--header-tabs-bg-color:#444;--search-bg-color:#2f2f33;--search-btn-bg-color:#333;--warnnote-bg-color:#1e1e1e;--dict-translation-hover-bg-color:#2f2f33;--heavy-user-bg-color:#222;--ad-placeholder-bg:#353535;--rulebox-bg-color:#2a2a2a;--placeholder-color:#b3b3b3;--placeholder-focus-color:#fff;--term-copy-color:#f66;--try-me-msg-color:#666;--more-pron-trigger-color:#666;--dark-mode-icon-path-fill-color:#ddd;--dark-mode-icon-path-fill-first-time-color:#b90701;--header-text-color:#ddd;--header-link-color:#ccc;--header-link-span-color:#bbb;--header-link-h1-color:#ddd;--header-hover-color:#4d4d53;--select-bg-color:var(--search-btn-bg-color);--select-border-color:var(--border-color);--select-option-bg-color:var(--search-btn-bg-color);--custom-select-focus-box-shadow:#555;--status-3xx-color:#5e58c6;--status-4xx-color:#ddd;--rowhighlight-color:#4f470f;--audio-controls-hover-color:#ddd;--heavy-user-hover-border-color:#6f6e6e;--selected-term-arrow-color:#ddd;--warnnote-icon-color:#ddd;--box-shadow-color:rgba(0,0,0,.12);--loader-border-top-color:rgba(0,0,0,.2);--input-placeholder-color:#adadad66;--header-tabs-selected-border-color:var(--body-text-color);--sticky-search-box-shadow:#00000075;--copy-ctmenu-border:#555;--copy-ctmenu-label-color:#ccc;--left-col-title1-color:#c1c1c1;--ac-text-color:var(--body-text-color);--ac-bg-color:var(--select-bg-color);--ac-border-color:var(--select-border-color);--ac-separator-color:var(--border-color);--modal-content-background-color:var(--bg-color);--modal-border-color:var(--border-color);--close-button-color:#aaa;--close-button-hover-focus-color:#464646;--explanatory-border-color:var(--border-color);--explanatory-background-color:var(--highlight-color);--key-background-color:#ccc;--key-color:#000;--announcement-text-color:var(--body-text-color);--announcement-border-color:#747272;--announcement-background-color:var(--highlight-color);--announcement-important-text-color:#2f2f33;--announcement-important-border-color:#a57615;--announcement-important-background-color:#ab9532;--BOXW_warning-color:var(--body-text-color);--BOXW_warning-bg-color:#555;--strk-st-color1:#f2f2f7;--strk-st-color2:#707070;--button-border-color:var(--border-color);--button-bg-color:#333;--button-hover-border-color:#3d3d3d;--button-hover-bg-color:#4a4949;--swiper-spinner-border-color:rgba(0,0,0,.1);--swiper-spinner-border-left-color:var(--header-tabs-color);--swiper-error-color:#f00;--swiper-pagination-bullet-background:var(--header-tabs-selected-hover-color);--swiper-pagination-bullet-hover-background:#fff;--swiper-header-tabs-background-color:var(--content-bg-color);--swiper-header-tabs-border-bottom-color:#65656d;--swiper-header-tabs-color:#a1a1ae;--swiper-header-tabs-hover-background-color:#4d4d53;--swiper-header-tabs-selected-color:#7068f2;--swiper-header-tabs-selected-hover-color:#d2cfff;--swiper-header-tabs-selected-border-bottom-color:var(--main-color);--swiper-scrollbar-thumb-background:#ccc;--swiper-scrollbar-thumb-hover-background:#aaa;--swiper-scrollbar-track-background:#f8f8f8;--conj-header-bg-color:#2a2a2a;--conj-temp-header-bg-color:#2a2a2a;--conj-pron-header-bg-color:#2a2a2a;--conj-body-highlighted-text-color:#66f;--conj-link-color:#6e66ff;--conj-visited-link-color:#9e65fa;--index-link-color:#a0a0a0;--index-link-hover-color:#555;--index-section-header-bg-color:#333;--index-section-header-text-color:#ddd;--index-section-bg-color:#1e1e1e;--index-section-text-color:#ccc;--index-section-border-color:#444;--index-section-separator-color:#555;--index-control-special-bg-color:var(--control-bg-color);--index-navbar-text-color:var(--body-text-color);--index-navbar-bg-color:#333;--index-navbar-link-color:#ccc;--index-navbar-link-hover-color:#ccc;--index-navbar-menu-bg-color:#444;--index-navbar-menu-element-hover-color:#555;--index-navbar-menu-element-bg-color:#222;--index-navbar-menu-separator-color:#000;--index-navbar-submenu-link-hover:#124b94;--index-footer-menu-header-color:#124b94;--index-footer-menu-border-top-color:rgba(255,255,255,.1);--index-footer-menu-border-bottom-color:rgba(0,0,0,.3);--index-footer-menu-element-color:#a0a0a0;--index-footer-menu-bg-color:#222;--index-footer-menu-separator-color:#000;--virt-footer-bg-color:var(--index-navbar-bg-color);--virt-table-border-color:#727272;--virt-table-text-color:#727272;--virt-table-hover-bg-color:var(--rowhighlight-color);--virt-table-same-color:#444;--virt-highlight-color:var(--highlight-color);--virt-link-color:var(--link-color);--virt-link-hover-color:var(--index-link-hover-color);--forum-no-results-border-color:var(--border-color);--forum-no-results-left-border-color:var(--main-color);--forum-no-results-bg-color:var(--content-bg-color);--forum-no-results-text-color:var(--body-text-color);--tooltip-bg-color:#2b2b31;--tooltip-text-color:#ddd;--tooltip-link-color:#a9c9ff;--tooltip-link-hover-color:#d2e2ff;--tooltip-shadow-color:rgba(0,0,0,.45);--tooltip-border-color:#4a4a52}.dark-mode #listen_txt:before,.dark-mode .reverseicon,.dark-mode .searchicon{filter:hue-rotate(165deg) invert(100%)}.dark-mode #accentSelection{background-image:url("data:image/svg+xml;utf8,<svg fill='%23bcbccc' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>")}.dark-mode .annIcon{filter:invert(1);-webkit-filter:invert(1)}.dark-mode .tooltip svg{filter:invert(1);-webkit-filter:invert(1)}@media(min-width:770px){.dark-mode .WRD tr:hover td.ToWrd>i.copy,.dark-mode .WRD span.zhgroup:hover>i.copy{filter:hue-rotate(165deg) invert(100%)}}:root{--control-text-color:#333;--control-bg-color:#d7d7d7;--control-border-color:#dadada;--control-focus-bg-color:#dfdede;--control-focus-color:#333;--input-bg-color:#f8f9fa;--input-border-color:#ced4da;--input-focus-bg-color:#fff}.dark-mode{--control-text-color:#ddd;--control-bg-color:#333;--control-border-color:#555;--control-focus-bg-color:#444;--control-focus-color:#fff;--input-bg-color:#333;--input-border-color:#555;--input-focus-bg-color:#444}button,select,input,textarea,#reverseBtnContainer,.inputcontainer{background-color:var(--control-bg-color);color:var(--control-text-color);border:1px solid var(--control-border-color);border-radius:3px}select{padding-left:4px}button:focus,select:focus,input:focus,button:hover,select:hover,input:hover,#reverseBtnContainer:hover,.inputcontainer:hover,#reverseBtnContainer:focus,.inputcontainer:focus{background-color:var(--control-focus-bg-color);color:var(--control-focus-color)}input[type="text"],input[type="password"],input[type="email"],input[type="search"],textarea{background-color:var(--input-bg-color);border-color:var(--input-border-color)}input[type="text"]:focus,input[type="password"]:focus,input[type="email"]:focus,input[type="search"]:focus,textarea:focus,input[type="text"]:hover,input[type="password"]:hover,input[type="email"]:hover,input[type="search"]:hover,textarea:hover{background-color:var(--input-focus-bg-color)}button:hover,input[type=button]:hover,input[type="checkbox"]:hover,input[type=submit]:hover,select:hover,input:hover,#reverseBtnContainer:hover{cursor:pointer}input:hover,.inputcontainer:hover,textarea:hover{cursor:text}button,input[type=button],input[type=submit],select{padding:4px 10px}*{box-sizing:border-box}a{text-decoration:none;color:var(--link-color)}input::-moz-focus-inner{border:0;padding:0}span.supr1{vertical-align:super}span.ac{font-variant:small-caps}div.trans{padding:0}ol.entry li{margin-top:5px}.hide{display:none}.entrySeparator{margin-top:1em;margin-bottom:1em;border-bottom:1px solid var(--border-color)}.small1{display:inline-block;font-size:x-small}html{overflow-y:scroll;font-size:100%;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%}@font-face{font-family:'WR_Korean';src:local('-apple-system'),local('BlinkMacSystemFont'),local('Malgun Gothic'),local('맑은 고딕'),local('helvetica'),local('Apple SD Gothic Neo'),local('sans-serif');unicode-range:U+AC00-D7AF}@font-face{font-family:'WR_Japanese';src:local('Helvetica Neue'),local('Arial'),local('Hiragino Kaku Gothic ProN'),local('Hiragino Sans'),local('Meiryo'),local('sans-serif');unicode-range:U+3000-30FF,U+FF00-FFEF,U+4E00-9FAF}@font-face{font-family:'WR_Arabic';src:local('Calibri'),local('Muna'),local('KacstOne'),local('Geeza Pro');unicode-range:U+600-6FF}body{font-size:12px;line-height:1.231;margin:0;font-family:WR_Korean,WR_Japanese,WR_Arabic,-apple-system,BlinkMacSystemFont,"Segoe UI","Roboto",sans-serif !important;font-display:swap;background:var(--bg-color);color:var(--body-text-color);min-width:300px}.content{background-color:var(--content-bg-color)}a img{border:0}.mobileblock{display:inline;padding-left:3px}.alwaysblock{display:block}*[placeholder]{padding-left:5px !important}.even{vertical-align:top}.odd{vertical-align:top}:not(.even)+.even,:not(.odd)+.odd{border-top:1px solid var(--row-color)}:not(.even)+.even td,:not(.odd)+.odd td{padding-top:8px}input::placeholder,::-webkit-input-placeholder,::-moz-placeholder,:-ms-input-placeholder{color:var(--input-placeholder-color)}::-moz-placeholder{opacity:1}.centerChild{position:relative}.centerChild>div{position:absolute;top:50%;left:50%}.hcenterChild{position:relative}.hcenterChild>div{position:absolute;left:50%}#contenttable{content-visibility:auto;width:100%}#contenttable>tbody,#contenttable>tbody>tr{display:block}#contenttable>tbody>tr{display:flex;flex-wrap:nowrap}#contenttable>tbody>tr>td#leftcolumn,#contenttable>tbody>tr>td#centercolumn,#contenttable>tbody>tr>td#rightcolumn{flex:1;min-width:0}#contenttable>tbody>tr>td#leftcolumn{flex-basis:164px;max-width:164px;flex-grow:1}#contenttable>tbody>tr>td#centercolumn{flex-basis:530px;max-width:530px;flex-grow:3}#contenttable>tbody>tr>td#rightcolumn{flex-basis:308px;max-width:308px;flex-grow:1;text-align:center}#RightColcLastRow{text-align:left}#container,#footer{width:1002px}#container{position:relative;margin:0 auto;margin-bottom:3px;border-radius:3px;min-width:300px}#scontainer{position:relative;width:1000px;margin:0 auto}#header{height:41px;width:100vw;position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw}.full-header{height:41px;width:100%;min-width:1002px;background:var(--main-color);line-height:38px}.header-content{padding:0 10px;margin:0 auto}#logo{float:left;font-size:16px;color:var(--header-text-color);white-space:nowrap}#logo a{font-size:22px;text-decoration:none;color:var(--header-link-color)}#logo a span{color:var(--header-link-span-color)}#logo span#logotitle{display:inline;font-size:12px;font-weight:bold;color:var(--header-link-h1-color)}#nav{float:right;padding-top:2px;overflow:hidden;max-width:45%;text-overflow:ellipsis;font-size:13px;color:var(--header-text-color);white-space:nowrap}#nav a{font-size:13px;font-weight:bold;color:var(--header-link-color)}.content{margin-top:-5px;-webkit-border-radius:3px;-moz-border-radius:3px;border-radius:3px;border:1px var(--border-color) solid;display:flow-root;clear:both}#contenttable{border-collapse:collapse}#rightcolumn,#leftcolumn,#centercolumn{vertical-align:top}#footer{position:relative;padding-top:7px;padding-bottom:5px;font-size:11px}.footer{width:100%}#leftcolumn{border-right:1px solid var(--border-color);line-height:1.4}#wrsave{list-style-type:none}ul#recentsearches{opacity:0;transition:opacity 200ms ease-in-out}ul#recentsearches.show{opacity:1}#left{padding-left:0;margin-top:0;font-size:12px}#left ul li{padding-right:1px;padding-left:4px}#left ul{padding-left:0;padding-right:1px}html[dir=rtl] #leftcolumn ul{padding-inline-start:0}html[dir=rtl] ul#WRlastseen{padding-inline-start:revert !important}ul#WRlastseen>li{overflow:hidden;text-overflow:ellipsis;max-width:164px}td .title1{font-size:13px;font-weight:bold;color:var(--left-col-title1-color);border-bottom:1px solid var(--border-color);margin-bottom:7px;padding-top:25px;padding-bottom:6px;padding-left:16px}.FCboxes{margin-top:5px;margin-left:-5px;padding-top:7px;padding-left:10px;border-top:solid 1px var(--border-color)}#rightcolumn{border-left:1px solid var(--border-color)}.subscribeBtn{font-size:16px;font-weight:700;border:2px solid var(--main-color);border-radius:20px;padding:9px 7px;width:100%}.subscribeBtn:hover{border:2px solid var(--main-color)}label.checkbox{display:inline-block;padding-left:15px;font-size:14px}input.checkbox{width:15px;height:15px;padding:0;margin:0;vertical-align:bottom;position:relative;top:-1px}#AppStore,#GooglePlay{width:150px;height:46px;display:inline-block}table.rightcolumn{table-layout:fixed;border-collapse:collapse}#centercolumn{padding:0}#otherDicts,#FTintro,.FTsource,#articleHead,#noTransFound,#ErrorMessage,#postArticle{padding:0 20px;font-size:14px}#article a,#articleWRD a,#varticleWRD a,#articleHead a,#noTransFound a{font-size:13px}#article p,#articleWRD p,#varticleWRD p,#articleHead p,#noTransFound p{font-size:13px}div#article .noword p{font-size:14px}div#article p#noEntryFound{font-size:12px}div#article p.tobetranslated{font-size:12px}#ErrorMessage{margin-top:30px}#FTintro{padding-top:5px !important;padding-bottom:5px !important}.FTsource{padding-left:50px}.FTlist{padding-left:80px}#article p,#articleWRD p,#varticleWRD p,#articleHead p,#noTransFound p{margin-bottom:3px}h1.headerWord,h3.headerWord{display:inline-block;margin:16px 16px 16px 0;font-size:25px;font-family:Georgia,Times,"Times New Roman",serif}h1.headerWord ar,h3.headerWord.ar{margin:16px 0 16px 16px}h3.headerWord+div.alternativeResult{margin-top:-16px}div.alternativeResult{margin-bottom:10px}.showingFor{margin-top:18px;margin-bottom:-15px}.showingFor.ar{font-size:120%;margin-bottom:-10px}#footerlink{display:none}div#eplinkContainer{padding-right:20px}html[dir=rtl] div#eplinkContainer{padding-left:20px}html.phone div#eplinkContainer{display:none}#englishPageLink{margin-top:3px}#englishPageLink>span:first-child{position:relative;top:2px}#englishPageLink>span{padding-right:5px;display:inline-block}#loginLink.moved{margin-left:10px}#article p.EngInf{font-size:12px;padding-bottom:0;margin-bottom:5px}.inflections{font-size:13px;margin-left:10px}p.other_languages{line-height:1.5em;font-size:12px !important}#lista_link a{display:inline-block;margin-bottom:4px}#WHlinksmoved,#postLinksmoved,#WHlinks_forMobile{display:none}#WHlinks{padding-top:8px;padding-bottom:8px}#checkMonoMatch{font-size:14px !important;display:block;margin:2em 0 1.5em 0;padding:10px;border:1px solid var(--link-color);border-radius:8px}.dismissBox{display:flex;padding:4px}.dismissBox .txt-container{flex:1}.dismissBox .close-icon-container{flex:0 0 16px}.dismissBoxAnimate{max-height:999px}.dismissBoxHidden{max-height:0}.WarnNote{font-size:13px;display:flex;border:1px solid var(--warnnote-main-border-color);border-right:2px solid var(--warnnote-border-color);border-bottom:2px solid var(--warnnote-border-color);border-radius:5px;padding:7px 15px;margin-top:10px}.WarnNote .icon{margin-right:5px;margin-top:1px}.selectedTerm,.otherTerm{position:relative}.selectedTerm .arrow,.otherTerm:hover .arrow{position:absolute;margin-left:calc(50% - 7.5px);bottom:-2px;width:0;height:0;border-style:solid;border-width:0 7.5px 5px 7.5px}.inAltTermOnly{font-size:14px;display:block !important;padding:14px 20px 0 20px}.tooltip.inAltTermOnly span{font-size:90%;left:50%;transform:translateX(-50%);width:max-content !important;max-width:350px !important}.tooltip.inAltTermOnly::before{left:50%;margin-left:-6px;top:100%}#search,#searchPlaceholder{height:51px}#search{position:static;-webkit-border-radius:3px;-moz-border-radius:3px;border-radius:3px;border:1px var(--border-color) solid}#search.addKBLink,#searchPlaceholder.addKBLink{height:59px}#search div#useKBLink{font-size:11px;position:absolute;left:185px;top:36px}#searchPlaceholder.visibleKBLink,#search.visibleKBLink{height:70px}#search input{font-size:20px;border:1px solid var(--search-input-border-color);-moz-border-radius:3px;-webkit-border-radius:3px;border-radius:3px;height:32px;width:280px;padding-right:2px}#text_form{display:flex;float:left;margin-left:184px;margin-top:6px}#text_form input.button{border:0;width:12px;height:12px;vertical-align:bottom;position:relative;bottom:1px;padding:8px 7px 8px 7px}.inputcontainer{display:inline-block;margin-left:5px;border:solid 1px var(--border-color);height:32px;border-radius:2px}label.custom-select{margin-left:5px;position:relative;display:inline-block}.custom-select select{height:100%;width:164px}.sticky{position:fixed !important;top:0;left:0;width:100% !important}.sticky #text_form{float:none}@media(min-width:769px){.sticky #forumapi{margin-top:-25px}}#kbd-logo-cell{display:none}audio:not([controls]){display:none}#listen_widget{font-size:12px;display:inline-block;padding:3px 0 2px;border:1px solid var(--tag-border-color);-webkit-border-radius:3px;-moz-border-radius:3px;border-radius:3px;margin-left:0;overflow:hidden;vertical-align:middle;margin-bottom:5px;color:var(--gray-color);background-color:var(--content-bg-color);white-space:nowrap}#listen_txt,.listen_language{text-transform:uppercase;top:-1px;padding:7px 7px 5px 0;position:relative;left:4px;border-right:1px solid var(--tag-border-color);margin-right:1em}#dummyspan{display:none}#accentSelection{border:0;text-transform:uppercase;color:var(--gray-color);background:transparent;padding:2px 0 0 3px;padding-right:2rem;position:relative;top:-1px;-webkit-appearance:none;-moz-appearance:none;height:23px}.pronWR,.pronRH{margin-left:6px !important}.pwrapper{border:none;display:inline-block}.tooltip.pronWidget span{font-size:14px;width:225px !important;padding:7px 10px !important}.pr{margin:0}.more-pron-state,.more-pron-target{display:none}.more-pron-wrap>p.pr{display:inline}.more-pron-state:checked~.more-pron-wrap .more-pron-target{display:block}.more-pron-state:checked~.more-pron-wrap .more-pron-target.expand{display:inline}.more-pron-trigger{display:inline-block;padding:0 .5em}div.pinyin>div{display:inline-block}span.simplified,span.traditional,span.pinyin,span.hiragana{border:1px solid var(--tag-border-color);border-radius:4px;padding:3px 4px;font-size:10px}span.simplified.sm,span.traditional.sm,span.pinyin.sm,span.hiragana.sm{padding:2px 2px;font-size:9px}td.nums1{vertical-align:top}td.roman1{vertical-align:top}span.roman1{vertical-align:bottom}.conjugate_link{display:inline-block;padding:3px 0 2px;border:1px solid var(--tag-border-color);-webkit-border-radius:3px;-moz-border-radius:3px;border-radius:3px;margin-left:0;font-size:12px;font-variant:small-caps;vertical-align:bottom;padding:0 2px 2px 2px;top:-1px;color:var(--gray-color);background-color:var(--content-bg-color);white-space:nowrap;text-transform:none}div.conv{margin-left:20px}div.notConv{margin-left:0;padding-left:0;border-left:0}ul.hEntry{margin-left:-20px}table #right{padding-left:18px;margin-top:0}li.synonym{margin-left:auto}.thumbs{display:none}.engthes ul{padding-top:0;margin-top:0}.liSense{margin-left:-40px}div.tags{display:inline;width:50%;float:right}.clickable ul li.liSense ul li.synonym{display:inline-block;font-size:14px}.clickable ul li.synonym{display:inline-block;font-size:14px}.inps{border:solid 1px #808080;padding-bottom:5px;padding-left:10px;width:80%;font-size:12px}.inps input{width:300px}.addterm{margin-top:5px}div#spellSug{margin-left:2px !important;min-height:100px}div#spellSug{margin-top:10px}#spellSug table{border-style:hidden;border-collapse:collapse}#spellSug td{border-width:0}.notfound{padding:2px;border-top:solid var(--border-color) 1px;border-bottom:solid var(--border-color) 1px;margin-top:5px}#articleWRD .wrcopyright,#varticleWRD .wrcopyright{font-size:10px;margin-left:20px}table.WRD{width:100%;border-collapse:collapse;border-top:solid 1px var(--border-color);border-bottom:solid 1px var(--border-color)}tr.wrtopsection td{padding-bottom:12px;padding-top:12px;font-size:16px;text-align:center}#articleWRD p.note-othersideonly,#varticleWRD p.note-othersideonly{margin-left:20px;font-size:12px}.termCopy{position:relative;display:inline-block}.termCopy>i.copy{width:0;height:12px;display:inline-block;position:relative;top:2px}.termCopy.show>i.copy{width:14px}.termCopy>span.copytt{position:absolute;width:100px;border-radius:5px;padding:5px;left:0;top:-30px}.termCopy>span.ctmenu{display:flex;align-items:center;justify-content:space-around;position:absolute;border:1px solid var(--copy-ctmenu-border);border-radius:5px;padding:5px;left:0;top:-70px}.termCopy>span.ctmenu>span.ctarrow{width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:4px solid var(--copy-ctmenu-border);position:absolute;top:57px;left:18px}.termCopy>span.ctmenu>.cticon{display:flex;flex-direction:column;width:40px;height:40px;margin:3px}.termCopy>span.ctmenu>.cticon>svg{height:20px}.termCopy>span.ctmenu>.cticon:active>svg{position:relative;top:1px;left:1px}.termCopy>span.ctmenu label{padding-top:5px;font-size:9px}tr.more td{border-bottom:1px solid var(--border-color)}.WRD td{padding:2px}.WRD td.FrWrd{padding-left:20px}.WRD td.ToWrd{position:relative;padding-right:15px}html:not([dir="rtl"]) .dsense{float:right !important;text-align:right !important}html[dir="rtl"] .dsense{float:left !important;text-align:left !important}.notePubl{padding-left:20px !important;padding-right:20px !important}table.WRD .additional{border-top:solid 1px var(--border-color)}table.WRDrefl{border-bottom:0;margin-bottom:15px}.WRreporterror{width:100%;border-collapse:collapse;border-bottom:1px solid var(--border-color);margin-bottom:40px}.WRreporterror td{padding-left:2px;padding-right:4px}a.conjugate{margin-left:.3em}.langHeader td{padding-bottom:4px}.hw-flex-container{display:block}#termWithTashkeel{display:inline-block;padding-left:0;margin:0;margin-left:18px !important;margin-bottom:10px}dl.ListInfl{display:table-row;margin:0}dt.ListInfl{display:table-cell;min-width:80px;padding-right:3px}dd.ListInfl{display:table-cell;padding-left:15px}ul.subEnt,.subEnt ul,.subEntry ul{margin-top:0;margin-bottom:0;padding-bottom:0}.subEntry span{display:inline}.forum{text-overflow:ellipsis;overflow:hidden}#forumapi{float:right;margin-top:15px;margin-right:9px;font-size:12px}#forumapi span.bttn a{margin-right:-4px;padding:7px;border:1px solid var(--border-color);font-size:14px}#forumapi span.forum a{-webkit-border-top-left-radius:5px;-webkit-border-bottom-left-radius:5px;-moz-border-radius-topleft:5px;-moz-border-radius-bottomleft:5px;border-top-left-radius:5px;border-bottom-left-radius:5px}#forumapi span.api a{-webkit-border-top-right-radius:5px;-webkit-border-bottom-right-radius:5px;-moz-border-radius-topright:5px;-moz-border-radius-bottomright:5px;border-top-right-radius:5px;border-bottom-right-radius:5px}p#threadsHeader{font-weight:bold;margin-bottom:0;padding:7px 0 7px 0;margin-top:20px;border-top:1px solid var(--border-color);font-size:13px !important}p#threadsHeader.noborder{border-top:none;margin-top:0}p.threadsLanguageSection{margin-bottom:3px}#lista_link{padding-left:30px;padding-top:13px}#lista_link ul{padding-left:0;margin-bottom:5px}.threadnote{margin-bottom:30px;margin-top:15px}.threadnote ol{padding-top:2px;padding-bottom:2px}#extra_links{margin-bottom:15px;margin-left:45px}.extra_links{margin-left:15px;margin-top:10px}#extra_links a,.extra_links a{padding:2px 0}#extra_links .boxed.last,.extra_links .boxed.last{border:none !important}#extra_links a:last-child .boxed,.extra_links a:last-child .boxed{border-bottom:0 none}#forumNotes{display:none;margin:5px 0 25px 0;font-size:14px !important}#ad1{position:static;margin:6px auto;width:970px;height:90px;display:block;text-align:center}#top728{border:0 none;height:90px;overflow:hidden;width:100%}#ad2{position:static;width:728px;height:90px;margin:6px auto}td.ad{padding-bottom:10px}td.ad a{display:inherit}#gtrans{display:inline-block;border:0 none}table.WRDrefl{border-bottom:none;margin-bottom:15px}.super{vertical-align:super;font-size:.8em}.notePubl_tr{border:1px solid var(--body-text-color);border-right:2px solid var(--body-text-color);border-left:2px solid var(--body-text-color)}#tabRev span,#tabRev a{width:auto}#postLinks{border-top:1px solid var(--border-color);border-bottom:1px solid var(--border-color);margin-top:15px;padding:10px 7px !important;border:1px solid var(--border-color);border-radius:5px;margin-bottom:15px;position:relative}#postLinks>span{position:absolute;left:10px;top:-10px;padding:0 4px;font-size:13px !important}#postLinks a{font-size:13px}html[dir=rtl] #postLinks>span{right:10px}#listen_txt:before,.col_link,#AppStore,#GooglePlay,#search .inputcontainer>i{background-size:160px 172px}.webpNoSupp #listen_txt:before,.webpNoSupp .col_link,.webpNoSupp #AppStore,.webpNoSupp #GooglePlay,.webpNoSupp #search .inputcontainer>i{background-size:160px 172px}.col_link{width:16px;height:16px;display:inline-block !important}#listen_txt:before{content:' ';width:23px;height:16px;display:inline-block;margin-right:4px;vertical-align:middle;margin-left:4px;margin-bottom:2.5px;position:relative;top:-1px}#search .inputcontainer>input{position:relative;top:-4px;left:-1px;width:30px;height:32px;padding:0;vertical-align:middle;border:none !important}#search .inputcontainer>i{position:absolute}#search .inputcontainer>i.searchicon{width:16px;height:16px;margin-top:7px;margin-left:6px}#search .inputcontainer>i.reverseicon{width:17px;height:16px;margin-top:7px;margin-left:6px}#forumapi span.bttn a{font-weight:bold}.FrWrd .engusg:before{vertical-align:middle;margin-right:3px}.adtitle{height:16px}#ad_728{position:absolute}.heavyUser:hover{border:1px solid var(--heavy-user-hover-border-color)}.heavyUser{width:70%;margin:3vh 0 1vh 0;border-radius:10px;padding:10px;border:1px solid var(--tag-border-color)}.extras{margin-top:2vh;border-radius:10px;padding:10px}.extras div:nth-child(n+2){margin-top:10px}.WRD tr td:nth-child(2):not(.FrEx):not(.ToEx){width:40%}.WRD tr td:nth-child(1):not(.FrEx):not(.ToEx){width:24%}.WRD tr td:nth-child(3):not(.FrEx):not(.ToEx){width:36%}.WRD td.FrWrd{padding-left:5px}.WRD td.ToWrd{padding-right:1px;padding-left:5px}html[dir="rtl"] .WRD td.FrWrd{padding-right:5px}html[dir="rtl"] .WRD td.ToWrd{padding-right:5px;padding-left:1px}.loader,.loader:after{border-radius:50%;width:12px;height:12px}.loader{display:inline-block;top:2px;position:relative;border-top:.3em solid var(--loader-border-top-color);border-right:.3em solid var(--main-color);border-bottom:.3em solid var(--main-color);border-left:.3em solid var(--main-color)}.table{display:table;border-collapse:separate;width:100%}.table>.row{display:table-row}.table>.row>.cell{display:table-cell}.adbackground{vertical-align:middle;width:100%}html.phone #articleHead,html.phone #noTransFound{padding:0 !important}html.phone h1.headerWord,html.phone h3.headerWord{margin:5px 16px 5px 10px}html.phone h1.headerWord.ar,html.phone h3.headerWord.ar{margin:5px 16px 5px 10px}html.phone .hw-flex-container{padding-left:10px;padding-right:10px}html.phone #WHlinks{display:none}html.phone #WHlinksmoved,html.phone #postLinksmoved{display:block}html.phone #WHlinksmoved a,html.phone #postLinksmoved a{display:block;border-bottom:solid 1px var(--border-color);margin-top:0;margin-bottom:0;padding-left:10px;padding-top:12px;padding-bottom:12px;font-size:1.5em}html.phone #WHlinksmoved>a:first-child{border-top:solid 1px var(--border-color);margin-top:-.5px}html.phone #postLinks{display:none}#translation.swiper-slide{margin:0;padding:0}#definition.swiper-slide{margin:0;padding:5px}#synonyms.swiper-slide{margin:0;padding:5px}#mobiletop{padding:0 !important;margin-top:var(--ad-mobiletop-margin) !important}.FrWrd .engusg:before{content:"💬"}span.tracecontent th{padding:0 8px}span.tracecontent th.alt{padding:0 8px}span.tracecontent td{padding:0 8px}span.tracecontent h1,span.tracecontent h2,span.tracecontent h3{margin:2px 0}#tryMeMsg{height:16px;float:right;margin-top:12px;margin-right:3px;font-size:10px}#tryMeMsg.firstTime{display:block}#darkModeControls{height:16px;margin-top:10px;margin-right:-10px}#darkModeControls>.icon{width:16px;height:16px}#darkModeControls>.icon.lightmode,#darkModeControls>.icon.darkmode,#darkModeControls>.icon.automode{display:none}_:-ms-lang(x),#reverseBtnContainer{display:none}.debugmsg{border-radius:3px;margin:10px;padding:3px}#articleWRD .conjugate,#varticleWRD .conjugate{font-size:1em;line-height:1}.pronWR,.pronRH{font-size:14px}.hiraganatxt{font-size:10px}.NoteInfl{font-size:12px}.langHeader{font-size:13px}.pronRH i{font-size:13px}del.noclick,strong.noclick{font-size:13px}.noword>p,.noword a{font-size:14px !important}#search{direction:ltr;background:var(--search-bg-color)}#search input{background:var(--bg-color)}#search input:active,#search input:focus{color:var(--body-text-color)}.inputcontainer{text-align:center}.custom-select select{font-weight:bold !important}.custom-select select,.custom-select select option,.custom-select select optgroup{font-weight:normal}#search .inputcontainer>input{background:none}.sticky{z-index:100;box-shadow:0 3px 14px 0 var(--sticky-search-box-shadow)}@media screen and (max-width:769px){#search{height:auto;width:inherit;padding-left:3px;padding-top:3px;padding-bottom:3px}#text_form .inputcontainer{width:32px;height:31px}label.custom-select{margin-right:2px;height:31px}#search{height:41px}#search input[type='search']{width:100%}#search #reverseBtnContainer{margin-left:0}#text_form{display:flex;padding:0 5px 0 5px;align-items:center;width:100%}#myAutoComplete{width:calc(100% - 238px)}.small1{font-size:small}.content{min-width:inherit;margin-top:-8px}#content{margin-bottom:0}.mobileblock{margin-top:0;margin-bottom:0;padding-left:10px;padding-top:12px;padding-bottom:12px}#footer>a.mobileblock:first-child{margin-top:-.5px}#footer>a.mobileblock:first-child{margin-top:-1px}#header,.full-header,.content{width:auto}.full-header{min-width:auto}#contenttable{width:100%}#leftcolumn,#centercolumn,#rightcolumn{max-width:100% !important}#footer{margin-top:0;padding-top:0}#logo{padding-left:10px;margin-left:0}#container,#scontainer,#footer,#__asptrace,.header-content{width:100%}#text_form{margin-left:auto;margin-top:2px;padding:0 5px 0 5px;width:100%}#search{height:auto;width:inherit;padding-left:3px;padding-top:3px;padding-bottom:3px}#ad1,#ad1_holder,#ad2,#logo span#logotitle,#nav,.OxAd,.eslinks,.mobileremove,td#rightcolumn,#audiodrop a:nth-child(n+3){display:none !important}.content{border:0}.mobileblock{display:block;font-size:1.5em;border-bottom:solid 1px var(--border-color)}#footer>a.mobileblock:first-child{border-top:solid 1px var(--border-color)}#container{word-wrap:break-word;word-break:break-word}#postArticle{padding:0 !important;width:inherit}#postArticle>*:not(.mobileAd_holderContainer):not(#lista_link){padding:0 3px 0 10px}.first{border-top:solid 1px var(--border-color);padding-left:0}#footerlink{display:block;float:right;padding-top:10px;margin-right:10px}#text_form{left:auto;float:none;display:flex;align-items:center}#text_form .inputcontainer{width:32px;height:31px}label.custom-select{margin-right:2px;height:31px}#search input[type='search']{width:100%}#search #reverseBtnContainer{margin-left:0}#articleWRD,#varticleWRD{font-size:16px}#articleWRD,#varticleWRD{padding:0}#articleWRD,#varticleWRD{width:inherit}.WRD td.FrWrd{padding-left:10px}.WRD td.ToWrd{padding-right:1px}.noword{margin:0 10px}#pronunciation_widget{margin-left:10px}div#spellSug{min-height:200px}#noTransFound{margin-left:10px}#noTransFound>p{margin-top:0}}@media screen and (max-width:800px){#forumapi{display:none}}@media only screen and (max-device-width:300px){.WRD td.FrWrd{padding-left:1px}#articleWRD,#varticleWRD{font-size:15px;width:100%}#otherDicts,#FTintro,.FTsource{font-size:16px}ul #tabWR{margin-left:0 !important}#centercolumn div#collinsdiv{padding:0 !important}}@media only screen and (max-device-width:560px){p.other_languages{margin-top:2vh}p.other_languages a{margin-right:1.5vw;margin-left:1.5vw}#englishPageLink span{height:16px}#englishPageLink svg{width:16px;height:16px}.FTlist a{font-size:1.3em}#lista_link a{font-size:1.3em}}@media screen and (max-width:769px){td#leftcolumn{display:none}#footerlink a{font-variant:small-caps;font-size:18px !important}}@media only screen and (max-width:769px){.FrWrd .engusg{margin-right:4px;font-size:19px !important;vertical-align:middle}}@media(min-width:770px){.zhgroup,.jagroup{display:block;float:left;width:100%}.WRD td.ToWrd i.copy{opacity:.3;transition:opacity .2s}.WRD tr:hover td.ToWrd>i.copy,.WRD span.zhgroup:hover>i.copy,.WRD span.jagroup:hover>i.copy{position:absolute;width:16px;height:16px}html:not([dir="rtl"]) .WRD tr:hover td.ToWrd>i.copy,.WRD span.zhgroup:hover>i.copy,.WRD span.jagroup:hover>i.copy{right:5px}html[dir="rtl"] .WRD tr:hover td.ToWrd>i.copy{left:5px}}@media(min-width:769px){.sticky #forumapi{margin-top:-25px}}@media screen and (max-width:769px){#search div#useKBLink{left:15px}}.modal{opacity:0;display:none;position:fixed;z-index:999;padding-top:100px;left:0;top:0;width:100%;height:100%;overflow:auto;background-color:var(--modal-fallback-background-color);background-color:var(--modal-background-color);transition:all 150ms ease-in-out}.modal-content{text-align:left;opacity:0;background-color:var(--modal-content-background-color);margin:auto;margin-top:-20px;padding:20px;border:1px solid var(--modal-border-color);width:80%;-webkit-box-shadow:5px 9px 15px 5px var(--modal-box-shadow-color);box-shadow:5px 9px 15px 5px var(--modal-box-shadow-color);transition:all 150ms ease-in-out}.modal.show{opacity:1}.modal.show>.modal-content.show{opacity:1;margin-top:0}.close{color:var(--close-button-color);float:right;font-size:28px;font-weight:bold}.close:hover,.close:focus{color:var(--close-button-hover-focus-color);text-decoration:none;cursor:pointer}@media only screen and (min-device-width:320px) and (max-device-width:480px) and (-webkit-min-device-pixel-ratio:2) and (orientation:portrait){.modal-content{width:90%}}.tooltip{position:relative;display:inline-block;cursor:pointer}.tooltip span:not(.noTooltip){display:none !important}.wr-tooltip-layer{--wr-tooltip-width:240px;--wr-tooltip-arrow-left:50%;position:fixed;z-index:10000;max-width:min(var(--wr-tooltip-width),calc(100vw - 16px));opacity:0;transform:translateY(-2px);transition:opacity .16s ease-in-out,transform .16s ease-in-out;pointer-events:none;visibility:hidden;user-select:none;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none}.wr-tooltip-layer.visible{opacity:.92;visibility:visible;transform:translateY(0)}.wr-tooltip-content{background-color:var(--tooltip-bg-color,#000);color:var(--tooltip-text-color,#eee);border:1px solid var(--tooltip-border-color,transparent);text-align:center;border-radius:6px;padding:12px;line-height:1.4;box-shadow:0 2px 8px var(--tooltip-shadow-color,rgba(0,0,0,.2))}.wr-tooltip-arrow{position:absolute;left:var(--wr-tooltip-arrow-left);transform:translateX(-50%);top:100%;width:0;height:0;border-width:6px 6px 0 6px;border-style:solid;border-color:var(--tooltip-bg-color,#000) transparent transparent transparent}.wr-tooltip-layer.down .wr-tooltip-arrow{top:-6px;border-width:0 6px 6px 6px;border-color:transparent transparent var(--tooltip-bg-color,#000) transparent}html[lang="ar"] .wr-tooltip-layer{direction:rtl}.wr-tooltip-layer.virtual .wr-tooltip-content{white-space:nowrap;padding:10px 15px;width:auto}.wr-tooltip-abbr-link{margin-top:8px}.wr-tooltip-abbr-link a,.wr-tooltip-abbr-link a:visited{color:var(--tooltip-link-color,#7fd4ff);text-decoration:underline;font-weight:600}.wr-tooltip-abbr-link a:hover,.wr-tooltip-abbr-link a:focus{color:var(--tooltip-link-hover-color,#b8ebff)}@media only screen and (max-width:480px){.wr-tooltip-layer{--wr-tooltip-width:180px}}@media(pointer:coarse){.wr-tooltip-layer.visible{pointer-events:auto}}:root{--bullet-size:5px;--bullet-active-size:calc(var(--bullet-size) + var(--bullet-size)*.8)}.swiper-container{overflow:hidden;width:100%;position:relative}.swiper-wrapper{display:flex;flex-wrap:nowrap;transition:transform .2s ease-in-out;width:100%;box-sizing:border-box;height:100%}.swiper-slide{flex:0 0 100%;box-sizing:border-box;position:relative;display:flex;justify-content:center;height:100%}.swiper-content{width:100%;box-sizing:border-box;min-height:150px}.spinner{margin-top:100px;border:4px solid var(--swiper-spinner-border-color);width:36px;height:36px;border-radius:50%;border-left-color:var(--swiper-spinner-border-left-color);animation:spin 1s linear infinite;position:absolute;left:50%;margin-left:-18px;z-index:1}@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}.hidden{display:none}.error{color:var(--swiper-error-color);text-align:center}.swiper-pagination{display:flex;align-items:center;justify-content:flex-end;height:var(--bullet-active-size);padding-right:2px;margin-top:5px;margin-bottom:5px}.swiper-pagination-bullet{display:inline-block;width:var(--bullet-size);height:var(--bullet-size);margin:0 4px;background:var(--swiper-pagination-bullet-background);border-radius:50%;opacity:.3;cursor:pointer;transition:all .2s}.swiper-pagination-bullet:hover{background:var(--swiper-pagination-bullet-hover-background)}.swiper-pagination-bullet-active{width:var(--bullet-active-size);height:var(--bullet-active-size);opacity:.5}#headerTabs{background-color:var(--swiper-header-tabs-background-color);border-bottom:2px solid var(--swiper-header-tabs-border-bottom-color);overflow-x:auto;-webkit-overflow-scrolling:touch}#headerTabs::-moz-scrollbar{height:1px}#headerTabs::-webkit-scrollbar{height:1px}#headerTabs{scrollbar-width:none;scrollbar-color:transparent transparent}#headerTabs ul{display:flex;flex-wrap:nowrap;list-style:none;padding:0;margin:0}#headerTabs ul li{flex:0 0 auto;padding:7px 10px;cursor:pointer;transition:color .1s,border-bottom .1s;color:var(--swiper-header-tabs-color);border-bottom:3px solid transparent}#headerTabs ul li:hover{color:var(--header-tabs-hover-color);background-color:var(--swiper-header-tabs-hover-background-color)}#headerTabs ul li.selected{color:var(--swiper-header-tabs-selected-color);border-bottom:3px solid var(--swiper-header-tabs-selected-border-bottom-color);font-weight:bold}#headerTabs ul li.selected:hover{color:var(--swiper-header-tabs-selected-hover-color)}#headerTabs ul li a,#headerTabs ul li span{text-decoration:none;color:inherit;display:block}#headerTabs::-webkit-scrollbar{height:1px}#headerTabs::-webkit-scrollbar-thumb{background:var(--swiper-scrollbar-thumb-background)}#headerTabs::-webkit-scrollbar-thumb:hover{background:var(--swiper-scrollbar-thumb-hover-background)}#headerTabs::-webkit-scrollbar-track{background:var(--swiper-scrollbar-track-background)}@media(max-width:768px){#headerTabs ul li{font-size:12px}}
+    </style>
+
+
+<style type="text/css">
+
+    /* SECTION: BROWSER/PLATFORM RULES */
+    /*#1055: headertabs not showing correctly when desktop view is used on a mobile phone*/
+    /*Keep the tabs large enough for fingers and reduce the font size*/
+
+	/* hack because iOS app is showing table in wrong sized text*/
+	/*issue #989 (Listen box styling: speaker icon too high): Hack related to OSX*/
+
+	/*Desktop fixes*/
+tr.even:hover, tr.odd:hover, tr.evenEx:hover, tr.oddEx:hover{background-color:var(--rowhighlight-color);}
+	/*Ads fixes*/
+
+	/* SECTION: CONDITIONAL LANGUAGE FILES */
+    
+    
+    
+    
+    
+    
+    
+	/* SECTION: OTHER DICTIONARIES RULES */
+    
+	/* Global */
+	body {
+		font-family: Arial, Helvetica, sans-serif
+	}
+
+	ul {
+		list-style-type: none
+	}
+
+	/* Dictionaries: Espasa */
+	.hw {
+		text-decoration: none
+	}
+
+	/* Dictionaries: Collins dicts */
+	.phonetics {
+		color: var(--body-highlighted-text-color);
+		font-size: 10pt;
+		font-weight: 700;
+		font-family: "Lucida Sans Unicode", "Arial Unicode MS", "Lucida Grande"
+	}
+
+	.HWexpansion {
+		font-style: italic
+	}
+
+	.smallcaps {
+		font-variant: small-caps
+	}
+
+	.translation {
+		font-family: "Times New Roman", Times, serif;
+		margin-left: 15px
+	}
+
+	.pron,
+	.ps {
+		font-family: "Times New Roman", Times, serif;
+		color: var(--body-highlighted-text-color)
+	}
+
+	.lbgram,
+	.ps.transps,
+	.xrsense {
+		font-size: small
+	}
+
+	.category {
+		margin-left: 15px;
+		margin-top: 8px
+	}
+
+	.catsecondary {
+		margin-left: 30px
+	}
+
+	.third {
+		margin-left: 45px
+	}
+
+	a .xrsense {
+		text-decoration: none
+	}
+
+	span.normalized {
+		font-weight: 400;
+		font-style: normal
+	}
+
+	.gramcat {
+		display: block;
+		margin-top: 10px;
+		margin-bottom: 10px;
+		margin-left: 20px
+	}
+
+	.etymology {
+		margin-left: 20px;
+		margin-top: 10px;
+		display: block
+	}
+
+	.subentry {
+		display: list-item;
+		list-style: disc inside
+	}
+
+	span.subentry {
+		margin-top: 10px
+	}
+
+	span.subentryblk {
+		display: block;
+		margin-top: 10px;
+	}
+
+	span.note {
+		display: block;
+		margin-top: 10px;
+		margin-left: 20px
+	}
+
+	div.box {
+		padding: 10px;
+		margin: 5px;
+		border: 1px solid #222;
+		-webkit-border-radius: 3px;
+		-moz-border-radius: 3px;
+		border-radius: 3px
+	}
+
+	ol.senses {
+		margin-top: 5px
+	}
+
+	.superentry {
+		counter-reset: homonym
+	}
+
+	.vargrp:not(.groupintro) {
+		display: block
+	}
+
+	.entry > .vargrp {
+		margin-top:10px;
+		margin-left:20px
+	}
+
+	/* Shared between colins, Langenscheidt
+	   Collins: 		RN, SF, box, register, translation, gloss, subjarea, FF, label, ff, phrase, relword, lbgram, bold, headnumber, prep, orig, var, xr, xrsense, homonym
+	   Langenscheidt: 	ex, ital, usage, subjarea, phrase, headnumber, xr, arab, latin, roman, homonym */
+	.RN,
+	.SF,
+	.box.ex,
+	.ital,
+	.register,
+	.translation.gloss,
+	.usage {
+		font-style: italic
+	}
+
+	.box.register,
+	.subjarea {
+		font-variant: small-caps;
+		text-transform: lowercase
+	}
+
+	.phrase {
+		margin-left: 15px
+	}
+
+	.FF,
+	.box.ex,
+	.inflgroup,
+	.label.ff,
+	.phrase,
+	.relword {
+		font-weight: 700
+	}
+
+	.lbgram,
+	.usage {
+		color: var(--body-highlighted-text-color)
+	}
+
+	.bold,
+	.headnumber,
+	.prep.orig,
+	.var,
+	.xr a,
+	.xrsense {
+		font-weight: 700
+	}
+
+	.headnumber,
+	.xrsense {
+		vertical-align: super
+	}
+
+	.arab.headnumber,
+	.latin.headnumber,
+	.roman.headnumber {
+		vertical-align: baseline
+	}
+
+	.homonym {
+		vertical-align: super
+	}
+
+	.homonym:before {
+		content: counter(homonym, decimal);
+		counter-increment: homonym
+	}
+
+	/* Shared between colins, Langenscheidt and ES gramatica
+	   Collins: 		example, phrase
+	   Langenscheidt: 	example, phrase, ex
+	   Es Gramatica: 	example*/
+	.example {
+		font-style: italic;
+		text-indent: 15px
+	}
+
+	.phrase.example {
+		font-style: normal
+	}
+
+	.phrase.example.ex {
+		text-indent: 0;
+		margin-left: auto
+	}
+
+	/* Shared between colins, Langenscheidt, ES gramatica  and Espasa*/
+	.entry {
+		margin-bottom: 30px;
+		font-size: 14px
+	}
+	
+    
+    
+</style>
+
+
+
+    <link rel="preload" href="/css/noncriticalbundle.min.css?v=T56rJk1JDVremYjJPLinTZKkmKfzITsSzNmIw9ANN7o" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/css/noncriticalbundle.min.css?v=T56rJk1JDVremYjJPLinTZKkmKfzITsSzNmIw9ANN7o"></noscript>
+
+
+
+
+<!-- Preconnect to critical external origins to avoid DNS/TLS latency -->
+<link rel="preconnect" href="https://cdnawsw.wordreference.net" crossorigin>
+<link rel="preconnect" href="https://www.googletagmanager.com">
+<!-- Favicon -->
+<link rel="icon" href="/favicon.ico" sizes="any"><!-- 32×32 -->
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="https://cdnawsw.wordreference.net/apple-touch-icon.png"><!-- 180×180 -->
+<link rel="manifest" href="/favicons/manifest.json?dict=enen">
+
+
+<meta name="theme-color" content="#ffffff">
+
+<script>var strOrig = "hello"; var strDic = "enen";</script>
+
+<script>
+        function check_webp_feature(feature, callback) {
+            var kTestImages = {
+                lossy: "UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3AAAAAA",
+                lossless: "UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA==",
+                alpha: "UklGRkoAAABXRUJQVlA4WAoAAAAQAAAAAAAAAAAAQUxQSAwAAAARBxAR/Q9ERP8DAABWUDggGAAAABQBAJ0BKgEAAQAAAP4AAA3AAP7mtQAAAA==",
+                animation: "UklGRlIAAABXRUJQVlA4WAoAAAASAAAAAAAAAAAAQU5JTQYAAAD/////AABBTk1GJgAAAAAAAAAAAAAAAAAAAGQAAABWUDhMDQAAAC8AAAAQBxAREYiI/gcA"
+            };
+            var img = new Image();
+            img.onload = function () {
+                var result = (img.width > 0) && (img.height > 0);
+                callback(feature, result);
+            };
+            img.onerror = function () {
+                callback(feature, false);
+            };
+            img.src = "data:image/webp;base64," + kTestImages[feature];
+        }
+    check_webp_feature('alpha', function (feature, isSupported) {
+        if (!isSupported) {
+            // webp not supported,
+            document.getElementsByTagName("html")[0].classList.add("webpNoSupp");
+        }
+    });
+</script>
+
+        
+        
+            <script>"use strict";function hasClass(n,t){return n.classList?n.classList.contains(t):new RegExp("\\b"+t+"\\b").test(n.className)}function decodeHtmlEntity(n){return n?n.replace(/&#(\d+);/g,function(n,t){return String.fromCharCode(t)}):""}function encodeHtmlEntity(n){for(var i=[],t=n.length-1;t>=0;t--)i.unshift(["&#",n[t].charCodeAt(),";"].join(""));return i.join("")}function readCookie(n){n=n.replace(/([.*+?\^=!:${}()|\[\]\/\\])/g,"\\$1");var i=new RegExp("(?:^|;)\\s?"+n+"=(.*?)(?:;|$)","i"),t=document.cookie.match(i);return t&&unescape(t[1])}function setCookie(n,t,i){var r=new Date,u;r.setTime(r.getTime()+i*864e5);u="expires="+r.toUTCString();document.cookie=n+"="+t+";"+u+";path=/;domain=wordreference.com;SameSite=Lax"}function consoleDebug(){function t(n){var u,t,r,i,f;return i=Math.floor(n/1e3),r=Math.floor(i/60),i=i%60,t=Math.floor(r/60),r=r%60,u=Math.floor(t/24),t=t%24,t+=u*24,f=n-i*1e3,t+":"+r+":"+i+"'"+f}if(cdebug){let n=t(Date.now()-window.performance.timing.navigationStart);arguments["0"]="\x1b[41;44;4m"+n+"\x1b[m "+arguments["0"];console.log.apply(null,arguments)}}async function copyTextToClipboard(n){try{await navigator.clipboard.writeText(n);console.log("Text copied to clipboard successfully!")}catch(t){console.error("Failed to copy text:",t)}}function deaccent(n){var t={a:"àáâãäåąāǎ",ae:"æ",c:"çćč",d:"ď",e:"èéêëęěē",g:"ğ",i:"ìíîïıīǐ",l:"ł",n:"ñń",o:"òóôõöøōǒ",S:"ßŞŚŠ",s:"şśš",t:"ť",u:"ùúûüūǔǖǘǚǜ",y:"ÿý",z:"źżž",A:"ÀÁÂÃÄÅĄĀǍ",AE:"Æ",C:"ÇĆČ",D:"Ď",E:"ÈÉÊËĘĚĒ",G:"Ğ",I:"ÌÍÎÏIĪǏ",L:"Ł",N:"ÑŃ",O:"ÒÓÔÕÖØŌǑ",T:"Ť",U:"ÙÚÛÜŪǓǕǗǙǛ",Y:"ŸÝ",Z:"ŹŻŽ"};return n.replace(/[^\u0000-\u007E]/g,function(n){var i=n;for(var r in t)i=i.replace(new RegExp("["+t[r]+"]"),r);return i})}function removeArabicDiacritics(n){var i,t;for(n=n.replace(/([^\u0621-\u063A\u0641-\u064A\u0660-\u0669a-zA-Z 0-9])/g,""),n=n.replace(/(آ|إ|أ)/g,"ا"),n=n.replace(/(ة)/g,"ه"),n=n.replace(/(ئ|ؤ)/g,"ء"),n=n.replace(/(ى)/g,"ي"),i=1632,t=0;t<10;t++)n.replace(String.fromCharCode(i+t),String.fromCharCode(48+t));return n}function hasAsianGlyphs(n){return/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f\u3131-\uD79D]/.test(n)}function getPreferredLang(){var n=readCookie("llang"),i,t;return n==null?getFullLangName("en"):(n=n.substring(0,n.length-1),i=n.substring(2,4),t=getFullLangName(i),t==null)?getFullLangName("en"):t}function getFullLangName(n){return[{code:"en",language:"English"},{code:"es",language:"Spanish"},{code:"fr",language:"French"},{code:"pt",language:"Portuguese"},{code:"it",language:"Italian"},{code:"de",language:"German"},{code:"ca",language:"Catalan"},{code:"nl",language:"Dutch"},{code:"sv",language:"Swedish"},{code:"ru",language:"Russian"},{code:"pl",language:"Polish"},{code:"ro",language:"Romanian"},{code:"cz",language:"Czech"},{code:"gr",language:"Greek"},{code:"tr",language:"Turkish"},{code:"zh",language:"Chinese"},{code:"ja",language:"Japanese"},{code:"ko",language:"Korean"},{code:"ar",language:"Arabic"}].find(function(t){return t.code==n})}function getLangCode(n){let t;switch(n){case"cz":t="cs";break;case"gr":t="el";break;default:t=n}return t}function inIframe(){try{return window.self!==window.top}catch(n){return!0}}function getPositionAtCenter(n){const{top:t,left:i,width:r,height:u}=n.getBoundingClientRect();return{x:i+r/2,y:t+u/2}}function getDistanceBetweenElements(n,t){const i=getPositionAtCenter(n),r=getPositionAtCenter(t);return Math.hypot(i.x-r.x,i.y-r.y)}function iOS(){return["iPad Simulator","iPhone Simulator","iPod Simulator","iPad","iPhone","iPod"].includes(navigator.platform)||navigator.userAgent.includes("Mac")&&"ontouchend"in document}function isMac(){return navigator.platform.toUpperCase().indexOf("MAC")>=0}function getDictionary(){return document.getElementById("fSelect")?document.getElementById("fSelect").value:strDic}function getDictionary2(){var n;return document.forms[0]?(n=document.forms[0].dict,n&&n.options.length>0)?n.options[n.selectedIndex].value:null:null}function insertAfter(n,t){t.parentNode.insertBefore(n,t.nextSibling)}function load_settings(){"localStorage"in window&&window.localStorage!==null&&localStorage.sWRSettings!=null&&(sWRSettings=JSON.parse(localStorage.sWRSettings));GuessNativeLanguage();GuessFavoriteTransDict();GuessPreferredDicts();sWRSettings.hasOwnProperty("LeftClick")||readCookie("onclick")==null?sWRSettings.hasOwnProperty("LeftClick")||(sWRSettings.LeftClick="translate"):sWRSettings.LeftClick=readCookie("onclick")!=="0"?"translate":"nothing";sWRSettings.hasOwnProperty("RightClick")&&wrserver.browser!="App"||(sWRSettings.RightClick="nothing")}function save_settings(){"localStorage"in window&&window.localStorage!==null&&(localStorage.sWRSettings=JSON.stringify(sWRSettings),console.log(sWRSettings))}function saveThemeSettings(n){var t;let i="sWRSettings";"localStorage"in window&&window.localStorage!==null&&localStorage[i]!=null?(t=JSON.parse(localStorage[i]),t.theme=n,localStorage[i]=JSON.stringify(t)):(t={theme:n},localStorage[i]=JSON.stringify(t))}function loadThemeSettings(){return sWRSettings.theme||"light"}function getDebugInfoSettings(){return sWRSettings.debugInfo||(sWRSettings.debugInfo={enabled:!1,maxPages:5,retentionDays:7,autoCleanup:!0,sanitization:!0}),sWRSettings.debugInfo}function setDebugInfoEnabled(n){console.log("[Debug] Setting debug info enabled:",n);var t=getDebugInfoSettings();t.enabled=n;save_settings();console.log("[Debug] Debug settings updated:",t);n||typeof clearAllDebugInfo!="function"||console.log("[Debug] Debug collection disabled, existing data retained. Use debug viewer to clear if needed.")}function isDebugInfoEnabled(){var t=getDebugInfoSettings(),n=t.enabled===!0;return console.log("[Debug] Debug info enabled check:",n),n}function updateDebugInfoSettings(n){var t=getDebugInfoSettings();typeof n.maxPages=="number"&&n.maxPages>=1&&n.maxPages<=50&&(t.maxPages=n.maxPages);typeof n.retentionDays=="number"&&n.retentionDays>=1&&n.retentionDays<=30&&(t.retentionDays=n.retentionDays);typeof n.autoCleanup=="boolean"&&(t.autoCleanup=n.autoCleanup);typeof n.sanitization=="boolean"&&(t.sanitization=n.sanitization);save_settings()}function GuessNativeLanguage(){if(!sWRSettings.nativeLang){var n=GuessPreferredLanguages();wrserver&&n.push(GetLangByCC(wrserver.ipcc));n.length>0&&(sWRSettings.nativeLang=n[0],save_settings())}}function GuessPreferredLanguages(){let n=[...window.navigator.languages];return n.forEach(function(t){t.length>2&&(n.splice(0,0,t.substring(0,2)),n.splice(n.indexOf(t),1))}),n.indexOf("el")!=-1&&n.splice(n.indexOf("el"),1,"gr"),n.indexOf("cs")!=-1&&n.splice(n.indexOf("cs"),1,"cz"),n.length>1&&(n=n.filter(n=>n!="en")),n}function GuessFavoriteTransDict(){if(!sWRSettings.favTransDict){var n=GetMostUsedDictionary();n||(n="en"+sWRSettings.nativeLang);n&&(sWRSettings.favTransDict=n,save_settings())}}function GetMostUsedDictionary(){var t={},r=0,u,i,n;if("localStorage"in window&&window.localStorage!==null&&localStorage.sWRrecentSearch!=null){i=JSON.parse(localStorage.sWRrecentSearch);for(let f=0;f<i.recent.length;f++)(n=i.recent[f].dict,validDictionaries.includes(n))&&(t[n]=t[n]?t[n]+1:1,t[n]>r&&(r=t[n],u=n))}return u}function GuessPreferredDicts(){if(!sWRSettings.favDicts){var n=GetRecentDicts();wrserver&&n.push(GetDictByCC(wrserver.ipcc));n.length>0&&(sWRSettings.favDicts=n,save_settings())}}function GetRecentDicts(n=false){var i=[],r,t;if("localStorage"in window&&window.localStorage!==null&&localStorage.sWRrecentSearch!=null){r=JSON.parse(localStorage.sWRrecentSearch);for(let u=0;u<r.recent.length;u++)t=r.recent[u].dict,!i.includes(t)&&(n||validDictionaries.includes(t))&&i.push(t)}return i}function GetLastUsedDictionary(){var n=readCookie("llang");return n?(n=n.substring(0,n.length-1),validDictionaries.includes(n)||(n=null),n):null}function GuessLastUsedLanguage(){var n=readCookie("llang"),i,t;return n==null?getFullLangName("en"):(n=n.substring(0,n.length-1),i=n.substring(2,4),t=getFullLangName(i),t==null)?getFullLangName("en"):t}function GetDictByCC(n){let t;switch(n){case"AR":case"BO":case"CL":case"CO":case"CR":case"CU":case"DR":case"EC":case"ES":case"GT":case"HN":case"MX":case"PA":case"PE":case"PR":case"PY":case"SV":case"UY":case"VE":case"US":case"DO":case"NI":case"GQ":t="enes";break;case"AE":case"DZ":case"EG":case"IQ":case"KW":case"JO":case"LB":case"MA":case"OM":case"PS":case"QA":case"SA":case"SY":case"YE":case"BH":case"LY":case"MR":case"SO":case"SS":case"TN":t="enar";break;case"FR":case"CH":case"CI":case"SN":case"GB":case"CA":case"AU":case"IE":case"NZ":case"CD":case"MG":case"CM":case"NE":case"BF":case"ML":case"TD":case"GN":case"RW":case"BE":case"BI":case"BJ":case"HT":case"TG":case"CF":case"CG":case"GA":case"DJ":case"KM":case"LU":case"VU":case"SC":case"MC":t="enfr";break;case"AT":case"DE":t="ende";break;case"CN":case"HK":case"SG":t="enzh";break;case"IT":case"VA":case"SM":t="enit";break;case"BR":case"PT":case"MZ":case"AO":case"GW":case"TL":case"MO":case"ST":t="enpt";break;case"CZ":t="encz";break;case"GR":t="engr";break;case"JP":t="enja";break;case"KO":case"KP":t="enko";break;case"PL":t="enpl";break;case"RO":t="enro";break;case"RU":t="enru";break;case"TR":t="entr";break;default:t=""}return t}function GetLangByCC(n){let t;switch(n){case"AR":case"BO":case"CL":case"CO":case"CR":case"CU":case"DR":case"EC":case"ES":case"GT":case"HN":case"MX":case"PA":case"PE":case"PR":case"PY":case"SV":case"UY":case"VE":case"US":case"DO":case"NI":case"GQ":t="es";break;case"AE":case"DZ":case"EG":case"IQ":case"KW":case"JO":case"LB":case"MA":case"OM":case"PS":case"QA":case"SA":case"SY":case"YE":case"BH":case"LY":case"MR":case"SO":case"SS":case"TN":t="ar";break;case"FR":case"CH":case"CI":case"SN":case"GB":case"CA":case"AU":case"IE":case"NZ":case"CD":case"MG":case"CM":case"NE":case"BF":case"ML":case"TD":case"GN":case"RW":case"BE":case"BI":case"BJ":case"HT":case"TG":case"CF":case"CG":case"GA":case"DJ":case"KM":case"LU":case"VU":case"SC":case"MC":t="fr";break;case"AT":case"DE":t="de";break;case"CN":case"HK":case"SG":t="zh";break;case"IT":case"VA":case"SM":t="it";break;case"BR":case"PT":case"MZ":case"AO":case"GW":case"TL":case"MO":case"ST":t="pt";break;case"CZ":t="cz";break;case"GR":t="gr";break;case"JP":t="ja";break;case"KO":case"KP":t="ko";break;case"PL":t="pl";break;case"RO":t="ro";break;case"RU":t="ru";break;case"TR":t="tr";break;default:t="en"}return t}var strDic=strDic||"",rootUrl=window.location.protocol+"//"+window.location.hostname+(window.location.port.length>0?":"+window.location.port:"")+"/",visitor;const userInfoConsts={Browser:{Chrome:0,Firefox:1,IE:2,Edge:3,Safari:4,Opera:5,App:6,Other:7},BrowserOS:{Windows:0,OSX:1,IOS:2,Linux:3,Android:4,WinPhone:5,BlackBerry:6,Other:7},Platform:{Desktop:0,Phone:1,Tablet:2}};visitor=visitor||{browser:null,browserOS:null,browserVersion:null,platform:null};window.wrconsent=window.wrconsent||{};window.wrconsent.gdpr=window.wrconsent.gdpr||{};window.wrconsent.ccpa=window.wrconsent.ccpa||{};window.googlefc=window.googlefc||{};window.googlefc.callbackQueue=window.googlefc.callbackQueue||[];var urlParams=new URLSearchParams(window.location.search),cdebug=urlParams.has("cdebug"),isVirtualDict=isVirtualDict||!1;String.prototype.regexIndexOf=function(n,t){var i=this.substring(t||0).search(n);return i>=0?i+(t||0):i};String.prototype.regexLastIndexOf=function(n,t){n=n.global?n:new RegExp(n.source,"g"+(n.ignoreCase?"i":"")+(n.multiLine?"m":""));typeof t=="undefined"?t=this.length:t<0&&(t=0);var u=this.substring(0,t+1),i=-1,f=0;let r;while((r=n.exec(u))!==null)i=r.index,n.lastIndex=++f;return i};window.mobilecheck=function(){var n=!1;return function(t){(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i.test(t)||/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(t.substr(0,4)))&&(n=!0)}(navigator.userAgent||navigator.vendor||window.opera),n};window.mobileAndTabletcheck=function(){var n=!1;return function(t){(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino|android|ipad|playbook|silk/i.test(t)||/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(t.substr(0,4)))&&(n=!0)}(navigator.userAgent||navigator.vendor||window.opera),n};"use strict";var sWRSettings={},wrserver=wrserver||{},validDictionaries=["enes","esen","esfr","fres","espt","ptes","esit","ites","esde","dees","eses","enesl","enesb","esenb","esenl","esend","enfr","fren","enit","iten","itit","caca","ende","deen","ennl","nlen","ensv","sven","enru","ruen","enpt","pten","enpl","plen","enro","roen","encz","czen","engr","gren","entr","tren","enzh","zhen","enja","jaen","enko","koen","enar","aren","enen","frit","enthe","encol","enusg","essin","esgram","esca","enis","isen"];load_settings();</script>
+                <script defer src="/js/noncriticalbundle.min.js?v=UucRWQWygnm_xfeAj91DKfcVO_pqg0iLvGdrl6WeYtA"></script>
+        
+
+
+
+
+
+
+
+<script>
+    console.log(`>> Provider selection:
+    snigel: True
+    WR: False`);
+</script>
+</head>
+<body class="dictionary-page">
+    
+
+
+
+
+    <header class="full-header">
+        <div class="header-content">
+            <div id="logo" >
+                <a href="https://www.wordreference.com/">WordReference<span>.com</span></a><span class="mobileremove">  |  </span><span id="logotitle"><span>Online</span> <span>Language</span> <span>Dictionaries</span></span>
+            </div>
+
+            <div id="nav" >
+                        <a href="/definition/">English Dictionary</a>
+ | <a href="">hello</a>            </div>
+        </div>
+    </header>
+
+
+        <div id="ad1">
+            
+                <!-- adngin-top_leaderboard-0 -->
+                <div id='adngin-top_leaderboard-0'></div>
+        </div>
+
+
+
+
+    <script>
+        function changeTheme(n,t){enableTheme(n);t&&saveDarkModeSettings(n)}function enableTheme(n){if(n==="dark")document.body.classList.add("dark-mode");else if(n==="auto"){const n=window.matchMedia("(prefers-color-scheme: dark)");n.matches?document.body.classList.add("dark-mode"):document.body.classList.remove("dark-mode")}else document.body.classList.remove("dark-mode")}function isForcedDarkMode(){const n=new URLSearchParams(window.location.search);return n.has("display")&&n.get("display")==="dark"}function loadDarkModeSettings(){if(isForcedDarkMode())return"dark";let t="sWRSettings";if("localStorage"in window&&window.localStorage!==null&&localStorage[t]!=null){var n=JSON.parse(localStorage[t]);return n.theme?n.theme:"light"}return"light"}function saveDarkModeSettings(n){var t={theme:"light"};let i="sWRSettings";"localStorage"in window&&window.localStorage!==null&&localStorage[i]!=null?(t=JSON.parse(localStorage[i]),t.theme=n,localStorage[i]=JSON.stringify(t)):(t={theme:n},localStorage[i]=JSON.stringify(t))}var currentTheme=currentTheme||loadDarkModeSettings();enableTheme(currentTheme);window.matchMedia("(prefers-color-scheme: dark)").addListener(function(n){n.matches&&currentTheme=="auto"?changeTheme("dark",!1):n.matches||currentTheme!="auto"||changeTheme("light",!1)});
+    </script>
+
+
+    <div id="container">
+        
+
+    <div id="searchPlaceholder" class="">
+        <div id="search" class="">
+            <div id="scontainer">
+                <form method="GET" action="/redirect/translation.aspx" id="text_form" name="sbox" onsubmit="return toSubmit(event);">
+                    <div id="myAutoComplete" style="display:inline">
+                        <input type="search" name="w" id="si" title="shortcut: /" oninvalid="alert('Invalid characters in search input field');" pattern="^[^<>%\\]*$" size="20" maxlength="200" tabindex="1" value="" placeholder="Search" autocomplete="off" autocorrect="off" autocapitalize="none">
+                        <div id="myACContainer" style="display:inline"></div>
+                        <div id="tipsModal" class="modal">
+                            <div class="modal-content">
+                                <span class="close">&times;</span>
+                                <div class="modal-body"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <label class="custom-select">
+                        <select size="1" name="dict" tabindex="2" id="fSelect">
+
+                                <option value='enen' title='' selected>English definition</option>
+                            <option id='dictseparator' class="separator" disabled>──────────</option> <!-- Separator -->
+                                <option value='enthe' title=''>English synonyms</option>
+                                <option value='encol' title=''>English collocations</option>
+                                    <option class="separator" disabled>──────────</option>
+                                <option value='lists' title=''>Lists</option>
+                                <option value='other' title=''>more...</option>
+                        </select>
+                    </label>
+                    <div class="inputcontainer">
+                        <i class="searchicon"></i>
+                        <input type="submit" id="searchBtn" name="B" title="Search" tabindex="4" value="">
+                    </div>
+
+                    <script>
+                        function toSubmit(event) {
+                            if(document.sbox.w.value.slice(0,1) == ":"){
+                                console.log("** I can't submit when it's a shortcut.");
+                                event.preventDefault();
+                                return false;
+                            }
+
+                            if(document.sbox.dict.value == strDic){
+                                location.href = '/' + strDic + '/' + document.sbox.w.value;
+                                return(false);
+                            }
+                            if(document.sbox.dict.value=='lists'){
+                                location.href = '/lists?w=' + encodeURIComponent(document.sbox.w.value);
+                                return(false);
+                            }
+                        }
+                    </script>
+                </form>
+
+                <div id="forumapi">
+                    <span class="forum api bttn"><a href="https://forum.wordreference.com">Forums</a></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+        <div class="content">
+            <table id="contenttable" >
+                <tr>
+                    <td id="leftcolumn">
+    <ul id="left" class="leftcolumn">
+        <li>
+                
+
+<ul>
+    <li class="title1" title="See Also:">See Also:</li>
+</ul>
+<ul>
+    <li id="link" ><ul><li><a href="/definition/Hellespontus">Hellespontus</a></li>
+<li><a href="/definition/hellfire">hellfire</a></li>
+<li><a href="/definition/hellgrammite">hellgrammite</a></li>
+<li><a href="/definition/hellhole">hellhole</a></li>
+<li><a href="/definition/hellhound">hellhound</a></li>
+<li><a href="/definition/Hellinger">Hellinger</a></li>
+<li><a href="/definition/hellion">hellion</a></li>
+<li><a href="/definition/hellish">hellish</a></li>
+<li><a href="/definition/hellkite">hellkite</a></li>
+<li><a href="/definition/Hellman">Hellman</a></li>
+<li><a href="/definition/hello">hello</a></li>
+<li><a href="/definition/hellscape">hellscape</a></li>
+<li><a href="/definition/helluva">helluva</a></li>
+<li><a href="/definition/helm">helm</a></li>
+<li><a href="/definition/helm port">helm port</a></li>
+<li><a href="/definition/Helmand">Helmand</a></li>
+<li><a href="/definition/helmer">helmer</a></li>
+<li><a href="/definition/helmet">helmet</a></li>
+<li><a href="/definition/helmet liner">helmet liner</a></li>
+<li><a href="/definition/helmet shell">helmet shell</a></li>
+<li><a href="/definition/helmeted guinea fowl">helmeted guinea fowl</a></li>
+</ul></li>
+</ul>
+
+            
+<ul>
+    <li class="title1" title="Recent searches:">Recent searches:</li>
+</ul>
+
+<ul id="recentsearches">
+        <li id="wrsave"></li>
+        <li style="list-style-type:none;" id="viewallhistory">
+            <a href="/docs/searchHistory.aspx?dict=enen" target="_blank">View All</a>
+            <script>
+                if ('localStorage' in window && window['localStorage'] !== null) {
+                    if ((localStorage["bWRsaveHistory"]) && (localStorage["bWRsaveHistory"] == "false")) {
+                        document.getElementById("viewallhistory").style.display = "none";
+                    };
+                }
+            </script>
+        </li>
+</ul>
+
+        </li>
+    </ul>
+</td>
+
+
+                    
+                    <td id="centercolumn">
+                        
+<div id="articleHead">
+
+        
+
+                    <h1 class="headerWord">hello</h1>
+                
+            <div id="footerlink"><a href="#footer">[links]</a></div>
+                
+<div id='listen_widget'><span id='listen_txt' style='display: none;'>Listen:</span><input type='hidden' id='audT' value='8' /><script>window.audioFiles = ['/audio/en/uk/general/en042667.mp3','/audio/en/us/us/en042667.mp3','/audio/en/uk/rp/en042667.mp3','/audio/en/uk/Yorkshire/en042667-55.mp3','/audio/en/scot/en042667.mp3','/audio/en/us/south/en042667.mp3','/audio/en/Irish/en042667.mp3','/audio/en/Jamaica/en042667.mp3',];</script><span id='audiodrop'><select id='accentSelection'></select></span></div>
+<script>
+//Select Audio in local storage
+var audPref = localStorage['wr_audio-'+strDic.substr(0,2)];
+//Clear the cached selection
+var sel = document.getElementById('accentSelection')
+var audChoice = '<optgroup label="Accents"><option title="Southern UK" value="0" >UK</option><option title="USA-Neutral pronunciation" value="1" >US</option><option title="Received Pronunciation (BBC English)" value="2" selected="selected">UK-RP</option><option title="Uk Yorkshire" value="3" >UK-Yorkshire</option><option title="Scottish Pronunciation" value="4" >UK-Scottish</option><option title="US-Southern pronunciation" value="5" >US-Southern</option><option title="Irish Pronunciation" value="6" >Irish</option><option title="Jamaican pronunciation" value="7" >Jamaican</option></optgroup><optgroup label="Playback rate"><option title="Speed at 100%" value="%100">100%</option><option title="Speed at 75%" value="%75">75%</option><option title="Speed at 50%" value="%50">50%</option></optgroup>';
+audChoice = audChoice.replace(/ selected=["']selected["']/gm, '');var audT = document.getElementById('audT');if ((audT) && (audPref)) {
+		//Parse the content
+		if(audPref.indexOf(':') > -1) {
+			var audPrefAccent = audPref.split(':')[0];
+			var playbackRate = audPref.split(':')[1];
+		} else {
+			var audPrefAccent = audPref;
+			var playbackRate = 1;
+		}
+		var re = new RegExp('(<option[^>]+)(>' + audPrefAccent + '<\/option>)','gm');		audChoice = audChoice.replace(re, "$1 selected='selected'$2");
+}
+sel.innerHTML = audChoice;
+var isIE11 = (!!window.MSInputMethodContext && !!document.documentMode)
+document.getElementById('listen_txt').style.display = 'inline';
+if(isIE11)
+	document.getElementById('listen_widget').style.display = 'none';
+</script>
+<div id='pronunciation_widget'><div class='pwrapper'><span class='tooltip pronWidget'>UK:<sup>*</sup><span style='font-size:12px'><sup>*</sup>UK and possibly other pronunciations</span></span><span class='pronWR tooltip pronWidget' dir='ltr'><span style='font-size:12px'>UK and possibly other pronunciations</span>/həˈləʊ/</span><span class='tooltip pronWidget' style='border-left:1px solid #c5c5c5; padding:3px 4px; margin-left:7px;'>US:<span style='font-size:12px'>USA pronunciation: IPA and respelling</span></span><span class='pronRH tooltip pronWidget' dir='ltr'><span style='font-size:12px'>USA pronunciation: IPA</span>/hɛˈloʊ, hə-, ˈhɛloʊ/</span> ,<span class='pronRH tooltip pronWidget' dir='ltr'><span style='font-size:12px'>USA pronunciation: respelling</span>(he lō<b>′</b>, hə-, hel<b>′</b>ō)</span></div></div><div id='dummyspan'></div>
+
+
+            <div id="forumNotes"><a id="forumNotesLink">ⓘ One or more forum threads is an exact match of your searched term</a></div>
+            <div id="WHlinks" style="padding-top: 8px;"> 
+    <a href='/enes/hello'>in Spanish</a> | 
+<a href='/enfr/hello'>in French</a> | 
+<a href='/synonyms/hello'>English synonyms</a> | 
+<a href='/encol/hello'>English Collocations</a> | 
+<a href='/EnglishUsage/hello'>English Usage</a> | 
+<a title='conjugate English verbs' href='/conj/enverbs.aspx'>Conjugator</a> | 
+<a title='in Context' Target='gg' href='http://www.google.com/search?tbm=nws&amp;ned=us&amp;hl=en&amp;q=%22hello%22'>in context</a> | 
+<a title='images' Target='gg' href='https://www.google.com/search?tbm=isch&amp;safe=active&amp;q=%22hello%22)'>images</a>
+
+</div>
+
+            <span id='strAnchors'></span>
+
+        <br>
+        
+
+
+        <div class="hw-flex-container" style="direction: ltr">
+            <div class="inflectionsSection">
+                
+
+        <div class='entryinfl' style='padding-left:0px; cursor:pointer;'><dl style='margin:0px 0px 6px;'><strong>Inflections</strong> of '<strong>hello</strong>' (<span class='POS2'><span class='POS2' data-lang='en' data-abbr='n'>n</span></span>):  <span class='POS2'><span class='POS2' data-lang='en' data-abbr='npl'>npl</span></span>: hellos <br></dl></div>
+    
+                
+
+
+
+                            
+                                        
+<div class='otherWRD clickable' style='padding-left:0px; cursor:pointer;'><dl style='margin:12px 0px 6px;'><dt><strong>Inflections</strong> of '<strong><a href='hello'>hello</a></strong>' (<span><span class='POS2' data-lang='en' data-abbr='v'>v</span></span>): (<a href='/conj/enverbs.aspx?v=hello'>⇒ conjugate</a>)</dt><dd style='margin-left:20px;'><dl class='ListInfl'><dt class='ListInfl'>hellos</dt><dd class='ListInfl'><span><span class='POS2' data-lang='en' data-abbr='v+3rd+person+singular'>v 3rd person singular</span></span> </dd></dl></dd><dd style='margin-left:20px;'><dl class='ListInfl'><dt class='ListInfl'>helloing</dt><dd class='ListInfl'><span><span class='POS2' data-lang='en' data-abbr='v+pres+p'>v pres p</span></span> </dd></dl></dd><dd style='margin-left:20px;'><dl class='ListInfl'><dt class='ListInfl'>helloed</dt><dd class='ListInfl'><span><span class='POS2' data-lang='en' data-abbr='v+past'>v past</span></span> </dd></dl></dd><dd style='margin-left:20px;'><dl class='ListInfl'><dt class='ListInfl'>helloed</dt><dd class='ListInfl'><span><span class='POS2' data-lang='en' data-abbr='v+past+p'>v past p</span></span> </dd></dl></dd></dl></div>
+            </div><!-- End of inflectionsSection -->
+        </div><!-- End of flex-container -->        
+</div><!-- End of articleHead -->
+
+                        
+
+                            
+
+
+                            
+
+
+    <div id="article">
+        <div id='otherDicts'>
+
+                
+<br>
+<style>
+    .entryRH{display:block;padding-top:10px}.entrySeparator{margin-bottom:1em;border-bottom:1px solid #dcdcdc}.rh_me{font-weight:700}.rh_pron{font-size:14px;padding-left:5px;font-family:"Times New Roman",Times,serif;font-style:normal;color:var(--body-highlighted-text-color)}.tooltip.rh_pron{display:inline;position:relative}.rh_pdef{font-style:normal;display:block}.rh_idib{display:block}.rh_empos{font-weight:700;font-style:italic}.rh_def{font-style:normal;display:block;margin-top:5px}.rh_var{font-style:normal}.rh_ros{display:block;font-weight:400}.rh_xr{display:block;font-weight:400}.rh_sc{font-variant:small-caps}.rh_pos{font-weight:400}.rh_txt{font-style:normal;font-weight:400}.rh_ex{display:block;padding-left:15px;text-indent:-10px;color:gray}.cFord .ford:before{display:initial!important;content:'#'!important}.supnt{font-style:normal;display:block;margin:5px 0 0 10px;border:1px solid #000;padding:5px 10px 5px 5px}.supnt ul{margin-top:0;margin-bottom:0}.supnt li{list-style:none;text-indent:-15px}.supnt .rh_pron{padding-left:0}.supnt .s_usage:after{font-weight:700;content:'Usage'}.supnt .s_syn:after{font-weight:700;content:'Synonyms'}.supnt .s_synstudy:after{font-weight:700;content:'Synonym Study'}.supnt .s_sst:after{font-weight:700;content:'Synonym Study'}.supnt .s_regvar:after{font-weight:700;content:'Regional Variation'}.supnt .s_reg:after{font-weight:700;content:'Regional Variation'}.supnt .s_pron:after{font-weight:700;content:'Pronunciation'}.supnt .s_note:after{font-weight:700;content:'Note'}.supnt .s_hist:after{font-weight:700;content:'History'}.supnt .s_ff:after{font-weight:700;content:'False Friend'}.supnt .s_ant:after{font-weight:700;content:'Antonyms'}.supnt .s_rel:after{font-weight:700;content:'Related Words'}ol{margin-top:0;margin-bottom:8px}ul{list-style-type:square;padding-left:15px}.rh_lab{color: var(--body-text-color);font-style:italic;float:right;text-align:right;font-size:.85em;padding-left:8px}.rh_lab.gram{font-size:.85em}.rh_lab.gram a{font-size:1em!important}.rh_lab span{font-style:normal}.rh_ety{font-style:normal;display:block;font-weight:400;margin:5px 0 5px 10px;border:1px solid #000;padding:5px}.rh_ety:before{font-weight:700;content:'Etymology'}.rh_desc{display:block}.rh_cat{color: var(--body-text-color);float:right;background:rgba(180,188,219,.46);border:1px solid gray;border-radius:3px;padding:.5px 4px .5px 4px;margin-left:20px;font-size:smaller}.etyUl{list-style:none;padding-left:1.3em;margin-top:0;margin-bottom:0}.etyLi{list-style-position:inside;text-indent:-1.2em}.etyLi:before{content:"➜"}
+</style>
+
+
+<span class='small1'>WordReference Random House Learner's Dictionary of American English &copy; 2026</span><br><div class='entryRH trans clickable'></ol><span class='rh_me'>hel•lo<sup style='font-weight:normal;'></sup></span>&nbsp;<em class='tooltip rh_pron'>/hɛˈloʊ, hə-, ˈhɛloʊ/<span>USA pronunciation</span></em>&nbsp;&nbsp;
+<span class='rh_pdef'><span class='rh_pos'>interj., n., pl.</span>&nbsp;<b>-los.</b>&nbsp;</span><br><span class='rh_empos'>interj.</span>&nbsp;<ol><li id=advanced_1 value=1><span class='rh_def'>This word is used to express a greeting, answer a telephone, or attract attention:<span class='rh_ex'>Hello, how are you?</span></span></li>
+<li id=advanced_2 value=2><span class='rh_def'>This word is used to express surprise, wonder, etc.:<span class='rh_ex'>"Hello, what's this?'' said the detective.</span></span></li>
+</ol><br><span class='rh_empos'>n.</span>&nbsp;<span class='rh_lab'><span>[</span><a href='count%20noun'>countable</a><span>]</span></span><ol><li id=advanced_3 value=3><span class='rh_def'>an act or instance of saying "hello'';<br> greeting:<span class='rh_ex'>a mumbled hello.</span></span></li></ol>
+<br></ol></div><div class='entrySeparator'></div><span class='small1'>WordReference Random House Unabridged Dictionary of American English &copy; 2026</span><br><div class='entryRH trans clickable'></ol><span class='rh_me'>hel•lo<sup style='font-weight:normal;'></sup></span>&nbsp;
+<em class='tooltip rh_pron'>(he lō<b>′</b>, hə-, hel<b>′</b>ō),<span>USA pronunciation</span></em>&nbsp;<span class='rh_pdef'><span class='rh_pos'>interj., n., pl.</span>&nbsp;<b>-los,</b>&nbsp;<span class='rh_pos'>v.,</span>&nbsp;<b>-loed, -lo•ing.</b>&nbsp;</span><br><span class='rh_empos'>interj.</span>&nbsp;<ol><li id=unabridged_1 value=1><span class='rh_def'>(used to express a greeting, answer a telephone, or attract attention.)</span></li>
+<li id=unabridged_2 value=2><span class='rh_def'>(an exclamation of surprise, wonder, elation, etc.)</span></li>
+<li id=unabridged_3 value=3><span class='rh_def'>(used derisively to question the comprehension, intelligence, or common sense of the person being addressed):<span class='rh_ex'>You're gonna go out with him <i>? Hello!</i></span></span></li>
+</ol><br><span class='rh_empos'>n.</span>&nbsp;<ol><li id=unabridged_4 value=4><span class='rh_def'>the call "hello'' (used as an expression of greeting):<span class='rh_ex'>She gave me a warm hello.</span></span></li>
+</ol><br><span class='rh_empos'>v.i.</span>&nbsp;<ol><li id=unabridged_5 value=5><span class='rh_def'>to say "hello'';<br> to cry or shout:<span class='rh_ex'>I helloed, but no one answered.</span></span></li>
+</ol><br><span class='rh_empos'>v.t.</span>&nbsp;<ol><li id=unabridged_6 value=6><span class='rh_def'>to say "hello'' to (someone):<span class='rh_ex'>We helloed each other as though nothing had happened.</span></span></li></ol><var>Also,<span class='rh_lab'><span>[</span>esp. Brit.,<span>]</span></span> <b>hullo.</b>&nbsp;</var>
+<div id='RHety' class='rh_ety'><ul class='etyUl'><li class='etyLi' style='margin-left:0em;'> variant of <span class='rh_sc'>hallo</span> 1865–70</li></ul></div>
+<br></ol><span class='rh_me'>hello,<sup style='font-weight:normal;'></sup></span>&nbsp;+<span class='rh_pos'>interj.</span>&nbsp;
+<ol><li id=unabridged_0 value=1><span class='rh_def'>(used derisively to question the comprehension, intelligence, or common sense of the person being addressed):<span class='rh_ex'>You're gonna go out with him? <i> Hello!</i></span></span></li></ol>
+<br></ol></div><div class='entrySeparator'></div><div class='small1'>Collins Concise English Dictionary © HarperCollins Publishers::</div>
+<div class='superentry collinsen trans clickable'><div class='entry' id="uffcfaf76bd71c570.-6a6b9a69.1430c86b290.6149"><span class='hwblk'><strong class='hw'>hello</strong>, <strong class='hw'>hallo</strong>, <strong class='hw'>hullo</strong> <span class='prongrp'>/<span class='pron'>hɛˈləʊ</span>;  <span class='pron'>hə-</span>;  <span class='pron'>ˈhɛləʊ</span>/</span></span> <span class='gramcat'> <span class='subjarea'>sentence substitute</span> <ol class='senses'><li class='sense'> <span class='definition'>an expression of greeting used on meeting a person or at the start of a telephone call</span></li><li class='sense'> <span class='definition'>a call used to attract attention</span></li><li class='sense'> <span class='definition'>an expression of surprise</span></li><li class='sense'> <span class='definition'>an expression used to indicate that the speaker thinks his or her listener is naive or slow to realize something</span>: <span class='example'>Hello? Have you been on Mars for the past two weeks or something?</span></li></ol></span> <span class='gramcat'> <span class='subjarea'>n</span>  (<span class='inflgroup'> <span class='subjarea'>pl</span>  <span class='infl'>-los</span></span>)<ol class='senses'><li class='sense' style='list-style-type:none'> <span class='definition'>the act of saying or calling "hello"</span></li></ol></span><span class='etymology'>Etymology: 19<span style='vertical-align: super'>th</span> Century: see  <span class='smallcaps'>hallo</span></span></div></div>
+<div class='entrySeparator'></div>            </div> <!--End of otherDicts div -->
+                
+
+<div id='FTintro'><span class='ph' data-ph='sFTintro:hello'>'<b>hello</b>' also found in these entries (note: many are not synonyms or translations):</span>
+</div>
+<div class='FTlist'>
+<a href="/definition/dumela">dumela</a>
+ - <a href="/definition/golden hello">golden hello</a>
+ - <a href="/definition/hallo">hallo</a>
+ - <a href="/definition/hi">hi</a>
+ - <a href="/definition/howdy">howdy</a>
+ - <a href="/definition/howzit">howzit</a>
+ - <a href="/definition/hullo">hullo</a>
+ - <a href="/definition/Adam">Adam</a>
+ - <a href="/definition/aloha">aloha</a>
+ - <a href="/definition/bonjour">bonjour</a>
+ - <a href="/definition/ciao">ciao</a>
+ - <a href="/definition/hey">hey</a>
+ - <a href="/definition/hulloa">hulloa</a>
+ - <a href="/definition/say">say</a>
+ - <a href="/definition/so">so</a>
+</div>
+
+
+    </div> 
+                            
+
+                            
+<div id="postArticle">
+    
+
+
+
+            
+
+<div class='extras odd'><div><span class='extra_category' title='In Lists'>In Lists: </span><a href='/lists/show/top-2000-english-words.1'>Top 2000 English words</a>, <a href='/lists/show/spoken-greetings.171'>Spoken greetings</a>, <a href='/lists/show/things-you-say-when-someone-gets-home.857'>Things you say when someone gets home</a>, <a href='/lists' title='more...'> more...</a></div><div><span class='extra_category' title='Synonyms'>Synonyms: </span><a href='/enen/hi'>hi</a>, <a href='/enen/hey'>hey</a>, <a href='/enen/hullo'>hullo</a>, <a href='/enen/hallo'>hallo</a>, <a href='/enen/hiya'>hiya</a>, <a href='/synonyms/hello' title='more...'> more...</a></div><div><span class='extra_category' title='Collocations'>Collocations: </span>a [friendly, forced, mumbled, quick] hello, [waved, nodded] a hello (to), [waved] to say hello, <a href='/EnglishCollocations/hello' title='more...'> more...</a></div></div>
+
+
+    
+
+<p id='threadsHeader' title='Forum discussions with the word(s) "hello" in the title'><span style='margin-right: 7px; font-size: 1.3em;'>🗣️</span><span class='ph' data-ph='sFDisc:hello'>Forum discussions with the word(s) "hello" in the title:</span></p><div id="lista_link" data-mode="compact"><a href='https://forum.wordreference.com/threads/lady-always-with-an-adjective-hello-young-lady.4138645/'>&#39;lady&#39; always with an adjective? [<b>Hello</b>, young lady]</a><br>
+<a href='https://forum.wordreference.com/threads/as-you-stand-to-say-hello.3624230/'>As you stand to say <b>hello</b></a><br>
+<a href='https://forum.wordreference.com/threads/british-greetings-hello-ay-up-wotcha-and-others.179604/'>British greetings [<b>hello</b>, ay-up, wotcha, and others]</a><br>
+<a href='https://forum.wordreference.com/threads/comma-after-hello-hi-etc.3086833/'>Comma after <b>Hello</b>, Hi, etc</a><br>
+<a href='https://forum.wordreference.com/threads/comma-between-hi-hello-and-name-salutation-hi-paul-i.1247529/'>comma between &#39;hi&#39; / &#39;<b>hello</b>&#39; and name [salutation]: Hi, Paul, I</a><br>
+<a href='https://forum.wordreference.com/threads/comma-or-colon-with-speech-tag-with-a-dry-mouth-he-said-hello.598620/'>comma or colon with speech tag: With a dry mouth he said: &#39;<b>hello</b>!&#39;</a><br>
+<a href='https://forum.wordreference.com/threads/defining-hello-grammatically.1967794/'>Defining &quot;<b>Hello</b>&quot; grammatically</a><br>
+<a href='https://forum.wordreference.com/threads/did-i-have-you-at-hello.3447890/'>Did I have you at <b>hello</b>?</a><br>
+<a href='https://forum.wordreference.com/threads/dont-forget-to-say-hello-to-your-mom-response-to.2141532/'>Don&#39;t forget to say <b>hello</b> to your mom. [Response to]</a><br>
+<a href='https://forum.wordreference.com/threads/general-send-my-hello-to-your-family.2714128/'>General: send my <b>hello</b> to your family</a><br>
+<a href='https://forum.wordreference.com/threads/give-my-love-to-x-say-hello-to-x.2544896/'>give my love to X / say <b>hello</b> to X</a><br>
+<a href='https://forum.wordreference.com/threads/good-morning-hello.3362062/'>Good morning -<b>Hello</b></a><br>
+<a href='https://forum.wordreference.com/threads/good-morning-hello-excuse-me-sir.3155260/'>Good morning / <b>Hello</b> / Excuse me, Sir.</a><br>
+<a href='https://forum.wordreference.com/threads/greet-wish-someone-hello-namashkaar-or-assalam-o-alaikum.3225691/'>Greet/wish someone <b>Hello</b>, Namashkaar or Assalam-o-alaikum?</a><br>
+<a href='https://forum.wordreference.com/threads/greeting-a-professor-hello-or-something-else.3086730/'>Greeting a professor: <b>Hello</b>, or something else?</a><br>
+<a href='https://forum.wordreference.com/threads/greetings-vs-hello.3733684/'>Greetings vs <b>Hello</b></a><br>
+<a href='https://forum.wordreference.com/threads/ha-hello.2735004/'>Ha! <b>Hello</b>!</a><br>
+<a href='https://forum.wordreference.com/threads/he-is-saying-says-hello-to-you-as-we-speak.3559565/'>He &lt;is saying&gt;&lt;says&gt; <b>hello</b> to you as we speak</a><br>
+<a href='https://forum.wordreference.com/threads/hello-i-m-not-sure-about-a-few-sentences.45618/'><b>Hello</b> , I m not sure about a few sentences !</a><br>
+<a href='https://forum.wordreference.com/threads/hello-expression-of-surprise.2160360/'><b>hello</b> (expression of surprise)</a><br>
+<a href='https://forum.wordreference.com/threads/hello-good-morning-everyone-or-hello-good-morning-everyone.3184666/'><b>hello</b> (good morning), everyone or <b>hello</b> (good morning) everyone</a><br>
+<a href='https://forum.wordreference.com/threads/hello-used-only-formally.3103315/'><b>Hello</b> [used only formally?]</a><br>
+<a href='https://forum.wordreference.com/threads/hello-hi-hey.423798/'><b>Hello</b> / Hi / Hey</a><br>
+<a href='https://forum.wordreference.com/threads/hello-and-duh.1142834/'><b>hello</b> and duh</a><br>
+<a href='https://forum.wordreference.com/threads/hello-and-other-greetings.2042821/'><b>Hello</b> and other greetings</a><br>
+<a href='https://forum.wordreference.com/threads/hello-can-i-say-i-have-only-you-put-in-my-schedule.2238466/'><b>Hello</b> Can I say &#39;I have only you put in my schedule&#39;?</a><br>
+<a href='https://forum.wordreference.com/threads/hello-can-someone-help-me-to-get-the-idea-around-this-lines.3197876/'><b>Hello</b> can someone help me to get the idea around this Lines</a><br>
+<a href='https://forum.wordreference.com/threads/hello-dear%E2%9C%93-%C3%97.3752249/'><b>Hello</b> dear✓/&#215;?</a><br>
+<a href='https://forum.wordreference.com/threads/hello-early-bird.3987003/'><b>Hello</b> Early Bird.</a><br>
+<a href='https://forum.wordreference.com/threads/hello-everyone-how-do-you-say-the-date-2015-twenty-fifteen-or-two-thousand-fifteen.3105023/'><b>Hello</b> everyone , how do you say the date 2015? Twenty fifteen or two thousand fifteen?</a><br>
+<a href="/definition/forumtitles/hello" title='more...'><strong>more...</strong></a><div class='extra_links'><a href='https://forum.wordreference.com/forums/6/' title="Visit the English Only Forum"><span class='ph' data-ph='sVisitForum:English Only|6'>Visit the English Only Forum.</span></a><br /><a href='https://forum.wordreference.com/forums/6/' title="Ask in the forums yourself">Help WordReference: <span class='ph' data-ph='sAskYourself'>Ask in the forums yourself.</span></a></div></div> <!-- End lista_link --><div id='extra_links'></div>
+
+        <br>
+        <a href="https://www.merriam-webster.com/dictionary/hello" target="_blank">Look up "hello" at Merriam-Webster</a><br>
+        <a href="https://www.dictionary.com/browse/hello" target="_blank">Look up "hello" at dictionary.com</a>
+
+    
+
+    <style>
+
+        ul#announcement, ul#announcement a { 
+            font-size: 12px; 
+        }
+        ul#announcement {
+            margin: 0;
+            border-top: 1px solid var(--announcement-border-color);
+            margin-top: 2vh;
+            margin-bottom: 2vh;
+            border-radius: 10px;
+            padding: 10px !important;
+            background-color: var(--announcement-background-color);
+        }
+        ul#announcement > li {
+            line-height: 20px;
+            list-style: none;
+            text-indent: -22px;
+            padding-left: 22px;
+        }
+        html[dir=rtl] ul#announcement > li {
+            text-indent: 0;
+        }
+        .annIcon {
+            display: inline-block;
+            background: url(https://cdnawsw.wordreference.net/images/sprite_2022.webp?v=241226) no-repeat;
+            background-size: 160px 172px;
+            background-position: -39px -141px;
+            width: 20px;
+            height: 16px;
+            line-height: 20px;
+            vertical-align: text-bottom;
+        }
+        .webpNoSupp .annIcon {
+            background: url(https://cdnawsw.wordreference.net/images/sprite_2022.png?v=241226) no-repeat;
+        }
+        html[dir=rtl] .annIcon {
+            -moz-transform: scaleX(-1);
+            -o-transform: scaleX(-1);
+            -webkit-transform: scaleX(-1);
+            transform: scaleX(-1);
+            filter: FlipH;
+            -ms-filter: "FlipH";
+        }
+        @media screen and (max-width: 769px) {
+            ul#announcement {
+                padding: 5px 10px 5px 10px;
+                border-bottom: none;
+            }
+        }
+    </style>
+    <ul id="announcement">
+            <li><span class="annIcon"></span><span>Go to <a href='/preferences'>Preferences</a> page and choose from different actions for taps or mouse clicks.</span></li>
+    </ul>
+
+
+        
+
+
+            <p class='other_languages'><span title='In other languages:'>In other languages:</span> <a href="/enes/hello" title='Spanish'>Spanish</a> | <a href="/enfr/hello" title='French'>French</a> | <a href="/enit/hello" title='Italian'>Italian</a> | <a href="/enpt/hello" title='Portuguese'>Portuguese</a> | <a href="/enro/hello" title='Romanian'>Romanian</a> | <a href="/ende/hello" title='German'>German</a> | <a href="/ennl/hello" title='Dutch'>Dutch</a> | <a href="/ensv/hello" title='Swedish'>Swedish</a> | <a href="/enru/hello" title='Russian'>Russian</a> | <a href="/enpl/hello" title='Polish'>Polish</a> | <a href="/encz/hello" title='Czech'>Czech</a> | <a href="/engr/hello" title='Greek'>Greek</a> | <a href="/entr/hello" title='Turkish'>Turkish</a> | <a href="/enzh/hello" title='Chinese'>Chinese</a> | <a href="/enja/hello" title='Japanese'>Japanese</a> | <a href="/enko/hello" title='Korean'>Korean</a> | <a href="/enar/hello" title='Arabic'>Arabic</a> </p>
+        
+
+        
+
+
+
+    <div id="postLinks">
+        <span title="Links">Links:</span>
+        <a href='/Preferences'>⚙️Preferences</a> | 
+<a title='Abbreviations' href='/english/abbreviationsWRD.aspx?dict=enen'>Abbreviations</a> | 
+<a title='Pronunciations' href='/english/Pronunciation-English.aspx'>Pron. Symbols</a> | 
+<a title='Privacy Policy' href='/english/Privacy%20Policy.htm'>Privacy Policy</a> | 
+<a title='Terms of Service' href='/english/TermsOfService.aspx'>Terms of Service</a> | 
+<a title='Support WR' href='/docs/support-wordreference.aspx'>Support WR</a> | 
+<a title='Forums' href='https://forum.wordreference.com/'>Forums</a> | 
+<a title='Suggestions' href='https://forum.wordreference.com/misc/contact'>Suggestions</a>
+
+    </div>
+
+</div> <!-- End of postArticle -->
+
+<!-- Other scripts-->
+
+
+
+
+                    
+
+                    </td>
+                    
+
+                    
+
+    <td id="rightcolumn">
+            
+            <div class='adtitle' style='width:100%;text-align:center;color:gray;'>Advertisements</div>
+            <div style='height:260px;border-bottom: solid 1px #dcdcdc;padding-bottom:5px'>
+
+                <!-- adngin-side_mpu_1-0 -->
+                <div id='adngin-side_mpu_1-0'></div>            </div>
+        <div id="rightStickyContent" style="position: sticky; top: 53px;">
+                <div class='adtitle' style='width:100%;text-align: center;color: gray;'>Advertisements</div>
+                <div style='height:260px;width: 100%; border-bottom: solid 1px #dcdcdc; padding-bottom: 5px;'>
+
+                <!-- adngin-side_mpu_2-0 -->
+                <div id='adngin-side_mpu_2-0'></div>                </div>
+                <div id="reportAdLink" style='padding: 5px 0 7px 0;border-bottom: solid 1px #dcdcdc;'>
+                    <a href="/docs/report.ad.aspx?dict=enen" target="_blank" title="Report an inappropriate ad." style="font-size:12px;text-align:left;margin-left:5px;">Report an inappropriate ad.</a>
+                </div>
+
+                <div style='text-align:center;border-bottom:solid 1px #dcdcdc;'>
+                        <a id='GooglePlay' href='https://play.google.com/store/apps/details?id=com.wordreference' title='Android App' style='background-position:-5px -61px;background-repeat:no-repeat;'></a>
+                    <a href='https://apps.apple.com/us/app/wordreference-dictionary/id515127233' id='AppStore' title='iPhone App' style='background-position:-5px -5px;background-repeat:no-repeat;'></a>
+                </div>
+            <div class='wrSupportRightAdLink' style='font-size:12px;text-align:left;padding-left:5px;padding-top:6px'>
+                <a href="/docs/supporter.aspx" target="_blank" title="WordReference Supporter - no ads">Become a WordReference Supporter to view the site ad-free.</a>
+            </div>
+
+                <div id="RightColcLastRow">
+                    <div dir="auto" class="FCboxes" title="Shortcut for Chrome">
+                        <b class="highlight">Chrome users:</b> Use <a href="/tools/Chrome-search-shortcut.aspx">search shortcuts</a> for the fastest search of WordReference.
+                    </div>
+                </div>
+        </div>
+
+    </td>
+
+                </tr>
+            </table>
+        </div>
+        
+<div id="footer">
+
+    
+
+
+<table class='footer'>
+    <tr>
+        <td><a href="/english/copyright.aspx">Copyright</a> © 2026 WordReference.com</td>
+        <td style="display: flex; align-items: end; justify-content: flex-end;">
+            <div style="text-align:right;white-space: nowrap;" title="Please report any problems.">Please <a href="https://forum.wordreference.com/misc/contact">report</a> any problems.</div>
+        </td>
+    </tr>
+</table>
+
+</div>
+
+
+    </div>
+    
+
+<script>
+    // Merge server data with existing wrserver object to avoid losing any previously set properties
+
+        var serverData = {
+  "Initialization": {
+    "Id": 6,
+    "Exception": null,
+    "Status": 5,
+    "IsCanceled": false,
+    "IsCompleted": true,
+    "IsCompletedSuccessfully": true,
+    "CreationOptions": 0,
+    "AsyncState": null,
+    "IsFaulted": false
+  },
+  "ddict": {
+    "dict": "enen",
+    "dict_alt": "definition",
+    "isDictionary": true,
+    "isBase": false,
+    "isMonolingual": true,
+    "isVirtual": false,
+    "isVirtualPlus": false,
+    "isAutomatic": false,
+    "isReversible": false,
+    "showOtherSide": false,
+    "hasOneSide": true,
+    "addVirtualInGA": false,
+    "isRightToLeft": false,
+    "isAsian": false,
+    "isWRDict": false,
+    "isCollins": true,
+    "isEspasa": false,
+    "isMondadori": false,
+    "isLarousse": false,
+    "isLangenscheidt": false,
+    "isConjugator": false,
+    "forumIDs": "6,92",
+    "defaultForumID": "6",
+    "defaultForumName": "English Only",
+    "forumTableName": "wr_thread_enen",
+    "IsValidDictionary": true,
+    "dict_OppositeDirection": "enen",
+    "term_count": 260897,
+    "collocation_count": 0,
+    "translation_count": 0,
+    "stats_last_updated": "2026-08-31T06:00:13",
+    "note": "Random House Learner\u0027s Dictionary: should i add this dictionary also ?",
+    "last_update": null,
+    "isSpaceAcceptedInCompounds": true
+  },
+  "ipcc": "GB",
+  "ipcc2": [
+    "ENG",
+    "CON"
+  ],
+  "os": 0,
+  "platform": 0,
+  "browser": 0,
+  "browserVersion": 0,
+  "route": null,
+  "IsVirtKeyboardNeeded": false,
+  "servername": "wwwde2",
+  "lineCount": {
+    "regular": 0,
+    "phrasal": 0,
+    "compounds": 0
+  },
+  "ad": {
+    "AdMode": 0,
+    "AdModeName": null,
+    "bGoogleOnly": false,
+    "AdAllowedCountries": [],
+    "bEnablePrebid": false,
+    "bEnableConfiant": false,
+    "bPrebid": false,
+    "bPrebid_forum": false,
+    "bPrebid_728A": false,
+    "bPrebid_300A": false,
+    "bPrebid_300B": false,
+    "bPrebid_728F_top": false,
+    "bPrebid_728F_mid": false,
+    "bPrebid_728F_bot": false,
+    "bPrebid_m320x50": false,
+    "bPrebid_mf320x50": false,
+    "bPrebid_m300x250": false,
+    "bPrebid_728x90mt": false,
+    "bPrebid_indep": false,
+    "bPrebid_abtest": false,
+    "au728A": null,
+    "au728x90mt": null,
+    "au300A": null,
+    "au300B": null,
+    "aum320x50": null,
+    "aumf320x50": null,
+    "aum300x250": null,
+    "bNoAds": false,
+    "useConsent": false,
+    "errors": null,
+    "isForum": false,
+    "runABTest": false,
+    "RandomClass": null,
+    "RandomNumber": 0,
+    "RandomNumber10000": 0,
+    "bLazyLoadingEnabled": false,
+    "bEnableBlockThrough": false,
+    "UseInlineCode": false,
+    "IsTestAdPage": false,
+    "auf728F_top": null,
+    "auf728F_mid": null,
+    "auf728F_bot": null,
+    "bSnigelEnabled": true,
+    "bWREnabled": false,
+    "SelectedProviderName": null,
+    "SnigelDesktopReqPercent": 50,
+    "SnigelMobileReqPercent": 50,
+    "Settings": null
+  },
+  "wrTraceData": [],
+  "renderManifest": null
+};
+        if (typeof wrserver !== 'undefined' && wrserver !== null) {
+            // Preserve existing wrTraceData if it exists and has content
+            var existingTraceData = wrserver.wrTraceData;
+            
+            // Merge serverData into existing wrserver object
+            Object.assign(wrserver, serverData);
+            
+            // Restore the existing wrTraceData if it was more populated than the server data
+            if (existingTraceData && existingTraceData.length > 0 && 
+                (!serverData.wrTraceData || serverData.wrTraceData.length === 0)) {
+                wrserver.wrTraceData = existingTraceData;
+            }
+        } else {
+            // If wrserver doesn't exist, create it with serverData
+            var wrserver = serverData;
+        }
+        </script>
+
+
+
+
+
+
+<script>
+	//for placeholder text to fade on focus
+	if (document.getElementById("si")){
+		document.getElementById("si").onfocus = function(){
+			document.getElementById("si").placeholder = '';
+		};
+	}
+</script>
+
+<!--[if lt IE 9]>
+<script>
+	if (document.getElementById("listen_widget")){
+		function addUpgradeNotice(){
+			if (!document.getElementById("audtag")){
+				if (!document.getElementById("ieupgrade")){
+					var upgradeDiv = document.createElement("div");
+					upgradeDiv.id = 'ieupgrade';
+					upgradeDiv.innerHTML = 'The audio on WordReference works best with the latest version of Internet Explorer. <a target="_blank" href="http://windows.microsoft.com/en-US/internet-explorer/downloads/ie/">Upgrade now!</a>';
+					document.getElementById("listen_widget").parentElement.insertBefore(upgradeDiv, document.getElementById("listen_widget").nextSibling);
+				}
+			}
+		}
+	
+		document.getElementById("listen_widget").onclick = function(){
+			return addUpgradeNotice();
+		}
+		function dismissUpgrade(){
+			document.getElementById("ieupgrade").parentElement.removeChild(document.getElementById("ieupgrade"));
+		}
+
+	}
+</script>
+<![endif]-->
+
+
+
+
+
+<script>
+    var dMatch = true;
+    var fMatch = false;
+    var isReverseDict = false;
+    var isVirtualDict = false;
+
+    var visitor = {
+        browser: 0,
+        browserOS: 0,
+        browserVersion: 0,
+        platform: 0,
+        country: "WRDicts.Models.VisitorCountryModel"
+    };
+
+    gtag('event', 'www', {
+      'event_category': 'site',
+      'non_interaction': true
+    });
+
+    gtag('event', 'wwwde2-458f5494', {
+        'non_interaction': true,
+        'event_callback': function() {
+            consoleDebug('wwwde2-458f5494');
+        }
+    });
+
+    //ga('send', { hitType: 'event', eventCategory: '', eventAction: 'www'}, {nonInteraction: true});
+    /*
+    if (typeof GDPRcookieYes !== "undefined") {
+        ga('send', 'GDPRcookieYes', {
+        'dimension3':   GDPRcookieYes.toString()
+        });
+    }
+    */
+
+</script>
+
+<script type="application/ld+json">
+{
+    "@context": "http://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [{
+    "@type": "ListItem",
+    "position": 1,
+    "item": {
+        "@id": "//www.wordreference.com/definition/",
+        "name": "English Dictionary"
+    }
+    },{
+        "@type": "ListItem",
+        "position": 2,
+        "item": {
+        "@id": "//www.wordreference.com/definition/hello",
+        "name": "hello"
+        }
+    }]
+}
+</script>
+
+
+
+<script>
+    console.log(">> Server name:", 'wwwde2');
+</script>
+
+
+
+
+<script>
+(function() {
+    'use strict';
+    
+    // Check if debug collection is enabled before loading any debug scripts
+    if (!('localStorage' in window) || window['localStorage'] === null) {
+        return; // Exit silently if localStorage not available
+    }
+    
+    try {
+        var sWRSettings = localStorage['sWRSettings'] ? JSON.parse(localStorage['sWRSettings']) : {};
+        
+        // Check if debug collection is enabled
+        var debugEnabled = sWRSettings.debugInfo && sWRSettings.debugInfo.enabled === true;
+        
+        if (!debugEnabled) {
+            return; // Exit silently if debug collection is disabled
+        }
+        
+        // First load debugInfoCore.js
+        var isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        var hasNoMinifyParam = window.location.search.indexOf('nominify') !== -1;
+        
+        var coreScript = document.createElement('script');
+        coreScript.src = (isDevelopment || hasNoMinifyParam) ? '/js/debugInfoCore.js' : '/js/debugInfoCore.min.js';
+        coreScript.src += '?v=' + Date.now(); // Cache busting
+        
+        coreScript.onload = function() {
+            // Core is loaded, now check if collection should proceed
+            if (typeof isDebugCollectionEnabled === 'function' && 
+                typeof isAllowedForDebugCollection === 'function' &&
+                isDebugCollectionEnabled() && isAllowedForDebugCollection()) {
+                
+                // Only then load the collection script
+                var collectScript = document.createElement('script');
+                collectScript.src = (isDevelopment || hasNoMinifyParam) ? '/js/debugInfoCollect.js' : '/js/debugInfoCollect.min.js';
+                collectScript.src += '?v=' + Date.now(); // Cache busting
+                
+                document.head.appendChild(collectScript);
+            }
+        };
+        
+        coreScript.onerror = function() {
+            // Silently handle core script loading errors
+        };
+        
+        document.head.appendChild(coreScript);
+        
+    } catch (e) {
+        // Silently handle any errors - no debug scripts loaded
+    }
+})();
+</script>
+
+
+
+    
+    <script>
+    
+</script>
+</body>
+</html>

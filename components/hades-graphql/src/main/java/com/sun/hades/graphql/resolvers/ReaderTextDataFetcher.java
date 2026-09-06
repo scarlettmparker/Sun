@@ -14,6 +14,7 @@ import com.sun.hades.codegen.types.ReaderText;
 import com.sun.hades.codegen.types.ReaderTextInput;
 import com.sun.hades.codegen.types.TextLevelAssessment;
 import com.sun.hades.codegen.types.Word;
+import com.sun.hades.codegen.types.WordDictionary;
 import com.sun.hades.codegen.types.WordScope;
 import com.sun.hades.graphql.services.ReaderTextGraphQLService;
 import com.sun.hades.graphql.services.WordReferenceService;
@@ -116,12 +117,13 @@ public class ReaderTextDataFetcher {
    *
    * @param word the headword to look up
    * @param scope the parts of the page to include
+   * @param dictionary the dictionary to query, defaulting to Greek-English
    * @return the word, or null when the entry does not exist
    */
   @DgsData(parentType = "HadesQueries", field = "defineWord")
   @PreAuthorize("@permissions.has('graphql.hades.defineWord')")
-  public Word defineWord(String word, List<WordScope> scope) {
-    return wordReferenceService.defineWord(word, scope);
+  public Word defineWord(String word, List<WordScope> scope, WordDictionary dictionary) {
+    return wordReferenceService.defineWord(word, scope, dictionary);
   }
 
   /**

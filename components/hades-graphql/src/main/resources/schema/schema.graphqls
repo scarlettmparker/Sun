@@ -37,6 +37,14 @@ enum WordScope {
 }
 
 """
+Which WordReference dictionary to query.
+"""
+enum WordDictionary {
+  GREEK_ENGLISH
+  ENGLISH
+}
+
+"""
 A dictionary word with its translations, compounds, and related words.
 """
 type Word {
@@ -333,7 +341,7 @@ type HadesQueries {
   ): [ReaderAccount!]!
   myVote(targetType: ReaderVoteTarget!, targetId: ID!): VoteValue
   locateRemoteObjects(ids: [String!]!): [ReaderObjectReference!]!
-  defineWord(word: String!, scope: [WordScope!]): Word
+   defineWord(word: String!, scope: [WordScope!], dictionary: WordDictionary): Word
   viewedTexts(pagination: PaginationInput): PagedTextViews!
   viewedReaderTexts(pagination: PaginationInput): PagedReaderTexts!
   locateReaderTexts(ids: [ID!]!): [ReaderText!]!

@@ -3,6 +3,7 @@ package com.sun.hades.graphql.services;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.sun.hades.codegen.types.Word;
+import com.sun.hades.codegen.types.WordDictionary;
 import com.sun.hades.codegen.types.WordScope;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -72,6 +73,43 @@ class WordReferenceServiceTest {
     assertThat(word.getEntries().get(0).getTranslations())
         .extracting(com.sun.hades.codegen.types.WordTranslation::getTerm)
         .contains("Ουαλία");
+  }
+
+  @Test
+  void defineWord_english_returnsDefinitions() throws Exception {
+    Word word = service.parseWord(
+        fixture("wordreference/definition-hello.html"),
+        "hello",
+        List.of(),
+        WordDictionary.ENGLISH);
+
+    assertThat(word).isNotNull();
+    assertThat(word.getTerm()).isEqualTo("hello");
+    assertThat(word.getEntries()).isNotEmpty();
+    assertThat(word.getEntries().get(0).getTranslations().get(0).getTerm()).isNotBlank();
+    assertThat(word.getSourceUrl()).isEqualTo("https://www.wordreference.com/definition/hello");
+    assertThat(word.getCompounds()).isEmpty();
+  }
+
+  @Test
+  void defineWord_english_withExamples_includesExamples() throws Exception {
+    Word word = service.parseWord(
+        fixture("wordreference/definition-hello.html"),
+        "hello",
+        List.of(WordScope.EXAMPLES),
+        WordDictionary.ENGLISH);
+
+    assertThat(word.getEntries().stream().anyMatch(entry -> !entry.getExamples().isEmpty())).isTrue();
+  }
+
+  @Test
+  void defineWord_english_returnsNullWhenMissing() throws Exception {
+    assertThat(service.parseWord(
+            fixture("wordreference/definition-missing.html"),
+            "qwertyuiopasdfghjkl",
+            List.of(),
+            WordDictionary.ENGLISH))
+        .isNull();
   }
 
   private static String fixture(String path) throws Exception {

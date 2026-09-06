@@ -60,6 +60,11 @@ type DialogProps = React.HTMLAttributes<HTMLElement> & {
    * Initial position for draggable dialogs.
    */
   position?: { top: number; left: number };
+  /**
+   * Portal target for the dialog content. Defaults to document.body.
+   * Pass a shadow root to render inside a shadow tree.
+   */
+  container?: Element | DocumentFragment;
 };
 
 let dragZCounter = 100;
@@ -77,6 +82,7 @@ const Dialog = (props: DialogProps) => {
     onOpenChange,
     position,
     onKeyDown,
+    container,
     ...rest
   } = props;
   const [mounted, setMounted] = useState(false);
@@ -301,7 +307,7 @@ const Dialog = (props: DialogProps) => {
     </DialogContext.Provider>
   );
 
-  return createPortal(content, document.body);
+  return createPortal(content, container ?? document.body);
 };
 
 type DialogHeaderProps = React.HTMLAttributes<HTMLElement>;
