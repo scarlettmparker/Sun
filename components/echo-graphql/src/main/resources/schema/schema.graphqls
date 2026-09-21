@@ -262,7 +262,7 @@ type RemoveTemplateItemResponse {
 }
 
 """Result of attaching a remote object to a checklist detail."""
-type AttachObjectResponse {
+type AttachChecklistObjectResponse {
   message: String!
   id: ID!
 }
@@ -318,7 +318,7 @@ type ChecklistMutations {
   addTemplateItem(templateId: ID!, itemId: ID!, position: Int): AddTemplateItemResponse!
   removeTemplateItem(templateId: ID!, itemId: ID!): RemoveTemplateItemResponse!
 
-  attachObject(source: ID!, target: ID!, ownerType: RemoteObjectType): AttachObjectResponse!
+  attachObject(source: ID!, target: ID!, ownerType: RemoteObjectType): AttachChecklistObjectResponse!
   detachObject(source: ID!, target: ID!, ownerType: RemoteObjectType): DetachObjectResponse!
 }
 

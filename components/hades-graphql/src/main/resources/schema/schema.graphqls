@@ -362,7 +362,7 @@ type DeleteCommentResponse {
   id: ID!
 }
 
-type VoteResponse {
+type VoteReaderResponse {
   message: String!
   annotation: ReaderAnnotation
   comment: ReaderComment
@@ -383,7 +383,7 @@ type ShareNotesResponse {
   id: ID!
 }
 
-type AttachObjectResponse {
+type AttachReaderObjectResponse {
   message: String!
   id: ID!
 }
@@ -440,14 +440,14 @@ type HadesMutations {
   editComment(id: ID!, body: String!): EditCommentResponse!
   deleteComment(id: ID!): DeleteCommentResponse!
 
-  vote(input: VoteInput!): VoteResponse!
-  removeVote(targetType: ReaderVoteTarget!, targetId: ID!): VoteResponse!
+  vote(input: VoteInput!): VoteReaderResponse!
+  removeVote(targetType: ReaderVoteTarget!, targetId: ID!): VoteReaderResponse!
 
   createPrivateNote(input: PrivateNoteInput!): CreatePrivateNoteResponse!
   deletePrivateNote(id: ID!): DeletePrivateNoteResponse!
   shareNotes(input: ShareNotesInput!): ShareNotesResponse!
 
-  attachObject(source: ID!, target: String!): AttachObjectResponse!
+  attachObject(source: ID!, target: String!): AttachReaderObjectResponse!
   discordLogin(code: String!, state: String!): DiscordLoginResult
 }
 

@@ -3,7 +3,7 @@ package com.sun.icarus.graphql.resolvers;
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
 import com.sun.icarus.codegen.types.ArchiveThreadResponse;
-import com.sun.icarus.codegen.types.AttachObjectResponse;
+import com.sun.icarus.codegen.types.AttachForumObjectResponse;
 import com.sun.icarus.codegen.types.CreatePostInput;
 import com.sun.icarus.codegen.types.CreatePostResponse;
 import com.sun.icarus.codegen.types.CreateThreadInput;
@@ -21,7 +21,7 @@ import com.sun.icarus.codegen.types.PagedForumPosts;
 import com.sun.icarus.codegen.types.PagedForumThreads;
 import com.sun.icarus.codegen.types.PaginationInput;
 import com.sun.icarus.codegen.types.RemoveVoteResponse;
-import com.sun.icarus.codegen.types.VoteResponse;
+import com.sun.icarus.codegen.types.VoteForumResponse;
 import com.sun.icarus.graphql.services.IcarusGraphQLService;
 import com.sun.icarus.model.enums.VoteValue;
 import java.util.List;
@@ -200,7 +200,7 @@ public class IcarusDataFetcher {
    */
   @DgsData(parentType = "IcarusMutations", field = "vote")
   @PreAuthorize("@permissions.has('graphql.icarus.vote')")
-  public VoteResponse vote(ForumVoteInput input) {
+  public VoteForumResponse vote(ForumVoteInput input) {
     return icarusGraphQLService.vote(input);
   }
 
@@ -225,7 +225,7 @@ public class IcarusDataFetcher {
    */
   @DgsData(parentType = "IcarusMutations", field = "attachObject")
   @PreAuthorize("@permissions.has('graphql.icarus.attachObject')")
-  public AttachObjectResponse attachObject(String source, String target) {
+  public AttachForumObjectResponse attachObject(String source, String target) {
     return icarusGraphQLService.attachObject(source, target);
   }
 }

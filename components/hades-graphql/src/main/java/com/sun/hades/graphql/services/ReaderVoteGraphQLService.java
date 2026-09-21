@@ -2,7 +2,7 @@ package com.sun.hades.graphql.services;
 
 import com.sun.base.error.MutationException;
 import com.sun.hades.codegen.types.VoteInput;
-import com.sun.hades.codegen.types.VoteResponse;
+import com.sun.hades.codegen.types.VoteReaderResponse;
 import com.sun.hades.graphql.mappers.ReaderAnnotationMapper;
 import com.sun.hades.graphql.mappers.ReaderCommentMapper;
 import com.sun.hades.model.ReaderAnnotationEntity;
@@ -61,7 +61,7 @@ public class ReaderVoteGraphQLService {
    * @return the vote response with the affected target
    */
   @Transactional
-  public VoteResponse vote(VoteInput input) {
+  public VoteReaderResponse vote(VoteInput input) {
     try {
       UUID id = voteService.vote(
           input.getTargetType(),
@@ -83,7 +83,7 @@ public class ReaderVoteGraphQLService {
    * @return the vote response with the affected target
    */
   @Transactional
-  public VoteResponse removeVote(ReaderVoteTarget targetType, String targetId) {
+  public VoteReaderResponse removeVote(ReaderVoteTarget targetType, String targetId) {
     try {
       UUID id = voteService.removeVote(targetType, UUID.fromString(targetId));
       logger.info("removeVote succeeded for id {}", id);
@@ -102,8 +102,8 @@ public class ReaderVoteGraphQLService {
    * @param id the target id
    * @return the vote response
    */
-  private VoteResponse response(String message, ReaderVoteTarget targetType, UUID id) {
-    VoteResponse.Builder builder = VoteResponse.newBuilder().message(message);
+  private VoteReaderResponse response(String message, ReaderVoteTarget targetType, UUID id) {
+    VoteReaderResponse.Builder builder = VoteReaderResponse.newBuilder().message(message);
     if (targetType == ReaderVoteTarget.ANNOTATION) {
       ReaderAnnotationEntity annotation = annotationService.findById(id)
           .orElseThrow(() -> new IllegalArgumentException("Annotation not found: " + id));

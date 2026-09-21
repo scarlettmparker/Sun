@@ -10,7 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.sun.base.error.MutationException;
-import com.sun.hades.codegen.types.AttachObjectResponse;
+import com.sun.hades.codegen.types.AttachReaderObjectResponse;
 import com.sun.hades.codegen.types.CreateAnnotationResponse;
 import com.sun.hades.codegen.types.DeleteAnnotationResponse;
 import com.sun.hades.codegen.types.EditAnnotationResponse;
@@ -193,7 +193,7 @@ class ReaderAnnotationGraphQLServiceTest {
     UUID returned = UUID.randomUUID();
     when(annotationService.attach(eq(source), eq("target"))).thenReturn(returned);
 
-    AttachObjectResponse result = service.attachObject(source.toString(), "target");
+    AttachReaderObjectResponse result = service.attachObject(source.toString(), "target");
 
     assertThat(result.getId()).isEqualTo(returned.toString());
   }

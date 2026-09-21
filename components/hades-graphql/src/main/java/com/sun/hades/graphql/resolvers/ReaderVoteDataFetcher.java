@@ -3,7 +3,7 @@ package com.sun.hades.graphql.resolvers;
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
 import com.sun.hades.codegen.types.VoteInput;
-import com.sun.hades.codegen.types.VoteResponse;
+import com.sun.hades.codegen.types.VoteReaderResponse;
 import com.sun.hades.graphql.services.ReaderVoteGraphQLService;
 import com.sun.hades.model.enums.ReaderVoteTarget;
 import com.sun.hades.model.enums.VoteValue;
@@ -42,7 +42,7 @@ public class ReaderVoteDataFetcher {
    */
   @DgsData(parentType = "HadesMutations", field = "vote")
   @PreAuthorize("@permissions.has('graphql.hades.vote')")
-  public VoteResponse vote(VoteInput input) {
+  public VoteReaderResponse vote(VoteInput input) {
     return readerVoteGraphQLService.vote(input);
   }
 
@@ -55,7 +55,7 @@ public class ReaderVoteDataFetcher {
    */
   @DgsData(parentType = "HadesMutations", field = "removeVote")
   @PreAuthorize("@permissions.has('graphql.hades.removeVote')")
-  public VoteResponse removeVote(ReaderVoteTarget targetType, String targetId) {
+  public VoteReaderResponse removeVote(ReaderVoteTarget targetType, String targetId) {
     return readerVoteGraphQLService.removeVote(targetType, targetId);
   }
 }

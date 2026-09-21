@@ -4,7 +4,7 @@ import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
 import com.sun.base.ratelimit.RateLimit;
 import com.sun.hades.codegen.types.AnnotationInput;
-import com.sun.hades.codegen.types.AttachObjectResponse;
+import com.sun.hades.codegen.types.AttachReaderObjectResponse;
 import com.sun.hades.codegen.types.CreateAnnotationResponse;
 import com.sun.hades.codegen.types.DeleteAnnotationResponse;
 import com.sun.hades.codegen.types.EditAnnotationResponse;
@@ -101,7 +101,7 @@ public class ReaderAnnotationDataFetcher {
    */
   @DgsData(parentType = "HadesMutations", field = "attachObject")
   @PreAuthorize("@permissions.has('graphql.hades.attachObject')")
-  public AttachObjectResponse attachObject(String source, String target) {
+  public AttachReaderObjectResponse attachObject(String source, String target) {
     return readerAnnotationGraphQLService.attachObject(source, target);
   }
 }

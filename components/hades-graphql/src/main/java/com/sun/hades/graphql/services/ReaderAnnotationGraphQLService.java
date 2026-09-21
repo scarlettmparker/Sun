@@ -1,7 +1,7 @@
 package com.sun.hades.graphql.services;
 
 import com.sun.base.error.MutationException;
-import com.sun.hades.codegen.types.AttachObjectResponse;
+import com.sun.hades.codegen.types.AttachReaderObjectResponse;
 import com.sun.hades.codegen.types.CreateAnnotationResponse;
 import com.sun.hades.codegen.types.DeleteAnnotationResponse;
 import com.sun.hades.codegen.types.EditAnnotationResponse;
@@ -211,11 +211,11 @@ public class ReaderAnnotationGraphQLService {
    * @return the attach-object response
    */
   @Transactional
-  public AttachObjectResponse attachObject(String source, String target) {
+  public AttachReaderObjectResponse attachObject(String source, String target) {
     try {
       UUID id = annotationService.attach(UUID.fromString(source), target);
       logger.info("attachObject succeeded for id {}", id);
-      return AttachObjectResponse.newBuilder()
+      return AttachReaderObjectResponse.newBuilder()
           .message("Object attached successfully")
           .id(id.toString())
           .build();

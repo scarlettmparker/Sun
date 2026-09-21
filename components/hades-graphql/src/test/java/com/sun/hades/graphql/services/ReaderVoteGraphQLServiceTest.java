@@ -12,7 +12,7 @@ import com.sun.base.error.MutationException;
 import com.sun.hades.codegen.types.ReaderAnnotation;
 import com.sun.hades.codegen.types.ReaderComment;
 import com.sun.hades.codegen.types.VoteInput;
-import com.sun.hades.codegen.types.VoteResponse;
+import com.sun.hades.codegen.types.VoteReaderResponse;
 import com.sun.hades.graphql.mappers.ReaderAnnotationMapper;
 import com.sun.hades.graphql.mappers.ReaderCommentMapper;
 import com.sun.hades.model.ReaderAnnotationEntity;
@@ -71,7 +71,7 @@ class ReaderVoteGraphQLServiceTest {
     when(annotationService.findById(targetId)).thenReturn(Optional.of(entity));
     when(annotationMapper.map(eq(entity), any(), any(), anyInt(), any())).thenReturn(mapped);
 
-    VoteResponse result = service.vote(input);
+    VoteReaderResponse result = service.vote(input);
 
     assertThat(result.getAnnotation()).isEqualTo(mapped);
     assertThat(result.getComment()).isNull();
@@ -89,7 +89,7 @@ class ReaderVoteGraphQLServiceTest {
     when(commentService.findById(targetId)).thenReturn(Optional.of(entity));
     when(commentMapper.map(eq(entity), any(), any())).thenReturn(mapped);
 
-    VoteResponse result = service.vote(input);
+    VoteReaderResponse result = service.vote(input);
 
     assertThat(result.getComment()).isEqualTo(mapped);
     assertThat(result.getAnnotation()).isNull();
@@ -117,7 +117,7 @@ class ReaderVoteGraphQLServiceTest {
     when(annotationService.findById(targetId)).thenReturn(Optional.of(entity));
     when(annotationMapper.map(eq(entity), any(), any(), anyInt(), any())).thenReturn(mapped);
 
-    VoteResponse result = service.removeVote(ReaderVoteTarget.ANNOTATION, targetId.toString());
+    VoteReaderResponse result = service.removeVote(ReaderVoteTarget.ANNOTATION, targetId.toString());
 
     assertThat(result.getAnnotation()).isEqualTo(mapped);
     verify(voteService).removeVote(ReaderVoteTarget.ANNOTATION, targetId);

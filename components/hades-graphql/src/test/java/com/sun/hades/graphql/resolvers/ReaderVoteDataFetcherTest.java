@@ -6,7 +6,7 @@ import static org.mockito.Mockito.when;
 
 import com.sun.hades.codegen.types.ReaderAnnotation;
 import com.sun.hades.codegen.types.VoteInput;
-import com.sun.hades.codegen.types.VoteResponse;
+import com.sun.hades.codegen.types.VoteReaderResponse;
 import com.sun.hades.graphql.services.ReaderVoteGraphQLService;
 import com.sun.hades.model.enums.ReaderVoteTarget;
 import com.sun.hades.model.enums.VoteValue;
@@ -37,13 +37,13 @@ class ReaderVoteDataFetcherTest {
   void vote_shouldDelegateToService() {
     VoteInput input = VoteInput.newBuilder()
         .targetType(ReaderVoteTarget.ANNOTATION).targetId("id").value(VoteValue.UP).build();
-    VoteResponse mockResult = VoteResponse.newBuilder()
+    VoteReaderResponse mockResult = VoteReaderResponse.newBuilder()
         .message("ok")
         .annotation(ReaderAnnotation.newBuilder().id("id").body("body").build())
         .build();
     when(readerVoteGraphQLService.vote(input)).thenReturn(mockResult);
 
-    VoteResponse result = fetcher.vote(input);
+    VoteReaderResponse result = fetcher.vote(input);
 
     assertThat(result).isEqualTo(mockResult);
     verify(readerVoteGraphQLService).vote(input);
@@ -51,13 +51,13 @@ class ReaderVoteDataFetcherTest {
 
   @Test
   void removeVote_shouldDelegateToService() {
-    VoteResponse mockResult = VoteResponse.newBuilder()
+    VoteReaderResponse mockResult = VoteReaderResponse.newBuilder()
         .message("ok")
         .annotation(ReaderAnnotation.newBuilder().id("id").body("body").build())
         .build();
     when(readerVoteGraphQLService.removeVote(ReaderVoteTarget.ANNOTATION, "id")).thenReturn(mockResult);
 
-    VoteResponse result = fetcher.removeVote(ReaderVoteTarget.ANNOTATION, "id");
+    VoteReaderResponse result = fetcher.removeVote(ReaderVoteTarget.ANNOTATION, "id");
 
     assertThat(result).isEqualTo(mockResult);
     verify(readerVoteGraphQLService).removeVote(ReaderVoteTarget.ANNOTATION, "id");

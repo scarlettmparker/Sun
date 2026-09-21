@@ -3,7 +3,7 @@ package com.sun.icarus.graphql.services;
 import com.sun.base.error.MutationException;
 import com.sun.base.util.PageRequests;
 import com.sun.icarus.codegen.types.ArchiveThreadResponse;
-import com.sun.icarus.codegen.types.AttachObjectResponse;
+import com.sun.icarus.codegen.types.AttachForumObjectResponse;
 import com.sun.icarus.codegen.types.CreatePostInput;
 import com.sun.icarus.codegen.types.CreatePostResponse;
 import com.sun.icarus.codegen.types.CreateThreadInput;
@@ -18,7 +18,7 @@ import com.sun.icarus.codegen.types.PagedForumPosts;
 import com.sun.icarus.codegen.types.PagedForumThreads;
 import com.sun.icarus.codegen.types.PaginationInput;
 import com.sun.icarus.codegen.types.RemoveVoteResponse;
-import com.sun.icarus.codegen.types.VoteResponse;
+import com.sun.icarus.codegen.types.VoteForumResponse;
 import com.sun.icarus.codegen.types.ForumObjectReference;
 import com.sun.icarus.codegen.types.ForumVoteInput;
 import com.sun.icarus.codegen.types.RemoteUser;
@@ -326,12 +326,12 @@ public class IcarusGraphQLService {
    * @return the voted post
    */
   @Transactional
-  public VoteResponse vote(ForumVoteInput input) {
+  public VoteForumResponse vote(ForumVoteInput input) {
     try {
       UUID postId = voteService.vote(UUID.fromString(input.getPostId()), input.getValue());
       ForumPost post = mapPost(postId);
       logger.info("vote succeeded for id {}", postId);
-      return VoteResponse.newBuilder()
+      return VoteForumResponse.newBuilder()
           .message("vote succeeded")
           .post(post)
           .build();
@@ -371,11 +371,11 @@ public class IcarusGraphQLService {
    * @return the thread id
    */
   @Transactional
-  public AttachObjectResponse attachObject(String source, String target) {
+  public AttachForumObjectResponse attachObject(String source, String target) {
     try {
       UUID id = threadService.attach(UUID.fromString(source), target);
       logger.info("attachObject succeeded for id {}", id);
-      return AttachObjectResponse.newBuilder()
+      return AttachForumObjectResponse.newBuilder()
           .message("attachObject succeeded")
           .id(id.toString())
           .build();

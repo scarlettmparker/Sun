@@ -5,7 +5,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.sun.hades.codegen.types.AnnotationInput;
-import com.sun.hades.codegen.types.AttachObjectResponse;
+import com.sun.hades.codegen.types.AttachReaderObjectResponse;
 import com.sun.hades.codegen.types.CreateAnnotationResponse;
 import com.sun.hades.codegen.types.DeleteAnnotationResponse;
 import com.sun.hades.codegen.types.EditAnnotationResponse;
@@ -96,13 +96,13 @@ class ReaderAnnotationDataFetcherTest {
 
   @Test
   void attachObject_shouldDelegateToService() {
-    AttachObjectResponse mockResult = AttachObjectResponse.newBuilder()
+    AttachReaderObjectResponse mockResult = AttachReaderObjectResponse.newBuilder()
         .message("ok")
         .id("id")
         .build();
     when(readerAnnotationGraphQLService.attachObject("source", "target")).thenReturn(mockResult);
 
-    AttachObjectResponse result = fetcher.attachObject("source", "target");
+    AttachReaderObjectResponse result = fetcher.attachObject("source", "target");
 
     assertThat(result).isEqualTo(mockResult);
     verify(readerAnnotationGraphQLService).attachObject("source", "target");

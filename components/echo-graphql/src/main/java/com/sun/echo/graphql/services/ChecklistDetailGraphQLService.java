@@ -1,7 +1,7 @@
 package com.sun.echo.graphql.services;
 
 import com.sun.base.error.MutationException;
-import com.sun.echo.codegen.types.AttachObjectResponse;
+import com.sun.echo.codegen.types.AttachChecklistObjectResponse;
 import com.sun.echo.codegen.types.DetachObjectResponse;
 import com.sun.echo.codegen.types.RemoteObjectReference;
 import com.sun.echo.codegen.types.RemoteObjectType;
@@ -57,11 +57,11 @@ public class ChecklistDetailGraphQLService {
    * @return the updated detail id
    */
   @Transactional
-  public AttachObjectResponse attachObject(String source, String target, RemoteObjectType ownerType) {
+  public AttachChecklistObjectResponse attachObject(String source, String target, RemoteObjectType ownerType) {
     return mutate("attachObject", () -> {
       UUID id = detailService.attach(UUID.fromString(source), target,
           ownerType == null ? null : ownerType.name());
-      return AttachObjectResponse.newBuilder()
+      return AttachChecklistObjectResponse.newBuilder()
           .message("Object attached successfully")
           .id(id.toString())
           .build();

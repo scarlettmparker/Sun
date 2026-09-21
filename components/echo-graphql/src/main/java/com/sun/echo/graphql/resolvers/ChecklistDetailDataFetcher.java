@@ -2,7 +2,7 @@ package com.sun.echo.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
-import com.sun.echo.codegen.types.AttachObjectResponse;
+import com.sun.echo.codegen.types.AttachChecklistObjectResponse;
 import com.sun.echo.codegen.types.DetachObjectResponse;
 import com.sun.echo.codegen.types.RemoteObjectReference;
 import com.sun.echo.codegen.types.RemoteObjectType;
@@ -44,7 +44,7 @@ public class ChecklistDetailDataFetcher {
    */
   @DgsData(parentType = "ChecklistMutations", field = "attachObject")
   @PreAuthorize("@permissions.has('graphql.echo.attachObject')")
-  public AttachObjectResponse attachObject(String source, String target, RemoteObjectType ownerType) {
+  public AttachChecklistObjectResponse attachObject(String source, String target, RemoteObjectType ownerType) {
     return checklistDetailGraphQLService.attachObject(source, target, ownerType);
   }
 

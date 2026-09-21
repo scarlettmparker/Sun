@@ -98,7 +98,7 @@ type DeletePostResponse {
   id: ID!
 }
 
-type VoteResponse {
+type VoteForumResponse {
   message: String!
   post: ForumPost!
 }
@@ -108,7 +108,7 @@ type RemoveVoteResponse {
   post: ForumPost!
 }
 
-type AttachObjectResponse {
+type AttachForumObjectResponse {
   message: String!
   id: ID!
 }
@@ -121,9 +121,9 @@ type IcarusMutations {
   createPost(input: CreatePostInput!): CreatePostResponse!
   editPost(id: ID!, body: String!): EditPostResponse!
   deletePost(id: ID!): DeletePostResponse!
-  vote(input: ForumVoteInput!): VoteResponse!
+  vote(input: ForumVoteInput!): VoteForumResponse!
   removeVote(postId: ID!): RemoveVoteResponse!
-  attachObject(source: ID!, target: String!): AttachObjectResponse!
+  attachObject(source: ID!, target: String!): AttachForumObjectResponse!
 }
 
 extend type Query {

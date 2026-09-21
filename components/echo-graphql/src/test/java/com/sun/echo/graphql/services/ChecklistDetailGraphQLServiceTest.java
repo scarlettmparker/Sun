@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.sun.echo.codegen.types.AttachObjectResponse;
+import com.sun.echo.codegen.types.AttachChecklistObjectResponse;
 import com.sun.echo.codegen.types.DetachObjectResponse;
 import com.sun.echo.codegen.types.RemoteObjectReference;
 import com.sun.echo.codegen.types.RemoteObjectType;
@@ -48,7 +48,7 @@ class ChecklistDetailGraphQLServiceTest {
     UUID attached = UUID.randomUUID();
     when(detailService.attach(source, "target", "ENTRY")).thenReturn(attached);
 
-    AttachObjectResponse result = service.attachObject(source.toString(), "target", RemoteObjectType.ENTRY);
+    AttachChecklistObjectResponse result = service.attachObject(source.toString(), "target", RemoteObjectType.ENTRY);
 
     assertThat(result.getId()).isEqualTo(attached.toString());
     assertThat(result.getMessage()).contains("attached");
@@ -74,7 +74,7 @@ class ChecklistDetailGraphQLServiceTest {
     UUID attached = UUID.randomUUID();
     when(detailService.attach(source, "target", null)).thenReturn(attached);
 
-    AttachObjectResponse result = service.attachObject(source.toString(), "target", null);
+    AttachChecklistObjectResponse result = service.attachObject(source.toString(), "target", null);
 
     assertThat(result.getId()).isEqualTo(attached.toString());
     verify(detailService).attach(source, "target", null);

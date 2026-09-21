@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.sun.echo.codegen.types.AttachObjectResponse;
+import com.sun.echo.codegen.types.AttachChecklistObjectResponse;
 import com.sun.echo.codegen.types.DetachObjectResponse;
 import com.sun.echo.codegen.types.RemoteObjectReference;
 import com.sun.echo.codegen.types.RemoteObjectType;
@@ -40,7 +40,7 @@ class ChecklistDetailDataFetcherTest {
   void attachObject_delegatesToService() {
     String source = UUID.randomUUID().toString();
     String target = "target-1";
-    AttachObjectResponse expected = AttachObjectResponse.newBuilder().message("Object attached successfully").id(source).build();
+    AttachChecklistObjectResponse expected = AttachChecklistObjectResponse.newBuilder().message("Object attached successfully").id(source).build();
     when(checklistDetailGraphQLService.attachObject(source, target, RemoteObjectType.ENTRY)).thenReturn(expected);
 
     var result = fetcher.attachObject(source, target, RemoteObjectType.ENTRY);
