@@ -4,12 +4,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.sun.echo.codegen.types.AddTemplateItemResponse;
+import com.sun.echo.codegen.types.ArchiveTemplateResponse;
 import com.sun.echo.codegen.types.ChecklistDetail;
 import com.sun.echo.codegen.types.ChecklistTemplate;
 import com.sun.echo.codegen.types.ChecklistTemplateInput;
+import com.sun.echo.codegen.types.CreateTemplateResponse;
 import com.sun.echo.codegen.types.PagedChecklistTemplateItems;
 import com.sun.echo.codegen.types.PaginationInput;
-import com.sun.echo.codegen.types.QuerySuccess;
+import com.sun.echo.codegen.types.RemoveTemplateItemResponse;
+import com.sun.echo.codegen.types.SaveTemplateResponse;
 import com.sun.echo.graphql.services.ChecklistTemplateGraphQLService;
 import java.util.List;
 import java.util.UUID;
@@ -75,7 +79,8 @@ class ChecklistTemplateDataFetcherTest {
 
   @Test
   void createTemplate_delegatesToService() {
-    QuerySuccess expected = QuerySuccess.newBuilder().message("createTemplate succeeded").id(UUID.randomUUID().toString()).build();
+    CreateTemplateResponse expected = CreateTemplateResponse.newBuilder().message("Checklist template created successfully")
+        .template(ChecklistTemplate.newBuilder().id(UUID.randomUUID().toString()).name("n").build()).build();
     when(checklistTemplateGraphQLService.createTemplate("n", "d", null)).thenReturn(expected);
 
     var result = fetcher.createTemplate("n", "d", null);
@@ -87,7 +92,8 @@ class ChecklistTemplateDataFetcherTest {
   @Test
   void saveTemplate_delegatesToService() {
     ChecklistTemplateInput input = ChecklistTemplateInput.newBuilder().name("t").build();
-    QuerySuccess expected = QuerySuccess.newBuilder().message("saveTemplate succeeded").id(UUID.randomUUID().toString()).build();
+    SaveTemplateResponse expected = SaveTemplateResponse.newBuilder().message("Checklist template saved successfully")
+        .template(ChecklistTemplate.newBuilder().id(UUID.randomUUID().toString()).name("t").build()).build();
     when(checklistTemplateGraphQLService.saveTemplate(input)).thenReturn(expected);
 
     var result = fetcher.saveTemplate(input);
@@ -99,7 +105,8 @@ class ChecklistTemplateDataFetcherTest {
   @Test
   void archiveTemplate_delegatesToService() {
     String id = UUID.randomUUID().toString();
-    QuerySuccess expected = QuerySuccess.newBuilder().message("archiveTemplate succeeded").id(id).build();
+    ArchiveTemplateResponse expected = ArchiveTemplateResponse.newBuilder().message("Checklist template archived successfully")
+        .template(ChecklistTemplate.newBuilder().id(id).name("t").build()).build();
     when(checklistTemplateGraphQLService.archiveTemplate(id)).thenReturn(expected);
 
     var result = fetcher.archiveTemplate(id);
@@ -112,7 +119,8 @@ class ChecklistTemplateDataFetcherTest {
   void addTemplateItem_delegatesToService() {
     String templateId = UUID.randomUUID().toString();
     String itemId = UUID.randomUUID().toString();
-    QuerySuccess expected = QuerySuccess.newBuilder().message("addTemplateItem succeeded").id(UUID.randomUUID().toString()).build();
+    AddTemplateItemResponse expected = AddTemplateItemResponse.newBuilder().message("Template item added successfully")
+        .template(ChecklistTemplate.newBuilder().id(templateId).name("t").build()).build();
     when(checklistTemplateGraphQLService.addTemplateItem(templateId, itemId, 1)).thenReturn(expected);
 
     var result = fetcher.addTemplateItem(templateId, itemId, 1);
@@ -125,7 +133,9 @@ class ChecklistTemplateDataFetcherTest {
   void removeTemplateItem_delegatesToService() {
     String templateId = UUID.randomUUID().toString();
     String itemId = UUID.randomUUID().toString();
-    QuerySuccess expected = QuerySuccess.newBuilder().message("removeTemplateItem succeeded").id(templateId).build();
+    RemoveTemplateItemResponse expected = RemoveTemplateItemResponse.newBuilder()
+        .message("Template item removed successfully")
+        .template(ChecklistTemplate.newBuilder().id(templateId).name("t").build()).build();
     when(checklistTemplateGraphQLService.removeTemplateItem(templateId, itemId)).thenReturn(expected);
 
     var result = fetcher.removeTemplateItem(templateId, itemId);

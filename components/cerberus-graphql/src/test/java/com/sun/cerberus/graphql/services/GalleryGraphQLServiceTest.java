@@ -8,12 +8,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import com.sun.base.error.MutationException;
 import com.sun.cerberus.model.GalleryItemEntity;
+import com.sun.cerberus.codegen.types.CreateGalleryItemResponse;
 import com.sun.cerberus.codegen.types.GalleryItem;
 import com.sun.cerberus.codegen.types.GalleryItemInput;
-import com.sun.cerberus.codegen.types.QueryResult;
-import com.sun.cerberus.codegen.types.QuerySuccess;
-import com.sun.cerberus.codegen.types.StandardError;
 
 import java.util.Arrays;
 import java.util.List;
@@ -155,12 +154,12 @@ class GalleryGraphQLServiceTest {
 
     when(galleryItemMapper.mapInput(input)).thenReturn(galleryItemEntity);
     when(cerberusService.save(galleryItemEntity)).thenReturn(savedEntity);
+    when(galleryItemMapper.map(savedEntity)).thenReturn(galleryItem1);
 
-    QueryResult result = galleryGraphQLService.create(input);
+    CreateGalleryItemResponse result = galleryGraphQLService.create(input);
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
-    QuerySuccess success = (QuerySuccess) result;
-    assertThat(success.getId()).isEqualTo(savedEntity.getId().toString());
+    assertThat(result.getMessage()).isEqualTo("Gallery item created successfully");
+    assertThat(result.getItem()).isEqualTo(galleryItem1);
   }
 
   @Test
@@ -191,7 +190,7 @@ class GalleryGraphQLServiceTest {
   }
 
   @Test
-  void create_shouldReturnStandardErrorWhenExceptionOccurs() {
+  void create_shouldThrowMutationExceptionWhenExceptionOccurs() {
     GalleryItemInput input = GalleryItemInput.newBuilder()
         .title("New Gallery Item")
         .description("New Description")
@@ -210,10 +209,8 @@ class GalleryGraphQLServiceTest {
     when(galleryItemMapper.mapInput(input)).thenReturn(galleryItemEntity);
     doThrow(new RuntimeException("Database error")).when(cerberusService).save(galleryItemEntity);
 
-    QueryResult result = galleryGraphQLService.create(input);
-
-    assertThat(result).isInstanceOf(StandardError.class);
-    StandardError error = (StandardError) result;
-    assertThat(error.getMessage()).contains("Failed to create gallery item: Database error");
+    assertThatThrownBy(() -> galleryGraphQLService.create(input))
+        .isInstanceOf(MutationException.class)
+        .hasMessageContaining("Failed to create gallery item: Database error");
   }
 }

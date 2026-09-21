@@ -2,13 +2,16 @@ package com.sun.gaia.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
+import com.sun.gaia.codegen.types.DeletePropertyEntryResponse;
 import com.sun.gaia.codegen.types.PropertySetEntry;
 import com.sun.gaia.codegen.types.PropertySetSchema;
 import com.sun.gaia.codegen.types.PropertySetSchemaInput;
-import com.sun.gaia.codegen.types.QueryResult;
+import com.sun.gaia.codegen.types.RegisterPropertySetSchemaResponse;
 import com.sun.gaia.codegen.types.RemoteUserType;
 import com.sun.gaia.codegen.types.SetPropertyInput;
+import com.sun.gaia.codegen.types.SetPropertyResponse;
 import com.sun.gaia.codegen.types.UpsertPropertyEntryInput;
+import com.sun.gaia.codegen.types.UpsertPropertyEntryResponse;
 import com.sun.gaia.graphql.services.PropertySetGraphQLService;
 import java.util.List;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -100,7 +103,7 @@ public class PropertySetDataFetcher {
    */
   @DgsData(parentType = "GaiaMutations", field = "upsertPropertyEntry")
   @PreAuthorize("@permissions.has('graphql.gaia.upsertPropertyEntry')")
-  public PropertySetEntry upsertPropertyEntry(String ownerKey, String name, String entry,
+  public UpsertPropertyEntryResponse upsertPropertyEntry(String ownerKey, String name, String entry,
       UpsertPropertyEntryInput input) {
     return propertySetGraphQLService.upsertPropertyEntry(ownerKey, name, entry, input.getValues());
   }
@@ -116,7 +119,7 @@ public class PropertySetDataFetcher {
    */
   @DgsData(parentType = "GaiaMutations", field = "setProperty")
   @PreAuthorize("@permissions.has('graphql.gaia.setProperty')")
-  public PropertySetEntry setProperty(String ownerKey, String name, String entry,
+  public SetPropertyResponse setProperty(String ownerKey, String name, String entry,
       SetPropertyInput input) {
     return propertySetGraphQLService.setProperty(ownerKey, name, entry, input.getProperty(),
         input.getValue());
@@ -130,7 +133,7 @@ public class PropertySetDataFetcher {
    */
   @DgsData(parentType = "GaiaMutations", field = "registerPropertySetSchema")
   @PreAuthorize("@permissions.has('graphql.gaia.registerPropertySetSchema')")
-  public PropertySetSchema registerPropertySetSchema(PropertySetSchemaInput input) {
+  public RegisterPropertySetSchemaResponse registerPropertySetSchema(PropertySetSchemaInput input) {
     return propertySetGraphQLService.registerPropertySetSchema(input);
   }
 
@@ -144,7 +147,7 @@ public class PropertySetDataFetcher {
    */
   @DgsData(parentType = "GaiaMutations", field = "deletePropertyEntry")
   @PreAuthorize("@permissions.has('graphql.gaia.deletePropertyEntry')")
-  public QueryResult deletePropertyEntry(String ownerKey, String name, String entry) {
+  public DeletePropertyEntryResponse deletePropertyEntry(String ownerKey, String name, String entry) {
     return propertySetGraphQLService.deletePropertyEntry(ownerKey, name, entry);
   }
 }

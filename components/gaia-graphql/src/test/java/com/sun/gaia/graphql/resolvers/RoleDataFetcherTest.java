@@ -4,9 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.sun.gaia.codegen.types.QueryResult;
-import com.sun.gaia.codegen.types.QuerySuccess;
+import com.sun.gaia.codegen.types.CreateRoleResponse;
+import com.sun.gaia.codegen.types.DeleteRoleResponse;
 import com.sun.gaia.codegen.types.Role;
+import com.sun.gaia.codegen.types.SetAccountRolesResponse;
 import com.sun.gaia.graphql.services.RoleGraphQLService;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -57,20 +58,21 @@ class RoleDataFetcherTest {
   @Test
   void createRole_shouldDelegate() {
     Role r = Role.newBuilder().id("id1").name("admin").build();
-    when(service.createRole("admin", "desc")).thenReturn(r);
+    CreateRoleResponse mock = CreateRoleResponse.newBuilder().message("Role created").role(r).build();
+    when(service.createRole("admin", "desc")).thenReturn(mock);
 
-    Role result = fetcher.createRole("admin", "desc");
+    CreateRoleResponse result = fetcher.createRole("admin", "desc");
 
-    assertThat(result).isEqualTo(r);
+    assertThat(result).isEqualTo(mock);
     verify(service).createRole("admin", "desc");
   }
 
   @Test
   void deleteRole_shouldDelegate() {
-    QueryResult mock = QuerySuccess.newBuilder().message("Role deleted").id("id1").build();
+    DeleteRoleResponse mock = DeleteRoleResponse.newBuilder().message("Role deleted").id("id1").build();
     when(service.deleteRole("id1")).thenReturn(mock);
 
-    QueryResult result = fetcher.deleteRole("id1");
+    DeleteRoleResponse result = fetcher.deleteRole("id1");
 
     assertThat(result).isEqualTo(mock);
     verify(service).deleteRole("id1");
@@ -78,10 +80,14 @@ class RoleDataFetcherTest {
 
   @Test
   void setAccountRoles_shouldDelegate() {
-    QueryResult mock = QuerySuccess.newBuilder().message("Account roles updated").id("acc1").build();
+    SetAccountRolesResponse mock = SetAccountRolesResponse.newBuilder()
+        .message("Account roles updated")
+        .accountId("acc1")
+        .roles(List.of("admin"))
+        .build();
     when(service.setAccountRoles("acc1", List.of("admin"))).thenReturn(mock);
 
-    QueryResult result = fetcher.setAccountRoles("acc1", List.of("admin"));
+    SetAccountRolesResponse result = fetcher.setAccountRoles("acc1", List.of("admin"));
 
     assertThat(result).isEqualTo(mock);
     verify(service).setAccountRoles("acc1", List.of("admin"));

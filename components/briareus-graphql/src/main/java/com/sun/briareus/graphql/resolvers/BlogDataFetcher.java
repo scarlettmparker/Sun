@@ -9,16 +9,22 @@ import com.sun.briareus.graphql.services.BlogGraphQLService;
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
 import com.netflix.graphql.dgs.DgsDataFetchingEnvironment;
+import com.sun.briareus.codegen.types.AddRemoteObjectResponse;
 import com.sun.briareus.codegen.types.BlogPost;
 import com.sun.briareus.codegen.types.AttachedText;
 import com.sun.briareus.codegen.types.BlogPostType;
 import com.sun.briareus.codegen.types.BlogQueries;
 import com.sun.briareus.codegen.types.BlogMutations;
 import com.sun.briareus.codegen.types.BlogPostInput;
+import com.sun.briareus.codegen.types.CreateBlogPostResponse;
+import com.sun.briareus.codegen.types.CreateBlogPostTypeResponse;
+import com.sun.briareus.codegen.types.DeleteBlogPostResponse;
+import com.sun.briareus.codegen.types.IngestBlogFromSourceResponse;
 import com.sun.briareus.codegen.types.IngestBlogInput;
 import com.sun.briareus.codegen.types.PagedBlogPosts;
 import com.sun.briareus.codegen.types.PaginationInput;
-import com.sun.briareus.codegen.types.QueryResult;
+import com.sun.briareus.codegen.types.RemoveRemoteObjectResponse;
+import com.sun.briareus.codegen.types.UpdateBlogPostResponse;
 
 @DgsComponent
 public class BlogDataFetcher {
@@ -98,11 +104,11 @@ public class BlogDataFetcher {
    *
    * @param title the title of the blog post
    * @param input the input data for the blog post
-   * @return QueryResult indicating success or error
+   * @return the created blog post
    */
   @DgsData(parentType = "BlogMutations", field = "createBlogPost")
   @PreAuthorize("@permissions.has('graphql.briareus.createBlogPost')")
-  public QueryResult createBlogPost(String title, BlogPostInput input) {
+  public CreateBlogPostResponse createBlogPost(String title, BlogPostInput input) {
     return blogGraphQLService.createBlogPost(title, input);
   }
 
@@ -111,11 +117,11 @@ public class BlogDataFetcher {
    *
    * @param id the post id
    * @param input the update input
-   * @return the result
+   * @return the updated blog post
    */
   @DgsData(parentType = "BlogMutations", field = "updateBlogPost")
   @PreAuthorize("@permissions.has('graphql.briareus.updateBlogPost')")
-  public QueryResult updateBlogPost(String id, BlogPostInput input) {
+  public UpdateBlogPostResponse updateBlogPost(String id, BlogPostInput input) {
     return blogGraphQLService.updateBlogPost(id, input);
   }
 
@@ -124,11 +130,11 @@ public class BlogDataFetcher {
    *
    * @param name the type name
    * @param description an optional description
-   * @return QueryResult indicating success or error
+   * @return the created blog post type
    */
   @DgsData(parentType = "BlogMutations", field = "createBlogPostType")
   @PreAuthorize("@permissions.has('graphql.briareus.createBlogPostType')")
-  public QueryResult createBlogPostType(String name, String description) {
+  public CreateBlogPostTypeResponse createBlogPostType(String name, String description) {
     return blogGraphQLService.createBlogPostType(name, description);
   }
 
@@ -185,11 +191,11 @@ public class BlogDataFetcher {
    *
    * @param postId the post id
    * @param target the remote-object string
-   * @return the outcome
+   * @return the updated blog post
    */
   @DgsData(parentType = "BlogMutations", field = "addRemoteObject")
   @PreAuthorize("@permissions.has('graphql.briareus.addRemoteObject')")
-  public QueryResult addRemoteObject(String postId, String target) {
+  public AddRemoteObjectResponse addRemoteObject(String postId, String target) {
     return blogGraphQLService.addRemoteObject(postId, target);
   }
 
@@ -198,11 +204,11 @@ public class BlogDataFetcher {
    *
    * @param postId the post id
    * @param target the remote-object string
-   * @return the outcome
+   * @return the updated blog post
    */
   @DgsData(parentType = "BlogMutations", field = "removeRemoteObject")
   @PreAuthorize("@permissions.has('graphql.briareus.removeRemoteObject')")
-  public QueryResult removeRemoteObject(String postId, String target) {
+  public RemoveRemoteObjectResponse removeRemoteObject(String postId, String target) {
     return blogGraphQLService.removeRemoteObject(postId, target);
   }
 
@@ -210,11 +216,11 @@ public class BlogDataFetcher {
    * Ingests a blog from a source.
    *
    * @param input the ingest input
-   * @return the outcome
+   * @return the ingested blog post
    */
   @DgsData(parentType = "BlogMutations", field = "ingestBlogFromSource")
   @PreAuthorize("@permissions.has('graphql.briareus.ingestBlogFromSource')")
-  public QueryResult ingestBlogFromSource(IngestBlogInput input) {
+  public IngestBlogFromSourceResponse ingestBlogFromSource(IngestBlogInput input) {
     return blogGraphQLService.ingestBlogFromSource(input);
   }
 
@@ -222,11 +228,11 @@ public class BlogDataFetcher {
    * Deletes a blog post and its children, owner only.
    *
    * @param id the post id
-   * @return the outcome
+   * @return the deleted post id
    */
   @DgsData(parentType = "BlogMutations", field = "deleteBlogPost")
   @PreAuthorize("@permissions.has('graphql.briareus.deleteBlogPost')")
-  public QueryResult deleteBlogPost(String id) {
+  public DeleteBlogPostResponse deleteBlogPost(String id) {
     return blogGraphQLService.deleteBlogPost(id);
   }
 }

@@ -3,12 +3,15 @@ package com.sun.hades.graphql.resolvers;
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
 import com.netflix.graphql.dgs.DgsDataFetchingEnvironment;
+import com.sun.hades.codegen.types.ArchiveTextResponse;
+import com.sun.hades.codegen.types.CreateSourceResponse;
+import com.sun.hades.codegen.types.CreateTextResponse;
 import com.sun.hades.codegen.types.HadesMutations;
 import com.sun.hades.codegen.types.HadesQueries;
+import com.sun.hades.codegen.types.MarkViewedResponse;
 import com.sun.hades.codegen.types.PagedReaderTexts;
 import com.sun.hades.codegen.types.PagedTextViews;
 import com.sun.hades.codegen.types.PaginationInput;
-import com.sun.hades.codegen.types.QueryResult;
 import com.sun.hades.codegen.types.ReaderSource;
 import com.sun.hades.codegen.types.ReaderText;
 import com.sun.hades.codegen.types.ReaderTextInput;
@@ -154,11 +157,11 @@ public class ReaderTextDataFetcher {
    *
    * @param name the source name
    * @param url the source url
-   * @return a QueryResult
+   * @return the create-source response
    */
   @DgsData(parentType = "HadesMutations", field = "createSource")
   @PreAuthorize("@permissions.has('graphql.hades.createSource')")
-  public QueryResult createSource(String name, String url) {
+  public CreateSourceResponse createSource(String name, String url) {
     return readerTextGraphQLService.createSource(name, url);
   }
 
@@ -166,11 +169,11 @@ public class ReaderTextDataFetcher {
    * Creates a text.
    *
    * @param input the text input
-   * @return a QueryResult
+   * @return the create-text response
    */
   @DgsData(parentType = "HadesMutations", field = "createText")
   @PreAuthorize("@permissions.has('graphql.hades.createText')")
-  public QueryResult createText(ReaderTextInput input) {
+  public CreateTextResponse createText(ReaderTextInput input) {
     return readerTextGraphQLService.createText(input);
   }
 
@@ -178,11 +181,11 @@ public class ReaderTextDataFetcher {
    * Archives a text.
    *
    * @param id the text id
-   * @return a QueryResult
+   * @return the archive-text response
    */
   @DgsData(parentType = "HadesMutations", field = "archiveText")
   @PreAuthorize("@permissions.has('graphql.hades.archiveText')")
-  public QueryResult archiveText(String id) {
+  public ArchiveTextResponse archiveText(String id) {
     return readerTextGraphQLService.archiveText(id);
   }
 
@@ -190,11 +193,11 @@ public class ReaderTextDataFetcher {
    * Marks a text as viewed.
    *
    * @param textId the text id
-   * @return a QueryResult
+   * @return the mark-viewed response
    */
   @DgsData(parentType = "HadesMutations", field = "markViewed")
   @PreAuthorize("@permissions.has('graphql.hades.markViewed')")
-  public QueryResult markViewed(String textId) {
+  public MarkViewedResponse markViewed(String textId) {
     return readerTextGraphQLService.markViewed(textId);
   }
 

@@ -1,13 +1,14 @@
 package com.sun.icarus.graphql.services;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import com.sun.base.error.MutationException;
 import com.sun.icarus.codegen.types.CreateThreadInput;
+import com.sun.icarus.codegen.types.CreateThreadResponse;
 import com.sun.icarus.codegen.types.ForumThread;
-import com.sun.icarus.codegen.types.QueryResult;
-import com.sun.icarus.codegen.types.QuerySuccess;
 import com.sun.icarus.graphql.mappers.ForumPostMapper;
 import com.sun.icarus.graphql.mappers.ForumThreadMapper;
 import com.sun.icarus.model.ForumThreadEntity;
@@ -15,6 +16,7 @@ import com.sun.icarus.service.ForumPostService;
 import com.sun.icarus.service.ForumThreadService;
 import com.sun.icarus.service.ForumVoteService;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -50,25 +52,30 @@ class IcarusGraphQLServiceTest {
   }
 
   @Test
-  void createThread_shouldReturnQuerySuccess() {
+  void createThread_shouldReturnThread() {
     UUID id = UUID.randomUUID();
+    ForumThreadEntity entity = new ForumThreadEntity();
+    entity.setId(id);
+    entity.setTitle("Thread");
+    ForumThread mapped = ForumThread.newBuilder().id(id.toString()).title("Thread").build();
     when(threadService.create("Thread", "hades:annotation:abc")).thenReturn(id);
+    when(threadService.findById(id)).thenReturn(Optional.of(entity));
+    when(threadMapper.map(entity)).thenReturn(mapped);
 
-    QueryResult result = service.createThread(CreateThreadInput.newBuilder()
+    CreateThreadResponse result = service.createThread(CreateThreadInput.newBuilder()
         .title("Thread").remoteObject("hades:annotation:abc").build());
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
-    assertThat(((QuerySuccess) result).getId()).isEqualTo(id.toString());
+    assertThat(result.getThread()).isEqualTo(mapped);
+    assertThat(result.getMessage()).isEqualTo("createThread succeeded");
   }
 
   @Test
-  void createThread_shouldReturnStandardErrorWhenServiceThrows() {
+  void createThread_shouldThrowMutationExceptionWhenServiceThrows() {
     when(threadService.create(any(), any())).thenThrow(new RuntimeException("Database error"));
 
-    QueryResult result = service.createThread(CreateThreadInput.newBuilder()
-        .title("Thread").remoteObject("hades:annotation:abc").build());
-
-    assertThat(result).isInstanceOf(com.sun.icarus.codegen.types.StandardError.class);
-    assertThat(((com.sun.icarus.codegen.types.StandardError) result).getMessage()).contains("Database error");
+    assertThatThrownBy(() -> service.createThread(CreateThreadInput.newBuilder()
+        .title("Thread").remoteObject("hades:annotation:abc").build()))
+        .isInstanceOf(MutationException.class)
+        .hasMessageContaining("Database error");
   }
 }

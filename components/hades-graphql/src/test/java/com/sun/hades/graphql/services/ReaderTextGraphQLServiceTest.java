@@ -1,17 +1,21 @@
 package com.sun.hades.graphql.services;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.sun.base.error.MutationException;
 import com.sun.gaia.service.UserContextHolder;
+import com.sun.hades.codegen.types.ArchiveTextResponse;
+import com.sun.hades.codegen.types.CreateSourceResponse;
+import com.sun.hades.codegen.types.CreateTextResponse;
+import com.sun.hades.codegen.types.MarkViewedResponse;
 import com.sun.hades.codegen.types.PagedReaderTexts;
-import com.sun.hades.codegen.types.QuerySuccess;
 import com.sun.hades.codegen.types.ReaderSource;
 import com.sun.hades.codegen.types.ReaderText;
 import com.sun.hades.codegen.types.ReaderTextInput;
-import com.sun.hades.codegen.types.StandardError;
 import com.sun.hades.codegen.types.TextLevelAssessment;
 import com.sun.hades.graphql.inference.InferenceClient;
 import com.sun.hades.graphql.mappers.ReaderSourceMapper;
@@ -22,6 +26,7 @@ import com.sun.hades.model.enums.CefrLevel;
 import com.sun.hades.model.enums.ReaderTextStatus;
 import com.sun.hades.service.ReaderSourceService;
 import com.sun.hades.service.ReaderTextService;
+import com.sun.hades.service.TextViewService;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -44,6 +49,7 @@ class ReaderTextGraphQLServiceTest {
   @Mock private InferenceClient inferenceClient;
   @Mock private ReaderTextMapper textMapper;
   @Mock private ReaderSourceMapper sourceMapper;
+  @Mock private TextViewService textViewService;
 
   @InjectMocks private ReaderTextGraphQLService service;
 
@@ -157,21 +163,22 @@ class ReaderTextGraphQLServiceTest {
   void createSource_delegates() {
     ReaderSourceEntity saved = new ReaderSourceEntity();
     saved.setId(UUID.randomUUID());
+    ReaderSource mapped = ReaderSource.newBuilder().id(saved.getId().toString()).name("Name").build();
     when(sourceService.save(any())).thenReturn(saved);
+    when(sourceMapper.map(saved)).thenReturn(mapped);
 
-    var result = service.createSource("Name", "https://example.com");
+    CreateSourceResponse result = service.createSource("Name", "https://example.com");
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
-    assertThat(((QuerySuccess) result).getId()).isEqualTo(saved.getId().toString());
+    assertThat(result.getSource()).isEqualTo(mapped);
+    assertThat(result.getMessage()).contains("created");
   }
 
   @Test
-  void createSource_returnsStandardErrorWhenUnauthenticated() {
+  void createSource_throwsWhenUnauthenticated() {
     UserContextHolder.clear();
 
-    var result = service.createSource("Name", "https://example.com");
-
-    assertThat(result).isInstanceOf(StandardError.class);
+    assertThatThrownBy(() -> service.createSource("Name", "https://example.com"))
+        .isInstanceOf(MutationException.class);
   }
 
   @Test
@@ -182,25 +189,25 @@ class ReaderTextGraphQLServiceTest {
     when(textMapper.mapInput(input)).thenReturn(entity);
     ReaderTextEntity saved = new ReaderTextEntity();
     saved.setId(UUID.randomUUID());
+    ReaderText mapped = ReaderText.newBuilder().id(saved.getId().toString()).title("Title").build();
     when(textService.save(entity)).thenReturn(saved);
+    when(textMapper.map(saved)).thenReturn(mapped);
 
-    var result = service.createText(input);
+    CreateTextResponse result = service.createText(input);
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
-    assertThat(((QuerySuccess) result).getId()).isEqualTo(saved.getId().toString());
+    assertThat(result.getText()).isEqualTo(mapped);
   }
 
   @Test
-  void createText_returnsStandardErrorOnFailure() {
+  void createText_throwsOnFailure() {
     ReaderTextInput input = ReaderTextInput.newBuilder()
         .title("Title").content("content").language("fr").level(CefrLevel.A1).build();
     when(textMapper.mapInput(input)).thenReturn(new ReaderTextEntity());
     when(textService.save(any())).thenThrow(new RuntimeException("fail"));
 
-    var result = service.createText(input);
-
-    assertThat(result).isInstanceOf(StandardError.class);
-    assertThat(((StandardError) result).getMessage()).contains("fail");
+    assertThatThrownBy(() -> service.createText(input))
+        .isInstanceOf(MutationException.class)
+        .hasMessageContaining("fail");
   }
 
   @Test
@@ -209,25 +216,46 @@ class ReaderTextGraphQLServiceTest {
     ReaderTextEntity entity = new ReaderTextEntity();
     entity.setId(id);
     entity.setStatus(ReaderTextStatus.ACTIVE);
-    when(textService.findById(id)).thenReturn(Optional.of(entity));
     ReaderTextEntity saved = new ReaderTextEntity();
     saved.setId(id);
+    saved.setStatus(ReaderTextStatus.ARCHIVED);
+    ReaderText mapped = ReaderText.newBuilder().id(id.toString()).title("Title").build();
+    when(textService.findById(id)).thenReturn(Optional.of(entity));
     when(textService.save(any())).thenReturn(saved);
+    when(textMapper.map(saved)).thenReturn(mapped);
 
-    var result = service.archiveText(id.toString());
+    ArchiveTextResponse result = service.archiveText(id.toString());
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
-    assertThat(((QuerySuccess) result).getId()).isEqualTo(id.toString());
+    assertThat(result.getText()).isEqualTo(mapped);
     assertThat(entity.getStatus()).isEqualTo(ReaderTextStatus.ARCHIVED);
   }
 
   @Test
-  void archiveText_returnsStandardErrorWhenNotFound() {
+  void archiveText_throwsWhenNotFound() {
     UUID id = UUID.randomUUID();
     when(textService.findById(id)).thenReturn(Optional.empty());
 
-    var result = service.archiveText(id.toString());
+    assertThatThrownBy(() -> service.archiveText(id.toString()))
+        .isInstanceOf(MutationException.class);
+  }
 
-    assertThat(result).isInstanceOf(StandardError.class);
+  @Test
+  void markViewed_delegates() {
+    UUID id = UUID.randomUUID();
+
+    MarkViewedResponse result = service.markViewed(id.toString());
+
+    assertThat(result.getTextId()).isEqualTo(id.toString());
+    verify(textViewService).markViewed(id);
+  }
+
+  @Test
+  void markViewed_throwsOnFailure() {
+    UUID id = UUID.randomUUID();
+    org.mockito.Mockito.doThrow(new IllegalArgumentException("fail"))
+        .when(textViewService).markViewed(id);
+
+    assertThatThrownBy(() -> service.markViewed(id.toString()))
+        .isInstanceOf(MutationException.class);
   }
 }

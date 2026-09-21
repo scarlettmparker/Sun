@@ -14,10 +14,10 @@ import org.springframework.mock.web.MockHttpServletResponse;
 class RateLimitFilterTest {
 
   private static final String CREATE_ANNOTATION_BODY = """
-      {"query":"mutation createAnnotation($input: AnnotationInput!) { hadesMutations { createAnnotation(input: $input) { ... on QuerySuccess { message } } } }"}
+      {"query":"mutation createAnnotation($input: AnnotationInput!) { hadesMutations { createAnnotation(input: $input) { message } } }"}
       """;
   private static final String EDIT_ANNOTATION_BODY = """
-      {"query":"mutation editAnnotation($id: ID!, $body: String!) { hadesMutations { editAnnotation(id: $id, body: $body) { ... on QuerySuccess { message } } } }"}
+      {"query":"mutation editAnnotation($id: ID!, $body: String!) { hadesMutations { editAnnotation(id: $id, body: $body) { message } } }"}
       """;
   private static final String QUERY_BODY = """
       {"query":"query texts { hadesQueries { texts { items { id } } } }"}

@@ -2,13 +2,18 @@ package com.sun.fates.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
+import com.sun.fates.codegen.types.CreatePersonResponse;
+import com.sun.fates.codegen.types.CreatePlaceResponse;
+import com.sun.fates.codegen.types.DeletePersonResponse;
+import com.sun.fates.codegen.types.DeletePlaceResponse;
 import com.sun.fates.codegen.types.FatesMutations;
 import com.sun.fates.codegen.types.FatesQueries;
 import com.sun.fates.codegen.types.Person;
 import com.sun.fates.codegen.types.PersonInput;
 import com.sun.fates.codegen.types.Place;
 import com.sun.fates.codegen.types.PlaceInput;
-import com.sun.fates.codegen.types.QueryResult;
+import com.sun.fates.codegen.types.SavePersonResponse;
+import com.sun.fates.codegen.types.SavePlaceResponse;
 import com.sun.fates.graphql.services.FatesGraphQLService;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -93,11 +98,11 @@ public class FatesDataFetcher {
    * Creates a new person.
    *
    * @param input the person input
-   * @return the result of the create operation
+   * @return the created person
    */
   @DgsData(parentType = "FatesMutations", field = "createPerson")
   @PreAuthorize("@permissions.has('graphql.fates.createPerson')")
-  public QueryResult createPerson(PersonInput input) {
+  public CreatePersonResponse createPerson(PersonInput input) {
     return fatesGraphQLService.createPerson(input);
   }
 
@@ -105,11 +110,11 @@ public class FatesDataFetcher {
    * Updates an existing person.
    *
    * @param input the person input
-   * @return the result of the update operation
+   * @return the updated person
    */
   @DgsData(parentType = "FatesMutations", field = "savePerson")
   @PreAuthorize("@permissions.has('graphql.fates.savePerson')")
-  public QueryResult savePerson(PersonInput input) {
+  public SavePersonResponse savePerson(PersonInput input) {
     return fatesGraphQLService.savePerson(input);
   }
 
@@ -117,11 +122,11 @@ public class FatesDataFetcher {
    * Deletes a person.
    *
    * @param id the person id
-   * @return the result of the delete operation
+   * @return the deleted person id
    */
   @DgsData(parentType = "FatesMutations", field = "deletePerson")
   @PreAuthorize("@permissions.has('graphql.fates.deletePerson')")
-  public QueryResult deletePerson(String id) {
+  public DeletePersonResponse deletePerson(String id) {
     return fatesGraphQLService.deletePerson(id);
   }
 
@@ -129,11 +134,11 @@ public class FatesDataFetcher {
    * Creates a new place.
    *
    * @param input the place input
-   * @return the result of the create operation
+   * @return the created place
    */
   @DgsData(parentType = "FatesMutations", field = "createPlace")
   @PreAuthorize("@permissions.has('graphql.fates.createPlace')")
-  public QueryResult createPlace(PlaceInput input) {
+  public CreatePlaceResponse createPlace(PlaceInput input) {
     return fatesGraphQLService.createPlace(input);
   }
 
@@ -141,11 +146,11 @@ public class FatesDataFetcher {
    * Updates an existing place.
    *
    * @param input the place input
-   * @return the result of the update operation
+   * @return the updated place
    */
   @DgsData(parentType = "FatesMutations", field = "savePlace")
   @PreAuthorize("@permissions.has('graphql.fates.savePlace')")
-  public QueryResult savePlace(PlaceInput input) {
+  public SavePlaceResponse savePlace(PlaceInput input) {
     return fatesGraphQLService.savePlace(input);
   }
 
@@ -153,11 +158,11 @@ public class FatesDataFetcher {
    * Deletes a place.
    *
    * @param id the place id
-   * @return the result of the delete operation
+   * @return the deleted place id
    */
   @DgsData(parentType = "FatesMutations", field = "deletePlace")
   @PreAuthorize("@permissions.has('graphql.fates.deletePlace')")
-  public QueryResult deletePlace(String id) {
+  public DeletePlaceResponse deletePlace(String id) {
     return fatesGraphQLService.deletePlace(id);
   }
 }

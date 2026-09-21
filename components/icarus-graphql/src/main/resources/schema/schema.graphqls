@@ -68,17 +68,62 @@ type IcarusQueries {
   locateRemoteObjects(ids: [String!]!): [ForumObjectReference!]!
 }
 
+type CreateThreadResponse {
+  message: String!
+  thread: ForumThread!
+}
+
+type LockThreadResponse {
+  message: String!
+  thread: ForumThread!
+}
+
+type ArchiveThreadResponse {
+  message: String!
+  thread: ForumThread!
+}
+
+type CreatePostResponse {
+  message: String!
+  post: ForumPost!
+}
+
+type EditPostResponse {
+  message: String!
+  post: ForumPost!
+}
+
+type DeletePostResponse {
+  message: String!
+  id: ID!
+}
+
+type VoteResponse {
+  message: String!
+  post: ForumPost!
+}
+
+type RemoveVoteResponse {
+  message: String!
+  post: ForumPost!
+}
+
+type AttachObjectResponse {
+  message: String!
+  id: ID!
+}
+
 """Write operations for forums."""
 type IcarusMutations {
-  createThread(input: CreateThreadInput!): QueryResult
-  lockThread(id: ID!): QueryResult
-  archiveThread(id: ID!): QueryResult
-  createPost(input: CreatePostInput!): QueryResult
-  editPost(id: ID!, body: String!): QueryResult
-  deletePost(id: ID!): QueryResult
-  vote(input: ForumVoteInput!): QueryResult
-  removeVote(postId: ID!): QueryResult
-  attachObject(source: ID!, target: String!): QueryResult
+  createThread(input: CreateThreadInput!): CreateThreadResponse!
+  lockThread(id: ID!): LockThreadResponse!
+  archiveThread(id: ID!): ArchiveThreadResponse!
+  createPost(input: CreatePostInput!): CreatePostResponse!
+  editPost(id: ID!, body: String!): EditPostResponse!
+  deletePost(id: ID!): DeletePostResponse!
+  vote(input: ForumVoteInput!): VoteResponse!
+  removeVote(postId: ID!): RemoveVoteResponse!
+  attachObject(source: ID!, target: String!): AttachObjectResponse!
 }
 
 extend type Query {

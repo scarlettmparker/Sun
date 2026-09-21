@@ -3,9 +3,8 @@ package com.sun.fates.graphql.resolvers;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import com.sun.fates.codegen.types.CreatePersonResponse;
 import com.sun.fates.codegen.types.Person;
-import com.sun.fates.codegen.types.QueryResult;
-import com.sun.fates.codegen.types.QuerySuccess;
 import com.sun.fates.graphql.services.FatesGraphQLService;
 import java.util.List;
 import java.util.UUID;
@@ -40,12 +39,15 @@ class FatesDataFetcherTest {
 
   @Test
   void createPerson_delegatesToService() {
-    QuerySuccess success = QuerySuccess.newBuilder().message("ok").build();
-    when(service.createPerson(any())).thenReturn(success);
+    CreatePersonResponse response = CreatePersonResponse.newBuilder()
+        .message("createPerson succeeded")
+        .person(Person.newBuilder().id("1").build())
+        .build();
+    when(service.createPerson(any())).thenReturn(response);
 
-    QueryResult result = fetcher.createPerson(null);
+    CreatePersonResponse result = fetcher.createPerson(null);
 
-    assertThat(result).isSameAs(success);
+    assertThat(result).isSameAs(response);
   }
 
   private static <T> T any() {

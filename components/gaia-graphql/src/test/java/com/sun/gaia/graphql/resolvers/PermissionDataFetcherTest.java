@@ -4,9 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.sun.gaia.codegen.types.QueryResult;
-import com.sun.gaia.codegen.types.QuerySuccess;
 import com.sun.gaia.codegen.types.RemoteUserType;
+import com.sun.gaia.codegen.types.SetAccountPermissionsResponse;
+import com.sun.gaia.codegen.types.SetRolePermissionsResponse;
 import com.sun.gaia.graphql.services.PermissionGraphQLService;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -64,10 +64,15 @@ class PermissionDataFetcherTest {
 
   @Test
   void setAccountPermissions_shouldDelegate() {
-    QueryResult mock = QuerySuccess.newBuilder().message("Account permissions updated").id("acc1").build();
+    SetAccountPermissionsResponse mock = SetAccountPermissionsResponse.newBuilder()
+        .message("Account permissions updated")
+        .accountId("acc1")
+        .permissions(List.of("perm.read"))
+        .build();
     when(service.setAccountPermissions("acc1", List.of("perm.read"))).thenReturn(mock);
 
-    QueryResult result = fetcher.setAccountPermissions("acc1", List.of("perm.read"));
+    SetAccountPermissionsResponse result =
+        fetcher.setAccountPermissions("acc1", List.of("perm.read"));
 
     assertThat(result).isEqualTo(mock);
     verify(service).setAccountPermissions("acc1", List.of("perm.read"));
@@ -75,10 +80,14 @@ class PermissionDataFetcherTest {
 
   @Test
   void setRolePermissions_shouldDelegate() {
-    QueryResult mock = QuerySuccess.newBuilder().message("Role permissions updated").id("role1").build();
+    SetRolePermissionsResponse mock = SetRolePermissionsResponse.newBuilder()
+        .message("Role permissions updated")
+        .roleId("role1")
+        .permissions(List.of("perm.read"))
+        .build();
     when(service.setRolePermissions("role1", List.of("perm.read"))).thenReturn(mock);
 
-    QueryResult result = fetcher.setRolePermissions("role1", List.of("perm.read"));
+    SetRolePermissionsResponse result = fetcher.setRolePermissions("role1", List.of("perm.read"));
 
     assertThat(result).isEqualTo(mock);
     verify(service).setRolePermissions("role1", List.of("perm.read"));

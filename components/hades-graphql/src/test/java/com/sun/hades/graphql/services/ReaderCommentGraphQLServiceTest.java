@@ -1,17 +1,20 @@
 package com.sun.hades.graphql.services;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.sun.base.error.MutationException;
+import com.sun.hades.codegen.types.AddCommentResponse;
 import com.sun.hades.codegen.types.CommentInput;
+import com.sun.hades.codegen.types.DeleteCommentResponse;
+import com.sun.hades.codegen.types.EditCommentResponse;
 import com.sun.hades.codegen.types.PagedReaderComments;
-import com.sun.hades.codegen.types.QuerySuccess;
 import com.sun.hades.codegen.types.ReaderComment;
-import com.sun.hades.codegen.types.StandardError;
 import com.sun.hades.graphql.mappers.ReaderCommentMapper;
 import com.sun.hades.graphql.mappers.RemoteUserMapper;
 import com.sun.hades.model.ReaderCommentEntity;
@@ -22,6 +25,7 @@ import com.sun.hades.service.ReaderCommentService;
 import com.sun.hades.service.ReaderVoteService;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -95,12 +99,16 @@ class ReaderCommentGraphQLServiceTest {
     UUID returned = UUID.randomUUID();
     CommentInput input = CommentInput.newBuilder()
         .annotationId(annotationId.toString()).body("body").build();
+    ReaderCommentEntity entity = new ReaderCommentEntity();
+    entity.setId(returned);
+    ReaderComment mapped = ReaderComment.newBuilder().id(returned.toString()).body("body").build();
     when(commentService.addComment(eq(annotationId), eq(null), eq("body"))).thenReturn(returned);
+    when(commentService.findById(returned)).thenReturn(Optional.of(entity));
+    when(commentMapper.map(eq(entity), any(), any())).thenReturn(mapped);
 
-    var result = service.addComment(input);
+    AddCommentResponse result = service.addComment(input);
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
-    assertThat(((QuerySuccess) result).getId()).isEqualTo(returned.toString());
+    assertThat(result.getComment()).isEqualTo(mapped);
   }
 
   @Test
@@ -110,57 +118,62 @@ class ReaderCommentGraphQLServiceTest {
     UUID returned = UUID.randomUUID();
     CommentInput input = CommentInput.newBuilder()
         .annotationId(annotationId.toString()).parentId(parentId.toString()).body("reply").build();
+    ReaderCommentEntity entity = new ReaderCommentEntity();
+    entity.setId(returned);
+    ReaderComment mapped = ReaderComment.newBuilder().id(returned.toString()).body("reply").build();
     when(commentService.addComment(eq(annotationId), eq(parentId), eq("reply"))).thenReturn(returned);
+    when(commentService.findById(returned)).thenReturn(Optional.of(entity));
+    when(commentMapper.map(eq(entity), any(), any())).thenReturn(mapped);
 
-    var result = service.addComment(input);
+    AddCommentResponse result = service.addComment(input);
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
-    assertThat(((QuerySuccess) result).getId()).isEqualTo(returned.toString());
+    assertThat(result.getComment()).isEqualTo(mapped);
   }
 
   @Test
-  void addComment_returnsStandardErrorOnFailure() {
+  void addComment_throwsOnFailure() {
     UUID annotationId = UUID.randomUUID();
     CommentInput input = CommentInput.newBuilder()
         .annotationId(annotationId.toString()).body("").build();
     when(commentService.addComment(any(), any(), any())).thenThrow(new IllegalArgumentException("Invalid comment"));
 
-    var result = service.addComment(input);
-
-    assertThat(result).isInstanceOf(StandardError.class);
+    assertThatThrownBy(() -> service.addComment(input))
+        .isInstanceOf(MutationException.class);
   }
 
   @Test
   void editComment_delegates() {
     UUID id = UUID.randomUUID();
     UUID returned = UUID.randomUUID();
+    ReaderCommentEntity entity = new ReaderCommentEntity();
+    entity.setId(returned);
+    ReaderComment mapped = ReaderComment.newBuilder().id(returned.toString()).body("new").build();
     when(commentService.editComment(id, "new")).thenReturn(returned);
+    when(commentService.findById(returned)).thenReturn(Optional.of(entity));
+    when(commentMapper.map(eq(entity), any(), any())).thenReturn(mapped);
 
-    var result = service.editComment(id.toString(), "new");
+    EditCommentResponse result = service.editComment(id.toString(), "new");
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
-    assertThat(((QuerySuccess) result).getId()).isEqualTo(returned.toString());
+    assertThat(result.getComment()).isEqualTo(mapped);
   }
 
   @Test
   void deleteComment_delegates() {
     UUID id = UUID.randomUUID();
 
-    var result = service.deleteComment(id.toString());
+    DeleteCommentResponse result = service.deleteComment(id.toString());
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
-    assertThat(((QuerySuccess) result).getId()).isEqualTo(id.toString());
+    assertThat(result.getId()).isEqualTo(id.toString());
     verify(commentService).deleteComment(id);
   }
 
   @Test
-  void deleteComment_returnsStandardErrorWhenThrows() {
+  void deleteComment_throwsWhenThrows() {
     UUID id = UUID.randomUUID();
     org.mockito.Mockito.doThrow(new IllegalArgumentException("not found"))
         .when(commentService).deleteComment(id);
 
-    var result = service.deleteComment(id.toString());
-
-    assertThat(result).isInstanceOf(StandardError.class);
+    assertThatThrownBy(() -> service.deleteComment(id.toString()))
+        .isInstanceOf(MutationException.class);
   }
 }

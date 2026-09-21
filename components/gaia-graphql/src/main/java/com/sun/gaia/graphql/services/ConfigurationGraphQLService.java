@@ -1,9 +1,11 @@
 package com.sun.gaia.graphql.services;
 
+import com.sun.gaia.codegen.types.ApplyConfigurationResponse;
 import com.sun.gaia.codegen.types.Configuration;
 import com.sun.gaia.codegen.types.ConfigurationInput;
-import com.sun.gaia.codegen.types.QueryResult;
-import com.sun.gaia.codegen.types.QuerySuccess;
+import com.sun.gaia.codegen.types.CreateConfigurationResponse;
+import com.sun.gaia.codegen.types.DeleteConfigurationResponse;
+import com.sun.gaia.codegen.types.UpdateConfigurationResponse;
 import com.sun.gaia.graphql.mappers.ConfigurationMapper;
 import com.sun.gaia.graphql.services.support.GaiaGraphQLSupport;
 import com.sun.gaia.service.ConfigurationReconciler;
@@ -66,13 +68,17 @@ public class ConfigurationGraphQLService {
    * Creates a configuration.
    *
    * @param input the configuration input
-   * @return the saved configuration
+   * @return the response with the saved configuration
    */
   @Transactional
-  public Configuration createConfiguration(ConfigurationInput input) {
-    return configurationMapper.map(configurationService.create(
+  public CreateConfigurationResponse createConfiguration(ConfigurationInput input) {
+    Configuration configuration = configurationMapper.map(configurationService.create(
         input.getName(), input.getDescription(),
         input.getEnabled() == null || input.getEnabled(), GaiaGraphQLSupport.asMap(input.getContent())));
+    return CreateConfigurationResponse.newBuilder()
+        .message("Configuration created")
+        .configuration(configuration)
+        .build();
   }
 
   /**
@@ -80,25 +86,29 @@ public class ConfigurationGraphQLService {
    *
    * @param id the configuration id
    * @param input the configuration input
-   * @return the saved configuration
+   * @return the response with the saved configuration
    */
   @Transactional
-  public Configuration updateConfiguration(String id, ConfigurationInput input) {
-    return configurationMapper.map(configurationService.update(
+  public UpdateConfigurationResponse updateConfiguration(String id, ConfigurationInput input) {
+    Configuration configuration = configurationMapper.map(configurationService.update(
         UUID.fromString(id), input.getName(), input.getDescription(),
         input.getEnabled() == null || input.getEnabled(), GaiaGraphQLSupport.asMap(input.getContent())));
+    return UpdateConfigurationResponse.newBuilder()
+        .message("Configuration updated")
+        .configuration(configuration)
+        .build();
   }
 
   /**
    * Deletes a configuration.
    *
    * @param id the configuration id
-   * @return a success result
+   * @return the deletion result
    */
   @Transactional
-  public QueryResult deleteConfiguration(String id) {
+  public DeleteConfigurationResponse deleteConfiguration(String id) {
     configurationService.deleteById(UUID.fromString(id));
-    return QuerySuccess.newBuilder()
+    return DeleteConfigurationResponse.newBuilder()
         .message("Configuration deleted")
         .id(id)
         .build();
@@ -108,10 +118,15 @@ public class ConfigurationGraphQLService {
    * Applies a configuration's desired state immediately.
    *
    * @param id the configuration id
-   * @return the reconciled configuration
+   * @return the response with the reconciled configuration
    */
   @Transactional
-  public Configuration applyConfiguration(String id) {
-    return configurationMapper.map(configurationReconciler.reconcileById(UUID.fromString(id)));
+  public ApplyConfigurationResponse applyConfiguration(String id) {
+    Configuration configuration = configurationMapper.map(
+        configurationReconciler.reconcileById(UUID.fromString(id)));
+    return ApplyConfigurationResponse.newBuilder()
+        .message("Configuration applied")
+        .configuration(configuration)
+        .build();
   }
 }

@@ -1,7 +1,6 @@
 package com.sun.gaia.graphql.services;
 
-import com.sun.gaia.codegen.types.QueryResult;
-import com.sun.gaia.codegen.types.QuerySuccess;
+import com.sun.gaia.codegen.types.ExpireTailscaleDeviceResponse;
 import com.sun.gaia.codegen.types.TailscaleDevice;
 import com.sun.gaia.graphql.mappers.TailscaleDeviceMapper;
 import com.sun.gaia.service.TailscaleDeviceService;
@@ -57,14 +56,13 @@ public class TailscaleGraphQLService {
    * Marks a Tailscale device as expired.
    *
    * @param id the Gaia device record id.
-   * @return a success result.
+   * @return the response with the expired device.
    */
   @Transactional
-  public QueryResult expireTailscaleDevice(String id) {
-    tailscaleDeviceService.markExpired(UUID.fromString(id));
-    return QuerySuccess.newBuilder()
+  public ExpireTailscaleDeviceResponse expireTailscaleDevice(String id) {
+    return ExpireTailscaleDeviceResponse.newBuilder()
         .message("Tailscale device expired")
-        .id(id)
+        .device(tailscaleDeviceMapper.map(tailscaleDeviceService.markExpired(UUID.fromString(id))))
         .build();
   }
 }

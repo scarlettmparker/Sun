@@ -1,23 +1,27 @@
 package com.sun.hades.graphql.services;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.sun.base.error.MutationException;
+import com.sun.hades.codegen.types.CreatePrivateNoteResponse;
+import com.sun.hades.codegen.types.DeletePrivateNoteResponse;
 import com.sun.hades.codegen.types.PagedPrivateNotes;
 import com.sun.hades.codegen.types.PrivateNote;
 import com.sun.hades.codegen.types.PrivateNoteInput;
-import com.sun.hades.codegen.types.QuerySuccess;
 import com.sun.hades.codegen.types.ShareNotesInput;
-import com.sun.hades.codegen.types.StandardError;
+import com.sun.hades.codegen.types.ShareNotesResponse;
 import com.sun.hades.graphql.mappers.PrivateNoteMapper;
 import com.sun.hades.graphql.mappers.RemoteUserMapper;
 import com.sun.hades.model.PrivateNoteEntity;
 import com.sun.hades.service.PrivateNoteService;
 import com.sun.hades.service.ReaderAccountService;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -64,48 +68,49 @@ class PrivateNoteGraphQLServiceTest {
     UUID returned = UUID.randomUUID();
     PrivateNoteInput input = PrivateNoteInput.newBuilder()
         .textId(textId.toString()).startOffset(0).endOffset(10).body("note").build();
+    PrivateNoteEntity entity = new PrivateNoteEntity();
+    entity.setId(returned);
+    PrivateNote mapped = PrivateNote.newBuilder().id(returned.toString()).body("note").build();
     when(privateNoteService.createPrivateNote(eq(textId), eq(0), eq(10), eq("note"))).thenReturn(returned);
+    when(privateNoteService.findById(returned)).thenReturn(Optional.of(entity));
+    when(privateNoteMapper.map(eq(entity), any())).thenReturn(mapped);
 
-    var result = service.createPrivateNote(input);
+    CreatePrivateNoteResponse result = service.createPrivateNote(input);
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
-    assertThat(((QuerySuccess) result).getId()).isEqualTo(returned.toString());
+    assertThat(result.getNote()).isEqualTo(mapped);
   }
 
   @Test
-  void createPrivateNote_returnsStandardErrorOnFailure() {
+  void createPrivateNote_throwsOnFailure() {
     UUID textId = UUID.randomUUID();
     PrivateNoteInput input = PrivateNoteInput.newBuilder()
         .textId(textId.toString()).startOffset(0).endOffset(10).body("").build();
     when(privateNoteService.createPrivateNote(any(), any(int.class), any(int.class), any()))
         .thenThrow(new IllegalArgumentException("Invalid private note"));
 
-    var result = service.createPrivateNote(input);
-
-    assertThat(result).isInstanceOf(StandardError.class);
-    assertThat(((StandardError) result).getMessage()).contains("Invalid private note");
+    assertThatThrownBy(() -> service.createPrivateNote(input))
+        .isInstanceOf(MutationException.class)
+        .hasMessageContaining("Invalid private note");
   }
 
   @Test
   void deletePrivateNote_delegates() {
     UUID id = UUID.randomUUID();
 
-    var result = service.deletePrivateNote(id.toString());
+    DeletePrivateNoteResponse result = service.deletePrivateNote(id.toString());
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
-    assertThat(((QuerySuccess) result).getId()).isEqualTo(id.toString());
+    assertThat(result.getId()).isEqualTo(id.toString());
     verify(privateNoteService).deletePrivateNote(id);
   }
 
   @Test
-  void deletePrivateNote_returnsStandardErrorWhenThrows() {
+  void deletePrivateNote_throwsWhenThrows() {
     UUID id = UUID.randomUUID();
     org.mockito.Mockito.doThrow(new IllegalArgumentException("Not the owner"))
         .when(privateNoteService).deletePrivateNote(id);
 
-    var result = service.deletePrivateNote(id.toString());
-
-    assertThat(result).isInstanceOf(StandardError.class);
+    assertThatThrownBy(() -> service.deletePrivateNote(id.toString()))
+        .isInstanceOf(MutationException.class);
   }
 
   @Test
@@ -116,22 +121,20 @@ class PrivateNoteGraphQLServiceTest {
         .textId(textId.toString()).subjectIds(List.of(subjectId.toString())).build();
     when(privateNoteService.shareNotes(eq(textId), any(), any())).thenReturn(textId);
 
-    var result = service.shareNotes(input);
+    ShareNotesResponse result = service.shareNotes(input);
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
-    assertThat(((QuerySuccess) result).getId()).isEqualTo(textId.toString());
+    assertThat(result.getId()).isEqualTo(textId.toString());
   }
 
   @Test
-  void shareNotes_returnsStandardErrorOnFailure() {
+  void shareNotes_throwsOnFailure() {
     UUID textId = UUID.randomUUID();
     ShareNotesInput input = ShareNotesInput.newBuilder()
         .textId(textId.toString()).subjectIds(List.of()).build();
     when(privateNoteService.shareNotes(any(), any(), any()))
         .thenThrow(new IllegalArgumentException("Text not found"));
 
-    var result = service.shareNotes(input);
-
-    assertThat(result).isInstanceOf(StandardError.class);
+    assertThatThrownBy(() -> service.shareNotes(input))
+        .isInstanceOf(MutationException.class);
   }
 }

@@ -6,10 +6,12 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.sun.gaia.codegen.types.ApplyConfigurationResponse;
 import com.sun.gaia.codegen.types.Configuration;
 import com.sun.gaia.codegen.types.ConfigurationInput;
-import com.sun.gaia.codegen.types.QueryResult;
-import com.sun.gaia.codegen.types.QuerySuccess;
+import com.sun.gaia.codegen.types.CreateConfigurationResponse;
+import com.sun.gaia.codegen.types.DeleteConfigurationResponse;
+import com.sun.gaia.codegen.types.UpdateConfigurationResponse;
 import com.sun.gaia.graphql.mappers.ConfigurationMapper;
 import com.sun.gaia.model.ConfigurationEntity;
 import com.sun.gaia.service.ConfigurationReconciler;
@@ -75,9 +77,9 @@ class ConfigurationGraphQLServiceTest {
     when(configurationService.create(eq("my-config"), eq("desc"), eq(true), any())).thenReturn(entity);
     when(configurationMapper.map(entity)).thenReturn(mapped);
 
-    Configuration result = service.createConfiguration(input);
+    CreateConfigurationResponse result = service.createConfiguration(input);
 
-    assertThat(result).isEqualTo(mapped);
+    assertThat(result.getConfiguration()).isEqualTo(mapped);
   }
 
   @Test
@@ -89,9 +91,9 @@ class ConfigurationGraphQLServiceTest {
     when(configurationService.create(eq("my-config"), any(), eq(true), any())).thenReturn(entity);
     when(configurationMapper.map(entity)).thenReturn(mapped);
 
-    Configuration result = service.createConfiguration(input);
+    CreateConfigurationResponse result = service.createConfiguration(input);
 
-    assertThat(result).isEqualTo(mapped);
+    assertThat(result.getConfiguration()).isEqualTo(mapped);
     verify(configurationService).create(eq("my-config"), any(), eq(true), any());
   }
 
@@ -107,19 +109,19 @@ class ConfigurationGraphQLServiceTest {
         .thenReturn(entity);
     when(configurationMapper.map(entity)).thenReturn(mapped);
 
-    Configuration result = service.updateConfiguration(id.toString(), input);
+    UpdateConfigurationResponse result = service.updateConfiguration(id.toString(), input);
 
-    assertThat(result).isEqualTo(mapped);
+    assertThat(result.getConfiguration()).isEqualTo(mapped);
   }
 
   @Test
   void deleteConfiguration_returnsSuccess() {
     UUID id = UUID.randomUUID();
 
-    QueryResult result = service.deleteConfiguration(id.toString());
+    DeleteConfigurationResponse result = service.deleteConfiguration(id.toString());
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
-    assertThat(((QuerySuccess) result).getId()).isEqualTo(id.toString());
+    assertThat(result.getMessage()).isEqualTo("Configuration deleted");
+    assertThat(result.getId()).isEqualTo(id.toString());
     verify(configurationService).deleteById(id);
   }
 
@@ -131,9 +133,9 @@ class ConfigurationGraphQLServiceTest {
     when(configurationReconciler.reconcileById(id)).thenReturn(entity);
     when(configurationMapper.map(entity)).thenReturn(mapped);
 
-    Configuration result = service.applyConfiguration(id.toString());
+    ApplyConfigurationResponse result = service.applyConfiguration(id.toString());
 
-    assertThat(result).isEqualTo(mapped);
+    assertThat(result.getConfiguration()).isEqualTo(mapped);
     verify(configurationReconciler).reconcileById(id);
   }
 }

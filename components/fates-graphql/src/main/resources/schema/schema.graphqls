@@ -49,13 +49,43 @@ type FatesQueries {
   listPlaces: [Place!]
 }
 
+type CreatePersonResponse {
+  message: String!
+  person: Person!
+}
+
+type SavePersonResponse {
+  message: String!
+  person: Person!
+}
+
+type DeletePersonResponse {
+  message: String!
+  id: ID!
+}
+
+type CreatePlaceResponse {
+  message: String!
+  place: Place!
+}
+
+type SavePlaceResponse {
+  message: String!
+  place: Place!
+}
+
+type DeletePlaceResponse {
+  message: String!
+  id: ID!
+}
+
 type FatesMutations {
-  createPerson(input: PersonInput!): QueryResult
-  savePerson(input: PersonInput!): QueryResult
-  deletePerson(id: ID!): QueryResult
-  createPlace(input: PlaceInput!): QueryResult
-  savePlace(input: PlaceInput!): QueryResult
-  deletePlace(id: ID!): QueryResult
+  createPerson(input: PersonInput!): CreatePersonResponse!
+  savePerson(input: PersonInput!): SavePersonResponse!
+  deletePerson(id: ID!): DeletePersonResponse!
+  createPlace(input: PlaceInput!): CreatePlaceResponse!
+  savePlace(input: PlaceInput!): SavePlaceResponse!
+  deletePlace(id: ID!): DeletePlaceResponse!
 }
 
 extend type Query {

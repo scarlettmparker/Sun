@@ -4,6 +4,7 @@ import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
 import com.sun.gaia.codegen.types.HubRegistry;
 import com.sun.gaia.codegen.types.HubRegistryInput;
+import com.sun.gaia.codegen.types.SaveRegistryResponse;
 import com.sun.gaia.graphql.services.HubRegistryGraphQLService;
 import org.springframework.security.access.prepost.PreAuthorize;
 
@@ -38,7 +39,7 @@ public class HubRegistryDataFetcher {
    */
   @DgsData(parentType = "GaiaMutations", field = "saveRegistry")
   @PreAuthorize("@permissions.has('graphql.gaia.hubRegistry')")
-  public HubRegistry saveRegistry(HubRegistryInput input) {
+  public SaveRegistryResponse saveRegistry(HubRegistryInput input) {
     return hubRegistryGraphQLService.saveRegistry(input);
   }
 }

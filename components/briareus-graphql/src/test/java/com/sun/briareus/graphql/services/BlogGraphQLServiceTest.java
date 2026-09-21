@@ -9,11 +9,11 @@ import com.sun.briareus.service.BriareusService;
 import com.sun.briareus.codegen.types.BlogPost;
 import com.sun.briareus.codegen.types.BlogPostInput;
 import com.sun.briareus.codegen.types.BlogPostType;
+import com.sun.briareus.codegen.types.CreateBlogPostResponse;
+import com.sun.briareus.codegen.types.CreateBlogPostTypeResponse;
 import com.sun.briareus.codegen.types.PagedBlogPosts;
 import com.sun.briareus.codegen.types.PaginationInput;
-import com.sun.briareus.codegen.types.QueryResult;
-import com.sun.briareus.codegen.types.QuerySuccess;
-import com.sun.briareus.codegen.types.StandardError;
+import com.sun.base.error.MutationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -149,39 +149,39 @@ class BlogGraphQLServiceTest {
   }
 
   @Test
-  void createBlogPostType_shouldReturnQuerySuccess() {
-    BlogPostTypeEntity entity = new BlogPostTypeEntity();
-    entity.setName("BOT_FAQ");
+  void createBlogPostType_shouldReturnResponse() {
     BlogPostTypeEntity saved = new BlogPostTypeEntity();
     saved.setId(UUID.randomUUID());
     saved.setName("BOT_FAQ");
+    BlogPostType mapped = BlogPostType.newBuilder()
+        .id(saved.getId().toString())
+        .name("BOT_FAQ")
+        .build();
     when(blogPostTypeService.findByName("BOT_FAQ")).thenReturn(Optional.empty());
     when(blogPostTypeService.save(any(BlogPostTypeEntity.class))).thenReturn(saved);
+    when(blogPostTypeMapper.map(saved)).thenReturn(mapped);
 
-    QueryResult result = blogGraphQLService.createBlogPostType("BOT_FAQ", "description");
+    CreateBlogPostTypeResponse result = blogGraphQLService.createBlogPostType("BOT_FAQ", "description");
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
-    assertThat(((QuerySuccess) result).getId()).isEqualTo(saved.getId().toString());
+    assertThat(result.getType()).isEqualTo(mapped);
   }
 
   @Test
-  void createBlogPostType_shouldReturnErrorWhenNameBlank() {
-    QueryResult result = blogGraphQLService.createBlogPostType("  ", null);
-
-    assertThat(result).isInstanceOf(StandardError.class);
+  void createBlogPostType_shouldThrowWhenNameBlank() {
+    assertThatThrownBy(() -> blogGraphQLService.createBlogPostType("  ", null))
+        .isInstanceOf(MutationException.class);
   }
 
   @Test
-  void createBlogPostType_shouldReturnErrorWhenDuplicate() {
+  void createBlogPostType_shouldThrowWhenDuplicate() {
     when(blogPostTypeService.findByName("BOT_FAQ")).thenReturn(Optional.of(new BlogPostTypeEntity()));
 
-    QueryResult result = blogGraphQLService.createBlogPostType("BOT_FAQ", null);
-
-    assertThat(result).isInstanceOf(StandardError.class);
+    assertThatThrownBy(() -> blogGraphQLService.createBlogPostType("BOT_FAQ", null))
+        .isInstanceOf(MutationException.class);
   }
 
   @Test
-  void createBlogPost_shouldReturnQuerySuccessWhenSuccessful() {
+  void createBlogPost_shouldReturnResponseWhenSuccessful() {
     BlogPostInput input = BlogPostInput.newBuilder()
         .content("New blog content")
         .tags(Arrays.asList("new", "blog"))
@@ -196,16 +196,22 @@ class BlogGraphQLServiceTest {
     savedEntity.setId(UUID.randomUUID());
     savedEntity.setTitle("New Blog Post");
 
+    BlogPost mapped = BlogPost.newBuilder()
+        .id(savedEntity.getId().toString())
+        .title("New Blog Post")
+        .build();
+
     when(blogPostMapper.mapInput("New Blog Post", input)).thenReturn(postEntity);
     when(briareusService.save(postEntity)).thenReturn(savedEntity);
+    when(blogPostMapper.map(savedEntity)).thenReturn(mapped);
 
-    QueryResult result = blogGraphQLService.createBlogPost("New Blog Post", input);
+    CreateBlogPostResponse result = blogGraphQLService.createBlogPost("New Blog Post", input);
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
+    assertThat(result.getPost()).isEqualTo(mapped);
   }
 
   @Test
-  void createBlogPost_shouldReturnStandardErrorWhenExceptionOccurs() {
+  void createBlogPost_shouldThrowWhenExceptionOccurs() {
     BlogPostInput input = BlogPostInput.newBuilder()
         .content("New blog content")
         .tags(Arrays.asList("new", "blog"))
@@ -217,9 +223,8 @@ class BlogGraphQLServiceTest {
     when(blogPostMapper.mapInput("New Blog Post", input)).thenReturn(postEntity);
     doThrow(new RuntimeException("Database error")).when(briareusService).save(postEntity);
 
-    QueryResult result = blogGraphQLService.createBlogPost("New Blog Post", input);
-
-    assertThat(result).isInstanceOf(StandardError.class);
-    assertThat(((StandardError) result).getMessage()).contains("Database error");
+    assertThatThrownBy(() -> blogGraphQLService.createBlogPost("New Blog Post", input))
+        .isInstanceOf(MutationException.class)
+        .hasMessageContaining("Database error");
   }
 }

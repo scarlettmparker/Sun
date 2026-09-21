@@ -7,9 +7,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.sun.gaia.codegen.types.ApiKey;
-import com.sun.gaia.codegen.types.IssuedApiKey;
-import com.sun.gaia.codegen.types.QueryResult;
-import com.sun.gaia.codegen.types.QuerySuccess;
+import com.sun.gaia.codegen.types.IssueApiKeyResponse;
+import com.sun.gaia.codegen.types.RevokeApiKeyResponse;
+import com.sun.gaia.codegen.types.RotateApiKeyResponse;
 import com.sun.gaia.graphql.mappers.ApiKeyMapper;
 import com.sun.gaia.model.AccountEntity;
 import com.sun.gaia.model.ApiKeyEntity;
@@ -45,10 +45,10 @@ class ApiKeyGraphQLServiceTest {
     ApiKey mapped = ApiKey.newBuilder().id(key.getId().toString()).name("bot").build();
     when(apiKeyMapper.map(key)).thenReturn(mapped);
 
-    IssuedApiKey result = service.issueApiKey("niece-scarlett", "bot");
+    IssueApiKeyResponse result = service.issueApiKey("niece-scarlett", "bot");
 
-    assertThat(result.getPlaintextKey()).isEqualTo("ns_plaintext");
-    assertThat(result.getApiKey()).isEqualTo(mapped);
+    assertThat(result.getApiKey().getPlaintextKey()).isEqualTo("ns_plaintext");
+    assertThat(result.getApiKey().getApiKey()).isEqualTo(mapped);
     verify(apiKeyService).issueKey(accountId, "bot");
   }
 
@@ -61,13 +61,13 @@ class ApiKeyGraphQLServiceTest {
   }
 
   @Test
-  void revokeApiKey_returnsQuerySuccess() {
+  void revokeApiKey_returnsResponse() {
     UUID id = UUID.randomUUID();
 
-    QueryResult result = service.revokeApiKey(id.toString());
+    RevokeApiKeyResponse result = service.revokeApiKey(id.toString());
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
-    assertThat(((QuerySuccess) result).getId()).isEqualTo(id.toString());
+    assertThat(result.getMessage()).isEqualTo("API key revoked");
+    assertThat(result.getId()).isEqualTo(id.toString());
     verify(apiKeyService).revoke(id);
   }
 
@@ -90,10 +90,10 @@ class ApiKeyGraphQLServiceTest {
     ApiKey mapped = ApiKey.newBuilder().id(key.getId().toString()).name("bot").build();
     when(apiKeyMapper.map(key)).thenReturn(mapped);
 
-    IssuedApiKey result = service.rotateApiKey(id.toString());
+    RotateApiKeyResponse result = service.rotateApiKey(id.toString());
 
-    assertThat(result.getPlaintextKey()).isEqualTo("ns_rotated");
-    assertThat(result.getApiKey()).isEqualTo(mapped);
+    assertThat(result.getApiKey().getPlaintextKey()).isEqualTo("ns_rotated");
+    assertThat(result.getApiKey().getApiKey()).isEqualTo(mapped);
     verify(apiKeyService).rotate(id);
   }
 

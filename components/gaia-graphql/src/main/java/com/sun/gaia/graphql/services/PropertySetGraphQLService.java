@@ -1,12 +1,14 @@
 package com.sun.gaia.graphql.services;
 
+import com.sun.base.error.MutationException;
+import com.sun.gaia.codegen.types.DeletePropertyEntryResponse;
 import com.sun.gaia.codegen.types.PropertySetEntry;
 import com.sun.gaia.codegen.types.PropertySetSchema;
 import com.sun.gaia.codegen.types.PropertySetSchemaInput;
-import com.sun.gaia.codegen.types.QueryResult;
-import com.sun.gaia.codegen.types.QuerySuccess;
+import com.sun.gaia.codegen.types.RegisterPropertySetSchemaResponse;
 import com.sun.gaia.codegen.types.RemoteUserType;
-import com.sun.gaia.codegen.types.StandardError;
+import com.sun.gaia.codegen.types.SetPropertyResponse;
+import com.sun.gaia.codegen.types.UpsertPropertyEntryResponse;
 import com.sun.gaia.graphql.mappers.PropertySetMapper;
 import com.sun.gaia.graphql.services.support.GaiaGraphQLSupport;
 import com.sun.gaia.model.PropertySetEntryEntity;
@@ -108,13 +110,17 @@ public class PropertySetGraphQLService {
    * @param name the property set name
    * @param entry the entry name
    * @param values the values to store
-   * @return the saved entry
+   * @return the response with the saved entry
    */
   @Transactional
-  public PropertySetEntry upsertPropertyEntry(String ownerKey, String name, String entry,
+  public UpsertPropertyEntryResponse upsertPropertyEntry(String ownerKey, String name, String entry,
       Object values) {
-    return propertySetMapper.map(
+    PropertySetEntry saved = propertySetMapper.map(
         propertySetService.upsertEntry(ownerKey, name, entry, GaiaGraphQLSupport.asMap(values), false));
+    return UpsertPropertyEntryResponse.newBuilder()
+        .message("Property entry upserted")
+        .entry(saved)
+        .build();
   }
 
   /**
@@ -125,27 +131,35 @@ public class PropertySetGraphQLService {
    * @param entry the entry name
    * @param property the property name
    * @param value the property value
-   * @return the saved entry
+   * @return the response with the saved entry
    */
   @Transactional
-  public PropertySetEntry setProperty(String ownerKey, String name, String entry, String property,
+  public SetPropertyResponse setProperty(String ownerKey, String name, String entry, String property,
       Object value) {
-    return propertySetMapper.map(
+    PropertySetEntry saved = propertySetMapper.map(
         propertySetService.setProperty(ownerKey, name, entry, property, value));
+    return SetPropertyResponse.newBuilder()
+        .message("Property updated")
+        .entry(saved)
+        .build();
   }
 
   /**
    * Registers a property-set schema.
    *
    * @param input the schema input
-   * @return the saved schema
+   * @return the response with the saved schema
    */
   @Transactional
-  public PropertySetSchema registerPropertySetSchema(PropertySetSchemaInput input) {
-    return propertySetMapper.map(propertySetService.upsertSchema(
+  public RegisterPropertySetSchemaResponse registerPropertySetSchema(PropertySetSchemaInput input) {
+    PropertySetSchema schema = propertySetMapper.map(propertySetService.upsertSchema(
         input.getOwnerKey(), input.getName(),
         input.getConfigurable() != null && input.getConfigurable(),
         GaiaGraphQLSupport.asMap(input.getProperties())));
+    return RegisterPropertySetSchemaResponse.newBuilder()
+        .message("Property set schema registered")
+        .schema(schema)
+        .build();
   }
 
   /**
@@ -157,12 +171,15 @@ public class PropertySetGraphQLService {
    * @return the result
    */
   @Transactional
-  public QueryResult deletePropertyEntry(String ownerKey, String name, String entry) {
+  public DeletePropertyEntryResponse deletePropertyEntry(String ownerKey, String name, String entry) {
     boolean deleted = propertySetService.deleteEntry(ownerKey, name, entry);
     if (deleted) {
-      return QuerySuccess.newBuilder().message("Entry deleted").id(entry).build();
+      return DeletePropertyEntryResponse.newBuilder()
+          .message("Entry deleted")
+          .id(entry)
+          .build();
     }
-    return StandardError.newBuilder().message("Entry not found").build();
+    throw new MutationException("Entry not found");
   }
 
   /**

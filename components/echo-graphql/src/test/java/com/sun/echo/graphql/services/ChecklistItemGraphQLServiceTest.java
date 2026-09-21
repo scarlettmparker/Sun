@@ -1,17 +1,18 @@
 package com.sun.echo.graphql.services;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.sun.base.error.MutationException;
 import com.sun.echo.codegen.types.ChecklistCategory;
 import com.sun.echo.codegen.types.ChecklistItem;
+import com.sun.echo.codegen.types.CreateItemResponse;
 import com.sun.echo.codegen.types.PagedChecklistItems;
 import com.sun.echo.codegen.types.PaginationInput;
-import com.sun.echo.codegen.types.QueryResult;
-import com.sun.echo.codegen.types.QuerySuccess;
+import com.sun.echo.codegen.types.RetireItemResponse;
 import com.sun.echo.graphql.mappers.ChecklistCategoryMapper;
 import com.sun.echo.graphql.mappers.ChecklistDetailMapper;
 import com.sun.echo.graphql.mappers.ChecklistItemMapper;
@@ -77,16 +78,27 @@ class ChecklistItemGraphQLServiceTest {
   }
 
   @Test
-  void createItem_savesAndReturnsSuccess() {
+  void createItem_savesAndReturnsItem() {
     ChecklistItemEntity saved = new ChecklistItemEntity();
     saved.setId(UUID.randomUUID());
     when(itemService.save(any(ChecklistItemEntity.class))).thenReturn(saved);
+    ChecklistItem mapped = ChecklistItem.newBuilder().id(saved.getId().toString()).name("Buy milk").build();
+    when(itemMapper.map(saved)).thenReturn(mapped);
 
-    QueryResult result = service.createItem("Buy milk", "desc", null, "icon");
+    CreateItemResponse result = service.createItem("Buy milk", "desc", null, "icon");
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
-    assertThat(((QuerySuccess) result).getId()).isEqualTo(saved.getId().toString());
+    assertThat(result.getItem()).isEqualTo(mapped);
+    assertThat(result.getMessage()).contains("created");
     verify(itemService).save(any(ChecklistItemEntity.class));
+  }
+
+  @Test
+  void createItem_throwsMutationExceptionWhenSaveFails() {
+    when(itemService.save(any(ChecklistItemEntity.class))).thenThrow(new RuntimeException("Database error"));
+
+    assertThatThrownBy(() -> service.createItem("Buy milk", "desc", null, "icon"))
+        .isInstanceOf(MutationException.class)
+        .hasMessageContaining("createItem failed: Database error");
   }
 
   @Test
@@ -95,10 +107,12 @@ class ChecklistItemGraphQLServiceTest {
     ChecklistItemEntity retired = new ChecklistItemEntity();
     retired.setId(id);
     when(itemService.retire(id)).thenReturn(retired);
+    ChecklistItem mapped = ChecklistItem.newBuilder().id(id.toString()).name("x").build();
+    when(itemMapper.map(retired)).thenReturn(mapped);
 
-    QueryResult result = service.retireItem(id.toString());
+    RetireItemResponse result = service.retireItem(id.toString());
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
+    assertThat(result.getItem()).isEqualTo(mapped);
     verify(itemService).retire(id);
   }
 

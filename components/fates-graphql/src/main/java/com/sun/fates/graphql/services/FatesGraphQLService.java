@@ -1,12 +1,16 @@
 package com.sun.fates.graphql.services;
 
+import com.sun.base.error.MutationException;
+import com.sun.fates.codegen.types.CreatePersonResponse;
+import com.sun.fates.codegen.types.CreatePlaceResponse;
+import com.sun.fates.codegen.types.DeletePersonResponse;
+import com.sun.fates.codegen.types.DeletePlaceResponse;
 import com.sun.fates.codegen.types.Person;
 import com.sun.fates.codegen.types.PersonInput;
 import com.sun.fates.codegen.types.Place;
 import com.sun.fates.codegen.types.PlaceInput;
-import com.sun.fates.codegen.types.QueryResult;
-import com.sun.fates.codegen.types.QuerySuccess;
-import com.sun.fates.codegen.types.StandardError;
+import com.sun.fates.codegen.types.SavePersonResponse;
+import com.sun.fates.codegen.types.SavePlaceResponse;
 import com.sun.fates.graphql.mappers.PersonMapper;
 import com.sun.fates.graphql.mappers.PlaceMapper;
 import com.sun.fates.model.PersonEntity;
@@ -15,7 +19,6 @@ import com.sun.fates.service.PersonService;
 import com.sun.fates.service.PlaceService;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -97,105 +100,137 @@ public class FatesGraphQLService {
    * Creates a new person.
    *
    * @param input the person input
-   * @return the result of the create operation
+   * @return the created person
    */
   @Transactional
-  public QueryResult createPerson(PersonInput input) {
-    return mutate("createPerson", () -> {
+  public CreatePersonResponse createPerson(PersonInput input) {
+    try {
       PersonEntity entity = new PersonEntity();
       personMapper.map(input, entity);
-      return personService.save(entity).getId();
-    });
+      PersonEntity saved = personService.save(entity);
+      logger.info("createPerson succeeded for id {}", saved.getId());
+      return CreatePersonResponse.newBuilder()
+          .message("createPerson succeeded")
+          .person(personMapper.map(saved))
+          .build();
+    } catch (Exception e) {
+      logger.error("createPerson failed", e);
+      throw new MutationException("createPerson failed: " + e.getMessage(), e);
+    }
   }
 
   /**
    * Updates an existing person.
    *
    * @param input the person input
-   * @return the result of the update operation
+   * @return the updated person
    */
   @Transactional
-  public QueryResult savePerson(PersonInput input) {
-    return mutate("savePerson", () -> {
+  public SavePersonResponse savePerson(PersonInput input) {
+    try {
       PersonEntity entity = personService.findById(UUID.fromString(input.getId()))
           .orElseThrow(() -> new IllegalArgumentException("Person not found: " + input.getId()));
       personMapper.map(input, entity);
-      return personService.save(entity).getId();
-    });
+      PersonEntity saved = personService.save(entity);
+      logger.info("savePerson succeeded for id {}", saved.getId());
+      return SavePersonResponse.newBuilder()
+          .message("savePerson succeeded")
+          .person(personMapper.map(saved))
+          .build();
+    } catch (Exception e) {
+      logger.error("savePerson failed", e);
+      throw new MutationException("savePerson failed: " + e.getMessage(), e);
+    }
   }
 
   /**
    * Deletes a person.
    *
    * @param id the person id
-   * @return the result of the delete operation
+   * @return the deleted person id
    */
   @Transactional
-  public QueryResult deletePerson(String id) {
-    return mutate("deletePerson", () -> {
-      personService.deleteById(UUID.fromString(id));
-      return UUID.fromString(id);
-    });
+  public DeletePersonResponse deletePerson(String id) {
+    try {
+      UUID personId = UUID.fromString(id);
+      personService.deleteById(personId);
+      logger.info("deletePerson succeeded for id {}", personId);
+      return DeletePersonResponse.newBuilder()
+          .message("deletePerson succeeded")
+          .id(personId.toString())
+          .build();
+    } catch (Exception e) {
+      logger.error("deletePerson failed", e);
+      throw new MutationException("deletePerson failed: " + e.getMessage(), e);
+    }
   }
 
   /**
    * Creates a new place.
    *
    * @param input the place input
-   * @return the result of the create operation
+   * @return the created place
    */
   @Transactional
-  public QueryResult createPlace(PlaceInput input) {
-    return mutate("createPlace", () -> {
+  public CreatePlaceResponse createPlace(PlaceInput input) {
+    try {
       PlaceEntity entity = new PlaceEntity();
       placeMapper.map(input, entity);
-      return placeService.save(entity).getId();
-    });
+      PlaceEntity saved = placeService.save(entity);
+      logger.info("createPlace succeeded for id {}", saved.getId());
+      return CreatePlaceResponse.newBuilder()
+          .message("createPlace succeeded")
+          .place(placeMapper.map(saved))
+          .build();
+    } catch (Exception e) {
+      logger.error("createPlace failed", e);
+      throw new MutationException("createPlace failed: " + e.getMessage(), e);
+    }
   }
 
   /**
    * Updates an existing place.
    *
    * @param input the place input
-   * @return the result of the update operation
+   * @return the updated place
    */
   @Transactional
-  public QueryResult savePlace(PlaceInput input) {
-    return mutate("savePlace", () -> {
+  public SavePlaceResponse savePlace(PlaceInput input) {
+    try {
       PlaceEntity entity = placeService.findById(UUID.fromString(input.getId()))
           .orElseThrow(() -> new IllegalArgumentException("Place not found: " + input.getId()));
       placeMapper.map(input, entity);
-      return placeService.save(entity).getId();
-    });
+      PlaceEntity saved = placeService.save(entity);
+      logger.info("savePlace succeeded for id {}", saved.getId());
+      return SavePlaceResponse.newBuilder()
+          .message("savePlace succeeded")
+          .place(placeMapper.map(saved))
+          .build();
+    } catch (Exception e) {
+      logger.error("savePlace failed", e);
+      throw new MutationException("savePlace failed: " + e.getMessage(), e);
+    }
   }
 
   /**
    * Deletes a place.
    *
    * @param id the place id
-   * @return the result of the delete operation
+   * @return the deleted place id
    */
   @Transactional
-  public QueryResult deletePlace(String id) {
-    return mutate("deletePlace", () -> {
-      placeService.deleteById(UUID.fromString(id));
-      return UUID.fromString(id);
-    });
-  }
-
-  private QueryResult mutate(String op, Supplier<UUID> action) {
+  public DeletePlaceResponse deletePlace(String id) {
     try {
-      UUID id = action.get();
-      logger.info("{} succeeded for id {}", op, id);
-      return QuerySuccess.newBuilder()
-          .message(op + " succeeded")
-          .id(id == null ? null : id.toString())
+      UUID placeId = UUID.fromString(id);
+      placeService.deleteById(placeId);
+      logger.info("deletePlace succeeded for id {}", placeId);
+      return DeletePlaceResponse.newBuilder()
+          .message("deletePlace succeeded")
+          .id(placeId.toString())
           .build();
     } catch (Exception e) {
-      logger.error("{} failed", op, e);
-      return StandardError.newBuilder()
-          .message(op + " failed: " + e.getMessage())
-          .build();
+      logger.error("deletePlace failed", e);
+      throw new MutationException("deletePlace failed: " + e.getMessage(), e);
     }
   }
 }

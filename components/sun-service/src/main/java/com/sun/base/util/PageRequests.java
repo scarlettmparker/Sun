@@ -32,7 +32,7 @@ public final class PageRequests {
     Sort.Direction direction = (sortDir != null && sortDir.equalsIgnoreCase("DESC"))
         ? Sort.Direction.DESC
         : (sortDir != null && sortDir.equalsIgnoreCase("ASC") ? Sort.Direction.ASC : defaultDir);
-    return PageRequest.of(p, s, Sort.by(direction, property));
+    return PageRequest.of(p, s, toSort(property, direction));
   }
 
   /**
@@ -50,8 +50,22 @@ public final class PageRequests {
     int p = page == null ? 0 : page;
     int s = size == null ? Integer.MAX_VALUE : size;
     Sort sort = (orders == null || orders.isEmpty())
-        ? Sort.by(defaultDir, defaultSortBy)
+        ? toSort(defaultSortBy, defaultDir)
         : Sort.by(orders);
     return PageRequest.of(p, s, sort);
+  }
+
+  /**
+   * Builds a sort, falling back to unsorted when no property is given.
+   *
+   * @param property the sort property, or null
+   * @param direction the sort direction, or null for ascending
+   * @return the sort
+   */
+  private static Sort toSort(String property, Sort.Direction direction) {
+    if (property == null) {
+      return Sort.unsorted();
+    }
+    return direction == null ? Sort.by(property) : Sort.by(direction, property);
   }
 }

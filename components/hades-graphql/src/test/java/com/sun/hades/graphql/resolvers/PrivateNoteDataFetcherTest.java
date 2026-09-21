@@ -4,12 +4,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.sun.hades.codegen.types.CreatePrivateNoteResponse;
+import com.sun.hades.codegen.types.DeletePrivateNoteResponse;
 import com.sun.hades.codegen.types.PagedPrivateNotes;
 import com.sun.hades.codegen.types.PaginationInput;
+import com.sun.hades.codegen.types.PrivateNote;
 import com.sun.hades.codegen.types.PrivateNoteInput;
-import com.sun.hades.codegen.types.QueryResult;
-import com.sun.hades.codegen.types.QuerySuccess;
 import com.sun.hades.codegen.types.ShareNotesInput;
+import com.sun.hades.codegen.types.ShareNotesResponse;
 import com.sun.hades.graphql.services.PrivateNoteGraphQLService;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -41,10 +43,13 @@ class PrivateNoteDataFetcherTest {
   void createPrivateNote_shouldDelegateToService() {
     PrivateNoteInput input = PrivateNoteInput.newBuilder()
         .textId("text-id").startOffset(0).endOffset(10).body("body").build();
-    QueryResult mockResult = QuerySuccess.newBuilder().message("ok").id("id").build();
+    CreatePrivateNoteResponse mockResult = CreatePrivateNoteResponse.newBuilder()
+        .message("ok")
+        .note(PrivateNote.newBuilder().id("id").body("body").build())
+        .build();
     when(privateNoteGraphQLService.createPrivateNote(input)).thenReturn(mockResult);
 
-    QueryResult result = fetcher.createPrivateNote(input);
+    CreatePrivateNoteResponse result = fetcher.createPrivateNote(input);
 
     assertThat(result).isEqualTo(mockResult);
     verify(privateNoteGraphQLService).createPrivateNote(input);
@@ -52,10 +57,13 @@ class PrivateNoteDataFetcherTest {
 
   @Test
   void deletePrivateNote_shouldDelegateToService() {
-    QueryResult mockResult = QuerySuccess.newBuilder().message("ok").id("id").build();
+    DeletePrivateNoteResponse mockResult = DeletePrivateNoteResponse.newBuilder()
+        .message("ok")
+        .id("id")
+        .build();
     when(privateNoteGraphQLService.deletePrivateNote("id")).thenReturn(mockResult);
 
-    QueryResult result = fetcher.deletePrivateNote("id");
+    DeletePrivateNoteResponse result = fetcher.deletePrivateNote("id");
 
     assertThat(result).isEqualTo(mockResult);
     verify(privateNoteGraphQLService).deletePrivateNote("id");
@@ -64,10 +72,13 @@ class PrivateNoteDataFetcherTest {
   @Test
   void shareNotes_shouldDelegateToService() {
     ShareNotesInput input = ShareNotesInput.newBuilder().textId("text-id").build();
-    QueryResult mockResult = QuerySuccess.newBuilder().message("ok").id("text-id").build();
+    ShareNotesResponse mockResult = ShareNotesResponse.newBuilder()
+        .message("ok")
+        .id("text-id")
+        .build();
     when(privateNoteGraphQLService.shareNotes(input)).thenReturn(mockResult);
 
-    QueryResult result = fetcher.shareNotes(input);
+    ShareNotesResponse result = fetcher.shareNotes(input);
 
     assertThat(result).isEqualTo(mockResult);
     verify(privateNoteGraphQLService).shareNotes(input);

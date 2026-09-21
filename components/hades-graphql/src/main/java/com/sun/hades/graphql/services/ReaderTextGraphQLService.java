@@ -1,15 +1,17 @@
 package com.sun.hades.graphql.services;
 
+import com.sun.base.error.MutationException;
 import com.sun.base.util.FilterSpec;
 import com.sun.base.util.GraphQLSupport;
 import com.sun.gaia.service.UserContextHolder;
+import com.sun.hades.codegen.types.ArchiveTextResponse;
+import com.sun.hades.codegen.types.CreateSourceResponse;
+import com.sun.hades.codegen.types.CreateTextResponse;
+import com.sun.hades.codegen.types.MarkViewedResponse;
 import com.sun.hades.codegen.types.PagedReaderTexts;
 import com.sun.hades.codegen.types.PagedTextViews;
 import com.sun.hades.codegen.types.PaginationInput;
-import com.sun.hades.codegen.types.QueryResult;
-import com.sun.hades.codegen.types.QuerySuccess;
 import com.sun.hades.codegen.types.ReaderSource;
-import com.sun.hades.codegen.types.StandardError;
 import com.sun.hades.codegen.types.ReaderText;
 import com.sun.hades.codegen.types.ReaderTextInput;
 import com.sun.hades.codegen.types.TextLevelAssessment;
@@ -31,7 +33,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -169,14 +170,21 @@ public class ReaderTextGraphQLService {
    * Marks a text as viewed.
    *
    * @param textId the text id
-   * @return a QueryResult
+   * @return the mark-viewed response
    */
   @Transactional
-  public QueryResult markViewed(String textId) {
-    return mutate("markViewed", () -> {
+  public MarkViewedResponse markViewed(String textId) {
+    try {
       textViewService.markViewed(UUID.fromString(textId));
-      return UUID.fromString(textId);
-    });
+      logger.info("markViewed succeeded for id {}", textId);
+      return MarkViewedResponse.newBuilder()
+          .message("Text marked as viewed")
+          .textId(textId)
+          .build();
+    } catch (Exception e) {
+      logger.error("markViewed failed", e);
+      throw new MutationException("markViewed failed: " + e.getMessage(), e);
+    }
   }
 
   /**
@@ -229,72 +237,72 @@ public class ReaderTextGraphQLService {
    *
    * @param name the source name
    * @param url the source url
-   * @return a QueryResult
+   * @return the create-source response
    */
   @Transactional
-  public QueryResult createSource(String name, String url) {
-    return mutate("createSource", () -> {
+  public CreateSourceResponse createSource(String name, String url) {
+    try {
       requireUser();
       ReaderSourceEntity entity = new ReaderSourceEntity();
       entity.setName(name);
       entity.setUrl(url);
-      return sourceService.save(entity).getId();
-    });
+      ReaderSourceEntity saved = sourceService.save(entity);
+      logger.info("createSource succeeded for id {}", saved.getId());
+      return CreateSourceResponse.newBuilder()
+          .message("Source created successfully")
+          .source(sourceMapper.map(saved))
+          .build();
+    } catch (Exception e) {
+      logger.error("createSource failed", e);
+      throw new MutationException("createSource failed: " + e.getMessage(), e);
+    }
   }
 
   /**
    * Creates a text.
    *
    * @param input the text input
-   * @return a QueryResult
+   * @return the create-text response
    */
   @Transactional
-  public QueryResult createText(ReaderTextInput input) {
-    return mutate("createText", () -> {
+  public CreateTextResponse createText(ReaderTextInput input) {
+    try {
       requireUser();
       ReaderTextEntity entity = textMapper.mapInput(input);
-      return textService.save(entity).getId();
-    });
+      ReaderTextEntity saved = textService.save(entity);
+      logger.info("createText succeeded for id {}", saved.getId());
+      return CreateTextResponse.newBuilder()
+          .message("Text created successfully")
+          .text(textMapper.map(saved))
+          .build();
+    } catch (Exception e) {
+      logger.error("createText failed", e);
+      throw new MutationException("createText failed: " + e.getMessage(), e);
+    }
   }
 
   /**
    * Archives a text.
    *
    * @param id the text id
-   * @return a QueryResult
+   * @return the archive-text response
    */
   @Transactional
-  public QueryResult archiveText(String id) {
-    return mutate("archiveText", () -> {
+  public ArchiveTextResponse archiveText(String id) {
+    try {
       requireUser();
       ReaderTextEntity text = textService.findById(UUID.fromString(id))
           .orElseThrow(() -> new IllegalArgumentException("Text not found: " + id));
       text.setStatus(ReaderTextStatus.ARCHIVED);
-      return textService.save(text).getId();
-    });
-  }
-
-  /**
-   * Runs a mutation, returning QuerySuccess with the affected id or StandardError
-   * on failure.
-   *
-   * @param op the operation name (for logging and messages)
-   * @param action the mutation, returning the affected entity id
-   * @return a QueryResult
-   */
-  private QueryResult mutate(String op, Supplier<UUID> action) {
-    try {
-      UUID id = action.get();
-      logger.info("{} succeeded for id {}", op, id);
-      return QuerySuccess.newBuilder()
-          .message(op + " succeeded")
-          .id(id == null ? null : id.toString())
+      ReaderTextEntity saved = textService.save(text);
+      logger.info("archiveText succeeded for id {}", saved.getId());
+      return ArchiveTextResponse.newBuilder()
+          .message("Text archived successfully")
+          .text(textMapper.map(saved))
           .build();
     } catch (Exception e) {
-      logger.error("{} failed", op, e);
-      return StandardError.newBuilder()
-          .message(op + " failed: " + e.getMessage())
-          .build();
+      logger.error("archiveText failed", e);
+      throw new MutationException("archiveText failed: " + e.getMessage(), e);
     }
   }
 

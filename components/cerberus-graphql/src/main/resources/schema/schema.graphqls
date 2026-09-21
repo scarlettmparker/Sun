@@ -26,8 +26,13 @@ type GalleryQueries {
   locateGalleryItems(ids: [ID!]!): [GalleryItem]
 }
 
+type CreateGalleryItemResponse {
+  message: String!
+  item: GalleryItem!
+}
+
 type GalleryMutations {
-  create(input: GalleryItemInput): QueryResult
+  create(input: GalleryItemInput): CreateGalleryItemResponse!
 }
 
 extend type Query {

@@ -2,12 +2,21 @@ package com.sun.echo.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
+import com.sun.echo.codegen.types.AddItemResponse;
+import com.sun.echo.codegen.types.ArchiveChecklistResponse;
 import com.sun.echo.codegen.types.ChecklistDetail;
 import com.sun.echo.codegen.types.ChecklistEntry;
 import com.sun.echo.codegen.types.ChecklistEntryInput;
+import com.sun.echo.codegen.types.CompleteChecklistResponse;
+import com.sun.echo.codegen.types.CreateChecklistFromTemplateResponse;
+import com.sun.echo.codegen.types.CreateChecklistFromTemplatesResponse;
+import com.sun.echo.codegen.types.CreateChecklistResponse;
+import com.sun.echo.codegen.types.DeleteChecklistResponse;
 import com.sun.echo.codegen.types.PagedChecklistEntryItems;
 import com.sun.echo.codegen.types.PaginationInput;
-import com.sun.echo.codegen.types.QueryResult;
+import com.sun.echo.codegen.types.RemoveItemResponse;
+import com.sun.echo.codegen.types.SaveChecklistResponse;
+import com.sun.echo.codegen.types.SetItemStatusResponse;
 import com.sun.echo.graphql.services.ChecklistEntryGraphQLService;
 import com.sun.echo.model.enums.ItemStatus;
 import java.util.List;
@@ -77,11 +86,11 @@ public class ChecklistEntryDataFetcher {
    * Creates an empty checklist entry.
    *
    * @param name an optional name
-   * @return a QueryResult
+   * @return the created checklist entry
    */
   @DgsData(parentType = "ChecklistMutations", field = "createChecklist")
   @PreAuthorize("@permissions.has('graphql.echo.createChecklist')")
-  public QueryResult createChecklist(String name) {
+  public CreateChecklistResponse createChecklist(String name) {
     return checklistEntryGraphQLService.createChecklist(name);
   }
 
@@ -89,11 +98,11 @@ public class ChecklistEntryDataFetcher {
    * Creates a checklist entry seeded from a template's items.
    *
    * @param templateId the template id
-   * @return a QueryResult
+   * @return the created checklist entry
    */
   @DgsData(parentType = "ChecklistMutations", field = "createChecklistFromTemplate")
   @PreAuthorize("@permissions.has('graphql.echo.createChecklistFromTemplate')")
-  public QueryResult createChecklistFromTemplate(String templateId, String name) {
+  public CreateChecklistFromTemplateResponse createChecklistFromTemplate(String templateId, String name) {
     return checklistEntryGraphQLService.createChecklistFromTemplate(templateId, name);
   }
 
@@ -102,11 +111,11 @@ public class ChecklistEntryDataFetcher {
    *
    * @param templateIds the template ids to compose
    * @param name an optional name for the new entry
-   * @return a QueryResult
+   * @return the created checklist entry
    */
   @DgsData(parentType = "ChecklistMutations", field = "createChecklistFromTemplates")
   @PreAuthorize("@permissions.has('graphql.echo.createChecklistFromTemplates')")
-  public QueryResult createChecklistFromTemplates(List<String> templateIds, String name) {
+  public CreateChecklistFromTemplatesResponse createChecklistFromTemplates(List<String> templateIds, String name) {
     return checklistEntryGraphQLService.createChecklistFromTemplates(templateIds, name);
   }
 
@@ -114,11 +123,11 @@ public class ChecklistEntryDataFetcher {
    * Creates or updates a checklist entry from input.
    *
    * @param input the entry input
-   * @return a QueryResult
+   * @return the saved checklist entry
    */
   @DgsData(parentType = "ChecklistMutations", field = "saveChecklist")
   @PreAuthorize("@permissions.has('graphql.echo.saveChecklist')")
-  public QueryResult saveChecklist(ChecklistEntryInput input) {
+  public SaveChecklistResponse saveChecklist(ChecklistEntryInput input) {
     return checklistEntryGraphQLService.saveChecklist(input);
   }
 
@@ -126,11 +135,11 @@ public class ChecklistEntryDataFetcher {
    * Stamps a checklist entry's completion timestamp.
    *
    * @param id the entry id
-   * @return a QueryResult
+   * @return the completed checklist entry
    */
   @DgsData(parentType = "ChecklistMutations", field = "completeChecklist")
   @PreAuthorize("@permissions.has('graphql.echo.completeChecklist')")
-  public QueryResult completeChecklist(String id) {
+  public CompleteChecklistResponse completeChecklist(String id) {
     return checklistEntryGraphQLService.completeChecklist(id);
   }
 
@@ -138,11 +147,11 @@ public class ChecklistEntryDataFetcher {
    * Archives a checklist entry.
    *
    * @param id the entry id
-   * @return a QueryResult
+   * @return the archived checklist entry
    */
   @DgsData(parentType = "ChecklistMutations", field = "archiveChecklist")
   @PreAuthorize("@permissions.has('graphql.echo.archiveChecklist')")
-  public QueryResult archiveChecklist(String id) {
+  public ArchiveChecklistResponse archiveChecklist(String id) {
     return checklistEntryGraphQLService.archiveChecklist(id);
   }
 
@@ -150,11 +159,11 @@ public class ChecklistEntryDataFetcher {
    * Permanently deletes a checklist entry and its items.
    *
    * @param id the entry id
-   * @return a QueryResult
+   * @return the deleted entry id
    */
   @DgsData(parentType = "ChecklistMutations", field = "deleteChecklist")
   @PreAuthorize("@permissions.has('graphql.echo.deleteChecklist')")
-  public QueryResult deleteChecklist(String id) {
+  public DeleteChecklistResponse deleteChecklist(String id) {
     return checklistEntryGraphQLService.deleteChecklist(id);
   }
 
@@ -164,11 +173,11 @@ public class ChecklistEntryDataFetcher {
    * @param entryId the entry id
    * @param itemId the item id
    * @param position an optional explicit position
-   * @return a QueryResult
+   * @return the updated checklist entry
    */
   @DgsData(parentType = "ChecklistMutations", field = "addItem")
   @PreAuthorize("@permissions.has('graphql.echo.addItem')")
-  public QueryResult addItem(String entryId, String itemId, Integer position) {
+  public AddItemResponse addItem(String entryId, String itemId, Integer position) {
     return checklistEntryGraphQLService.addItem(entryId, itemId, position);
   }
 
@@ -177,11 +186,11 @@ public class ChecklistEntryDataFetcher {
    *
    * @param entryId the entry id
    * @param itemId the item id
-   * @return a QueryResult
+   * @return the updated checklist entry
    */
   @DgsData(parentType = "ChecklistMutations", field = "removeItem")
   @PreAuthorize("@permissions.has('graphql.echo.removeItem')")
-  public QueryResult removeItem(String entryId, String itemId) {
+  public RemoveItemResponse removeItem(String entryId, String itemId) {
     return checklistEntryGraphQLService.removeItem(entryId, itemId);
   }
 
@@ -191,11 +200,11 @@ public class ChecklistEntryDataFetcher {
    * @param entryId the entry id
    * @param itemId the item id
    * @param status the new status (NOT_STARTED, COMPLETE, FAILED, or NOT_NEEDED)
-   * @return a QueryResult
+   * @return the updated checklist entry
    */
   @DgsData(parentType = "ChecklistMutations", field = "setItemStatus")
   @PreAuthorize("@permissions.has('graphql.echo.setItemStatus')")
-  public QueryResult setItemStatus(String entryId, String itemId, ItemStatus status) {
+  public SetItemStatusResponse setItemStatus(String entryId, String itemId, ItemStatus status) {
     return checklistEntryGraphQLService.setItemStatus(entryId, itemId, status);
   }
 }

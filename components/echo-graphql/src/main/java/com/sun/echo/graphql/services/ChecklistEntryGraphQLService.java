@@ -1,14 +1,22 @@
 package com.sun.echo.graphql.services;
 
+import com.sun.base.error.MutationException;
+import com.sun.echo.codegen.types.AddItemResponse;
+import com.sun.echo.codegen.types.ArchiveChecklistResponse;
 import com.sun.echo.codegen.types.ChecklistDetail;
 import com.sun.echo.codegen.types.ChecklistEntry;
 import com.sun.echo.codegen.types.ChecklistEntryInput;
 import com.sun.echo.codegen.types.ChecklistEntryItem;
+import com.sun.echo.codegen.types.CompleteChecklistResponse;
+import com.sun.echo.codegen.types.CreateChecklistFromTemplateResponse;
+import com.sun.echo.codegen.types.CreateChecklistFromTemplatesResponse;
+import com.sun.echo.codegen.types.CreateChecklistResponse;
+import com.sun.echo.codegen.types.DeleteChecklistResponse;
 import com.sun.echo.codegen.types.PagedChecklistEntryItems;
 import com.sun.echo.codegen.types.PaginationInput;
-import com.sun.echo.codegen.types.QueryResult;
-import com.sun.echo.codegen.types.QuerySuccess;
-import com.sun.echo.codegen.types.StandardError;
+import com.sun.echo.codegen.types.RemoveItemResponse;
+import com.sun.echo.codegen.types.SaveChecklistResponse;
+import com.sun.echo.codegen.types.SetItemStatusResponse;
 import com.sun.echo.graphql.mappers.ChecklistDetailMapper;
 import com.sun.echo.graphql.mappers.ChecklistEntryItemMapper;
 import com.sun.echo.graphql.mappers.ChecklistEntryMapper;
@@ -112,14 +120,18 @@ public class ChecklistEntryGraphQLService {
    * Creates an empty checklist entry.
    *
    * @param name an optional name
-   * @return a QueryResult
+   * @return the created checklist entry
    */
   @Transactional
-  public QueryResult createChecklist(String name) {
+  public CreateChecklistResponse createChecklist(String name) {
     return mutate("createChecklist", () -> {
       ChecklistEntryEntity entity = new ChecklistEntryEntity();
       entity.setName(name);
-      return entryService.save(entity).getId();
+      ChecklistEntryEntity saved = entryService.save(entity);
+      return CreateChecklistResponse.newBuilder()
+          .message("Checklist created successfully")
+          .entry(entryMapper.map(saved))
+          .build();
     });
   }
 
@@ -127,12 +139,17 @@ public class ChecklistEntryGraphQLService {
    * Creates a checklist entry seeded from a template's items.
    *
    * @param templateId the template id
-   * @return a QueryResult
+   * @return the created checklist entry
    */
   @Transactional
-  public QueryResult createChecklistFromTemplate(String templateId, String name) {
-    return mutate("createChecklistFromTemplate",
-        () -> entryService.createFromTemplate(UUID.fromString(templateId), name).getId());
+  public CreateChecklistFromTemplateResponse createChecklistFromTemplate(String templateId, String name) {
+    return mutate("createChecklistFromTemplate", () -> {
+      ChecklistEntryEntity created = entryService.createFromTemplate(UUID.fromString(templateId), name);
+      return CreateChecklistFromTemplateResponse.newBuilder()
+          .message("Checklist created from template successfully")
+          .entry(entryMapper.map(created))
+          .build();
+    });
   }
 
   /**
@@ -140,27 +157,36 @@ public class ChecklistEntryGraphQLService {
    *
    * @param templateIds the template ids to compose
    * @param name an optional name for the new entry
-   * @return a QueryResult
+   * @return the created checklist entry
    */
   @Transactional
-  public QueryResult createChecklistFromTemplates(List<String> templateIds, String name) {
-    return mutate("createChecklistFromTemplates",
-        () -> entryService.createFromTemplates(
-            templateIds.stream().map(UUID::fromString).collect(Collectors.toList()), name).getId());
+  public CreateChecklistFromTemplatesResponse createChecklistFromTemplates(List<String> templateIds, String name) {
+    return mutate("createChecklistFromTemplates", () -> {
+      ChecklistEntryEntity created = entryService.createFromTemplates(
+          templateIds.stream().map(UUID::fromString).collect(Collectors.toList()), name);
+      return CreateChecklistFromTemplatesResponse.newBuilder()
+          .message("Checklist created from templates successfully")
+          .entry(entryMapper.map(created))
+          .build();
+    });
   }
 
   /**
    * Creates or updates a checklist entry from input.
    *
    * @param input the entry input
-   * @return a QueryResult
+   * @return the saved checklist entry
    */
   @Transactional
-  public QueryResult saveChecklist(ChecklistEntryInput input) {
+  public SaveChecklistResponse saveChecklist(ChecklistEntryInput input) {
     return mutate("saveChecklist", () -> {
       ChecklistEntryEntity entity = resolveEntry(input.getId());
       entryMapper.map(input, entity);
-      return entryService.save(entity).getId();
+      ChecklistEntryEntity saved = entryService.save(entity);
+      return SaveChecklistResponse.newBuilder()
+          .message("Checklist saved successfully")
+          .entry(entryMapper.map(saved))
+          .build();
     });
   }
 
@@ -168,36 +194,51 @@ public class ChecklistEntryGraphQLService {
    * Stamps a checklist entry's completion timestamp.
    *
    * @param id the entry id
-   * @return a QueryResult
+   * @return the completed checklist entry
    */
   @Transactional
-  public QueryResult completeChecklist(String id) {
-    return mutate("completeChecklist", () -> entryService.completeChecklist(UUID.fromString(id)).getId());
+  public CompleteChecklistResponse completeChecklist(String id) {
+    return mutate("completeChecklist", () -> {
+      ChecklistEntryEntity completed = entryService.completeChecklist(UUID.fromString(id));
+      return CompleteChecklistResponse.newBuilder()
+          .message("Checklist completed successfully")
+          .entry(entryMapper.map(completed))
+          .build();
+    });
   }
 
   /**
    * Archives a checklist entry (entry items are preserved).
    *
    * @param id the entry id
-   * @return a QueryResult
+   * @return the archived checklist entry
    */
   @Transactional
-  public QueryResult archiveChecklist(String id) {
-    return mutate("archiveChecklist", () -> entryService.archive(UUID.fromString(id)).getId());
+  public ArchiveChecklistResponse archiveChecklist(String id) {
+    return mutate("archiveChecklist", () -> {
+      ChecklistEntryEntity archived = entryService.archive(UUID.fromString(id));
+      return ArchiveChecklistResponse.newBuilder()
+          .message("Checklist archived successfully")
+          .entry(entryMapper.map(archived))
+          .build();
+    });
   }
 
   /**
    * Permanently deletes a checklist entry and its items.
    *
    * @param id the entry id
-   * @return a QueryResult
+   * @return the deleted entry id
    */
   @Transactional
-  public QueryResult deleteChecklist(String id) {
+  public DeleteChecklistResponse deleteChecklist(String id) {
     UUID entryId = UUID.fromString(id);
     return mutate("deleteChecklist", () -> {
       entryService.delete(entryId);
-      return entryId;
+      return DeleteChecklistResponse.newBuilder()
+          .message("Checklist deleted successfully")
+          .id(entryId.toString())
+          .build();
     });
   }
 
@@ -207,12 +248,18 @@ public class ChecklistEntryGraphQLService {
    * @param entryId the entry id
    * @param itemId the item id
    * @param position an optional explicit position
-   * @return a QueryResult
+   * @return the updated checklist entry
    */
   @Transactional
-  public QueryResult addItem(String entryId, String itemId, Integer position) {
-    return mutate("addItem",
-        () -> entryItemService.addItem(UUID.fromString(entryId), UUID.fromString(itemId), position).getId());
+  public AddItemResponse addItem(String entryId, String itemId, Integer position) {
+    return mutate("addItem", () -> {
+      UUID entryUuid = UUID.fromString(entryId);
+      entryItemService.addItem(entryUuid, UUID.fromString(itemId), position);
+      return AddItemResponse.newBuilder()
+          .message("Checklist item added successfully")
+          .entry(entryMapper.map(requireEntry(entryUuid)))
+          .build();
+    });
   }
 
   /**
@@ -220,14 +267,17 @@ public class ChecklistEntryGraphQLService {
    *
    * @param entryId the entry id
    * @param itemId the item id
-   * @return a QueryResult
+   * @return the updated checklist entry
    */
   @Transactional
-  public QueryResult removeItem(String entryId, String itemId) {
+  public RemoveItemResponse removeItem(String entryId, String itemId) {
     UUID entryUuid = UUID.fromString(entryId);
     return mutate("removeItem", () -> {
       entryItemService.removeItem(entryUuid, UUID.fromString(itemId));
-      return entryUuid;
+      return RemoveItemResponse.newBuilder()
+          .message("Checklist item removed successfully")
+          .entry(entryMapper.map(requireEntry(entryUuid)))
+          .build();
     });
   }
 
@@ -237,12 +287,18 @@ public class ChecklistEntryGraphQLService {
    * @param entryId the entry id
    * @param itemId the item id
    * @param status the new status (NOT_STARTED/COMPLETE/FAILED/NOT_NEEDED)
-   * @return a QueryResult
+   * @return the updated checklist entry
    */
   @Transactional
-  public QueryResult setItemStatus(String entryId, String itemId, ItemStatus status) {
-    return mutate("setItemStatus", () -> entryItemService
-        .setStatus(UUID.fromString(entryId), UUID.fromString(itemId), status).getId());
+  public SetItemStatusResponse setItemStatus(String entryId, String itemId, ItemStatus status) {
+    return mutate("setItemStatus", () -> {
+      UUID entryUuid = UUID.fromString(entryId);
+      entryItemService.setStatus(entryUuid, UUID.fromString(itemId), status);
+      return SetItemStatusResponse.newBuilder()
+          .message("Checklist item status updated successfully")
+          .entry(entryMapper.map(requireEntry(entryUuid)))
+          .build();
+    });
   }
 
   /**
@@ -255,31 +311,35 @@ public class ChecklistEntryGraphQLService {
     if (id == null) {
       return new ChecklistEntryEntity();
     }
-    return entryService.locate(UUID.fromString(id))
+    return requireEntry(UUID.fromString(id));
+  }
+
+  /**
+   * Loads an entry that must exist.
+   *
+   * @param id the entry id
+   * @return the entry entity
+   */
+  private ChecklistEntryEntity requireEntry(UUID id) {
+    return entryService.locate(id)
         .orElseThrow(() -> new IllegalArgumentException("Checklist entry not found: " + id));
   }
 
   /**
-   * Runs a mutation, returning QuerySuccess with the affected id or StandardError
-   * on failure.
+   * Runs a mutation, logging the operation and raising a MutationException on failure.
    *
-   * @param op the operation name (for logging and messages)
-   * @param action the mutation, returning the affected entity id
-   * @return a QueryResult
+   * @param op the operation name, for logging and messages
+   * @param action the mutation, returning its response
+   * @return the mutation response
    */
-  private QueryResult mutate(String op, Supplier<UUID> action) {
+  private <T> T mutate(String op, Supplier<T> action) {
     try {
-      UUID id = action.get();
-      logger.info("{} succeeded for id {}", op, id);
-      return QuerySuccess.newBuilder()
-          .message(op + " succeeded")
-          .id(id == null ? null : id.toString())
-          .build();
+      T response = action.get();
+      logger.info("{} succeeded", op);
+      return response;
     } catch (Exception e) {
       logger.error("{} failed", op, e);
-      return StandardError.newBuilder()
-          .message(op + " failed: " + e.getMessage())
-          .build();
+      throw new MutationException(op + " failed: " + e.getMessage(), e);
     }
   }
 }

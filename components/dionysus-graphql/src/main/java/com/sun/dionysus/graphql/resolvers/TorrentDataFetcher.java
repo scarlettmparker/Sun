@@ -3,6 +3,10 @@ package com.sun.dionysus.graphql.resolvers;
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
 import com.sun.dionysus.codegen.types.AddTorrentInput;
+import com.sun.dionysus.codegen.types.AddTorrentResponse;
+import com.sun.dionysus.codegen.types.CancelTorrentResponse;
+import com.sun.dionysus.codegen.types.PauseTorrentResponse;
+import com.sun.dionysus.codegen.types.ResumeTorrentResponse;
 import com.sun.dionysus.codegen.types.TorrentJob;
 import com.sun.dionysus.graphql.services.TorrentGraphQLService;
 import com.sun.dionysus.torrent.search.TorrentSearchResult;
@@ -40,25 +44,25 @@ public class TorrentDataFetcher {
 
   @DgsData(parentType = "FilestoreMutations", field = "addTorrent")
   @PreAuthorize("@permissions.has('graphql.dionysus.torrent.add')")
-  public TorrentJob addTorrent(AddTorrentInput input) {
+  public AddTorrentResponse addTorrent(AddTorrentInput input) {
     return torrentGraphQLService.addTorrent(input.getBucket(), input.getPath(), input.getMagnet(), input.getTorrentFileBase64());
   }
 
   @DgsData(parentType = "FilestoreMutations", field = "pauseTorrent")
   @PreAuthorize("@permissions.has('graphql.dionysus.torrent.pause')")
-  public TorrentJob pauseTorrent(String jobId) {
+  public PauseTorrentResponse pauseTorrent(String jobId) {
     return torrentGraphQLService.pauseTorrent(jobId);
   }
 
   @DgsData(parentType = "FilestoreMutations", field = "resumeTorrent")
   @PreAuthorize("@permissions.has('graphql.dionysus.torrent.resume')")
-  public TorrentJob resumeTorrent(String jobId) {
+  public ResumeTorrentResponse resumeTorrent(String jobId) {
     return torrentGraphQLService.resumeTorrent(jobId);
   }
 
   @DgsData(parentType = "FilestoreMutations", field = "cancelTorrent")
   @PreAuthorize("@permissions.has('graphql.dionysus.torrent.cancel')")
-  public TorrentJob cancelTorrent(String jobId) {
+  public CancelTorrentResponse cancelTorrent(String jobId) {
     return torrentGraphQLService.cancelTorrent(jobId);
   }
 }

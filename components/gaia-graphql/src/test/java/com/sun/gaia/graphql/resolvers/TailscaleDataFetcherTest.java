@@ -4,8 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.sun.gaia.codegen.types.QueryResult;
-import com.sun.gaia.codegen.types.QuerySuccess;
+import com.sun.gaia.codegen.types.ExpireTailscaleDeviceResponse;
 import com.sun.gaia.codegen.types.TailscaleDevice;
 import com.sun.gaia.graphql.services.TailscaleGraphQLService;
 import java.util.List;
@@ -46,10 +45,13 @@ class TailscaleDataFetcherTest {
 
   @Test
   void expireTailscaleDevice_shouldDelegate() {
-    QueryResult mock = QuerySuccess.newBuilder().message("Tailscale device expired").id("id1").build();
+    ExpireTailscaleDeviceResponse mock = ExpireTailscaleDeviceResponse.newBuilder()
+        .message("Tailscale device expired")
+        .device(TailscaleDevice.newBuilder().id("id1").name("node1").build())
+        .build();
     when(service.expireTailscaleDevice("id1")).thenReturn(mock);
 
-    QueryResult result = fetcher.expireTailscaleDevice("id1");
+    ExpireTailscaleDeviceResponse result = fetcher.expireTailscaleDevice("id1");
 
     assertThat(result).isEqualTo(mock);
     verify(service).expireTailscaleDevice("id1");

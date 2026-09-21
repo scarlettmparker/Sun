@@ -10,17 +10,6 @@ type Mutation {
   # Base Mutation type for schema extensions
 }
 
-type StandardError {
-  message: String!
-}
-
-type QuerySuccess {
-  message: String!
-  id: ID
-}
-
-union QueryResult = QuerySuccess | StandardError
-
 enum VoteValue {
   UP
   DOWN

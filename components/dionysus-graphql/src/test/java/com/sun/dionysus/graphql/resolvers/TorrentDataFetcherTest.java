@@ -5,6 +5,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.sun.dionysus.codegen.types.AddTorrentInput;
+import com.sun.dionysus.codegen.types.AddTorrentResponse;
+import com.sun.dionysus.codegen.types.CancelTorrentResponse;
+import com.sun.dionysus.codegen.types.PauseTorrentResponse;
+import com.sun.dionysus.codegen.types.ResumeTorrentResponse;
 import com.sun.dionysus.codegen.types.TorrentJob;
 import com.sun.dionysus.codegen.types.TorrentJobStatus;
 import com.sun.dionysus.graphql.services.TorrentGraphQLService;
@@ -68,11 +72,12 @@ class TorrentDataFetcherTest {
     TorrentJob job = TorrentJob.newBuilder().id("1").bucket("b").targetKeyPath("p")
         .sourceType("MAGNET").status(TorrentJobStatus.DOWNLOADING).infoHash("h")
         .totalBytes(100L).downloadedBytes(0L).uploadedBytes(0L).progress(0.0).build();
-    when(torrentGraphQLService.addTorrent("b", "p", "magnet:?xt=urn:btih:abc", null)).thenReturn(job);
+    AddTorrentResponse response = AddTorrentResponse.newBuilder().message("addTorrent succeeded").job(job).build();
+    when(torrentGraphQLService.addTorrent("b", "p", "magnet:?xt=urn:btih:abc", null)).thenReturn(response);
 
-    TorrentJob result = fetcher.addTorrent(input);
+    AddTorrentResponse result = fetcher.addTorrent(input);
 
-    assertThat(result).isEqualTo(job);
+    assertThat(result.getJob()).isEqualTo(job);
     verify(torrentGraphQLService).addTorrent("b", "p", "magnet:?xt=urn:btih:abc", null);
   }
 
@@ -81,11 +86,12 @@ class TorrentDataFetcherTest {
     TorrentJob job = TorrentJob.newBuilder().id("1").bucket("b").targetKeyPath("k")
         .sourceType("MAGNET").status(TorrentJobStatus.PAUSED).infoHash("h")
         .totalBytes(100L).downloadedBytes(0L).uploadedBytes(0L).progress(0.0).build();
-    when(torrentGraphQLService.pauseTorrent("1")).thenReturn(job);
+    PauseTorrentResponse response = PauseTorrentResponse.newBuilder().message("pauseTorrent succeeded").job(job).build();
+    when(torrentGraphQLService.pauseTorrent("1")).thenReturn(response);
 
-    TorrentJob result = fetcher.pauseTorrent("1");
+    PauseTorrentResponse result = fetcher.pauseTorrent("1");
 
-    assertThat(result).isEqualTo(job);
+    assertThat(result.getJob()).isEqualTo(job);
     verify(torrentGraphQLService).pauseTorrent("1");
   }
 
@@ -94,11 +100,12 @@ class TorrentDataFetcherTest {
     TorrentJob job = TorrentJob.newBuilder().id("1").bucket("b").targetKeyPath("k")
         .sourceType("MAGNET").status(TorrentJobStatus.DOWNLOADING).infoHash("h")
         .totalBytes(100L).downloadedBytes(0L).uploadedBytes(0L).progress(0.0).build();
-    when(torrentGraphQLService.resumeTorrent("1")).thenReturn(job);
+    ResumeTorrentResponse response = ResumeTorrentResponse.newBuilder().message("resumeTorrent succeeded").job(job).build();
+    when(torrentGraphQLService.resumeTorrent("1")).thenReturn(response);
 
-    TorrentJob result = fetcher.resumeTorrent("1");
+    ResumeTorrentResponse result = fetcher.resumeTorrent("1");
 
-    assertThat(result).isEqualTo(job);
+    assertThat(result.getJob()).isEqualTo(job);
     verify(torrentGraphQLService).resumeTorrent("1");
   }
 
@@ -107,11 +114,12 @@ class TorrentDataFetcherTest {
     TorrentJob job = TorrentJob.newBuilder().id("1").bucket("b").targetKeyPath("k")
         .sourceType("MAGNET").status(TorrentJobStatus.CANCELLED).infoHash("h")
         .totalBytes(100L).downloadedBytes(0L).uploadedBytes(0L).progress(0.0).build();
-    when(torrentGraphQLService.cancelTorrent("1")).thenReturn(job);
+    CancelTorrentResponse response = CancelTorrentResponse.newBuilder().message("cancelTorrent succeeded").job(job).build();
+    when(torrentGraphQLService.cancelTorrent("1")).thenReturn(response);
 
-    TorrentJob result = fetcher.cancelTorrent("1");
+    CancelTorrentResponse result = fetcher.cancelTorrent("1");
 
-    assertThat(result).isEqualTo(job);
+    assertThat(result.getJob()).isEqualTo(job);
     verify(torrentGraphQLService).cancelTorrent("1");
   }
 }

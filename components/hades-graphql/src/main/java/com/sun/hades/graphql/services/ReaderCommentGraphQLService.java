@@ -1,13 +1,14 @@
 package com.sun.hades.graphql.services;
 
+import com.sun.base.error.MutationException;
+import com.sun.hades.codegen.types.AddCommentResponse;
 import com.sun.hades.codegen.types.CommentInput;
+import com.sun.hades.codegen.types.DeleteCommentResponse;
+import com.sun.hades.codegen.types.EditCommentResponse;
 import com.sun.hades.codegen.types.PagedReaderComments;
 import com.sun.hades.codegen.types.PaginationInput;
-import com.sun.hades.codegen.types.QueryResult;
-import com.sun.hades.codegen.types.QuerySuccess;
 import com.sun.hades.codegen.types.ReaderComment;
 import com.sun.hades.codegen.types.RemoteUser;
-import com.sun.hades.codegen.types.StandardError;
 import com.sun.hades.graphql.mappers.ReaderCommentMapper;
 import com.sun.hades.graphql.mappers.RemoteUserMapper;
 import com.sun.hades.model.ReaderCommentEntity;
@@ -22,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -93,14 +93,26 @@ public class ReaderCommentGraphQLService {
    * Adds a comment to an annotation.
    *
    * @param input the comment input
-   * @return a QueryResult
+   * @return the add-comment response
    */
   @Transactional
-  public QueryResult addComment(CommentInput input) {
-    return mutate("addComment", () -> commentService.addComment(
-        UUID.fromString(input.getAnnotationId()),
-        input.getParentId() == null ? null : UUID.fromString(input.getParentId()),
-        input.getBody()));
+  public AddCommentResponse addComment(CommentInput input) {
+    try {
+      UUID id = commentService.addComment(
+          UUID.fromString(input.getAnnotationId()),
+          input.getParentId() == null ? null : UUID.fromString(input.getParentId()),
+          input.getBody());
+      logger.info("addComment succeeded for id {}", id);
+      ReaderCommentEntity comment = commentService.findById(id)
+          .orElseThrow(() -> new IllegalArgumentException("Comment not found: " + id));
+      return AddCommentResponse.newBuilder()
+          .message("Comment added successfully")
+          .comment(commentMapper.map(comment, null, null))
+          .build();
+    } catch (Exception e) {
+      logger.error("addComment failed", e);
+      throw new MutationException("addComment failed: " + e.getMessage(), e);
+    }
   }
 
   /**
@@ -108,49 +120,43 @@ public class ReaderCommentGraphQLService {
    *
    * @param id the comment id
    * @param body the new body
-   * @return a QueryResult
+   * @return the edit-comment response
    */
   @Transactional
-  public QueryResult editComment(String id, String body) {
-    return mutate("editComment",
-        () -> commentService.editComment(UUID.fromString(id), body));
+  public EditCommentResponse editComment(String id, String body) {
+    try {
+      UUID commentId = commentService.editComment(UUID.fromString(id), body);
+      logger.info("editComment succeeded for id {}", commentId);
+      ReaderCommentEntity comment = commentService.findById(commentId)
+          .orElseThrow(() -> new IllegalArgumentException("Comment not found: " + commentId));
+      return EditCommentResponse.newBuilder()
+          .message("Comment updated successfully")
+          .comment(commentMapper.map(comment, null, null))
+          .build();
+    } catch (Exception e) {
+      logger.error("editComment failed", e);
+      throw new MutationException("editComment failed: " + e.getMessage(), e);
+    }
   }
 
   /**
    * Deletes a comment.
    *
    * @param id the comment id
-   * @return a QueryResult
+   * @return the delete-comment response
    */
   @Transactional
-  public QueryResult deleteComment(String id) {
-    return mutate("deleteComment", () -> {
-      commentService.deleteComment(UUID.fromString(id));
-      return UUID.fromString(id);
-    });
-  }
-
-  /**
-   * Runs a mutation, returning QuerySuccess with the affected id or StandardError
-   * on failure.
-   *
-   * @param op the operation name (for logging and messages)
-   * @param action the mutation, returning the affected entity id
-   * @return a QueryResult
-   */
-  private QueryResult mutate(String op, Supplier<UUID> action) {
+  public DeleteCommentResponse deleteComment(String id) {
     try {
-      UUID id = action.get();
-      logger.info("{} succeeded for id {}", op, id);
-      return QuerySuccess.newBuilder()
-          .message(op + " succeeded")
-          .id(id == null ? null : id.toString())
+      commentService.deleteComment(UUID.fromString(id));
+      logger.info("deleteComment succeeded for id {}", id);
+      return DeleteCommentResponse.newBuilder()
+          .message("Comment deleted successfully")
+          .id(id)
           .build();
     } catch (Exception e) {
-      logger.error("{} failed", op, e);
-      return StandardError.newBuilder()
-          .message(op + " failed: " + e.getMessage())
-          .build();
+      logger.error("deleteComment failed", e);
+      throw new MutationException("deleteComment failed: " + e.getMessage(), e);
     }
   }
 }

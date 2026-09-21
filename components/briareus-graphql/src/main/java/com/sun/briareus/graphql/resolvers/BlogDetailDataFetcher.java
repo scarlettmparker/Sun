@@ -2,7 +2,8 @@ package com.sun.briareus.graphql.resolvers;
 
 import com.sun.briareus.codegen.types.BlogDetail;
 import com.sun.briareus.codegen.types.BlogWithPropertiesInput;
-import com.sun.briareus.codegen.types.QueryResult;
+import com.sun.briareus.codegen.types.CreateBlogWithPropertiesResponse;
+import com.sun.briareus.codegen.types.UpdateBlogWithPropertiesResponse;
 import com.sun.briareus.graphql.services.BlogDetailGqlService;
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
@@ -31,11 +32,11 @@ public class BlogDetailDataFetcher {
    * Creates a blog post with property set values.
    *
    * @param input the input
-   * @return the result
+   * @return the created blog post
    */
   @DgsData(parentType = "BlogMutations", field = "createBlogWithProperties")
   @PreAuthorize("@permissions.has('graphql.briareus.createBlogWithProperties')")
-  public QueryResult createBlogWithProperties(BlogWithPropertiesInput input) {
+  public CreateBlogWithPropertiesResponse createBlogWithProperties(BlogWithPropertiesInput input) {
     return blogDetailGqlService.createBlogWithProperties(input);
   }
 
@@ -44,11 +45,11 @@ public class BlogDetailDataFetcher {
    *
    * @param id the post id
    * @param input the input
-   * @return the result
+   * @return the updated blog post
    */
   @DgsData(parentType = "BlogMutations", field = "updateBlogWithProperties")
   @PreAuthorize("@permissions.has('graphql.briareus.updateBlogWithProperties')")
-  public QueryResult updateBlogWithProperties(String id, BlogWithPropertiesInput input) {
+  public UpdateBlogWithPropertiesResponse updateBlogWithProperties(String id, BlogWithPropertiesInput input) {
     return blogDetailGqlService.updateBlogWithProperties(id, input);
   }
 }

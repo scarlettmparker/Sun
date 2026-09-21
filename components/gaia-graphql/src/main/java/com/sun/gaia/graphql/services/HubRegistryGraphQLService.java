@@ -5,6 +5,7 @@ import com.sun.gaia.codegen.types.HubAppInput;
 import com.sun.gaia.codegen.types.HubMode;
 import com.sun.gaia.codegen.types.HubRegistry;
 import com.sun.gaia.codegen.types.HubRegistryInput;
+import com.sun.gaia.codegen.types.SaveRegistryResponse;
 import com.sun.gaia.model.PropertySetEntryEntity;
 import com.sun.gaia.service.PropertySetService;
 import java.util.ArrayList;
@@ -54,10 +55,10 @@ public class HubRegistryGraphQLService {
    * Validates and persists the hub registry.
    *
    * @param input the hub registry input
-   * @return the saved hub registry
+   * @return the response with the saved hub registry
    */
   @Transactional
-  public HubRegistry saveRegistry(HubRegistryInput input) {
+  public SaveRegistryResponse saveRegistry(HubRegistryInput input) {
     if (input.getMode() == null) {
       throw new IllegalArgumentException("Hub mode is required");
     }
@@ -75,7 +76,10 @@ public class HubRegistryGraphQLService {
     values.put("mode", input.getMode().name());
     values.put("apps", apps);
     propertySetService.upsertEntry(HUB_OWNER_KEY, HUB_SET_NAME, HUB_ENTRY_NAME, values, false);
-    return toHubRegistry(values);
+    return SaveRegistryResponse.newBuilder()
+        .message("Hub registry saved")
+        .registry(toHubRegistry(values))
+        .build();
   }
 
   /**

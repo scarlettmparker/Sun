@@ -5,10 +5,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.sun.hades.codegen.types.AnnotationInput;
+import com.sun.hades.codegen.types.AttachObjectResponse;
+import com.sun.hades.codegen.types.CreateAnnotationResponse;
+import com.sun.hades.codegen.types.DeleteAnnotationResponse;
+import com.sun.hades.codegen.types.EditAnnotationResponse;
 import com.sun.hades.codegen.types.PagedReaderAnnotations;
 import com.sun.hades.codegen.types.PaginationInput;
-import com.sun.hades.codegen.types.QueryResult;
-import com.sun.hades.codegen.types.QuerySuccess;
 import com.sun.hades.codegen.types.ReaderAnnotation;
 import com.sun.hades.graphql.services.ReaderAnnotationGraphQLService;
 import java.util.List;
@@ -52,10 +54,13 @@ class ReaderAnnotationDataFetcherTest {
   void createAnnotation_shouldDelegateToService() {
     AnnotationInput input = AnnotationInput.newBuilder()
         .textId("text-id").startOffset(0).endOffset(10).body("body").build();
-    QueryResult mockResult = QuerySuccess.newBuilder().message("ok").id("id").build();
+    CreateAnnotationResponse mockResult = CreateAnnotationResponse.newBuilder()
+        .message("ok")
+        .annotation(ReaderAnnotation.newBuilder().id("id").body("body").build())
+        .build();
     when(readerAnnotationGraphQLService.createAnnotation("text-id", 0, 10, "body")).thenReturn(mockResult);
 
-    QueryResult result = fetcher.createAnnotation(input);
+    CreateAnnotationResponse result = fetcher.createAnnotation(input);
 
     assertThat(result).isEqualTo(mockResult);
     verify(readerAnnotationGraphQLService).createAnnotation("text-id", 0, 10, "body");
@@ -63,10 +68,13 @@ class ReaderAnnotationDataFetcherTest {
 
   @Test
   void editAnnotation_shouldDelegateToService() {
-    QueryResult mockResult = QuerySuccess.newBuilder().message("ok").id("id").build();
+    EditAnnotationResponse mockResult = EditAnnotationResponse.newBuilder()
+        .message("ok")
+        .annotation(ReaderAnnotation.newBuilder().id("id").body("new body").build())
+        .build();
     when(readerAnnotationGraphQLService.editAnnotation("id", "new body")).thenReturn(mockResult);
 
-    QueryResult result = fetcher.editAnnotation("id", "new body");
+    EditAnnotationResponse result = fetcher.editAnnotation("id", "new body");
 
     assertThat(result).isEqualTo(mockResult);
     verify(readerAnnotationGraphQLService).editAnnotation("id", "new body");
@@ -74,10 +82,13 @@ class ReaderAnnotationDataFetcherTest {
 
   @Test
   void deleteAnnotation_shouldDelegateToService() {
-    QueryResult mockResult = QuerySuccess.newBuilder().message("ok").id("id").build();
+    DeleteAnnotationResponse mockResult = DeleteAnnotationResponse.newBuilder()
+        .message("ok")
+        .id("id")
+        .build();
     when(readerAnnotationGraphQLService.deleteAnnotation("id")).thenReturn(mockResult);
 
-    QueryResult result = fetcher.deleteAnnotation("id");
+    DeleteAnnotationResponse result = fetcher.deleteAnnotation("id");
 
     assertThat(result).isEqualTo(mockResult);
     verify(readerAnnotationGraphQLService).deleteAnnotation("id");
@@ -85,10 +96,13 @@ class ReaderAnnotationDataFetcherTest {
 
   @Test
   void attachObject_shouldDelegateToService() {
-    QueryResult mockResult = QuerySuccess.newBuilder().message("ok").id("id").build();
+    AttachObjectResponse mockResult = AttachObjectResponse.newBuilder()
+        .message("ok")
+        .id("id")
+        .build();
     when(readerAnnotationGraphQLService.attachObject("source", "target")).thenReturn(mockResult);
 
-    QueryResult result = fetcher.attachObject("source", "target");
+    AttachObjectResponse result = fetcher.attachObject("source", "target");
 
     assertThat(result).isEqualTo(mockResult);
     verify(readerAnnotationGraphQLService).attachObject("source", "target");

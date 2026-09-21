@@ -97,11 +97,72 @@ type KeyDetail {
   archivedAt: String
 }
 
-# Response payload for the renameKey mutation
-type RenameKeyResult {
+# Response payload for the putKey mutation.
+type PutKeyResponse {
+  message: String!
+  key: String!
+}
+
+# Response payload for the deleteFile mutation.
+type DeleteFileResponse {
+  message: String!
+  key: String!
+}
+
+# Response payload for the deleteKey mutation.
+type DeleteKeyResponse {
+  message: String!
+  key: String!
+}
+
+# Response payload for the renameKey mutation.
+type RenameKeyResponse {
+  message: String!
   success: Boolean!
   hasConflicts: Boolean!
   conflicts: [String!]!
+}
+
+# Response payload for the getPresignedUploadUrl mutation.
+type GetPresignedUploadUrlResponse {
+  message: String!
+  url: String!
+}
+
+# Response payload for the getPresignedUploadUrls mutation.
+type GetPresignedUploadUrlsResponse {
+  message: String!
+  urls: [String!]!
+}
+
+# Response payload for the getPresignedDownloadUrl mutation.
+type GetPresignedDownloadUrlResponse {
+  message: String!
+  url: String!
+}
+
+# Response payload for the addTorrent mutation.
+type AddTorrentResponse {
+  message: String!
+  job: TorrentJob!
+}
+
+# Response payload for the pauseTorrent mutation.
+type PauseTorrentResponse {
+  message: String!
+  job: TorrentJob!
+}
+
+# Response payload for the resumeTorrent mutation.
+type ResumeTorrentResponse {
+  message: String!
+  job: TorrentJob!
+}
+
+# Response payload for the cancelTorrent mutation.
+type CancelTorrentResponse {
+  message: String!
+  job: TorrentJob!
 }
 
 input PutKeyInput {
@@ -138,27 +199,27 @@ input PresignInput {
 # Mutations for filestore operations including multipart upload support.
 type FilestoreMutations {
   # Create a directory key (folder).
-  putKey(input: PutKeyInput!): Boolean
+  putKey(input: PutKeyInput!): PutKeyResponse!
   # Delete a file.
-  deleteFile(input: BucketKeyInput!): Boolean
+  deleteFile(input: BucketKeyInput!): DeleteFileResponse!
   # Delete a key and propagate: recursively delete the key, all sub-keys and files under it.
-  deleteKey(input: BucketKeyInput!): Boolean
+  deleteKey(input: BucketKeyInput!): DeleteKeyResponse!
   # Renames a single file or a directory prefix. Validates conflicts when merge is false.
-  renameKey(input: RenameKeyInput!): RenameKeyResult!
+  renameKey(input: RenameKeyInput!): RenameKeyResponse!
   # Returns a presigned PUT URL for direct browser-to-storage upload.
-  getPresignedUploadUrl(input: PresignInput!): String
+  getPresignedUploadUrl(input: PresignInput!): GetPresignedUploadUrlResponse!
   # Batch-presigns multiple PUT URLs for multi-file uploads.
-  getPresignedUploadUrls(input: [PresignInput!]!): [String!]!
+  getPresignedUploadUrls(input: [PresignInput!]!): GetPresignedUploadUrlsResponse!
   # Returns a presigned GET URL for direct browser download.
-  getPresignedDownloadUrl(input: BucketKeyInput!): String
+  getPresignedDownloadUrl(input: BucketKeyInput!): GetPresignedDownloadUrlResponse!
   # Adds a torrent from a magnet link or base64-encoded .torrent file.
-  addTorrent(input: AddTorrentInput!): TorrentJob
+  addTorrent(input: AddTorrentInput!): AddTorrentResponse!
   # Pauses a torrent download.
-  pauseTorrent(jobId: String!): TorrentJob
+  pauseTorrent(jobId: String!): PauseTorrentResponse!
   # Resumes a paused torrent download.
-  resumeTorrent(jobId: String!): TorrentJob
+  resumeTorrent(jobId: String!): ResumeTorrentResponse!
   # Cancels a torrent download and clears its scratch files.
-  cancelTorrent(jobId: String!): TorrentJob
+  cancelTorrent(jobId: String!): CancelTorrentResponse!
 }
 
 extend type Query {

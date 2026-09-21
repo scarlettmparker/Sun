@@ -1,18 +1,18 @@
 package com.sun.jocasta.graphql.services;
 
+import com.sun.base.error.MutationException;
 import com.sun.base.util.PageRequests;
-import com.sun.gaia.service.UserContextHolder;
 import com.sun.jocasta.codegen.types.Answer;
+import com.sun.jocasta.codegen.types.BulkCreateQuestionsResponse;
+import com.sun.jocasta.codegen.types.LinkQuestionResponse;
 import com.sun.jocasta.codegen.types.PagedAnswers;
 import com.sun.jocasta.codegen.types.PagedQuestions;
 import com.sun.jocasta.codegen.types.PageInfo;
 import com.sun.jocasta.codegen.types.PaginationInput;
-import com.sun.jocasta.codegen.types.QueryResult;
-import com.sun.jocasta.codegen.types.QuerySuccess;
+import com.sun.jocasta.codegen.types.SubmitAnswerResponse;
 import com.sun.jocasta.codegen.types.AnswerInput;
 import com.sun.jocasta.codegen.types.Question;
 import com.sun.jocasta.codegen.types.QuestionInput;
-import com.sun.jocasta.codegen.types.StandardError;
 import com.sun.jocasta.graphql.mappers.AnswerMapper;
 import com.sun.jocasta.graphql.mappers.QuestionMapper;
 import com.sun.jocasta.model.AnswerEntity;
@@ -31,7 +31,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Supplier;
 
 @Service
 public class JocastaGraphQLService {
@@ -105,11 +104,11 @@ public class JocastaGraphQLService {
    * Bulk creates questions.
    *
    * @param inputs - question inputs
-   * @return result with first id
+   * @return the created questions
    */
   @Transactional
-  public QueryResult bulkCreateQuestions(List<QuestionInput> inputs) {
-    return mutate("bulkCreateQuestions", () -> {
+  public BulkCreateQuestionsResponse bulkCreateQuestions(List<QuestionInput> inputs) {
+    try {
       if (inputs == null || inputs.isEmpty()) {
         throw new IllegalArgumentException("Inputs required");
       }
@@ -124,8 +123,16 @@ public class JocastaGraphQLService {
         entities.add(questionMapper.mapInput(input));
       }
       List<QuestionEntity> saved = questionService.createBulk(entities);
-      return saved.get(0).getId();
-    });
+      List<Question> questions = saved.stream().map(questionMapper::map).toList();
+      logger.info("bulkCreateQuestions succeeded for {} questions", questions.size());
+      return BulkCreateQuestionsResponse.newBuilder()
+          .message("bulkCreateQuestions succeeded")
+          .questions(questions)
+          .build();
+    } catch (Exception e) {
+      logger.error("bulkCreateQuestions failed", e);
+      throw new MutationException("bulkCreateQuestions failed: " + e.getMessage(), e);
+    }
   }
 
   /**
@@ -133,17 +140,25 @@ public class JocastaGraphQLService {
    *
    * @param questionId - question id
    * @param input - answer input containing myAnswer, correct, correctAnswer
-   * @return result
+   * @return the submitted answer
    */
   @Transactional
-  public QueryResult submitAnswer(String questionId, AnswerInput input) {
-    return mutate("submitAnswer", () -> {
+  public SubmitAnswerResponse submitAnswer(String questionId, AnswerInput input) {
+    try {
       UUID qid = UUID.fromString(questionId);
-      questionService.findById(qid).orElseThrow(() -> new IllegalArgumentException("Question not found: " + questionId));
+      questionService.findById(qid)
+          .orElseThrow(() -> new IllegalArgumentException("Question not found: " + questionId));
       AnswerEntity e = answerMapper.mapInput(questionId, input);
       AnswerEntity saved = answerService.submit(e);
-      return saved.getId();
-    });
+      logger.info("submitAnswer succeeded for id {}", saved.getId());
+      return SubmitAnswerResponse.newBuilder()
+          .message("submitAnswer succeeded")
+          .answer(answerMapper.map(saved))
+          .build();
+    } catch (Exception e) {
+      logger.error("submitAnswer failed", e);
+      throw new MutationException("submitAnswer failed: " + e.getMessage(), e);
+    }
   }
 
   /**
@@ -151,32 +166,25 @@ public class JocastaGraphQLService {
    *
    * @param questionId - question id
    * @param target - remote object target
-   * @return result
+   * @return the question id
    */
   @Transactional
-  public QueryResult linkQuestion(String questionId, String target) {
-    return mutate("linkQuestion", () -> {
-      UUID qid = UUID.fromString(questionId);
-      if (target == null || target.isBlank()) throw new IllegalArgumentException("Target required");
-      questionService.linkQuestion(qid, target).orElseThrow(() -> new IllegalArgumentException("Question not found: " + questionId));
-      return qid;
-    });
-  }
-
-  /**
-   * Runs a mutation and maps to QueryResult.
-   *
-   * @param op - operation name
-   * @param action - action supplier
-   * @return result
-   */
-  private QueryResult mutate(String op, Supplier<UUID> action) {
+  public LinkQuestionResponse linkQuestion(String questionId, String target) {
     try {
-      UUID id = action.get();
-      return QuerySuccess.newBuilder().message(op + " succeeded").id(id.toString()).build();
+      UUID qid = UUID.fromString(questionId);
+      if (target == null || target.isBlank()) {
+        throw new IllegalArgumentException("Target required");
+      }
+      questionService.linkQuestion(qid, target)
+          .orElseThrow(() -> new IllegalArgumentException("Question not found: " + questionId));
+      logger.info("linkQuestion succeeded for id {}", qid);
+      return LinkQuestionResponse.newBuilder()
+          .message("linkQuestion succeeded")
+          .id(qid.toString())
+          .build();
     } catch (Exception e) {
-      logger.error("{} failed", op, e);
-      return StandardError.newBuilder().message(e.getMessage()).build();
+      logger.error("linkQuestion failed", e);
+      throw new MutationException("linkQuestion failed: " + e.getMessage(), e);
     }
   }
 

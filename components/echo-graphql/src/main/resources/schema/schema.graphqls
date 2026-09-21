@@ -141,6 +141,138 @@ input ChecklistCategoryInput {
   description: String
 }
 
+"""Result of creating a checklist item."""
+type CreateItemResponse {
+  message: String!
+  item: ChecklistItem!
+}
+
+"""Result of saving a checklist item."""
+type SaveItemResponse {
+  message: String!
+  item: ChecklistItem!
+}
+
+"""Result of retiring a checklist item."""
+type RetireItemResponse {
+  message: String!
+  item: ChecklistItem!
+}
+
+"""Result of creating a checklist category."""
+type CreateCategoryResponse {
+  message: String!
+  category: ChecklistCategory!
+}
+
+"""Result of saving a checklist category."""
+type SaveCategoryResponse {
+  message: String!
+  category: ChecklistCategory!
+}
+
+"""Result of creating a checklist entry."""
+type CreateChecklistResponse {
+  message: String!
+  entry: ChecklistEntry!
+}
+
+"""Result of creating a checklist entry from a single template."""
+type CreateChecklistFromTemplateResponse {
+  message: String!
+  entry: ChecklistEntry!
+}
+
+"""Result of creating a checklist entry from multiple templates."""
+type CreateChecklistFromTemplatesResponse {
+  message: String!
+  entry: ChecklistEntry!
+}
+
+"""Result of saving a checklist entry."""
+type SaveChecklistResponse {
+  message: String!
+  entry: ChecklistEntry!
+}
+
+"""Result of completing a checklist entry."""
+type CompleteChecklistResponse {
+  message: String!
+  entry: ChecklistEntry!
+}
+
+"""Result of archiving a checklist entry."""
+type ArchiveChecklistResponse {
+  message: String!
+  entry: ChecklistEntry!
+}
+
+"""Result of deleting a checklist entry."""
+type DeleteChecklistResponse {
+  message: String!
+  id: ID!
+}
+
+"""Result of creating a checklist template."""
+type CreateTemplateResponse {
+  message: String!
+  template: ChecklistTemplate!
+}
+
+"""Result of saving a checklist template."""
+type SaveTemplateResponse {
+  message: String!
+  template: ChecklistTemplate!
+}
+
+"""Result of archiving a checklist template."""
+type ArchiveTemplateResponse {
+  message: String!
+  template: ChecklistTemplate!
+}
+
+"""Result of adding an item to a checklist entry."""
+type AddItemResponse {
+  message: String!
+  entry: ChecklistEntry!
+}
+
+"""Result of removing an item from a checklist entry."""
+type RemoveItemResponse {
+  message: String!
+  entry: ChecklistEntry!
+}
+
+"""Result of setting an item's status within a checklist entry."""
+type SetItemStatusResponse {
+  message: String!
+  entry: ChecklistEntry!
+}
+
+"""Result of adding an item to a checklist template."""
+type AddTemplateItemResponse {
+  message: String!
+  template: ChecklistTemplate!
+}
+
+"""Result of removing an item from a checklist template."""
+type RemoveTemplateItemResponse {
+  message: String!
+  template: ChecklistTemplate!
+}
+
+"""Result of attaching a remote object to a checklist detail."""
+type AttachObjectResponse {
+  message: String!
+  id: ID!
+}
+
+"""Result of detaching a remote object from a checklist detail."""
+type DetachObjectResponse {
+  message: String!
+  id: ID!
+}
+
 """Read operations for checklists."""
 type ChecklistQueries {
   items(pagination: PaginationInput): PagedChecklistItems!
@@ -160,34 +292,34 @@ type ChecklistQueries {
 
 """Write operations for checklists."""
 type ChecklistMutations {
-  createItem(name: String!, description: String, categoryId: ID, icon: String): QueryResult
-  saveItem(input: ChecklistItemInput!): QueryResult
-  retireItem(id: ID!): QueryResult
+  createItem(name: String!, description: String, categoryId: ID, icon: String): CreateItemResponse!
+  saveItem(input: ChecklistItemInput!): SaveItemResponse!
+  retireItem(id: ID!): RetireItemResponse!
 
-  createCategory(name: String!, description: String): QueryResult
-  saveCategory(input: ChecklistCategoryInput!): QueryResult
+  createCategory(name: String!, description: String): CreateCategoryResponse!
+  saveCategory(input: ChecklistCategoryInput!): SaveCategoryResponse!
 
-  createChecklist(name: String): QueryResult
-  createChecklistFromTemplate(templateId: ID!, name: String): QueryResult
-  createChecklistFromTemplates(templateIds: [ID!]!, name: String): QueryResult
-  saveChecklist(input: ChecklistEntryInput!): QueryResult
-  completeChecklist(id: ID!): QueryResult
-  archiveChecklist(id: ID!): QueryResult
-  deleteChecklist(id: ID!): QueryResult
+  createChecklist(name: String): CreateChecklistResponse!
+  createChecklistFromTemplate(templateId: ID!, name: String): CreateChecklistFromTemplateResponse!
+  createChecklistFromTemplates(templateIds: [ID!]!, name: String): CreateChecklistFromTemplatesResponse!
+  saveChecklist(input: ChecklistEntryInput!): SaveChecklistResponse!
+  completeChecklist(id: ID!): CompleteChecklistResponse!
+  archiveChecklist(id: ID!): ArchiveChecklistResponse!
+  deleteChecklist(id: ID!): DeleteChecklistResponse!
 
-  createTemplate(name: String!, description: String, itemIds: [ID!]): QueryResult
-  saveTemplate(input: ChecklistTemplateInput!): QueryResult
-  archiveTemplate(id: ID!): QueryResult
+  createTemplate(name: String!, description: String, itemIds: [ID!]): CreateTemplateResponse!
+  saveTemplate(input: ChecklistTemplateInput!): SaveTemplateResponse!
+  archiveTemplate(id: ID!): ArchiveTemplateResponse!
 
-  addItem(entryId: ID!, itemId: ID!, position: Int): QueryResult
-  removeItem(entryId: ID!, itemId: ID!): QueryResult
-  setItemStatus(entryId: ID!, itemId: ID!, status: ItemStatus!): QueryResult
+  addItem(entryId: ID!, itemId: ID!, position: Int): AddItemResponse!
+  removeItem(entryId: ID!, itemId: ID!): RemoveItemResponse!
+  setItemStatus(entryId: ID!, itemId: ID!, status: ItemStatus!): SetItemStatusResponse!
 
-  addTemplateItem(templateId: ID!, itemId: ID!, position: Int): QueryResult
-  removeTemplateItem(templateId: ID!, itemId: ID!): QueryResult
+  addTemplateItem(templateId: ID!, itemId: ID!, position: Int): AddTemplateItemResponse!
+  removeTemplateItem(templateId: ID!, itemId: ID!): RemoveTemplateItemResponse!
 
-  attachObject(source: ID!, target: ID!, ownerType: RemoteObjectType): QueryResult
-  detachObject(source: ID!, target: ID!, ownerType: RemoteObjectType): QueryResult
+  attachObject(source: ID!, target: ID!, ownerType: RemoteObjectType): AttachObjectResponse!
+  detachObject(source: ID!, target: ID!, ownerType: RemoteObjectType): DetachObjectResponse!
 }
 
 extend type Query {

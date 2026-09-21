@@ -2,8 +2,9 @@ package com.sun.gaia.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
-import com.sun.gaia.codegen.types.QueryResult;
 import com.sun.gaia.codegen.types.RemoteUserType;
+import com.sun.gaia.codegen.types.SetAccountPermissionsResponse;
+import com.sun.gaia.codegen.types.SetRolePermissionsResponse;
 import com.sun.gaia.graphql.services.PermissionGraphQLService;
 import java.util.List;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -71,7 +72,7 @@ public class PermissionDataFetcher {
     */
   @DgsData(parentType = "GaiaMutations", field = "setAccountPermissions")
   @PreAuthorize("@permissions.has('graphql.gaia.setAccountPermissions')")
-  public QueryResult setAccountPermissions(String accountId, List<String> permissions) {
+  public SetAccountPermissionsResponse setAccountPermissions(String accountId, List<String> permissions) {
     return permissionGraphQLService.setAccountPermissions(accountId, permissions);
   }
 
@@ -80,7 +81,7 @@ public class PermissionDataFetcher {
     */
   @DgsData(parentType = "GaiaMutations", field = "setRolePermissions")
   @PreAuthorize("@permissions.has('graphql.gaia.setRolePermissions')")
-  public QueryResult setRolePermissions(String roleId, List<String> permissions) {
+  public SetRolePermissionsResponse setRolePermissions(String roleId, List<String> permissions) {
     return permissionGraphQLService.setRolePermissions(roleId, permissions);
   }
 }

@@ -10,15 +10,19 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.sun.base.error.MutationException;
 import com.sun.fates.model.PersonEntity;
 import com.sun.fates.service.PersonService;
 import com.sun.gaia.codegen.types.Account;
 import com.sun.gaia.codegen.types.AuthResult;
+import com.sun.gaia.codegen.types.ChangePasswordResponse;
+import com.sun.gaia.codegen.types.ConfirmAccountReactivationResponse;
+import com.sun.gaia.codegen.types.DeactivateAccountResponse;
 import com.sun.gaia.codegen.types.LoginInput;
-import com.sun.gaia.codegen.types.QueryResult;
-import com.sun.gaia.codegen.types.QuerySuccess;
 import com.sun.gaia.codegen.types.RegisterInput;
-import com.sun.gaia.codegen.types.StandardError;
+import com.sun.gaia.codegen.types.RequestAccountReactivationResponse;
+import com.sun.gaia.codegen.types.SuspendAccountResponse;
+import com.sun.gaia.codegen.types.UnsuspendAccountResponse;
 import com.sun.gaia.graphql.mappers.AccountMapper;
 import com.sun.gaia.model.AccountEntity;
 import com.sun.gaia.model.ReactivationTokenEntity;
@@ -136,15 +140,14 @@ class AccountGraphQLServiceTest {
   }
 
   @Test
-  void changePassword_returnsErrorWhenNotAuthenticated() {
-    QueryResult result = service.changePassword("old", "new");
-
-    assertThat(result).isInstanceOf(StandardError.class);
-    assertThat(((StandardError) result).getMessage()).isEqualTo("Not authenticated");
+  void changePassword_throwsWhenNotAuthenticated() {
+    assertThatThrownBy(() -> service.changePassword("old", "new"))
+        .isInstanceOf(MutationException.class)
+        .hasMessage("Not authenticated");
   }
 
   @Test
-  void changePassword_returnsErrorWhenCurrentPasswordWrong() {
+  void changePassword_throwsWhenCurrentPasswordWrong() {
     UUID userId = UUID.randomUUID();
     AccountEntity account = new AccountEntity();
     account.setId(userId);
@@ -153,10 +156,9 @@ class AccountGraphQLServiceTest {
       when(accountService.findById(userId)).thenReturn(Optional.of(account));
       when(accountService.verifyPassword(account, "wrong")).thenReturn(false);
 
-      QueryResult result = service.changePassword("wrong", "new");
-
-      assertThat(result).isInstanceOf(StandardError.class);
-      assertThat(((StandardError) result).getMessage()).isEqualTo("Current password incorrect");
+      assertThatThrownBy(() -> service.changePassword("wrong", "new"))
+          .isInstanceOf(MutationException.class)
+          .hasMessage("Current password incorrect");
     } finally {
       UserContextHolder.clear();
     }
@@ -171,10 +173,9 @@ class AccountGraphQLServiceTest {
     when(accountService.findById(userId)).thenReturn(Optional.of(account));
     when(accountService.verifyPassword(account, "old")).thenReturn(true);
 
-    QueryResult result = service.changePassword("old", "new");
+    ChangePasswordResponse result = service.changePassword("old", "new");
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
-    assertThat(((QuerySuccess) result).getId()).isEqualTo(userId.toString());
+    assertThat(result.getMessage()).isEqualTo("Password changed");
     verify(accountService).changePassword(userId, "new");
   }
 
@@ -184,12 +185,14 @@ class AccountGraphQLServiceTest {
     AccountEntity account = new AccountEntity();
     account.setId(id);
     account.setStatus(AccountStatus.ACTIVE);
+    Account mapped = Account.newBuilder().id(id.toString()).status(AccountStatus.SUSPENDED).build();
     when(accountService.findById(id)).thenReturn(Optional.of(account));
+    when(accountMapper.map(account)).thenReturn(mapped);
 
-    QueryResult result = service.suspendAccount(id.toString());
+    SuspendAccountResponse result = service.suspendAccount(id.toString());
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
-    assertThat(((QuerySuccess) result).getId()).isEqualTo(id.toString());
+    assertThat(result.getMessage()).isEqualTo("Account suspended");
+    assertThat(result.getAccount()).isEqualTo(mapped);
     assertThat(account.getStatus()).isEqualTo(AccountStatus.SUSPENDED);
     verify(accountService).save(account);
   }
@@ -209,11 +212,13 @@ class AccountGraphQLServiceTest {
     AccountEntity account = new AccountEntity();
     account.setId(id);
     account.setStatus(AccountStatus.SUSPENDED);
+    Account mapped = Account.newBuilder().id(id.toString()).status(AccountStatus.ACTIVE).build();
     when(accountService.findById(id)).thenReturn(Optional.of(account));
+    when(accountMapper.map(account)).thenReturn(mapped);
 
-    QueryResult result = service.unsuspendAccount(id.toString());
+    UnsuspendAccountResponse result = service.unsuspendAccount(id.toString());
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
+    assertThat(result.getAccount()).isEqualTo(mapped);
     assertThat(account.getStatus()).isEqualTo(AccountStatus.ACTIVE);
     verify(accountService).save(account);
   }
@@ -227,10 +232,9 @@ class AccountGraphQLServiceTest {
       account.setId(userId);
       when(accountService.deactivateAccount(userId)).thenReturn(account);
 
-      QueryResult result = service.deactivateAccount();
+      DeactivateAccountResponse result = service.deactivateAccount();
 
-      assertThat(result).isInstanceOf(QuerySuccess.class);
-      assertThat(((QuerySuccess) result).getId()).isEqualTo(userId.toString());
+      assertThat(result.getMessage()).isEqualTo("Account deactivated");
       verify(accountService).deactivateAccount(userId);
     } finally {
       UserContextHolder.clear();
@@ -238,11 +242,10 @@ class AccountGraphQLServiceTest {
   }
 
   @Test
-  void deactivateAccount_returnsErrorWhenNotAuthenticated() {
-    QueryResult result = service.deactivateAccount();
-
-    assertThat(result).isInstanceOf(StandardError.class);
-    assertThat(((StandardError) result).getMessage()).isEqualTo("Not authenticated");
+  void deactivateAccount_throwsWhenNotAuthenticated() {
+    assertThatThrownBy(() -> service.deactivateAccount())
+        .isInstanceOf(MutationException.class)
+        .hasMessage("Not authenticated");
   }
 
   @Test
@@ -257,9 +260,10 @@ class AccountGraphQLServiceTest {
     token.setToken("reactivation-token");
     when(reactivationService.createToken(accountId)).thenReturn(token);
 
-    QueryResult result = service.requestAccountReactivation("user@test.com", "discord");
+    RequestAccountReactivationResponse result =
+        service.requestAccountReactivation("user@test.com", "discord");
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
+    assertThat(result.getMessage()).isEqualTo("Reactivation email sent");
     verify(emailService).sendReactivationEmail(eq("user@test.com"), contains("reactivation-token"));
   }
 
@@ -270,9 +274,10 @@ class AccountGraphQLServiceTest {
     account.setStatus(AccountStatus.ACTIVE);
     when(accountService.findByPersonEmail("active@test.com")).thenReturn(List.of(account));
 
-    QueryResult result = service.requestAccountReactivation("active@test.com", "discord");
+    RequestAccountReactivationResponse result =
+        service.requestAccountReactivation("active@test.com", "discord");
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
+    assertThat(result.getMessage()).isEqualTo("Reactivation email sent");
     verify(emailService, never()).sendReactivationEmail(anyString(), anyString());
     verify(reactivationService, never()).createToken(any());
   }
@@ -294,9 +299,10 @@ class AccountGraphQLServiceTest {
     token.setToken("reactivation-token");
     when(reactivationService.createToken(discordId)).thenReturn(token);
 
-    QueryResult result = service.requestAccountReactivation("shared@test.com", "discord");
+    RequestAccountReactivationResponse result =
+        service.requestAccountReactivation("shared@test.com", "discord");
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
+    assertThat(result.getMessage()).isEqualTo("Reactivation email sent");
     verify(reactivationService).createToken(discordId);
     verify(emailService).sendReactivationEmail(eq("shared@test.com"), contains("reactivation-token"));
   }
@@ -309,9 +315,10 @@ class AccountGraphQLServiceTest {
     local.setStatus(AccountStatus.DEACTIVATED);
     when(accountService.findByPersonEmail("local@test.com")).thenReturn(List.of(local));
 
-    QueryResult result = service.requestAccountReactivation("local@test.com", "discord");
+    RequestAccountReactivationResponse result =
+        service.requestAccountReactivation("local@test.com", "discord");
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
+    assertThat(result.getMessage()).isEqualTo("Reactivation email sent");
     verify(emailService, never()).sendReactivationEmail(anyString(), anyString());
     verify(reactivationService, never()).createToken(any());
   }
@@ -325,21 +332,22 @@ class AccountGraphQLServiceTest {
     account.setStatus(AccountStatus.DEACTIVATED);
     when(accountService.findById(accountId)).thenReturn(Optional.of(account));
 
-    QueryResult result = service.confirmAccountReactivation("reactivation-token");
+    ConfirmAccountReactivationResponse result =
+        service.confirmAccountReactivation("reactivation-token");
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
+    assertThat(result.getMessage()).isEqualTo("Account reactivated");
     assertThat(account.getStatus()).isEqualTo(AccountStatus.ACTIVE);
     verify(accountService).save(account);
   }
 
   @Test
-  void confirmAccountReactivation_returnsErrorWhenTokenInvalid() {
+  void confirmAccountReactivation_throwsWhenTokenInvalid() {
     when(reactivationService.useToken("bad-token"))
         .thenThrow(new IllegalArgumentException("Invalid reactivation token"));
 
-    QueryResult result = service.confirmAccountReactivation("bad-token");
-
-    assertThat(result).isInstanceOf(StandardError.class);
+    assertThatThrownBy(() -> service.confirmAccountReactivation("bad-token"))
+        .isInstanceOf(MutationException.class)
+        .hasMessageContaining("Invalid reactivation token");
   }
 
   @Test

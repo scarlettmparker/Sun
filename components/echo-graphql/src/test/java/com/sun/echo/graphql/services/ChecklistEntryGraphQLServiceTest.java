@@ -1,13 +1,16 @@
 package com.sun.echo.graphql.services;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.sun.base.error.MutationException;
+import com.sun.echo.codegen.types.ArchiveChecklistResponse;
 import com.sun.echo.codegen.types.ChecklistEntry;
-import com.sun.echo.codegen.types.QueryResult;
-import com.sun.echo.codegen.types.QuerySuccess;
+import com.sun.echo.codegen.types.CompleteChecklistResponse;
+import com.sun.echo.codegen.types.CreateChecklistResponse;
 import com.sun.echo.graphql.mappers.ChecklistDetailMapper;
 import com.sun.echo.graphql.mappers.ChecklistEntryItemMapper;
 import com.sun.echo.graphql.mappers.ChecklistEntryMapper;
@@ -52,16 +55,27 @@ class ChecklistEntryGraphQLServiceTest {
   }
 
   @Test
-  void createChecklist_savesAndReturnsSuccess() {
+  void createChecklist_savesAndReturnsEntry() {
     ChecklistEntryEntity saved = new ChecklistEntryEntity();
     saved.setId(UUID.randomUUID());
     when(entryService.save(any(ChecklistEntryEntity.class))).thenReturn(saved);
+    ChecklistEntry mapped = ChecklistEntry.newBuilder().id(saved.getId().toString()).name("My checklist").build();
+    when(entryMapper.map(saved)).thenReturn(mapped);
 
-    QueryResult result = service.createChecklist("My checklist");
+    CreateChecklistResponse result = service.createChecklist("My checklist");
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
-    assertThat(((QuerySuccess) result).getId()).isEqualTo(saved.getId().toString());
+    assertThat(result.getEntry()).isEqualTo(mapped);
+    assertThat(result.getMessage()).contains("created");
     verify(entryService).save(any(ChecklistEntryEntity.class));
+  }
+
+  @Test
+  void createChecklist_throwsMutationExceptionWhenSaveFails() {
+    when(entryService.save(any(ChecklistEntryEntity.class))).thenThrow(new RuntimeException("Database error"));
+
+    assertThatThrownBy(() -> service.createChecklist("My checklist"))
+        .isInstanceOf(MutationException.class)
+        .hasMessageContaining("createChecklist failed: Database error");
   }
 
   @Test
@@ -70,10 +84,12 @@ class ChecklistEntryGraphQLServiceTest {
     ChecklistEntryEntity completed = new ChecklistEntryEntity();
     completed.setId(id);
     when(entryService.completeChecklist(id)).thenReturn(completed);
+    ChecklistEntry mapped = ChecklistEntry.newBuilder().id(id.toString()).name("e").build();
+    when(entryMapper.map(completed)).thenReturn(mapped);
 
-    QueryResult result = service.completeChecklist(id.toString());
+    CompleteChecklistResponse result = service.completeChecklist(id.toString());
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
+    assertThat(result.getEntry()).isEqualTo(mapped);
     verify(entryService).completeChecklist(id);
   }
 
@@ -97,10 +113,12 @@ class ChecklistEntryGraphQLServiceTest {
     ChecklistEntryEntity archived = new ChecklistEntryEntity();
     archived.setId(id);
     when(entryService.archive(id)).thenReturn(archived);
+    ChecklistEntry mapped = ChecklistEntry.newBuilder().id(id.toString()).name("e").build();
+    when(entryMapper.map(archived)).thenReturn(mapped);
 
-    QueryResult result = service.archiveChecklist(id.toString());
+    ArchiveChecklistResponse result = service.archiveChecklist(id.toString());
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
+    assertThat(result.getEntry()).isEqualTo(mapped);
     verify(entryService).archive(id);
   }
 }

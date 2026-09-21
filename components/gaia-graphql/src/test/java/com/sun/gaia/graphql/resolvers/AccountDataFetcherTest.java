@@ -6,12 +6,19 @@ import static org.mockito.Mockito.when;
 
 import com.sun.gaia.codegen.types.Account;
 import com.sun.gaia.codegen.types.AuthResult;
+import com.sun.gaia.codegen.types.ChangePasswordResponse;
+import com.sun.gaia.codegen.types.ConfirmAccountReactivationResponse;
+import com.sun.gaia.codegen.types.DeactivateAccountResponse;
 import com.sun.gaia.codegen.types.LoginInput;
+import com.sun.gaia.codegen.types.LogoutResponse;
 import com.sun.gaia.codegen.types.PagedAccounts;
 import com.sun.gaia.codegen.types.PaginationInput;
-import com.sun.gaia.codegen.types.QueryResult;
-import com.sun.gaia.codegen.types.QuerySuccess;
 import com.sun.gaia.codegen.types.RegisterInput;
+import com.sun.gaia.codegen.types.RequestAccountReactivationResponse;
+import com.sun.gaia.codegen.types.RequestPasswordResetResponse;
+import com.sun.gaia.codegen.types.ResetPasswordResponse;
+import com.sun.gaia.codegen.types.SuspendAccountResponse;
+import com.sun.gaia.codegen.types.UnsuspendAccountResponse;
 import com.sun.gaia.graphql.services.AccountGraphQLService;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -74,10 +81,13 @@ class AccountDataFetcherTest {
 
   @Test
   void suspendAccount_shouldDelegateToService() {
-    QueryResult mockResult = QuerySuccess.newBuilder().message("Account suspended").id("id").build();
+    SuspendAccountResponse mockResult = SuspendAccountResponse.newBuilder()
+        .message("Account suspended")
+        .account(Account.newBuilder().id("id").build())
+        .build();
     when(service.suspendAccount("id")).thenReturn(mockResult);
 
-    QueryResult result = fetcher.suspendAccount("id");
+    SuspendAccountResponse result = fetcher.suspendAccount("id");
 
     assertThat(result).isEqualTo(mockResult);
     verify(service).suspendAccount("id");
@@ -85,10 +95,13 @@ class AccountDataFetcherTest {
 
   @Test
   void unsuspendAccount_shouldDelegateToService() {
-    QueryResult mockResult = QuerySuccess.newBuilder().message("Account unsuspended").id("id").build();
+    UnsuspendAccountResponse mockResult = UnsuspendAccountResponse.newBuilder()
+        .message("Account unsuspended")
+        .account(Account.newBuilder().id("id").build())
+        .build();
     when(service.unsuspendAccount("id")).thenReturn(mockResult);
 
-    QueryResult result = fetcher.unsuspendAccount("id");
+    UnsuspendAccountResponse result = fetcher.unsuspendAccount("id");
 
     assertThat(result).isEqualTo(mockResult);
     verify(service).unsuspendAccount("id");
@@ -96,10 +109,12 @@ class AccountDataFetcherTest {
 
   @Test
   void deactivateAccount_shouldDelegateToService() {
-    QueryResult mockResult = QuerySuccess.newBuilder().message("Account deactivated").id("id").build();
+    DeactivateAccountResponse mockResult = DeactivateAccountResponse.newBuilder()
+        .message("Account deactivated")
+        .build();
     when(service.deactivateAccount()).thenReturn(mockResult);
 
-    QueryResult result = fetcher.deactivateAccount();
+    DeactivateAccountResponse result = fetcher.deactivateAccount();
 
     assertThat(result).isEqualTo(mockResult);
     verify(service).deactivateAccount();
@@ -132,10 +147,10 @@ class AccountDataFetcherTest {
 
   @Test
   void logout_shouldDelegateToService() {
-    QueryResult mockResult = QuerySuccess.newBuilder().message("Logout succeeded").build();
+    LogoutResponse mockResult = LogoutResponse.newBuilder().message("Logout succeeded").build();
     when(service.logout()).thenReturn(mockResult);
 
-    QueryResult result = fetcher.logout();
+    LogoutResponse result = fetcher.logout();
 
     assertThat(result).isEqualTo(mockResult);
     verify(service).logout();
@@ -143,10 +158,12 @@ class AccountDataFetcherTest {
 
   @Test
   void requestPasswordReset_shouldDelegateToService() {
-    QueryResult mockResult = QuerySuccess.newBuilder().message("Password reset email sent").build();
+    RequestPasswordResetResponse mockResult = RequestPasswordResetResponse.newBuilder()
+        .message("Password reset email sent")
+        .build();
     when(service.requestPasswordReset("a@b.com")).thenReturn(mockResult);
 
-    QueryResult result = fetcher.requestPasswordReset("a@b.com");
+    RequestPasswordResetResponse result = fetcher.requestPasswordReset("a@b.com");
 
     assertThat(result).isEqualTo(mockResult);
     verify(service).requestPasswordReset("a@b.com");
@@ -154,10 +171,12 @@ class AccountDataFetcherTest {
 
   @Test
   void resetPassword_shouldDelegateToService() {
-    QueryResult mockResult = QuerySuccess.newBuilder().message("Password reset succeeded").id("id").build();
+    ResetPasswordResponse mockResult = ResetPasswordResponse.newBuilder()
+        .message("Password reset succeeded")
+        .build();
     when(service.resetPassword("token", "newPass")).thenReturn(mockResult);
 
-    QueryResult result = fetcher.resetPassword("token", "newPass");
+    ResetPasswordResponse result = fetcher.resetPassword("token", "newPass");
 
     assertThat(result).isEqualTo(mockResult);
     verify(service).resetPassword("token", "newPass");
@@ -165,10 +184,12 @@ class AccountDataFetcherTest {
 
   @Test
   void changePassword_shouldDelegateToService() {
-    QueryResult mockResult = QuerySuccess.newBuilder().message("Password changed").id("id").build();
+    ChangePasswordResponse mockResult = ChangePasswordResponse.newBuilder()
+        .message("Password changed")
+        .build();
     when(service.changePassword("old", "new")).thenReturn(mockResult);
 
-    QueryResult result = fetcher.changePassword("old", "new");
+    ChangePasswordResponse result = fetcher.changePassword("old", "new");
 
     assertThat(result).isEqualTo(mockResult);
     verify(service).changePassword("old", "new");
@@ -176,10 +197,13 @@ class AccountDataFetcherTest {
 
   @Test
   void requestAccountReactivation_shouldDelegateToService() {
-    QueryResult mockResult = QuerySuccess.newBuilder().message("Reactivation email sent").build();
+    RequestAccountReactivationResponse mockResult = RequestAccountReactivationResponse.newBuilder()
+        .message("Reactivation email sent")
+        .build();
     when(service.requestAccountReactivation("a@b.com", "discord")).thenReturn(mockResult);
 
-    QueryResult result = fetcher.requestAccountReactivation("a@b.com", "discord");
+    RequestAccountReactivationResponse result =
+        fetcher.requestAccountReactivation("a@b.com", "discord");
 
     assertThat(result).isEqualTo(mockResult);
     verify(service).requestAccountReactivation("a@b.com", "discord");
@@ -187,10 +211,12 @@ class AccountDataFetcherTest {
 
   @Test
   void confirmAccountReactivation_shouldDelegateToService() {
-    QueryResult mockResult = QuerySuccess.newBuilder().message("Account reactivated").id("id").build();
+    ConfirmAccountReactivationResponse mockResult = ConfirmAccountReactivationResponse.newBuilder()
+        .message("Account reactivated")
+        .build();
     when(service.confirmAccountReactivation("token")).thenReturn(mockResult);
 
-    QueryResult result = fetcher.confirmAccountReactivation("token");
+    ConfirmAccountReactivationResponse result = fetcher.confirmAccountReactivation("token");
 
     assertThat(result).isEqualTo(mockResult);
     verify(service).confirmAccountReactivation("token");

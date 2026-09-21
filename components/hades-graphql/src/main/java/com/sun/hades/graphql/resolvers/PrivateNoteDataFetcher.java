@@ -2,11 +2,13 @@ package com.sun.hades.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
+import com.sun.hades.codegen.types.CreatePrivateNoteResponse;
+import com.sun.hades.codegen.types.DeletePrivateNoteResponse;
 import com.sun.hades.codegen.types.PagedPrivateNotes;
 import com.sun.hades.codegen.types.PaginationInput;
 import com.sun.hades.codegen.types.PrivateNoteInput;
-import com.sun.hades.codegen.types.QueryResult;
 import com.sun.hades.codegen.types.ShareNotesInput;
+import com.sun.hades.codegen.types.ShareNotesResponse;
 import com.sun.hades.graphql.services.PrivateNoteGraphQLService;
 import org.springframework.security.access.prepost.PreAuthorize;
 
@@ -39,11 +41,11 @@ public class PrivateNoteDataFetcher {
    * Creates a private note on a range.
    *
    * @param input the private note input
-   * @return a QueryResult
+   * @return the create-private-note response
    */
   @DgsData(parentType = "HadesMutations", field = "createPrivateNote")
   @PreAuthorize("@permissions.has('graphql.hades.createPrivateNote')")
-  public QueryResult createPrivateNote(PrivateNoteInput input) {
+  public CreatePrivateNoteResponse createPrivateNote(PrivateNoteInput input) {
     return privateNoteGraphQLService.createPrivateNote(input);
   }
 
@@ -51,11 +53,11 @@ public class PrivateNoteDataFetcher {
    * Deletes a private note (owner only).
    *
    * @param id the note id
-   * @return a QueryResult
+   * @return the delete-private-note response
    */
   @DgsData(parentType = "HadesMutations", field = "deletePrivateNote")
   @PreAuthorize("@permissions.has('graphql.hades.deletePrivateNote')")
-  public QueryResult deletePrivateNote(String id) {
+  public DeletePrivateNoteResponse deletePrivateNote(String id) {
     return privateNoteGraphQLService.deletePrivateNote(id);
   }
 
@@ -63,11 +65,11 @@ public class PrivateNoteDataFetcher {
    * Shares all private notes on a text.
    *
    * @param input the share input
-   * @return a QueryResult
+   * @return the share-notes response
    */
   @DgsData(parentType = "HadesMutations", field = "shareNotes")
   @PreAuthorize("@permissions.has('graphql.hades.shareNotes')")
-  public QueryResult shareNotes(ShareNotesInput input) {
+  public ShareNotesResponse shareNotes(ShareNotesInput input) {
     return privateNoteGraphQLService.shareNotes(input);
   }
 }

@@ -1,14 +1,15 @@
 package com.sun.hades.graphql.services;
 
+import com.sun.base.error.MutationException;
+import com.sun.hades.codegen.types.CreatePrivateNoteResponse;
+import com.sun.hades.codegen.types.DeletePrivateNoteResponse;
 import com.sun.hades.codegen.types.PagedPrivateNotes;
 import com.sun.hades.codegen.types.PaginationInput;
 import com.sun.hades.codegen.types.PrivateNote;
 import com.sun.hades.codegen.types.PrivateNoteInput;
-import com.sun.hades.codegen.types.QueryResult;
-import com.sun.hades.codegen.types.QuerySuccess;
 import com.sun.hades.codegen.types.RemoteUser;
 import com.sun.hades.codegen.types.ShareNotesInput;
-import com.sun.hades.codegen.types.StandardError;
+import com.sun.hades.codegen.types.ShareNotesResponse;
 import com.sun.hades.graphql.mappers.PrivateNoteMapper;
 import com.sun.hades.graphql.mappers.RemoteUserMapper;
 import com.sun.hades.model.PrivateNoteEntity;
@@ -19,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Pageable;
@@ -79,75 +79,80 @@ public class PrivateNoteGraphQLService {
    * Creates a private note on a range.
    *
    * @param input the private note input
-   * @return a QueryResult
+   * @return the create-private-note response
    */
   @Transactional
-  public QueryResult createPrivateNote(PrivateNoteInput input) {
-    return mutate("createPrivateNote", () -> privateNoteService.createPrivateNote(
-        UUID.fromString(input.getTextId()),
-        input.getStartOffset(),
-        input.getEndOffset(),
-        input.getBody()));
+  public CreatePrivateNoteResponse createPrivateNote(PrivateNoteInput input) {
+    try {
+      UUID id = privateNoteService.createPrivateNote(
+          UUID.fromString(input.getTextId()),
+          input.getStartOffset(),
+          input.getEndOffset(),
+          input.getBody());
+      logger.info("createPrivateNote succeeded for id {}", id);
+      PrivateNoteEntity note = privateNoteService.findById(id)
+          .orElseThrow(() -> new IllegalArgumentException("Private note not found: " + id));
+      return CreatePrivateNoteResponse.newBuilder()
+          .message("Private note created successfully")
+          .note(privateNoteMapper.map(note, null))
+          .build();
+    } catch (Exception e) {
+      logger.error("createPrivateNote failed", e);
+      throw new MutationException("createPrivateNote failed: " + e.getMessage(), e);
+    }
   }
 
   /**
    * Deletes a private note (owner only).
    *
    * @param id the note id
-   * @return a QueryResult
+   * @return the delete-private-note response
    */
   @Transactional
-  public QueryResult deletePrivateNote(String id) {
-    return mutate("deletePrivateNote", () -> {
+  public DeletePrivateNoteResponse deletePrivateNote(String id) {
+    try {
       privateNoteService.deletePrivateNote(UUID.fromString(id));
-      return UUID.fromString(id);
-    });
+      logger.info("deletePrivateNote succeeded for id {}", id);
+      return DeletePrivateNoteResponse.newBuilder()
+          .message("Private note deleted successfully")
+          .id(id)
+          .build();
+    } catch (Exception e) {
+      logger.error("deletePrivateNote failed", e);
+      throw new MutationException("deletePrivateNote failed: " + e.getMessage(), e);
+    }
   }
 
   /**
    * Shares all private notes on a text.
    *
    * @param input the share input
-   * @return a QueryResult
+   * @return the share-notes response
    */
   @Transactional
-  public QueryResult shareNotes(ShareNotesInput input) {
-    return mutate("shareNotes", () -> privateNoteService.shareNotes(
-        UUID.fromString(input.getTextId()),
-        input.getSubjectIds() == null ? List.of() : input.getSubjectIds().stream()
-            .map(s -> {
-              try {
-                return UUID.fromString(s);
-              } catch (Exception e) {
-                return null;
-              }
-            })
-            .filter(s -> s != null)
-            .toList(),
-        input.getSubjectEmails() == null ? List.of() : input.getSubjectEmails()));
-  }
-
-  /**
-   * Runs a mutation, returning QuerySuccess with the affected id or StandardError
-   * on failure.
-   *
-   * @param op the operation name (for logging and messages)
-   * @param action the mutation, returning the affected entity id
-   * @return a QueryResult
-   */
-  private QueryResult mutate(String op, Supplier<UUID> action) {
+  public ShareNotesResponse shareNotes(ShareNotesInput input) {
     try {
-      UUID id = action.get();
-      logger.info("{} succeeded for id {}", op, id);
-      return QuerySuccess.newBuilder()
-          .message(op + " succeeded")
-          .id(id == null ? null : id.toString())
+      UUID id = privateNoteService.shareNotes(
+          UUID.fromString(input.getTextId()),
+          input.getSubjectIds() == null ? List.of() : input.getSubjectIds().stream()
+              .map(s -> {
+                try {
+                  return UUID.fromString(s);
+                } catch (Exception e) {
+                  return null;
+                }
+              })
+              .filter(s -> s != null)
+              .toList(),
+          input.getSubjectEmails() == null ? List.of() : input.getSubjectEmails());
+      logger.info("shareNotes succeeded for id {}", id);
+      return ShareNotesResponse.newBuilder()
+          .message("Notes shared successfully")
+          .id(id.toString())
           .build();
     } catch (Exception e) {
-      logger.error("{} failed", op, e);
-      return StandardError.newBuilder()
-          .message(op + " failed: " + e.getMessage())
-          .build();
+      logger.error("shareNotes failed", e);
+      throw new MutationException("shareNotes failed: " + e.getMessage(), e);
     }
   }
 }

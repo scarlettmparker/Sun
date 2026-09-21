@@ -2,9 +2,12 @@ package com.sun.gaia.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
+import com.sun.gaia.codegen.types.ApplyConfigurationResponse;
 import com.sun.gaia.codegen.types.Configuration;
 import com.sun.gaia.codegen.types.ConfigurationInput;
-import com.sun.gaia.codegen.types.QueryResult;
+import com.sun.gaia.codegen.types.CreateConfigurationResponse;
+import com.sun.gaia.codegen.types.DeleteConfigurationResponse;
+import com.sun.gaia.codegen.types.UpdateConfigurationResponse;
 import com.sun.gaia.graphql.services.ConfigurationGraphQLService;
 import java.util.List;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -52,7 +55,7 @@ public class ConfigurationDataFetcher {
    */
   @DgsData(parentType = "GaiaMutations", field = "createConfiguration")
   @PreAuthorize("@permissions.has('graphql.gaia.createConfiguration')")
-  public Configuration createConfiguration(ConfigurationInput input) {
+  public CreateConfigurationResponse createConfiguration(ConfigurationInput input) {
     return configurationGraphQLService.createConfiguration(input);
   }
 
@@ -65,7 +68,7 @@ public class ConfigurationDataFetcher {
    */
   @DgsData(parentType = "GaiaMutations", field = "updateConfiguration")
   @PreAuthorize("@permissions.has('graphql.gaia.updateConfiguration')")
-  public Configuration updateConfiguration(String id, ConfigurationInput input) {
+  public UpdateConfigurationResponse updateConfiguration(String id, ConfigurationInput input) {
     return configurationGraphQLService.updateConfiguration(id, input);
   }
 
@@ -77,7 +80,7 @@ public class ConfigurationDataFetcher {
    */
   @DgsData(parentType = "GaiaMutations", field = "deleteConfiguration")
   @PreAuthorize("@permissions.has('graphql.gaia.deleteConfiguration')")
-  public QueryResult deleteConfiguration(String id) {
+  public DeleteConfigurationResponse deleteConfiguration(String id) {
     return configurationGraphQLService.deleteConfiguration(id);
   }
 
@@ -89,7 +92,7 @@ public class ConfigurationDataFetcher {
    */
   @DgsData(parentType = "GaiaMutations", field = "applyConfiguration")
   @PreAuthorize("@permissions.has('graphql.gaia.applyConfiguration')")
-  public Configuration applyConfiguration(String id) {
+  public ApplyConfigurationResponse applyConfiguration(String id) {
     return configurationGraphQLService.applyConfiguration(id);
   }
 }

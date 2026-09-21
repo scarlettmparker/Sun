@@ -11,6 +11,7 @@ import com.sun.gaia.codegen.types.HubAppInput;
 import com.sun.gaia.codegen.types.HubMode;
 import com.sun.gaia.codegen.types.HubRegistry;
 import com.sun.gaia.codegen.types.HubRegistryInput;
+import com.sun.gaia.codegen.types.SaveRegistryResponse;
 import com.sun.gaia.model.PropertySetEntryEntity;
 import com.sun.gaia.service.PropertySetService;
 import java.util.List;
@@ -67,9 +68,10 @@ class HubRegistryGraphQLServiceTest {
     when(propertySetService.upsertEntry(eq("hub"), eq("registry"), eq("apps"), any(), eq(false)))
         .thenReturn(entity);
 
-    HubRegistry result = service.saveRegistry(input);
+    SaveRegistryResponse result = service.saveRegistry(input);
 
-    assertThat(result.getMode()).isEqualTo(HubMode.serve);
+    assertThat(result.getMessage()).isEqualTo("Hub registry saved");
+    assertThat(result.getRegistry().getMode()).isEqualTo(HubMode.serve);
     verify(propertySetService).upsertEntry(eq("hub"), eq("registry"), eq("apps"), any(), eq(false));
   }
 

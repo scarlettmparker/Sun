@@ -2,12 +2,16 @@ package com.sun.echo.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
+import com.sun.echo.codegen.types.AddTemplateItemResponse;
+import com.sun.echo.codegen.types.ArchiveTemplateResponse;
 import com.sun.echo.codegen.types.ChecklistDetail;
 import com.sun.echo.codegen.types.ChecklistTemplate;
 import com.sun.echo.codegen.types.ChecklistTemplateInput;
+import com.sun.echo.codegen.types.CreateTemplateResponse;
 import com.sun.echo.codegen.types.PagedChecklistTemplateItems;
 import com.sun.echo.codegen.types.PaginationInput;
-import com.sun.echo.codegen.types.QueryResult;
+import com.sun.echo.codegen.types.RemoveTemplateItemResponse;
+import com.sun.echo.codegen.types.SaveTemplateResponse;
 import com.sun.echo.graphql.services.ChecklistTemplateGraphQLService;
 import java.util.List;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -78,11 +82,11 @@ public class ChecklistTemplateDataFetcher {
    * @param name the template name
    * @param description an optional description
    * @param itemIds optional item ids to seed
-   * @return a QueryResult
+   * @return the created checklist template
    */
   @DgsData(parentType = "ChecklistMutations", field = "createTemplate")
   @PreAuthorize("@permissions.has('graphql.echo.createTemplate')")
-  public QueryResult createTemplate(String name, String description, List<String> itemIds) {
+  public CreateTemplateResponse createTemplate(String name, String description, List<String> itemIds) {
     return checklistTemplateGraphQLService.createTemplate(name, description, itemIds);
   }
 
@@ -90,11 +94,11 @@ public class ChecklistTemplateDataFetcher {
    * Creates or updates a checklist template from input.
    *
    * @param input the template input
-   * @return a QueryResult
+   * @return the saved checklist template
    */
   @DgsData(parentType = "ChecklistMutations", field = "saveTemplate")
   @PreAuthorize("@permissions.has('graphql.echo.saveTemplate')")
-  public QueryResult saveTemplate(ChecklistTemplateInput input) {
+  public SaveTemplateResponse saveTemplate(ChecklistTemplateInput input) {
     return checklistTemplateGraphQLService.saveTemplate(input);
   }
 
@@ -102,11 +106,11 @@ public class ChecklistTemplateDataFetcher {
    * Archives a checklist template.
    *
    * @param id the template id
-   * @return a QueryResult
+   * @return the archived checklist template
    */
   @DgsData(parentType = "ChecklistMutations", field = "archiveTemplate")
   @PreAuthorize("@permissions.has('graphql.echo.archiveTemplate')")
-  public QueryResult archiveTemplate(String id) {
+  public ArchiveTemplateResponse archiveTemplate(String id) {
     return checklistTemplateGraphQLService.archiveTemplate(id);
   }
 
@@ -116,11 +120,11 @@ public class ChecklistTemplateDataFetcher {
    * @param templateId the template id
    * @param itemId the item id
    * @param position an optional explicit position
-   * @return a QueryResult
+   * @return the updated checklist template
    */
   @DgsData(parentType = "ChecklistMutations", field = "addTemplateItem")
   @PreAuthorize("@permissions.has('graphql.echo.addTemplateItem')")
-  public QueryResult addTemplateItem(String templateId, String itemId, Integer position) {
+  public AddTemplateItemResponse addTemplateItem(String templateId, String itemId, Integer position) {
     return checklistTemplateGraphQLService.addTemplateItem(templateId, itemId, position);
   }
 
@@ -129,11 +133,11 @@ public class ChecklistTemplateDataFetcher {
    *
    * @param templateId the template id
    * @param itemId the item id
-   * @return a QueryResult
+   * @return the updated checklist template
    */
   @DgsData(parentType = "ChecklistMutations", field = "removeTemplateItem")
   @PreAuthorize("@permissions.has('graphql.echo.removeTemplateItem')")
-  public QueryResult removeTemplateItem(String templateId, String itemId) {
+  public RemoveTemplateItemResponse removeTemplateItem(String templateId, String itemId) {
     return checklistTemplateGraphQLService.removeTemplateItem(templateId, itemId);
   }
 }

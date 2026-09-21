@@ -17,11 +17,11 @@ import com.sun.briareus.graphql.services.BlogGraphQLService;
 import com.sun.briareus.codegen.types.BlogPost;
 import com.sun.briareus.codegen.types.BlogPostInput;
 import com.sun.briareus.codegen.types.BlogPostType;
+import com.sun.briareus.codegen.types.CreateBlogPostResponse;
+import com.sun.briareus.codegen.types.CreateBlogPostTypeResponse;
 import com.sun.briareus.codegen.types.PagedBlogPosts;
 import com.sun.briareus.codegen.types.PageInfo;
 import com.sun.briareus.codegen.types.PaginationInput;
-import com.sun.briareus.codegen.types.QueryResult;
-import com.sun.briareus.codegen.types.QuerySuccess;
 
 @ExtendWith(MockitoExtension.class)
 class BlogDataFetcherTest {
@@ -94,27 +94,35 @@ class BlogDataFetcherTest {
   }
 
   @Test
-  void createBlogPost_shouldReturnQueryResultFromService() {
+  void createBlogPost_shouldReturnResponseFromService() {
     BlogPostInput input = BlogPostInput.newBuilder()
         .content("New content")
         .tags(Arrays.asList("new", "tag"))
         .build();
 
-    QueryResult mockResult = QuerySuccess.newBuilder().message("ok").build();
+    BlogPost post = BlogPost.newBuilder().id("1").title("New Title").build();
+    CreateBlogPostResponse mockResult = CreateBlogPostResponse.newBuilder()
+        .message("ok")
+        .post(post)
+        .build();
 
     when(blogGraphQLService.createBlogPost("New Title", input)).thenReturn(mockResult);
 
-    QueryResult result = blogDataFetcher.createBlogPost("New Title", input);
+    CreateBlogPostResponse result = blogDataFetcher.createBlogPost("New Title", input);
 
     assertThat(result).isEqualTo(mockResult);
   }
 
   @Test
-  void createBlogPostType_shouldReturnQueryResultFromService() {
-    QueryResult mockResult = QuerySuccess.newBuilder().message("ok").build();
+  void createBlogPostType_shouldReturnResponseFromService() {
+    BlogPostType type = BlogPostType.newBuilder().id("1").name("BOT_FAQ").build();
+    CreateBlogPostTypeResponse mockResult = CreateBlogPostTypeResponse.newBuilder()
+        .message("ok")
+        .type(type)
+        .build();
     when(blogGraphQLService.createBlogPostType("BOT_FAQ", null)).thenReturn(mockResult);
 
-    QueryResult result = blogDataFetcher.createBlogPostType("BOT_FAQ", null);
+    CreateBlogPostTypeResponse result = blogDataFetcher.createBlogPostType("BOT_FAQ", null);
 
     assertThat(result).isEqualTo(mockResult);
   }

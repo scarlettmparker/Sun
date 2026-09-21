@@ -4,9 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import com.sun.icarus.codegen.types.CreateThreadInput;
+import com.sun.icarus.codegen.types.CreateThreadResponse;
 import com.sun.icarus.codegen.types.ForumThread;
-import com.sun.icarus.codegen.types.QueryResult;
-import com.sun.icarus.codegen.types.QuerySuccess;
 import com.sun.icarus.graphql.services.IcarusGraphQLService;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -45,10 +44,13 @@ class IcarusDataFetcherTest {
   void createThread_shouldDelegateToService() {
     CreateThreadInput input = CreateThreadInput.newBuilder()
         .title("Thread").remoteObject("hades:annotation:abc").build();
-    QueryResult mockResult = QuerySuccess.newBuilder().message("ok").build();
+    CreateThreadResponse mockResult = CreateThreadResponse.newBuilder()
+        .message("createThread succeeded")
+        .thread(ForumThread.newBuilder().id("1").title("Thread").build())
+        .build();
     when(service.createThread(input)).thenReturn(mockResult);
 
-    QueryResult result = fetcher.createThread(input);
+    CreateThreadResponse result = fetcher.createThread(input);
 
     assertThat(result).isEqualTo(mockResult);
   }

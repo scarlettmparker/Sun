@@ -6,12 +6,18 @@ import static org.mockito.Mockito.when;
 
 import com.sun.dionysus.codegen.types.Bucket;
 import com.sun.dionysus.codegen.types.BucketKeyInput;
+import com.sun.dionysus.codegen.types.DeleteFileResponse;
+import com.sun.dionysus.codegen.types.DeleteKeyResponse;
+import com.sun.dionysus.codegen.types.GetPresignedDownloadUrlResponse;
+import com.sun.dionysus.codegen.types.GetPresignedUploadUrlResponse;
+import com.sun.dionysus.codegen.types.GetPresignedUploadUrlsResponse;
 import com.sun.dionysus.codegen.types.KeyDetail;
 import com.sun.dionysus.codegen.types.KeyEntry;
 import com.sun.dionysus.codegen.types.PresignInput;
 import com.sun.dionysus.codegen.types.PutKeyInput;
+import com.sun.dionysus.codegen.types.PutKeyResponse;
 import com.sun.dionysus.codegen.types.RenameKeyInput;
-import com.sun.dionysus.codegen.types.RenameKeyResult;
+import com.sun.dionysus.codegen.types.RenameKeyResponse;
 import com.sun.dionysus.graphql.services.FilestoreGraphQLService;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -98,44 +104,47 @@ class FilestoreDataFetcherTest {
   @Test
   void putKey_shouldDelegateToService() {
     PutKeyInput input = PutKeyInput.newBuilder().bucket("b").key("k").build();
-    when(filestoreGraphQLService.putKey("b", "k")).thenReturn(true);
+    PutKeyResponse expected = PutKeyResponse.newBuilder().message("putKey succeeded").key("k").build();
+    when(filestoreGraphQLService.putKey("b", "k")).thenReturn(expected);
 
-    boolean result = fetcher.putKey(input);
+    PutKeyResponse result = fetcher.putKey(input);
 
-    assertThat(result).isTrue();
+    assertThat(result).isEqualTo(expected);
     verify(filestoreGraphQLService).putKey("b", "k");
   }
 
   @Test
   void deleteFile_shouldDelegateToService() {
     BucketKeyInput input = BucketKeyInput.newBuilder().bucket("b").key("k").build();
-    when(filestoreGraphQLService.deleteFile("b", "k")).thenReturn(true);
+    DeleteFileResponse expected = DeleteFileResponse.newBuilder().message("deleteFile succeeded").key("k").build();
+    when(filestoreGraphQLService.deleteFile("b", "k")).thenReturn(expected);
 
-    boolean result = fetcher.deleteFile(input);
+    DeleteFileResponse result = fetcher.deleteFile(input);
 
-    assertThat(result).isTrue();
+    assertThat(result.getKey()).isEqualTo("k");
     verify(filestoreGraphQLService).deleteFile("b", "k");
   }
 
   @Test
   void deleteKey_shouldDelegateToService() {
     BucketKeyInput input = BucketKeyInput.newBuilder().bucket("b").key("k").build();
-    when(filestoreGraphQLService.deleteKey("b", "k")).thenReturn(true);
+    DeleteKeyResponse expected = DeleteKeyResponse.newBuilder().message("deleteKey succeeded").key("k").build();
+    when(filestoreGraphQLService.deleteKey("b", "k")).thenReturn(expected);
 
-    boolean result = fetcher.deleteKey(input);
+    DeleteKeyResponse result = fetcher.deleteKey(input);
 
-    assertThat(result).isTrue();
+    assertThat(result.getKey()).isEqualTo("k");
     verify(filestoreGraphQLService).deleteKey("b", "k");
   }
 
   @Test
   void renameKey_shouldDelegateToService() {
     RenameKeyInput input = RenameKeyInput.newBuilder().bucket("b").sourceKey("s").targetKey("t").merge(false).build();
-    RenameKeyResult expected = new RenameKeyResult();
-    expected.setSuccess(true);
+    RenameKeyResponse expected = RenameKeyResponse.newBuilder()
+        .message("renameKey succeeded").success(true).hasConflicts(false).conflicts(List.of()).build();
     when(filestoreGraphQLService.renameKey("b", "s", "t", false)).thenReturn(expected);
 
-    RenameKeyResult result = fetcher.renameKey(input);
+    RenameKeyResponse result = fetcher.renameKey(input);
 
     assertThat(result).isEqualTo(expected);
     verify(filestoreGraphQLService).renameKey("b", "s", "t", false);
@@ -144,33 +153,39 @@ class FilestoreDataFetcherTest {
   @Test
   void getPresignedUploadUrl_shouldDelegateToService() {
     PresignInput input = PresignInput.newBuilder().bucket("b").key("k").contentType("text/plain").build();
-    when(filestoreGraphQLService.getPresignedUploadUrl("b", "k", "text/plain")).thenReturn("url");
+    GetPresignedUploadUrlResponse expected = GetPresignedUploadUrlResponse.newBuilder()
+        .message("getPresignedUploadUrl succeeded").url("url").build();
+    when(filestoreGraphQLService.getPresignedUploadUrl("b", "k", "text/plain")).thenReturn(expected);
 
-    String result = fetcher.getPresignedUploadUrl(input);
+    GetPresignedUploadUrlResponse result = fetcher.getPresignedUploadUrl(input);
 
-    assertThat(result).isEqualTo("url");
+    assertThat(result.getUrl()).isEqualTo("url");
     verify(filestoreGraphQLService).getPresignedUploadUrl("b", "k", "text/plain");
   }
 
   @Test
   void getPresignedUploadUrls_shouldDelegateToService() {
     PresignInput i = PresignInput.newBuilder().bucket("b").key("k").build();
-    when(filestoreGraphQLService.getPresignedUploadUrls(List.of(i))).thenReturn(List.of("u1"));
+    GetPresignedUploadUrlsResponse expected = GetPresignedUploadUrlsResponse.newBuilder()
+        .message("getPresignedUploadUrls succeeded").urls(List.of("u1")).build();
+    when(filestoreGraphQLService.getPresignedUploadUrls(List.of(i))).thenReturn(expected);
 
-    List<String> result = fetcher.getPresignedUploadUrls(List.of(i));
+    GetPresignedUploadUrlsResponse result = fetcher.getPresignedUploadUrls(List.of(i));
 
-    assertThat(result).containsExactly("u1");
+    assertThat(result.getUrls()).containsExactly("u1");
     verify(filestoreGraphQLService).getPresignedUploadUrls(List.of(i));
   }
 
   @Test
   void getPresignedDownloadUrl_shouldDelegateToService() {
     BucketKeyInput input = BucketKeyInput.newBuilder().bucket("b").key("k").build();
-    when(filestoreGraphQLService.getPresignedDownloadUrl("b", "k")).thenReturn("dl");
+    GetPresignedDownloadUrlResponse expected = GetPresignedDownloadUrlResponse.newBuilder()
+        .message("getPresignedDownloadUrl succeeded").url("dl").build();
+    when(filestoreGraphQLService.getPresignedDownloadUrl("b", "k")).thenReturn(expected);
 
-    String result = fetcher.getPresignedDownloadUrl(input);
+    GetPresignedDownloadUrlResponse result = fetcher.getPresignedDownloadUrl(input);
 
-    assertThat(result).isEqualTo("dl");
+    assertThat(result.getUrl()).isEqualTo("dl");
     verify(filestoreGraphQLService).getPresignedDownloadUrl("b", "k");
   }
 }

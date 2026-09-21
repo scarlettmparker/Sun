@@ -7,9 +7,8 @@ import com.sun.briareus.codegen.types.BlogPost;
 import com.sun.briareus.codegen.types.BlogPostInput;
 import com.sun.briareus.codegen.types.BlogPropertySet;
 import com.sun.briareus.codegen.types.BlogWithPropertiesInput;
-import com.sun.briareus.codegen.types.QueryResult;
-import com.sun.briareus.codegen.types.QuerySuccess;
-import com.sun.briareus.codegen.types.StandardError;
+import com.sun.briareus.codegen.types.CreateBlogWithPropertiesResponse;
+import com.sun.briareus.codegen.types.UpdateBlogWithPropertiesResponse;
 import com.sun.briareus.graphql.mappers.AttachedTextMapper;
 import com.sun.briareus.graphql.mappers.BlogDetailMapper;
 import com.sun.briareus.graphql.mappers.BlogGalleryItemMapper;
@@ -20,6 +19,7 @@ import com.sun.briareus.model.PostEntity;
 import com.sun.briareus.repository.PostRepository;
 import com.sun.briareus.service.BlogPostTypeService;
 import com.sun.briareus.service.BriareusService;
+import com.sun.base.error.MutationException;
 import com.sun.base.permify.PermifyClient;
 import com.sun.base.permify.PermifyUtil;
 import com.sun.cerberus.model.GalleryItemEntity;
@@ -124,10 +124,10 @@ public class BlogDetailGqlService {
    * Creates a blog post with property set values in one transaction.
    *
    * @param input the input
-   * @return the result
+   * @return the created blog post
    */
   @Transactional
-  public QueryResult createBlogWithProperties(BlogWithPropertiesInput input) {
+  public CreateBlogWithPropertiesResponse createBlogWithProperties(BlogWithPropertiesInput input) {
     try {
       if (input.getTitle() == null || input.getTitle().isBlank()) {
         throw new IllegalArgumentException("Title is required");
@@ -158,10 +158,13 @@ public class BlogDetailGqlService {
       }
       handleRemoteObjectGalleryLinks(saved);
       logger.info("createBlogWithProperties succeeded {}", saved.getId());
-      return QuerySuccess.newBuilder().message("Created").id(saved.getId().toString()).build();
+      return CreateBlogWithPropertiesResponse.newBuilder()
+          .message("Created")
+          .post(blogPostMapper.map(saved))
+          .build();
     } catch (Exception e) {
       logger.error("createBlogWithProperties failed", e);
-      return StandardError.newBuilder().message(e.getMessage()).build();
+      throw new MutationException(e.getMessage(), e);
     }
   }
 
@@ -170,10 +173,10 @@ public class BlogDetailGqlService {
    *
    * @param id the post id
    * @param input the input
-   * @return the result
+   * @return the updated blog post
    */
   @Transactional
-  public QueryResult updateBlogWithProperties(String id, BlogWithPropertiesInput input) {
+  public UpdateBlogWithPropertiesResponse updateBlogWithProperties(String id, BlogWithPropertiesInput input) {
     try {
       UUID postId = UUID.fromString(id);
       PostEntity post = briareusService.locatePost(postId)
@@ -206,10 +209,13 @@ public class BlogDetailGqlService {
         }
       }
       logger.info("updateBlogWithProperties succeeded {}", saved.getId());
-      return QuerySuccess.newBuilder().message("Updated").id(saved.getId().toString()).build();
+      return UpdateBlogWithPropertiesResponse.newBuilder()
+          .message("Updated")
+          .post(blogPostMapper.map(saved))
+          .build();
     } catch (Exception e) {
       logger.error("updateBlogWithProperties failed", e);
-      return StandardError.newBuilder().message(e.getMessage()).build();
+      throw new MutationException(e.getMessage(), e);
     }
   }
 

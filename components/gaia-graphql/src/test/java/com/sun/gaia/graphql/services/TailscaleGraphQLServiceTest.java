@@ -4,8 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.sun.gaia.codegen.types.QueryResult;
-import com.sun.gaia.codegen.types.QuerySuccess;
+import com.sun.gaia.codegen.types.ExpireTailscaleDeviceResponse;
 import com.sun.gaia.codegen.types.TailscaleDevice;
 import com.sun.gaia.graphql.mappers.TailscaleDeviceMapper;
 import com.sun.gaia.model.TailscaleDeviceEntity;
@@ -69,13 +68,18 @@ class TailscaleGraphQLServiceTest {
   }
 
   @Test
-  void expireTailscaleDevice_returnsSuccess() {
+  void expireTailscaleDevice_returnsResponse() {
     UUID id = UUID.randomUUID();
+    TailscaleDeviceEntity entity = new TailscaleDeviceEntity();
+    entity.setId(id);
+    TailscaleDevice mapped = TailscaleDevice.newBuilder().id(id.toString()).name("device-1").build();
+    when(tailscaleDeviceService.markExpired(id)).thenReturn(entity);
+    when(tailscaleDeviceMapper.map(entity)).thenReturn(mapped);
 
-    QueryResult result = service.expireTailscaleDevice(id.toString());
+    ExpireTailscaleDeviceResponse result = service.expireTailscaleDevice(id.toString());
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
-    assertThat(((QuerySuccess) result).getId()).isEqualTo(id.toString());
+    assertThat(result.getMessage()).isEqualTo("Tailscale device expired");
+    assertThat(result.getDevice()).isEqualTo(mapped);
     verify(tailscaleDeviceService).markExpired(id);
   }
 }

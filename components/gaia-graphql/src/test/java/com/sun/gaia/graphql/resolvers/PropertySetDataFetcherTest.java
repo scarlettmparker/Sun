@@ -4,12 +4,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.sun.gaia.codegen.types.DeletePropertyEntryResponse;
 import com.sun.gaia.codegen.types.PropertySetEntry;
 import com.sun.gaia.codegen.types.PropertySetSchema;
 import com.sun.gaia.codegen.types.PropertySetSchemaInput;
+import com.sun.gaia.codegen.types.RegisterPropertySetSchemaResponse;
 import com.sun.gaia.codegen.types.RemoteUserType;
 import com.sun.gaia.codegen.types.SetPropertyInput;
+import com.sun.gaia.codegen.types.SetPropertyResponse;
 import com.sun.gaia.codegen.types.UpsertPropertyEntryInput;
+import com.sun.gaia.codegen.types.UpsertPropertyEntryResponse;
 import com.sun.gaia.graphql.services.PropertySetGraphQLService;
 import java.util.List;
 import java.util.Map;
@@ -78,11 +82,13 @@ class PropertySetDataFetcherTest {
     Object values = Map.of("k", "v");
     UpsertPropertyEntryInput input =
         UpsertPropertyEntryInput.newBuilder().values(values).build();
-    when(service.upsertPropertyEntry("owner", "set", "entry", values)).thenReturn(entry);
+    UpsertPropertyEntryResponse mock = UpsertPropertyEntryResponse.newBuilder()
+        .message("Property entry upserted").entry(entry).build();
+    when(service.upsertPropertyEntry("owner", "set", "entry", values)).thenReturn(mock);
 
-    PropertySetEntry result = fetcher.upsertPropertyEntry("owner", "set", "entry", input);
+    UpsertPropertyEntryResponse result = fetcher.upsertPropertyEntry("owner", "set", "entry", input);
 
-    assertThat(result).isEqualTo(entry);
+    assertThat(result).isEqualTo(mock);
     verify(service).upsertPropertyEntry("owner", "set", "entry", values);
   }
 
@@ -90,11 +96,13 @@ class PropertySetDataFetcherTest {
   void setProperty_shouldDelegate() {
     PropertySetEntry entry = PropertySetEntry.newBuilder().id("id1").build();
     SetPropertyInput input = SetPropertyInput.newBuilder().property("prop").value("val").build();
-    when(service.setProperty("owner", "set", "entry", "prop", "val")).thenReturn(entry);
+    SetPropertyResponse mock = SetPropertyResponse.newBuilder()
+        .message("Property updated").entry(entry).build();
+    when(service.setProperty("owner", "set", "entry", "prop", "val")).thenReturn(mock);
 
-    PropertySetEntry result = fetcher.setProperty("owner", "set", "entry", input);
+    SetPropertyResponse result = fetcher.setProperty("owner", "set", "entry", input);
 
-    assertThat(result).isEqualTo(entry);
+    assertThat(result).isEqualTo(mock);
     verify(service).setProperty("owner", "set", "entry", "prop", "val");
   }
 
@@ -102,11 +110,13 @@ class PropertySetDataFetcherTest {
   void registerPropertySetSchema_shouldDelegate() {
     PropertySetSchemaInput input = PropertySetSchemaInput.newBuilder().ownerKey("owner").name("set").build();
     PropertySetSchema schema = PropertySetSchema.newBuilder().id("id1").name("set").build();
-    when(service.registerPropertySetSchema(input)).thenReturn(schema);
+    RegisterPropertySetSchemaResponse mock = RegisterPropertySetSchemaResponse.newBuilder()
+        .message("Property set schema registered").schema(schema).build();
+    when(service.registerPropertySetSchema(input)).thenReturn(mock);
 
-    PropertySetSchema result = fetcher.registerPropertySetSchema(input);
+    RegisterPropertySetSchemaResponse result = fetcher.registerPropertySetSchema(input);
 
-    assertThat(result).isEqualTo(schema);
+    assertThat(result).isEqualTo(mock);
     verify(service).registerPropertySetSchema(input);
   }
 
@@ -134,13 +144,13 @@ class PropertySetDataFetcherTest {
 
   @Test
   void deletePropertyEntry_shouldDelegate() {
-    com.sun.gaia.codegen.types.QuerySuccess success =
-        com.sun.gaia.codegen.types.QuerySuccess.newBuilder().message("Entry deleted").id("entry").build();
-    when(service.deletePropertyEntry("owner", "set", "entry")).thenReturn(success);
+    DeletePropertyEntryResponse mock = DeletePropertyEntryResponse.newBuilder()
+        .message("Entry deleted").id("entry").build();
+    when(service.deletePropertyEntry("owner", "set", "entry")).thenReturn(mock);
 
-    var result = fetcher.deletePropertyEntry("owner", "set", "entry");
+    DeletePropertyEntryResponse result = fetcher.deletePropertyEntry("owner", "set", "entry");
 
-    assertThat(result).isEqualTo(success);
+    assertThat(result).isEqualTo(mock);
     verify(service).deletePropertyEntry("owner", "set", "entry");
   }
 }

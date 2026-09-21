@@ -9,9 +9,13 @@ import com.sun.echo.codegen.types.ChecklistCategoryInput;
 import com.sun.echo.codegen.types.ChecklistDetail;
 import com.sun.echo.codegen.types.ChecklistItem;
 import com.sun.echo.codegen.types.ChecklistItemInput;
+import com.sun.echo.codegen.types.CreateCategoryResponse;
+import com.sun.echo.codegen.types.CreateItemResponse;
 import com.sun.echo.codegen.types.PagedChecklistItems;
 import com.sun.echo.codegen.types.PaginationInput;
-import com.sun.echo.codegen.types.QuerySuccess;
+import com.sun.echo.codegen.types.RetireItemResponse;
+import com.sun.echo.codegen.types.SaveCategoryResponse;
+import com.sun.echo.codegen.types.SaveItemResponse;
 import com.sun.echo.graphql.services.ChecklistItemGraphQLService;
 import java.util.List;
 import java.util.UUID;
@@ -76,7 +80,8 @@ class ChecklistItemDataFetcherTest {
 
   @Test
   void createItem_delegatesToService() {
-    QuerySuccess expected = QuerySuccess.newBuilder().message("createItem succeeded").id(UUID.randomUUID().toString()).build();
+    CreateItemResponse expected = CreateItemResponse.newBuilder().message("Checklist item created successfully")
+        .item(ChecklistItem.newBuilder().id(UUID.randomUUID().toString()).name("n").build()).build();
     when(checklistItemGraphQLService.createItem("n", "d", null, "icon")).thenReturn(expected);
 
     var result = fetcher.createItem("n", "d", null, "icon");
@@ -88,7 +93,8 @@ class ChecklistItemDataFetcherTest {
   @Test
   void saveItem_delegatesToService() {
     ChecklistItemInput input = ChecklistItemInput.newBuilder().name("x").build();
-    QuerySuccess expected = QuerySuccess.newBuilder().message("saveItem succeeded").id(UUID.randomUUID().toString()).build();
+    SaveItemResponse expected = SaveItemResponse.newBuilder().message("Checklist item saved successfully")
+        .item(ChecklistItem.newBuilder().id(UUID.randomUUID().toString()).name("x").build()).build();
     when(checklistItemGraphQLService.saveItem(input)).thenReturn(expected);
 
     var result = fetcher.saveItem(input);
@@ -100,7 +106,8 @@ class ChecklistItemDataFetcherTest {
   @Test
   void retireItem_delegatesToService() {
     String id = UUID.randomUUID().toString();
-    QuerySuccess expected = QuerySuccess.newBuilder().message("retireItem succeeded").id(id).build();
+    RetireItemResponse expected = RetireItemResponse.newBuilder().message("Checklist item retired successfully")
+        .item(ChecklistItem.newBuilder().id(id).name("x").build()).build();
     when(checklistItemGraphQLService.retireItem(id)).thenReturn(expected);
 
     var result = fetcher.retireItem(id);
@@ -111,7 +118,8 @@ class ChecklistItemDataFetcherTest {
 
   @Test
   void createCategory_delegatesToService() {
-    QuerySuccess expected = QuerySuccess.newBuilder().message("createCategory succeeded").id(UUID.randomUUID().toString()).build();
+    CreateCategoryResponse expected = CreateCategoryResponse.newBuilder().message("Checklist category created successfully")
+        .category(ChecklistCategory.newBuilder().id(UUID.randomUUID().toString()).name("cat").build()).build();
     when(checklistItemGraphQLService.createCategory("cat", "desc")).thenReturn(expected);
 
     var result = fetcher.createCategory("cat", "desc");
@@ -123,7 +131,8 @@ class ChecklistItemDataFetcherTest {
   @Test
   void saveCategory_delegatesToService() {
     ChecklistCategoryInput input = ChecklistCategoryInput.newBuilder().name("cat").build();
-    QuerySuccess expected = QuerySuccess.newBuilder().message("saveCategory succeeded").id(UUID.randomUUID().toString()).build();
+    SaveCategoryResponse expected = SaveCategoryResponse.newBuilder().message("Checklist category saved successfully")
+        .category(ChecklistCategory.newBuilder().id(UUID.randomUUID().toString()).name("cat").build()).build();
     when(checklistItemGraphQLService.saveCategory(input)).thenReturn(expected);
 
     var result = fetcher.saveCategory(input);

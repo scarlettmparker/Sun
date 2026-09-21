@@ -1,17 +1,22 @@
 package com.sun.hades.graphql.services;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.sun.base.error.MutationException;
+import com.sun.hades.codegen.types.AttachObjectResponse;
+import com.sun.hades.codegen.types.CreateAnnotationResponse;
+import com.sun.hades.codegen.types.DeleteAnnotationResponse;
+import com.sun.hades.codegen.types.EditAnnotationResponse;
 import com.sun.hades.codegen.types.PagedReaderAnnotations;
-import com.sun.hades.codegen.types.QuerySuccess;
 import com.sun.hades.codegen.types.ReaderAnnotation;
 import com.sun.hades.codegen.types.ReaderPosition;
-import com.sun.hades.codegen.types.StandardError;
 import com.sun.hades.graphql.mappers.ReaderAnnotationMapper;
 import com.sun.hades.graphql.mappers.ReaderPositionMapper;
 import com.sun.hades.graphql.mappers.RemoteUserMapper;
@@ -113,69 +118,73 @@ class ReaderAnnotationGraphQLServiceTest {
   void createAnnotation_success() {
     UUID id = UUID.randomUUID();
     UUID textId = UUID.randomUUID();
+    ReaderAnnotationEntity entity = new ReaderAnnotationEntity();
+    entity.setId(id);
+    ReaderAnnotation mapped = ReaderAnnotation.newBuilder().id(id.toString()).body("body").build();
     when(annotationService.createAnnotation(eq(textId), eq(0), eq(10), eq("body"))).thenReturn(id);
+    when(annotationService.findById(id)).thenReturn(Optional.of(entity));
+    when(annotationMapper.map(eq(entity), any(), any(), anyInt(), any())).thenReturn(mapped);
 
-    var result = service.createAnnotation(textId.toString(), 0, 10, "body");
+    CreateAnnotationResponse result = service.createAnnotation(textId.toString(), 0, 10, "body");
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
-    assertThat(((QuerySuccess) result).getId()).isEqualTo(id.toString());
+    assertThat(result.getAnnotation()).isEqualTo(mapped);
   }
 
   @Test
-  void createAnnotation_overlapErrorReturnsStandardError() {
+  void createAnnotation_throwsOnOverlapError() {
     UUID textId = UUID.randomUUID();
     when(annotationService.createAnnotation(any(), any(int.class), any(int.class), any()))
         .thenThrow(new IllegalArgumentException("Range overlaps an active annotation"));
 
-    var result = service.createAnnotation(textId.toString(), 0, 10, "body");
-
-    assertThat(result).isInstanceOf(StandardError.class);
-    assertThat(((StandardError) result).getMessage()).contains("overlaps");
+    assertThatThrownBy(() -> service.createAnnotation(textId.toString(), 0, 10, "body"))
+        .isInstanceOf(MutationException.class)
+        .hasMessageContaining("overlaps");
   }
 
   @Test
   void editAnnotation_delegates() {
     UUID id = UUID.randomUUID();
     UUID returned = UUID.randomUUID();
+    ReaderAnnotationEntity entity = new ReaderAnnotationEntity();
+    entity.setId(returned);
+    ReaderAnnotation mapped = ReaderAnnotation.newBuilder().id(returned.toString()).body("new body").build();
     when(annotationService.editAnnotation(id, "new body")).thenReturn(returned);
+    when(annotationService.findById(returned)).thenReturn(Optional.of(entity));
+    when(annotationMapper.map(eq(entity), any(), any(), anyInt(), any())).thenReturn(mapped);
 
-    var result = service.editAnnotation(id.toString(), "new body");
+    EditAnnotationResponse result = service.editAnnotation(id.toString(), "new body");
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
-    assertThat(((QuerySuccess) result).getId()).isEqualTo(returned.toString());
+    assertThat(result.getAnnotation()).isEqualTo(mapped);
   }
 
   @Test
-  void editAnnotation_returnsStandardErrorOnFailure() {
+  void editAnnotation_throwsOnFailure() {
     UUID id = UUID.randomUUID();
     when(annotationService.editAnnotation(eq(id), any())).thenThrow(new IllegalArgumentException("Not the author"));
 
-    var result = service.editAnnotation(id.toString(), "body");
-
-    assertThat(result).isInstanceOf(StandardError.class);
-    assertThat(((StandardError) result).getMessage()).contains("Not the author");
+    assertThatThrownBy(() -> service.editAnnotation(id.toString(), "body"))
+        .isInstanceOf(MutationException.class)
+        .hasMessageContaining("Not the author");
   }
 
   @Test
   void deleteAnnotation_delegates() {
     UUID id = UUID.randomUUID();
 
-    var result = service.deleteAnnotation(id.toString());
+    DeleteAnnotationResponse result = service.deleteAnnotation(id.toString());
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
-    assertThat(((QuerySuccess) result).getId()).isEqualTo(id.toString());
+    assertThat(result.getId()).isEqualTo(id.toString());
     verify(annotationService).deleteAnnotation(id);
   }
 
   @Test
-  void deleteAnnotation_returnsStandardErrorWhenServiceThrows() {
+  void deleteAnnotation_throwsWhenServiceThrows() {
     UUID id = UUID.randomUUID();
     org.mockito.Mockito.doThrow(new IllegalArgumentException("not found"))
         .when(annotationService).deleteAnnotation(id);
 
-    var result = service.deleteAnnotation(id.toString());
-
-    assertThat(result).isInstanceOf(StandardError.class);
+    assertThatThrownBy(() -> service.deleteAnnotation(id.toString()))
+        .isInstanceOf(MutationException.class);
   }
 
   @Test
@@ -184,9 +193,8 @@ class ReaderAnnotationGraphQLServiceTest {
     UUID returned = UUID.randomUUID();
     when(annotationService.attach(eq(source), eq("target"))).thenReturn(returned);
 
-    var result = service.attachObject(source.toString(), "target");
+    AttachObjectResponse result = service.attachObject(source.toString(), "target");
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
-    assertThat(((QuerySuccess) result).getId()).isEqualTo(returned.toString());
+    assertThat(result.getId()).isEqualTo(returned.toString());
   }
 }

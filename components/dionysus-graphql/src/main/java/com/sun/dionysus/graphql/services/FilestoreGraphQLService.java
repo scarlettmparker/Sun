@@ -1,5 +1,6 @@
 package com.sun.dionysus.graphql.services;
 
+import com.sun.base.error.MutationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,11 +9,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.http.HttpHeaders;
 import com.sun.dionysus.codegen.types.Bucket;
+import com.sun.dionysus.codegen.types.DeleteFileResponse;
+import com.sun.dionysus.codegen.types.DeleteKeyResponse;
 import com.sun.dionysus.codegen.types.File;
+import com.sun.dionysus.codegen.types.GetPresignedDownloadUrlResponse;
+import com.sun.dionysus.codegen.types.GetPresignedUploadUrlResponse;
+import com.sun.dionysus.codegen.types.GetPresignedUploadUrlsResponse;
 import com.sun.dionysus.codegen.types.KeyEntry;
 import com.sun.dionysus.codegen.types.KeyDetail;
-import com.sun.dionysus.codegen.types.RenameKeyResult;
 import com.sun.dionysus.codegen.types.PresignInput;
+import com.sun.dionysus.codegen.types.PutKeyResponse;
+import com.sun.dionysus.codegen.types.RenameKeyResponse;
 import com.sun.dionysus.graphql.mappers.FileMapper;
 import com.sun.dionysus.graphql.mappers.KeyEntryMapper;
 import com.sun.dionysus.graphql.mappers.KeyDetailMapper;
@@ -198,7 +205,7 @@ public class FilestoreGraphQLService {
   /**
    * Creates a directory key (folder) via Garage admin REST API.
    */
-  public boolean putKey(String bucket, String key) {
+  public PutKeyResponse putKey(String bucket, String key) {
     String dirKey;
 
     if (key == null || key.trim().isEmpty()) {
@@ -233,18 +240,21 @@ public class FilestoreGraphQLService {
       conn.getOutputStream().close();
       int status = conn.getResponseCode();
       if (status < 200 || status > 299) {
-        logger.warn("putKey upload failed with status {}", status);
-        return false;
+        throw new MutationException("putKey failed: storage returned status " + status);
       }
+    } catch (MutationException e) {
+      throw e;
     } catch (Exception e) {
-      logger.error("putKey upload failed", e);
-      return false;
+      throw new MutationException("putKey failed: " + e.getMessage(), e);
     }
 
     keyDetailService.createOrUpdateDetail(bucket, dirKey, dirKey, null);
 
     logger.info("Successfully created directory key: {} in bucket: {}", dirKey, bucket);
-    return true;
+    return PutKeyResponse.newBuilder()
+        .message("putKey succeeded")
+        .key(dirKey)
+        .build();
   }
 
   /**
@@ -288,19 +298,26 @@ public class FilestoreGraphQLService {
   /**
    * Deletes a file from the bucket.
    */
-  public boolean deleteFile(String bucket, String key) {
+  public DeleteFileResponse deleteFile(String bucket, String key) {
     if (torrentJobService.hasActiveAt(bucket, key)) {
       logger.warn("Rejecting delete of {} / {}: active torrent job exists", bucket, key);
-      return false;
+      throw new MutationException("deleteFile failed: an active torrent job exists for " + key);
     }
     logger.info("Deleting object from bucket: {} with key: {}", bucket, key);
-    s3Client.deleteObject(DeleteObjectRequest.builder()
-        .bucket(bucket)
-        .key(key)
-        .build());
-    keyDetailService.archiveDetail(bucket, key);
+    try {
+      s3Client.deleteObject(DeleteObjectRequest.builder()
+          .bucket(bucket)
+          .key(key)
+          .build());
+      keyDetailService.archiveDetail(bucket, key);
+    } catch (Exception e) {
+      throw new MutationException("deleteFile failed: " + e.getMessage(), e);
+    }
     logger.info("Successfully deleted object: {} from bucket: {}", key, bucket);
-    return true;
+    return DeleteFileResponse.newBuilder()
+        .message("deleteFile succeeded")
+        .key(key)
+        .build();
   }
 
   /**
@@ -308,17 +325,16 @@ public class FilestoreGraphQLService {
    *
    * @param bucket Target S3 bucket name.
    * @param key    Target key or folder prefix to delete.
-   * @return true if successful, false if a hard exception occurred.
+   * @return the deleted key
    */
-  public boolean deleteKey(String bucket, String key) {
+  public DeleteKeyResponse deleteKey(String bucket, String key) {
     if (key == null || key.isEmpty()) {
-      logger.warn("Key is null or empty, aborting delete operation.");
-      return false;
+      throw new MutationException("deleteKey failed: key must not be empty");
     }
 
     if (hasActiveAtOrChild(bucket, key)) {
       logger.warn("Rejecting recursive delete of {} / {}: active torrent job exists", bucket, key);
-      return false;
+      throw new MutationException("deleteKey failed: an active torrent job exists for " + key);
     }
 
     logger.info("Deleting key recursively from bucket: {} with key: {}", bucket, key);
@@ -358,11 +374,14 @@ public class FilestoreGraphQLService {
       keyDetailService.archiveRecursive(bucket, key);
 
       logger.info("Successfully deleted {} key(s) under '{}' in bucket: {}", totalDeleted, key, bucket);
-      return true;
+      return DeleteKeyResponse.newBuilder()
+          .message("deleteKey succeeded")
+          .key(key)
+          .build();
 
     } catch (Exception e) {
       logger.error("Failed to recursively delete key: {} from bucket: {}", key, bucket, e);
-      return false;
+      throw new MutationException("deleteKey failed: " + e.getMessage(), e);
     }
   }
 
@@ -395,21 +414,29 @@ public class FilestoreGraphQLService {
   /**
    * Returns a presigned PUT URL for direct browser upload (avoids base64 + GraphQL overhead).
    */
-  public String getPresignedUploadUrl(String bucket, String key, String contentType) {
-    return presignOne(bucket, key, contentType);
+  public GetPresignedUploadUrlResponse getPresignedUploadUrl(String bucket, String key, String contentType) {
+    String url = presignOne(bucket, key, contentType);
+    return GetPresignedUploadUrlResponse.newBuilder()
+        .message("getPresignedUploadUrl succeeded")
+        .url(url)
+        .build();
   }
 
   /**
    * Batch-presigns multiple PUT URLs for multi-file uploads.
    *
-   * @param inputs one presign request per file
-   * @return presigned URLs in the same order as the inputs
+   * @param input one presign request per file
+   * @return the presigned URLs in the same order as the inputs
    */
-  public List<String> getPresignedUploadUrls(List<PresignInput> input) {
+  public GetPresignedUploadUrlsResponse getPresignedUploadUrls(List<PresignInput> input) {
     logger.info("Batch-presigning {} upload URLs", input.size());
-    return input.stream()
+    List<String> urls = input.stream()
         .map(item -> presignOne(item.getBucket(), item.getKey(), item.getContentType()))
         .collect(Collectors.toList());
+    return GetPresignedUploadUrlsResponse.newBuilder()
+        .message("getPresignedUploadUrls succeeded")
+        .urls(urls)
+        .build();
   }
 
   /**
@@ -437,7 +464,7 @@ public class FilestoreGraphQLService {
   /**
    * Returns a presigned GET URL for direct browser download.
    */
-  public String getPresignedDownloadUrl(String bucket, String key) {
+  public GetPresignedDownloadUrlResponse getPresignedDownloadUrl(String bucket, String key) {
     logger.info("Generating presigned download URL for {} / {}", bucket, key);
 
     GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
@@ -448,26 +475,34 @@ public class FilestoreGraphQLService {
     PresignedGetObjectRequest presigned = s3Presigner.presignGetObject(presignRequest);
     String url = presigned.url().toString();
     logger.info("Presigned download URL generated");
-    return url;
+    return GetPresignedDownloadUrlResponse.newBuilder()
+        .message("getPresignedDownloadUrl succeeded")
+        .url(url)
+        .build();
   }
 
   /**
    * Renames a key or directory prefix by copying objects to a new destination and deleting sources.
    * If merge is false, it halts and reports conflicts if any destination objects already exist.
    */
-  public RenameKeyResult renameKey(String bucket, String sourceKey, String targetKey, boolean merge) {
-    RenameKeyResult result = new RenameKeyResult();
-    result.setSuccess(false);
-    result.setHasConflicts(false);
-    result.setConflicts(new ArrayList<>());
-
+  public RenameKeyResponse renameKey(String bucket, String sourceKey, String targetKey, boolean merge) {
     if (sourceKey == null || targetKey == null || sourceKey.equals(targetKey)) {
-      return result;
+      return RenameKeyResponse.newBuilder()
+          .message("renameKey failed: source and target must be provided and differ")
+          .success(false)
+          .hasConflicts(false)
+          .conflicts(new ArrayList<>())
+          .build();
     }
 
     if (hasActiveAtOrChild(bucket, sourceKey)) {
       logger.warn("Rejecting rename of {} / {}: active torrent job exists", bucket, sourceKey);
-      return result;
+      return RenameKeyResponse.newBuilder()
+          .message("renameKey failed: an active torrent job exists for " + sourceKey)
+          .success(false)
+          .hasConflicts(false)
+          .conflicts(new ArrayList<>())
+          .build();
     }
 
     logger.info("Initiating rename in bucket '{}': '{}' -> '{}' (merge={})", bucket, sourceKey, targetKey, merge);
@@ -480,7 +515,12 @@ public class FilestoreGraphQLService {
 
       if (sourceObjects.isEmpty()) {
         logger.warn("No objects found matching source key/prefix: {}", sourceKey);
-        return result;
+        return RenameKeyResponse.newBuilder()
+            .message("renameKey failed: no objects found at " + sourceKey)
+            .success(false)
+            .hasConflicts(false)
+            .conflicts(new ArrayList<>())
+            .build();
       }
 
       boolean isSourceDir = sourceKey.endsWith("/");
@@ -519,9 +559,12 @@ public class FilestoreGraphQLService {
       // Halt if unapproved conflicts occur
       if (!merge && !conflicts.isEmpty()) {
         logger.warn("Aborting rename operation due to {} conflicts at target destination.", conflicts.size());
-        result.setHasConflicts(true);
-        result.setConflicts(conflicts);
-        return result;
+        return RenameKeyResponse.newBuilder()
+            .message("renameKey failed: " + conflicts.size() + " conflict(s) at target destination")
+            .success(false)
+            .hasConflicts(true)
+            .conflicts(conflicts)
+            .build();
       }
 
       List<ObjectIdentifier> sourceIdsToDelete = new ArrayList<>();
@@ -549,12 +592,16 @@ public class FilestoreGraphQLService {
       }
 
       logger.info("Successfully completed move sequence for {} key variations.", moves.size());
-      result.setSuccess(true);
-      return result;
+      return RenameKeyResponse.newBuilder()
+          .message("renameKey succeeded")
+          .success(true)
+          .hasConflicts(false)
+          .conflicts(new ArrayList<>())
+          .build();
 
     } catch (Exception e) {
       logger.error("Failed to perform rename migration from '{}' to '{}'", sourceKey, targetKey, e);
-      return result;
+      throw new MutationException("renameKey failed: " + e.getMessage(), e);
     }
   }
 

@@ -11,7 +11,11 @@ import com.sun.echo.codegen.types.PagedChecklistItems;
 import com.sun.echo.codegen.types.PaginationInput;
 import com.sun.echo.codegen.types.ChecklistMutations;
 import com.sun.echo.codegen.types.ChecklistQueries;
-import com.sun.echo.codegen.types.QueryResult;
+import com.sun.echo.codegen.types.CreateCategoryResponse;
+import com.sun.echo.codegen.types.CreateItemResponse;
+import com.sun.echo.codegen.types.RetireItemResponse;
+import com.sun.echo.codegen.types.SaveCategoryResponse;
+import com.sun.echo.codegen.types.SaveItemResponse;
 import com.sun.echo.graphql.services.ChecklistItemGraphQLService;
 import org.springframework.security.access.prepost.PreAuthorize;
 
@@ -101,11 +105,11 @@ public class ChecklistItemDataFetcher {
    * @param description an optional description
    * @param categoryId an optional category id
    * @param icon an optional icon name
-   * @return a QueryResult
+   * @return the created checklist item
    */
   @DgsData(parentType = "ChecklistMutations", field = "createItem")
   @PreAuthorize("@permissions.has('graphql.echo.createItem')")
-  public QueryResult createItem(String name, String description, String categoryId, String icon) {
+  public CreateItemResponse createItem(String name, String description, String categoryId, String icon) {
     return checklistItemGraphQLService.createItem(name, description, categoryId, icon);
   }
 
@@ -113,11 +117,11 @@ public class ChecklistItemDataFetcher {
    * Creates or updates a checklist item from input.
    *
    * @param input the item input
-   * @return a QueryResult
+   * @return the saved checklist item
    */
   @DgsData(parentType = "ChecklistMutations", field = "saveItem")
   @PreAuthorize("@permissions.has('graphql.echo.saveItem')")
-  public QueryResult saveItem(ChecklistItemInput input) {
+  public SaveItemResponse saveItem(ChecklistItemInput input) {
     return checklistItemGraphQLService.saveItem(input);
   }
 
@@ -125,11 +129,11 @@ public class ChecklistItemDataFetcher {
    * Soft-retires a checklist item.
    *
    * @param id the item id
-   * @return a QueryResult
+   * @return the retired checklist item
    */
   @DgsData(parentType = "ChecklistMutations", field = "retireItem")
   @PreAuthorize("@permissions.has('graphql.echo.retireItem')")
-  public QueryResult retireItem(String id) {
+  public RetireItemResponse retireItem(String id) {
     return checklistItemGraphQLService.retireItem(id);
   }
 
@@ -138,11 +142,11 @@ public class ChecklistItemDataFetcher {
    *
    * @param name the category name
    * @param description an optional description
-   * @return a QueryResult
+   * @return the created checklist category
    */
   @DgsData(parentType = "ChecklistMutations", field = "createCategory")
   @PreAuthorize("@permissions.has('graphql.echo.createCategory')")
-  public QueryResult createCategory(String name, String description) {
+  public CreateCategoryResponse createCategory(String name, String description) {
     return checklistItemGraphQLService.createCategory(name, description);
   }
 
@@ -150,11 +154,11 @@ public class ChecklistItemDataFetcher {
    * Creates or updates a checklist category from input.
    *
    * @param input the category input
-   * @return a QueryResult
+   * @return the saved checklist category
    */
   @DgsData(parentType = "ChecklistMutations", field = "saveCategory")
   @PreAuthorize("@permissions.has('graphql.echo.saveCategory')")
-  public QueryResult saveCategory(ChecklistCategoryInput input) {
+  public SaveCategoryResponse saveCategory(ChecklistCategoryInput input) {
     return checklistItemGraphQLService.saveCategory(input);
   }
 }

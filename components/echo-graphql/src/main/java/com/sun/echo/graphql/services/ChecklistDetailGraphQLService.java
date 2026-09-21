@@ -1,10 +1,10 @@
 package com.sun.echo.graphql.services;
 
-import com.sun.echo.codegen.types.QueryResult;
-import com.sun.echo.codegen.types.QuerySuccess;
+import com.sun.base.error.MutationException;
+import com.sun.echo.codegen.types.AttachObjectResponse;
+import com.sun.echo.codegen.types.DetachObjectResponse;
 import com.sun.echo.codegen.types.RemoteObjectReference;
 import com.sun.echo.codegen.types.RemoteObjectType;
-import com.sun.echo.codegen.types.StandardError;
 import com.sun.echo.service.ChecklistDetailService;
 import java.util.List;
 import java.util.UUID;
@@ -54,44 +54,55 @@ public class ChecklistDetailGraphQLService {
    * @param source the owning entity id
    * @param target the foreign object id to attach
    * @param ownerType optional owner type hint
-   * @return a QueryResult
+   * @return the updated detail id
    */
   @Transactional
-  public QueryResult attachObject(String source, String target, RemoteObjectType ownerType) {
-    return mutate("attachObject", () -> detailService
-        .attach(UUID.fromString(source), target, ownerType == null ? null : ownerType.name()));
+  public AttachObjectResponse attachObject(String source, String target, RemoteObjectType ownerType) {
+    return mutate("attachObject", () -> {
+      UUID id = detailService.attach(UUID.fromString(source), target,
+          ownerType == null ? null : ownerType.name());
+      return AttachObjectResponse.newBuilder()
+          .message("Object attached successfully")
+          .id(id.toString())
+          .build();
+    });
   }
 
   /**
    * Removes a remote object reference from an owner's detail.
+   *
+   * @param source the owning entity id
+   * @param target the foreign object id to detach
+   * @param ownerType optional owner type hint
+   * @return the updated detail id
    */
   @Transactional
-  public QueryResult detachObject(String source, String target, RemoteObjectType ownerType) {
-    return mutate("detachObject", () -> detailService
-        .detach(UUID.fromString(source), target, ownerType == null ? null : ownerType.name()));
+  public DetachObjectResponse detachObject(String source, String target, RemoteObjectType ownerType) {
+    return mutate("detachObject", () -> {
+      UUID id = detailService.detach(UUID.fromString(source), target,
+          ownerType == null ? null : ownerType.name());
+      return DetachObjectResponse.newBuilder()
+          .message("Object detached successfully")
+          .id(id.toString())
+          .build();
+    });
   }
 
   /**
-   * Runs a mutation, returning QuerySuccess with the affected id or StandardError
-   * on failure.
+   * Runs a mutation, logging the operation and raising a MutationException on failure.
    *
-   * @param op the operation name (for logging and messages)
-   * @param action the mutation, returning the affected entity id
-   * @return a QueryResult
+   * @param op the operation name, for logging and messages
+   * @param action the mutation, returning its response
+   * @return the mutation response
    */
-  private QueryResult mutate(String op, Supplier<UUID> action) {
+  private <T> T mutate(String op, Supplier<T> action) {
     try {
-      UUID id = action.get();
-      logger.info("{} succeeded for id {}", op, id);
-      return QuerySuccess.newBuilder()
-          .message(op + " succeeded")
-          .id(id == null ? null : id.toString())
-          .build();
+      T response = action.get();
+      logger.info("{} succeeded", op);
+      return response;
     } catch (Exception e) {
       logger.error("{} failed", op, e);
-      return StandardError.newBuilder()
-          .message(op + " failed: " + e.getMessage())
-          .build();
+      throw new MutationException(op + " failed: " + e.getMessage(), e);
     }
   }
 }

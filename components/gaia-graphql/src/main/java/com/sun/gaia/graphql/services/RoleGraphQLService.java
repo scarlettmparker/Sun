@@ -1,8 +1,9 @@
 package com.sun.gaia.graphql.services;
 
-import com.sun.gaia.codegen.types.QueryResult;
-import com.sun.gaia.codegen.types.QuerySuccess;
+import com.sun.gaia.codegen.types.CreateRoleResponse;
+import com.sun.gaia.codegen.types.DeleteRoleResponse;
 import com.sun.gaia.codegen.types.Role;
+import com.sun.gaia.codegen.types.SetAccountRolesResponse;
 import com.sun.gaia.graphql.mappers.RoleMapper;
 import com.sun.gaia.service.RoleAdminService;
 import java.util.List;
@@ -71,24 +72,32 @@ public class RoleGraphQLService {
    *
    * @param name the role name
    * @param description the optional description
-   * @return the created role
+   * @return the response with the created role
    */
   @Transactional
-  public Role createRole(String name, String description) {
-    return roleMapper.map(roleAdminService.createRole(name, description));
+  public CreateRoleResponse createRole(String name, String description) {
+    Role role = roleMapper.map(roleAdminService.createRole(name, description));
+    logger.info("Created role {}", name);
+    return CreateRoleResponse.newBuilder()
+        .message("Role created")
+        .role(role)
+        .build();
   }
 
   /**
    * Deletes a role and its assignments.
    *
    * @param id the role id
-   * @return a success result
+   * @return the deletion result
    */
   @Transactional
-  public QueryResult deleteRole(String id) {
+  public DeleteRoleResponse deleteRole(String id) {
     roleAdminService.deleteRole(UUID.fromString(id));
     logger.info("Deleted role {}", id);
-    return QuerySuccess.newBuilder().message("Role deleted").id(id).build();
+    return DeleteRoleResponse.newBuilder()
+        .message("Role deleted")
+        .id(id)
+        .build();
   }
 
   /**
@@ -96,12 +105,16 @@ public class RoleGraphQLService {
    *
    * @param accountId the account id
    * @param roleNames the desired role names
-   * @return a success result
+   * @return the update result
    */
   @Transactional
-  public QueryResult setAccountRoles(String accountId, List<String> roleNames) {
+  public SetAccountRolesResponse setAccountRoles(String accountId, List<String> roleNames) {
     roleAdminService.setAccountRoles(UUID.fromString(accountId), roleNames);
     logger.info("Set roles for account {}", accountId);
-    return QuerySuccess.newBuilder().message("Account roles updated").id(accountId).build();
+    return SetAccountRolesResponse.newBuilder()
+        .message("Account roles updated")
+        .accountId(accountId)
+        .roles(roleNames)
+        .build();
   }
 }

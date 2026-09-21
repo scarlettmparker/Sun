@@ -2,8 +2,10 @@ package com.sun.gaia.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
-import com.sun.gaia.codegen.types.QueryResult;
+import com.sun.gaia.codegen.types.CreateRoleResponse;
+import com.sun.gaia.codegen.types.DeleteRoleResponse;
 import com.sun.gaia.codegen.types.Role;
+import com.sun.gaia.codegen.types.SetAccountRolesResponse;
 import com.sun.gaia.graphql.services.RoleGraphQLService;
 import java.util.List;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -52,7 +54,7 @@ public class RoleDataFetcher {
     */
   @DgsData(parentType = "GaiaMutations", field = "createRole")
   @PreAuthorize("@permissions.has('graphql.gaia.createRole')")
-  public Role createRole(String name, String description) {
+  public CreateRoleResponse createRole(String name, String description) {
     return roleGraphQLService.createRole(name, description);
   }
 
@@ -61,7 +63,7 @@ public class RoleDataFetcher {
     */
   @DgsData(parentType = "GaiaMutations", field = "deleteRole")
   @PreAuthorize("@permissions.has('graphql.gaia.deleteRole')")
-  public QueryResult deleteRole(String id) {
+  public DeleteRoleResponse deleteRole(String id) {
     return roleGraphQLService.deleteRole(id);
   }
 
@@ -70,7 +72,7 @@ public class RoleDataFetcher {
     */
   @DgsData(parentType = "GaiaMutations", field = "setAccountRoles")
   @PreAuthorize("@permissions.has('graphql.gaia.setAccountRoles')")
-  public QueryResult setAccountRoles(String accountId, List<String> roleNames) {
+  public SetAccountRolesResponse setAccountRoles(String accountId, List<String> roleNames) {
     return roleGraphQLService.setAccountRoles(accountId, roleNames);
   }
 }

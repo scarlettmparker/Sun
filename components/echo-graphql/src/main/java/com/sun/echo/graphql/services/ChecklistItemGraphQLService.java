@@ -1,15 +1,18 @@
 package com.sun.echo.graphql.services;
 
+import com.sun.base.error.MutationException;
 import com.sun.echo.codegen.types.ChecklistCategory;
 import com.sun.echo.codegen.types.ChecklistCategoryInput;
 import com.sun.echo.codegen.types.ChecklistDetail;
 import com.sun.echo.codegen.types.ChecklistItem;
 import com.sun.echo.codegen.types.ChecklistItemInput;
+import com.sun.echo.codegen.types.CreateCategoryResponse;
+import com.sun.echo.codegen.types.CreateItemResponse;
 import com.sun.echo.codegen.types.PagedChecklistItems;
 import com.sun.echo.codegen.types.PaginationInput;
-import com.sun.echo.codegen.types.QueryResult;
-import com.sun.echo.codegen.types.QuerySuccess;
-import com.sun.echo.codegen.types.StandardError;
+import com.sun.echo.codegen.types.RetireItemResponse;
+import com.sun.echo.codegen.types.SaveCategoryResponse;
+import com.sun.echo.codegen.types.SaveItemResponse;
 import com.sun.echo.graphql.mappers.ChecklistCategoryMapper;
 import com.sun.echo.graphql.mappers.ChecklistDetailMapper;
 import com.sun.echo.graphql.mappers.ChecklistItemMapper;
@@ -113,10 +116,10 @@ public class ChecklistItemGraphQLService {
    * @param description an optional description
    * @param categoryId an optional category id
    * @param icon an optional icon name
-   * @return a QueryResult
+   * @return the created checklist item
    */
   @Transactional
-  public QueryResult createItem(String name, String description, String categoryId, String icon) {
+  public CreateItemResponse createItem(String name, String description, String categoryId, String icon) {
     return mutate("createItem", () -> {
       ChecklistItemEntity entity = new ChecklistItemEntity();
       entity.setName(name);
@@ -125,7 +128,11 @@ public class ChecklistItemGraphQLService {
       if (categoryId != null) {
         entity.setCategoryId(UUID.fromString(categoryId));
       }
-      return itemService.save(entity).getId();
+      ChecklistItemEntity saved = itemService.save(entity);
+      return CreateItemResponse.newBuilder()
+          .message("Checklist item created successfully")
+          .item(itemMapper.map(saved))
+          .build();
     });
   }
 
@@ -133,14 +140,18 @@ public class ChecklistItemGraphQLService {
    * Creates or updates a checklist item from input.
    *
    * @param input the item input
-   * @return a QueryResult
+   * @return the saved checklist item
    */
   @Transactional
-  public QueryResult saveItem(ChecklistItemInput input) {
+  public SaveItemResponse saveItem(ChecklistItemInput input) {
     return mutate("saveItem", () -> {
       ChecklistItemEntity entity = resolveItem(input.getId());
       itemMapper.map(input, entity);
-      return itemService.save(entity).getId();
+      ChecklistItemEntity saved = itemService.save(entity);
+      return SaveItemResponse.newBuilder()
+          .message("Checklist item saved successfully")
+          .item(itemMapper.map(saved))
+          .build();
     });
   }
 
@@ -148,11 +159,17 @@ public class ChecklistItemGraphQLService {
    * Soft-retires a checklist item.
    *
    * @param id the item id
-   * @return a QueryResult
+   * @return the retired checklist item
    */
   @Transactional
-  public QueryResult retireItem(String id) {
-    return mutate("retireItem", () -> itemService.retire(UUID.fromString(id)).getId());
+  public RetireItemResponse retireItem(String id) {
+    return mutate("retireItem", () -> {
+      ChecklistItemEntity retired = itemService.retire(UUID.fromString(id));
+      return RetireItemResponse.newBuilder()
+          .message("Checklist item retired successfully")
+          .item(itemMapper.map(retired))
+          .build();
+    });
   }
 
   /**
@@ -160,15 +177,19 @@ public class ChecklistItemGraphQLService {
    *
    * @param name the category name
    * @param description an optional description
-   * @return a QueryResult
+   * @return the created checklist category
    */
   @Transactional
-  public QueryResult createCategory(String name, String description) {
+  public CreateCategoryResponse createCategory(String name, String description) {
     return mutate("createCategory", () -> {
       ChecklistCategoryEntity entity = new ChecklistCategoryEntity();
       entity.setName(name);
       entity.setDescription(description);
-      return categoryService.save(entity).getId();
+      ChecklistCategoryEntity saved = categoryService.save(entity);
+      return CreateCategoryResponse.newBuilder()
+          .message("Checklist category created successfully")
+          .category(categoryMapper.map(saved))
+          .build();
     });
   }
 
@@ -176,14 +197,18 @@ public class ChecklistItemGraphQLService {
    * Creates or updates a checklist category from input.
    *
    * @param input the category input
-   * @return a QueryResult
+   * @return the saved checklist category
    */
   @Transactional
-  public QueryResult saveCategory(ChecklistCategoryInput input) {
+  public SaveCategoryResponse saveCategory(ChecklistCategoryInput input) {
     return mutate("saveCategory", () -> {
       ChecklistCategoryEntity entity = resolveCategory(input.getId());
       categoryMapper.map(input, entity);
-      return categoryService.save(entity).getId();
+      ChecklistCategoryEntity saved = categoryService.save(entity);
+      return SaveCategoryResponse.newBuilder()
+          .message("Checklist category saved successfully")
+          .category(categoryMapper.map(saved))
+          .build();
     });
   }
 
@@ -216,26 +241,20 @@ public class ChecklistItemGraphQLService {
   }
 
   /**
-   * Runs a mutation, returning QuerySuccess with the affected id or StandardError
-   * on failure.
+   * Runs a mutation, logging the operation and raising a MutationException on failure.
    *
-   * @param op the operation name (for logging and messages)
-   * @param action the mutation, returning the affected entity id
-   * @return a QueryResult
+   * @param op the operation name, for logging and messages
+   * @param action the mutation, returning its response
+   * @return the mutation response
    */
-  private QueryResult mutate(String op, Supplier<UUID> action) {
+  private <T> T mutate(String op, Supplier<T> action) {
     try {
-      UUID id = action.get();
-      logger.info("{} succeeded for id {}", op, id);
-      return QuerySuccess.newBuilder()
-          .message(op + " succeeded")
-          .id(id == null ? null : id.toString())
-          .build();
+      T response = action.get();
+      logger.info("{} succeeded", op);
+      return response;
     } catch (Exception e) {
       logger.error("{} failed", op, e);
-      return StandardError.newBuilder()
-          .message(op + " failed: " + e.getMessage())
-          .build();
+      throw new MutationException(op + " failed: " + e.getMessage(), e);
     }
   }
 }

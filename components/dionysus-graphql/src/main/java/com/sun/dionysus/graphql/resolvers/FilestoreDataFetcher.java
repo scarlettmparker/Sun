@@ -5,7 +5,13 @@ import com.netflix.graphql.dgs.DgsData;
 import com.sun.dionysus.graphql.services.FilestoreGraphQLService;
 import com.sun.dionysus.codegen.types.FilestoreQueries;
 import com.sun.dionysus.codegen.types.FilestoreMutations;
-import com.sun.dionysus.codegen.types.RenameKeyResult;
+import com.sun.dionysus.codegen.types.DeleteFileResponse;
+import com.sun.dionysus.codegen.types.DeleteKeyResponse;
+import com.sun.dionysus.codegen.types.GetPresignedDownloadUrlResponse;
+import com.sun.dionysus.codegen.types.GetPresignedUploadUrlResponse;
+import com.sun.dionysus.codegen.types.GetPresignedUploadUrlsResponse;
+import com.sun.dionysus.codegen.types.PutKeyResponse;
+import com.sun.dionysus.codegen.types.RenameKeyResponse;
 import com.sun.dionysus.codegen.types.Bucket;
 import com.sun.dionysus.codegen.types.KeyEntry;
 import com.sun.dionysus.codegen.types.KeyDetail;
@@ -70,44 +76,44 @@ public class FilestoreDataFetcher {
 
   @DgsData(parentType = "FilestoreMutations", field = "putKey")
   @PreAuthorize("@permissions.has('graphql.dionysus.putKey')")
-  public boolean putKey(PutKeyInput input) {
+  public PutKeyResponse putKey(PutKeyInput input) {
     return filestoreGraphQLService.putKey(input.getBucket(), input.getKey());
   }
 
   @DgsData(parentType = "FilestoreMutations", field = "deleteFile")
   @PreAuthorize("@permissions.has('graphql.dionysus.deleteFile')")
-  public boolean deleteFile(BucketKeyInput input) {
+  public DeleteFileResponse deleteFile(BucketKeyInput input) {
     return filestoreGraphQLService.deleteFile(input.getBucket(), input.getKey());
   }
 
   @DgsData(parentType = "FilestoreMutations", field = "deleteKey")
   @PreAuthorize("@permissions.has('graphql.dionysus.deleteKey')")
-  public boolean deleteKey(BucketKeyInput input) {
+  public DeleteKeyResponse deleteKey(BucketKeyInput input) {
     return filestoreGraphQLService.deleteKey(input.getBucket(), input.getKey());
   }
 
   @DgsData(parentType = "FilestoreMutations", field = "renameKey")
   @PreAuthorize("@permissions.has('graphql.dionysus.renameKey')")
-  public RenameKeyResult renameKey(RenameKeyInput input) {
+  public RenameKeyResponse renameKey(RenameKeyInput input) {
     return filestoreGraphQLService.renameKey(input.getBucket(), input.getSourceKey(), input.getTargetKey(), input.getMerge());
   }
 
   @DgsData(parentType = "FilestoreMutations", field = "getPresignedUploadUrl")
   @PreAuthorize("@permissions.has('graphql.dionysus.getPresignedUploadUrl')")
-  public String getPresignedUploadUrl(PresignInput input) {
+  public GetPresignedUploadUrlResponse getPresignedUploadUrl(PresignInput input) {
     return filestoreGraphQLService.getPresignedUploadUrl(input.getBucket(), input.getKey(), input.getContentType());
   }
 
   @DgsData(parentType = "FilestoreMutations", field = "getPresignedUploadUrls")
   @PreAuthorize("@permissions.has('graphql.dionysus.getPresignedUploadUrls')")
-  public List<String> getPresignedUploadUrls(
+  public GetPresignedUploadUrlsResponse getPresignedUploadUrls(
       List<PresignInput> input) {
     return filestoreGraphQLService.getPresignedUploadUrls(input);
   }
 
   @DgsData(parentType = "FilestoreMutations", field = "getPresignedDownloadUrl")
   @PreAuthorize("@permissions.has('graphql.dionysus.getPresignedDownloadUrl')")
-  public String getPresignedDownloadUrl(BucketKeyInput input) {
+  public GetPresignedDownloadUrlResponse getPresignedDownloadUrl(BucketKeyInput input) {
     return filestoreGraphQLService.getPresignedDownloadUrl(input.getBucket(), input.getKey());
   }
 }

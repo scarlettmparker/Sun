@@ -2,7 +2,8 @@ package com.sun.echo.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
-import com.sun.echo.codegen.types.QueryResult;
+import com.sun.echo.codegen.types.AttachObjectResponse;
+import com.sun.echo.codegen.types.DetachObjectResponse;
 import com.sun.echo.codegen.types.RemoteObjectReference;
 import com.sun.echo.codegen.types.RemoteObjectType;
 import com.sun.echo.graphql.services.ChecklistDetailGraphQLService;
@@ -39,17 +40,25 @@ public class ChecklistDetailDataFetcher {
    * @param source the owning entity id
    * @param target the foreign object id to attach
    * @param ownerType an optional owner type hint (ENTRY, TEMPLATE, or ITEM)
-   * @return a QueryResult
+   * @return the updated detail id
    */
   @DgsData(parentType = "ChecklistMutations", field = "attachObject")
   @PreAuthorize("@permissions.has('graphql.echo.attachObject')")
-  public QueryResult attachObject(String source, String target, RemoteObjectType ownerType) {
+  public AttachObjectResponse attachObject(String source, String target, RemoteObjectType ownerType) {
     return checklistDetailGraphQLService.attachObject(source, target, ownerType);
   }
 
+  /**
+   * Detaches a foreign object from a checklist detail.
+   *
+   * @param source the owning entity id
+   * @param target the foreign object id to detach
+   * @param ownerType an optional owner type hint (ENTRY, TEMPLATE, or ITEM)
+   * @return the updated detail id
+   */
   @DgsData(parentType = "ChecklistMutations", field = "detachObject")
   @PreAuthorize("@permissions.has('graphql.echo.detachObject')")
-  public QueryResult detachObject(String source, String target, RemoteObjectType ownerType) {
+  public DetachObjectResponse detachObject(String source, String target, RemoteObjectType ownerType) {
     return checklistDetailGraphQLService.detachObject(source, target, ownerType);
   }
 }

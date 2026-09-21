@@ -1,14 +1,26 @@
 package com.sun.hades.graphql.services;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.sun.hades.codegen.types.QuerySuccess;
-import com.sun.hades.codegen.types.StandardError;
+import com.sun.base.error.MutationException;
+import com.sun.hades.codegen.types.ReaderAnnotation;
+import com.sun.hades.codegen.types.ReaderComment;
 import com.sun.hades.codegen.types.VoteInput;
+import com.sun.hades.codegen.types.VoteResponse;
+import com.sun.hades.graphql.mappers.ReaderAnnotationMapper;
+import com.sun.hades.graphql.mappers.ReaderCommentMapper;
+import com.sun.hades.model.ReaderAnnotationEntity;
+import com.sun.hades.model.ReaderCommentEntity;
 import com.sun.hades.model.enums.ReaderVoteTarget;
 import com.sun.hades.model.enums.VoteValue;
+import com.sun.hades.service.ReaderAnnotationService;
+import com.sun.hades.service.ReaderCommentService;
 import com.sun.hades.service.ReaderVoteService;
 import java.util.Optional;
 import java.util.UUID;
@@ -22,6 +34,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class ReaderVoteGraphQLServiceTest {
 
   @Mock private ReaderVoteService voteService;
+  @Mock private ReaderAnnotationService annotationService;
+  @Mock private ReaderCommentService commentService;
+  @Mock private ReaderAnnotationMapper annotationMapper;
+  @Mock private ReaderCommentMapper commentMapper;
 
   @InjectMocks private ReaderVoteGraphQLService service;
 
@@ -44,51 +60,76 @@ class ReaderVoteGraphQLServiceTest {
   }
 
   @Test
-  void vote_delegates() {
+  void vote_delegatesForAnnotation() {
     UUID targetId = UUID.randomUUID();
     VoteInput input = VoteInput.newBuilder()
         .targetType(ReaderVoteTarget.ANNOTATION).targetId(targetId.toString()).value(VoteValue.UP).build();
+    ReaderAnnotationEntity entity = new ReaderAnnotationEntity();
+    entity.setId(targetId);
+    ReaderAnnotation mapped = ReaderAnnotation.newBuilder().id(targetId.toString()).body("body").build();
     when(voteService.vote(ReaderVoteTarget.ANNOTATION, targetId, VoteValue.UP)).thenReturn(targetId);
+    when(annotationService.findById(targetId)).thenReturn(Optional.of(entity));
+    when(annotationMapper.map(eq(entity), any(), any(), anyInt(), any())).thenReturn(mapped);
 
-    var result = service.vote(input);
+    VoteResponse result = service.vote(input);
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
-    assertThat(((QuerySuccess) result).getId()).isEqualTo(targetId.toString());
+    assertThat(result.getAnnotation()).isEqualTo(mapped);
+    assertThat(result.getComment()).isNull();
   }
 
   @Test
-  void vote_returnsStandardErrorOnFailure() {
+  void vote_delegatesForComment() {
+    UUID targetId = UUID.randomUUID();
+    VoteInput input = VoteInput.newBuilder()
+        .targetType(ReaderVoteTarget.COMMENT).targetId(targetId.toString()).value(VoteValue.DOWN).build();
+    ReaderCommentEntity entity = new ReaderCommentEntity();
+    entity.setId(targetId);
+    ReaderComment mapped = ReaderComment.newBuilder().id(targetId.toString()).body("body").build();
+    when(voteService.vote(ReaderVoteTarget.COMMENT, targetId, VoteValue.DOWN)).thenReturn(targetId);
+    when(commentService.findById(targetId)).thenReturn(Optional.of(entity));
+    when(commentMapper.map(eq(entity), any(), any())).thenReturn(mapped);
+
+    VoteResponse result = service.vote(input);
+
+    assertThat(result.getComment()).isEqualTo(mapped);
+    assertThat(result.getAnnotation()).isNull();
+  }
+
+  @Test
+  void vote_throwsOnFailure() {
     UUID targetId = UUID.randomUUID();
     VoteInput input = VoteInput.newBuilder()
         .targetType(ReaderVoteTarget.ANNOTATION).targetId(targetId.toString()).value(VoteValue.UP).build();
     when(voteService.vote(ReaderVoteTarget.ANNOTATION, targetId, VoteValue.UP))
         .thenThrow(new IllegalArgumentException("fail"));
 
-    var result = service.vote(input);
-
-    assertThat(result).isInstanceOf(StandardError.class);
+    assertThatThrownBy(() -> service.vote(input))
+        .isInstanceOf(MutationException.class);
   }
 
   @Test
   void removeVote_delegates() {
     UUID targetId = UUID.randomUUID();
+    ReaderAnnotationEntity entity = new ReaderAnnotationEntity();
+    entity.setId(targetId);
+    ReaderAnnotation mapped = ReaderAnnotation.newBuilder().id(targetId.toString()).body("body").build();
     when(voteService.removeVote(ReaderVoteTarget.ANNOTATION, targetId)).thenReturn(targetId);
+    when(annotationService.findById(targetId)).thenReturn(Optional.of(entity));
+    when(annotationMapper.map(eq(entity), any(), any(), anyInt(), any())).thenReturn(mapped);
 
-    var result = service.removeVote(ReaderVoteTarget.ANNOTATION, targetId.toString());
+    VoteResponse result = service.removeVote(ReaderVoteTarget.ANNOTATION, targetId.toString());
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
-    assertThat(((QuerySuccess) result).getId()).isEqualTo(targetId.toString());
+    assertThat(result.getAnnotation()).isEqualTo(mapped);
     verify(voteService).removeVote(ReaderVoteTarget.ANNOTATION, targetId);
   }
 
   @Test
-  void removeVote_returnsStandardErrorWhenNoVote() {
+  void removeVote_throwsWhenNoVote() {
     UUID targetId = UUID.randomUUID();
     when(voteService.removeVote(ReaderVoteTarget.ANNOTATION, targetId))
         .thenThrow(new IllegalArgumentException("No vote to remove"));
 
-    var result = service.removeVote(ReaderVoteTarget.ANNOTATION, targetId.toString());
-
-    assertThat(result).isInstanceOf(StandardError.class);
+    assertThatThrownBy(() -> service.removeVote(ReaderVoteTarget.ANNOTATION, targetId.toString()))
+        .isInstanceOf(MutationException.class);
   }
 }

@@ -1,5 +1,10 @@
 package com.sun.dionysus.graphql.services;
 
+import com.sun.base.error.MutationException;
+import com.sun.dionysus.codegen.types.AddTorrentResponse;
+import com.sun.dionysus.codegen.types.CancelTorrentResponse;
+import com.sun.dionysus.codegen.types.PauseTorrentResponse;
+import com.sun.dionysus.codegen.types.ResumeTorrentResponse;
 import com.sun.dionysus.codegen.types.TorrentJob;
 import com.sun.dionysus.graphql.mappers.TorrentJobMapper;
 import com.sun.dionysus.model.TorrentJobEntity;
@@ -55,7 +60,7 @@ public class TorrentGraphQLService {
   /**
    * Starts a torrent from a magnet link or base64-encoded .torrent file.
    */
-  public TorrentJob addTorrent(String bucket, String path, String magnet, String torrentFileBase64) {
+  public AddTorrentResponse addTorrent(String bucket, String path, String magnet, String torrentFileBase64) {
     TorrentJobEntity job;
     if (magnet != null && !magnet.isBlank()) {
       if (MagnetUri.isMagnet(magnet)) {
@@ -75,31 +80,55 @@ public class TorrentGraphQLService {
     } else {
       throw new IllegalArgumentException("addTorrent requires a magnet or torrentFileBase64");
     }
-    return torrentJobMapper.map(job);
+    return AddTorrentResponse.newBuilder()
+        .message("addTorrent succeeded")
+        .job(torrentJobMapper.map(job))
+        .build();
   }
 
   /**
    * Pauses a running download.
    */
-  public TorrentJob pauseTorrent(String jobId) {
-    torrentClient.pauseJob(UUID.fromString(jobId));
-    return torrentJobService.findById(UUID.fromString(jobId)).map(torrentJobMapper::map).orElse(null);
+  public PauseTorrentResponse pauseTorrent(String jobId) {
+    UUID id = UUID.fromString(jobId);
+    torrentClient.pauseJob(id);
+    TorrentJob job = torrentJobService.findById(id)
+        .map(torrentJobMapper::map)
+        .orElseThrow(() -> new MutationException("pauseTorrent failed: torrent job not found: " + jobId));
+    return PauseTorrentResponse.newBuilder()
+        .message("pauseTorrent succeeded")
+        .job(job)
+        .build();
   }
 
   /**
    * Resumes a paused download.
    */
-  public TorrentJob resumeTorrent(String jobId) {
-    torrentClient.resumeJob(UUID.fromString(jobId));
-    return torrentJobService.findById(UUID.fromString(jobId)).map(torrentJobMapper::map).orElse(null);
+  public ResumeTorrentResponse resumeTorrent(String jobId) {
+    UUID id = UUID.fromString(jobId);
+    torrentClient.resumeJob(id);
+    TorrentJob job = torrentJobService.findById(id)
+        .map(torrentJobMapper::map)
+        .orElseThrow(() -> new MutationException("resumeTorrent failed: torrent job not found: " + jobId));
+    return ResumeTorrentResponse.newBuilder()
+        .message("resumeTorrent succeeded")
+        .job(job)
+        .build();
   }
 
   /**
    * Cancels a download and clears its scratch files.
    */
-  public TorrentJob cancelTorrent(String jobId) {
-    torrentClient.cancelJob(UUID.fromString(jobId));
-    return torrentJobService.findById(UUID.fromString(jobId)).map(torrentJobMapper::map).orElse(null);
+  public CancelTorrentResponse cancelTorrent(String jobId) {
+    UUID id = UUID.fromString(jobId);
+    torrentClient.cancelJob(id);
+    TorrentJob job = torrentJobService.findById(id)
+        .map(torrentJobMapper::map)
+        .orElseThrow(() -> new MutationException("cancelTorrent failed: torrent job not found: " + jobId));
+    return CancelTorrentResponse.newBuilder()
+        .message("cancelTorrent succeeded")
+        .job(job)
+        .build();
   }
 
   /**

@@ -10,9 +10,9 @@ import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
 import com.sun.cerberus.codegen.types.GalleryItem;
 import com.sun.cerberus.codegen.types.GalleryQueries;
+import com.sun.cerberus.codegen.types.CreateGalleryItemResponse;
 import com.sun.cerberus.codegen.types.GalleryMutations;
 import com.sun.cerberus.codegen.types.GalleryItemInput;
-import com.sun.cerberus.codegen.types.QueryResult;
 
 @DgsComponent
 public class GalleryDataFetcher {
@@ -91,11 +91,11 @@ public class GalleryDataFetcher {
    * Creates a new gallery item.
    *
    * @param input the input data for the gallery item
-   * @return QueryResult indicating success or error
+   * @return the created gallery item
    */
   @DgsData(parentType = "GalleryMutations", field = "create")
   @PreAuthorize("@permissions.has('graphql.cerberus.create')")
-  public QueryResult create(GalleryItemInput input) {
+  public CreateGalleryItemResponse create(GalleryItemInput input) {
     return galleryGraphQLService.create(input);
   }
 }

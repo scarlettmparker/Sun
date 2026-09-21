@@ -4,7 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.sun.echo.codegen.types.QuerySuccess;
+import com.sun.echo.codegen.types.AttachObjectResponse;
+import com.sun.echo.codegen.types.DetachObjectResponse;
 import com.sun.echo.codegen.types.RemoteObjectReference;
 import com.sun.echo.codegen.types.RemoteObjectType;
 import com.sun.echo.graphql.services.ChecklistDetailGraphQLService;
@@ -39,7 +40,7 @@ class ChecklistDetailDataFetcherTest {
   void attachObject_delegatesToService() {
     String source = UUID.randomUUID().toString();
     String target = "target-1";
-    QuerySuccess expected = QuerySuccess.newBuilder().message("attachObject succeeded").id(source).build();
+    AttachObjectResponse expected = AttachObjectResponse.newBuilder().message("Object attached successfully").id(source).build();
     when(checklistDetailGraphQLService.attachObject(source, target, RemoteObjectType.ENTRY)).thenReturn(expected);
 
     var result = fetcher.attachObject(source, target, RemoteObjectType.ENTRY);
@@ -52,7 +53,7 @@ class ChecklistDetailDataFetcherTest {
   void detachObject_delegatesToService() {
     String source = UUID.randomUUID().toString();
     String target = "target-1";
-    QuerySuccess expected = QuerySuccess.newBuilder().message("detachObject succeeded").id(source).build();
+    DetachObjectResponse expected = DetachObjectResponse.newBuilder().message("Object detached successfully").id(source).build();
     when(checklistDetailGraphQLService.detachObject(source, target, RemoteObjectType.ITEM)).thenReturn(expected);
 
     var result = fetcher.detachObject(source, target, RemoteObjectType.ITEM);

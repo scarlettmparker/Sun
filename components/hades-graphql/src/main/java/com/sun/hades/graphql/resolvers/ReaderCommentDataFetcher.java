@@ -2,10 +2,12 @@ package com.sun.hades.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
+import com.sun.hades.codegen.types.AddCommentResponse;
 import com.sun.hades.codegen.types.CommentInput;
+import com.sun.hades.codegen.types.DeleteCommentResponse;
+import com.sun.hades.codegen.types.EditCommentResponse;
 import com.sun.hades.codegen.types.PagedReaderComments;
 import com.sun.hades.codegen.types.PaginationInput;
-import com.sun.hades.codegen.types.QueryResult;
 import com.sun.hades.graphql.services.ReaderCommentGraphQLService;
 import org.springframework.security.access.prepost.PreAuthorize;
 
@@ -39,11 +41,11 @@ public class ReaderCommentDataFetcher {
    * Adds a comment.
    *
    * @param input the comment input
-   * @return a QueryResult
+   * @return the add-comment response
    */
   @DgsData(parentType = "HadesMutations", field = "addComment")
   @PreAuthorize("@permissions.has('graphql.hades.addComment')")
-  public QueryResult addComment(CommentInput input) {
+  public AddCommentResponse addComment(CommentInput input) {
     return readerCommentGraphQLService.addComment(input);
   }
 
@@ -52,11 +54,11 @@ public class ReaderCommentDataFetcher {
    *
    * @param id the comment id
    * @param body the new body
-   * @return a QueryResult
+   * @return the edit-comment response
    */
   @DgsData(parentType = "HadesMutations", field = "editComment")
   @PreAuthorize("@permissions.has('graphql.hades.editComment')")
-  public QueryResult editComment(String id, String body) {
+  public EditCommentResponse editComment(String id, String body) {
     return readerCommentGraphQLService.editComment(id, body);
   }
 
@@ -64,11 +66,11 @@ public class ReaderCommentDataFetcher {
    * Deletes a comment.
    *
    * @param id the comment id
-   * @return a QueryResult
+   * @return the delete-comment response
    */
   @DgsData(parentType = "HadesMutations", field = "deleteComment")
   @PreAuthorize("@permissions.has('graphql.hades.deleteComment')")
-  public QueryResult deleteComment(String id) {
+  public DeleteCommentResponse deleteComment(String id) {
     return readerCommentGraphQLService.deleteComment(id);
   }
 }

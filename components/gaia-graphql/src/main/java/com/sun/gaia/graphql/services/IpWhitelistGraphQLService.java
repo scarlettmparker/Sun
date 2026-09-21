@@ -1,9 +1,10 @@
 package com.sun.gaia.graphql.services;
 
+import com.sun.gaia.codegen.types.CreateIpWhitelistEntryResponse;
+import com.sun.gaia.codegen.types.DeleteIpWhitelistEntryResponse;
 import com.sun.gaia.codegen.types.IpWhitelistEntry;
 import com.sun.gaia.codegen.types.IpWhitelistEntryInput;
-import com.sun.gaia.codegen.types.QueryResult;
-import com.sun.gaia.codegen.types.QuerySuccess;
+import com.sun.gaia.codegen.types.UpdateIpWhitelistEntryResponse;
 import com.sun.gaia.graphql.mappers.IpWhitelistMapper;
 import com.sun.gaia.model.IpWhitelistEntryEntity;
 import com.sun.gaia.service.IpWhitelistService;
@@ -47,16 +48,16 @@ public class IpWhitelistGraphQLService {
    *
    * @param pattern     the IP pattern (CIDR, glob, or exact).
    * @param description optional description.
-   * @return a success result with the entry id
+   * @return the response with the created entry
    */
   @Transactional
-  public QueryResult createIpWhitelistEntry(IpWhitelistEntryInput input) {
+  public CreateIpWhitelistEntryResponse createIpWhitelistEntry(IpWhitelistEntryInput input) {
     IpWhitelistEntryEntity entity = ipWhitelistService.addEntry(
         input.getPattern(), input.getDescription(),
         input.getImmutable() != null && input.getImmutable());
-    return QuerySuccess.newBuilder()
+    return CreateIpWhitelistEntryResponse.newBuilder()
         .message("IP whitelist entry created")
-        .id(entity.getId().toString())
+        .entry(ipWhitelistMapper.map(entity))
         .build();
   }
 
@@ -65,15 +66,15 @@ public class IpWhitelistGraphQLService {
    *
    * @param id    the entry id
    * @param input the updated fields
-   * @return a success result
+   * @return the response with the updated entry
    */
   @Transactional
-  public QueryResult updateIpWhitelistEntry(String id, IpWhitelistEntryInput input) {
-    ipWhitelistService.updateEntry(UUID.fromString(id),
+  public UpdateIpWhitelistEntryResponse updateIpWhitelistEntry(String id, IpWhitelistEntryInput input) {
+    IpWhitelistEntryEntity entity = ipWhitelistService.updateEntry(UUID.fromString(id),
         input.getPattern(), input.getDescription(), input.getEnabled());
-    return QuerySuccess.newBuilder()
+    return UpdateIpWhitelistEntryResponse.newBuilder()
         .message("IP whitelist entry updated")
-        .id(id)
+        .entry(ipWhitelistMapper.map(entity))
         .build();
   }
 
@@ -81,12 +82,12 @@ public class IpWhitelistGraphQLService {
    * Deletes an IP whitelist entry.
    *
    * @param id the entry id
-   * @return a success result
+   * @return the deletion result
    */
   @Transactional
-  public QueryResult deleteIpWhitelistEntry(String id) {
+  public DeleteIpWhitelistEntryResponse deleteIpWhitelistEntry(String id) {
     ipWhitelistService.deleteEntry(UUID.fromString(id));
-    return QuerySuccess.newBuilder()
+    return DeleteIpWhitelistEntryResponse.newBuilder()
         .message("IP whitelist entry deleted")
         .id(id)
         .build();

@@ -1,8 +1,8 @@
 package com.sun.gaia.graphql.services;
 
-import com.sun.gaia.codegen.types.QueryResult;
-import com.sun.gaia.codegen.types.QuerySuccess;
 import com.sun.gaia.codegen.types.RemoteUserType;
+import com.sun.gaia.codegen.types.SetAccountPermissionsResponse;
+import com.sun.gaia.codegen.types.SetRolePermissionsResponse;
 import com.sun.gaia.model.enums.AccountStatus;
 import com.sun.gaia.repository.AccountRepository;
 import com.sun.gaia.service.RoleAdminService;
@@ -97,13 +97,17 @@ public class PermissionGraphQLService {
    *
    * @param accountId the account id
    * @param permissions the desired permissions
-   * @return a success result
+   * @return the update result
    */
   @Transactional
-  public QueryResult setAccountPermissions(String accountId, List<String> permissions) {
+  public SetAccountPermissionsResponse setAccountPermissions(String accountId, List<String> permissions) {
     roleAdminService.setAccountPermissions(UUID.fromString(accountId), permissions);
     logger.info("Set permissions for account {}", accountId);
-    return QuerySuccess.newBuilder().message("Account permissions updated").id(accountId).build();
+    return SetAccountPermissionsResponse.newBuilder()
+        .message("Account permissions updated")
+        .accountId(accountId)
+        .permissions(permissions)
+        .build();
   }
 
   /**
@@ -111,12 +115,16 @@ public class PermissionGraphQLService {
    *
    * @param roleId the role id
    * @param permissions the desired permissions
-   * @return a success result
+   * @return the update result
    */
   @Transactional
-  public QueryResult setRolePermissions(String roleId, List<String> permissions) {
+  public SetRolePermissionsResponse setRolePermissions(String roleId, List<String> permissions) {
     roleAdminService.setRolePermissions(UUID.fromString(roleId), permissions);
     logger.info("Set permissions for role {}", roleId);
-    return QuerySuccess.newBuilder().message("Role permissions updated").id(roleId).build();
+    return SetRolePermissionsResponse.newBuilder()
+        .message("Role permissions updated")
+        .roleId(roleId)
+        .permissions(permissions)
+        .build();
   }
 }

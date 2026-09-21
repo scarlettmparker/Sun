@@ -2,7 +2,7 @@ package com.sun.gaia.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
-import com.sun.gaia.codegen.types.QueryResult;
+import com.sun.gaia.codegen.types.ExpireTailscaleDeviceResponse;
 import com.sun.gaia.codegen.types.TailscaleDevice;
 import com.sun.gaia.graphql.services.TailscaleGraphQLService;
 import java.util.List;
@@ -34,7 +34,7 @@ public class TailscaleDataFetcher {
 
   @DgsData(parentType = "GaiaMutations", field = "expireTailscaleDevice")
   @PreAuthorize("@permissions.has('graphql.gaia.expireTailscaleDevice')")
-  public QueryResult expireTailscaleDevice(String id) {
+  public ExpireTailscaleDeviceResponse expireTailscaleDevice(String id) {
     return tailscaleGraphQLService.expireTailscaleDevice(id);
   }
 }

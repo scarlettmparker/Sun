@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 
 import com.sun.gaia.codegen.types.HubRegistry;
 import com.sun.gaia.codegen.types.HubRegistryInput;
+import com.sun.gaia.codegen.types.SaveRegistryResponse;
 import com.sun.gaia.graphql.services.HubRegistryGraphQLService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,10 +35,13 @@ class HubRegistryDataFetcherTest {
   @Test
   void saveRegistry_shouldDelegate() {
     HubRegistryInput input = HubRegistryInput.newBuilder().build();
-    HubRegistry mock = HubRegistry.newBuilder().build();
+    SaveRegistryResponse mock = SaveRegistryResponse.newBuilder()
+        .message("Hub registry saved")
+        .registry(HubRegistry.newBuilder().build())
+        .build();
     when(service.saveRegistry(input)).thenReturn(mock);
 
-    HubRegistry result = fetcher.saveRegistry(input);
+    SaveRegistryResponse result = fetcher.saveRegistry(input);
 
     assertThat(result).isEqualTo(mock);
     verify(service).saveRegistry(input);

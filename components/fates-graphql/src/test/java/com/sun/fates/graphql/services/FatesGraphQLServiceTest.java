@@ -2,11 +2,12 @@ package com.sun.fates.graphql.services;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
+import com.sun.fates.codegen.types.CreatePersonResponse;
+import com.sun.fates.codegen.types.DeletePersonResponse;
 import com.sun.fates.codegen.types.Person;
-import com.sun.fates.codegen.types.QueryResult;
-import com.sun.fates.codegen.types.QuerySuccess;
 import com.sun.fates.graphql.mappers.PersonMapper;
 import com.sun.fates.graphql.mappers.PlaceMapper;
 import com.sun.fates.model.PersonEntity;
@@ -61,25 +62,27 @@ class FatesGraphQLServiceTest {
   }
 
   @Test
-  void createPerson_returnsSuccessWithId() {
+  void createPerson_returnsPerson() {
     PersonEntity saved = new PersonEntity();
     saved.setId(UUID.randomUUID());
+    Person mapped = Person.newBuilder().id(saved.getId().toString()).build();
     when(personService.save(any(PersonEntity.class))).thenReturn(saved);
+    lenient().when(personMapper.map(saved)).thenReturn(mapped);
 
-    QueryResult result = service.createPerson(
+    CreatePersonResponse result = service.createPerson(
         com.sun.fates.codegen.types.PersonInput.newBuilder().firstName("A").lastName("B").build());
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
-    assertThat(((QuerySuccess) result).getId()).isEqualTo(saved.getId().toString());
+    assertThat(result.getPerson()).isEqualTo(mapped);
+    assertThat(result.getMessage()).isEqualTo("createPerson succeeded");
   }
 
   @Test
-  void deletePerson_returnsSuccessWithId() {
+  void deletePerson_returnsId() {
     UUID id = UUID.randomUUID();
 
-    QueryResult result = service.deletePerson(id.toString());
+    DeletePersonResponse result = service.deletePerson(id.toString());
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
-    assertThat(((QuerySuccess) result).getId()).isEqualTo(id.toString());
+    assertThat(result.getId()).isEqualTo(id.toString());
+    assertThat(result.getMessage()).isEqualTo("deletePerson succeeded");
   }
 }

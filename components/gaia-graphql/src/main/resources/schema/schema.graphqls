@@ -134,49 +134,195 @@ type GaiaQueries {
   ): [PropertySetEntry!]!
 }
 
+type LogoutResponse {
+  message: String!
+}
+
+type SuspendAccountResponse {
+  message: String!
+  account: Account!
+}
+
+type UnsuspendAccountResponse {
+  message: String!
+  account: Account!
+}
+
+type CreateRoleResponse {
+  message: String!
+  role: Role!
+}
+
+type DeleteRoleResponse {
+  message: String!
+  id: ID!
+}
+
+type SetAccountRolesResponse {
+  message: String!
+  accountId: ID!
+  roles: [String!]!
+}
+
+type SetAccountPermissionsResponse {
+  message: String!
+  accountId: ID!
+  permissions: [String!]!
+}
+
+type SetRolePermissionsResponse {
+  message: String!
+  roleId: ID!
+  permissions: [String!]!
+}
+
+type DeactivateAccountResponse {
+  message: String!
+}
+
+type RequestAccountReactivationResponse {
+  message: String!
+}
+
+type ConfirmAccountReactivationResponse {
+  message: String!
+}
+
+type RequestPasswordResetResponse {
+  message: String!
+}
+
+type ResetPasswordResponse {
+  message: String!
+}
+
+type ChangePasswordResponse {
+  message: String!
+}
+
+type UpsertPropertyEntryResponse {
+  message: String!
+  entry: PropertySetEntry!
+}
+
+type SetPropertyResponse {
+  message: String!
+  entry: PropertySetEntry!
+}
+
+type RegisterPropertySetSchemaResponse {
+  message: String!
+  schema: PropertySetSchema!
+}
+
+type DeletePropertyEntryResponse {
+  message: String!
+  id: ID!
+}
+
+type IssueApiKeyResponse {
+  message: String!
+  apiKey: IssuedApiKey!
+}
+
+type RevokeApiKeyResponse {
+  message: String!
+  id: ID!
+}
+
+type RotateApiKeyResponse {
+  message: String!
+  apiKey: IssuedApiKey!
+}
+
+type CreateConfigurationResponse {
+  message: String!
+  configuration: Configuration!
+}
+
+type UpdateConfigurationResponse {
+  message: String!
+  configuration: Configuration!
+}
+
+type DeleteConfigurationResponse {
+  message: String!
+  id: ID!
+}
+
+type ApplyConfigurationResponse {
+  message: String!
+  configuration: Configuration!
+}
+
+type CreateIpWhitelistEntryResponse {
+  message: String!
+  entry: IpWhitelistEntry!
+}
+
+type UpdateIpWhitelistEntryResponse {
+  message: String!
+  entry: IpWhitelistEntry!
+}
+
+type DeleteIpWhitelistEntryResponse {
+  message: String!
+  id: ID!
+}
+
+type ExpireTailscaleDeviceResponse {
+  message: String!
+  device: TailscaleDevice!
+}
+
+type SaveRegistryResponse {
+  message: String!
+  registry: HubRegistry!
+}
+
 type GaiaMutations {
   register(input: RegisterInput!): AuthResult
   login(input: LoginInput!): AuthResult
-  logout: QueryResult
-  suspendAccount(id: ID!): QueryResult
-  unsuspendAccount(id: ID!): QueryResult
-  createRole(name: String!, description: String): Role
-  deleteRole(id: ID!): QueryResult
-  setAccountRoles(accountId: ID!, roleNames: [String!]!): QueryResult
-  setAccountPermissions(accountId: ID!, permissions: [String!]!): QueryResult
-  setRolePermissions(roleId: ID!, permissions: [String!]!): QueryResult
-  deactivateAccount: QueryResult
-  requestAccountReactivation(email: String!, provider: String!): QueryResult
-  confirmAccountReactivation(token: String!): QueryResult
-  requestPasswordReset(email: String!): QueryResult
-  resetPassword(token: String!, newPassword: String!): QueryResult
-  changePassword(currentPassword: String!, newPassword: String!): QueryResult
+  logout: LogoutResponse!
+  suspendAccount(id: ID!): SuspendAccountResponse!
+  unsuspendAccount(id: ID!): UnsuspendAccountResponse!
+  createRole(name: String!, description: String): CreateRoleResponse!
+  deleteRole(id: ID!): DeleteRoleResponse!
+  setAccountRoles(accountId: ID!, roleNames: [String!]!): SetAccountRolesResponse!
+  setAccountPermissions(accountId: ID!, permissions: [String!]!): SetAccountPermissionsResponse!
+  setRolePermissions(roleId: ID!, permissions: [String!]!): SetRolePermissionsResponse!
+  deactivateAccount: DeactivateAccountResponse!
+  requestAccountReactivation(email: String!, provider: String!): RequestAccountReactivationResponse!
+  confirmAccountReactivation(token: String!): ConfirmAccountReactivationResponse!
+  requestPasswordReset(email: String!): RequestPasswordResetResponse!
+  resetPassword(token: String!, newPassword: String!): ResetPasswordResponse!
+  changePassword(currentPassword: String!, newPassword: String!): ChangePasswordResponse!
   upsertPropertyEntry(
     ownerKey: String!
     name: String!
     entry: String!
     input: UpsertPropertyEntryInput!
-  ): PropertySetEntry
+  ): UpsertPropertyEntryResponse!
   setProperty(
     ownerKey: String!
     name: String!
     entry: String!
     input: SetPropertyInput!
-  ): PropertySetEntry
-  registerPropertySetSchema(input: PropertySetSchemaInput!): PropertySetSchema
-  deletePropertyEntry(ownerKey: String!, name: String!, entry: String!): QueryResult
-  issueApiKey(accountUsername: String!, name: String!): IssuedApiKey
-  revokeApiKey(id: ID!): QueryResult
-  rotateApiKey(id: ID!): IssuedApiKey
-  createConfiguration(input: ConfigurationInput!): Configuration
-  updateConfiguration(id: ID!, input: ConfigurationInput!): Configuration
-  deleteConfiguration(id: ID!): QueryResult
-  applyConfiguration(id: ID!): Configuration
-  createIpWhitelistEntry(input: IpWhitelistEntryInput!): QueryResult
-  updateIpWhitelistEntry(id: ID!, input: IpWhitelistEntryInput!): QueryResult
-  deleteIpWhitelistEntry(id: ID!): QueryResult
-  expireTailscaleDevice(id: ID!): QueryResult
-  saveRegistry(input: HubRegistryInput!): HubRegistry
+  ): SetPropertyResponse!
+  registerPropertySetSchema(input: PropertySetSchemaInput!): RegisterPropertySetSchemaResponse!
+  deletePropertyEntry(ownerKey: String!, name: String!, entry: String!): DeletePropertyEntryResponse!
+  issueApiKey(accountUsername: String!, name: String!): IssueApiKeyResponse!
+  revokeApiKey(id: ID!): RevokeApiKeyResponse!
+  rotateApiKey(id: ID!): RotateApiKeyResponse!
+  createConfiguration(input: ConfigurationInput!): CreateConfigurationResponse!
+  updateConfiguration(id: ID!, input: ConfigurationInput!): UpdateConfigurationResponse!
+  deleteConfiguration(id: ID!): DeleteConfigurationResponse!
+  applyConfiguration(id: ID!): ApplyConfigurationResponse!
+  createIpWhitelistEntry(input: IpWhitelistEntryInput!): CreateIpWhitelistEntryResponse!
+  updateIpWhitelistEntry(id: ID!, input: IpWhitelistEntryInput!): UpdateIpWhitelistEntryResponse!
+  deleteIpWhitelistEntry(id: ID!): DeleteIpWhitelistEntryResponse!
+  expireTailscaleDevice(id: ID!): ExpireTailscaleDeviceResponse!
+  saveRegistry(input: HubRegistryInput!): SaveRegistryResponse!
 }
 
 extend type Query {

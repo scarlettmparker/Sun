@@ -1,8 +1,9 @@
 package com.sun.gaia.graphql.services;
 
+import com.sun.gaia.codegen.types.IssueApiKeyResponse;
 import com.sun.gaia.codegen.types.IssuedApiKey;
-import com.sun.gaia.codegen.types.QueryResult;
-import com.sun.gaia.codegen.types.QuerySuccess;
+import com.sun.gaia.codegen.types.RevokeApiKeyResponse;
+import com.sun.gaia.codegen.types.RotateApiKeyResponse;
 import com.sun.gaia.graphql.mappers.ApiKeyMapper;
 import com.sun.gaia.model.AccountEntity;
 import com.sun.gaia.service.AccountService;
@@ -42,14 +43,17 @@ public class ApiKeyGraphQLService {
    * @return the issued key and its one-time plaintext
    */
   @Transactional
-  public IssuedApiKey issueApiKey(String accountUsername, String name) {
+  public IssueApiKeyResponse issueApiKey(String accountUsername, String name) {
     AccountEntity account = accountService.findByUsername(accountUsername)
         .orElseThrow(() -> new IllegalArgumentException("Account not found: " + accountUsername));
     ApiKeyService.ApiKeyIssue issue = apiKeyService.issueKey(account.getId(), name);
     logger.info("Issued API key {} for account {}", issue.apiKey().getId(), account.getId());
-    return IssuedApiKey.newBuilder()
-        .apiKey(apiKeyMapper.map(issue.apiKey()))
-        .plaintextKey(issue.plaintextKey())
+    return IssueApiKeyResponse.newBuilder()
+        .message("API key issued")
+        .apiKey(IssuedApiKey.newBuilder()
+            .apiKey(apiKeyMapper.map(issue.apiKey()))
+            .plaintextKey(issue.plaintextKey())
+            .build())
         .build();
   }
 
@@ -57,13 +61,16 @@ public class ApiKeyGraphQLService {
    * Disables an API key.
    *
    * @param id the key id
-   * @return a success result
+   * @return the revocation result
    */
   @Transactional
-  public QueryResult revokeApiKey(String id) {
+  public RevokeApiKeyResponse revokeApiKey(String id) {
     apiKeyService.revoke(UUID.fromString(id));
     logger.info("Revoked API key {}", id);
-    return QuerySuccess.newBuilder().message("API key revoked").id(id).build();
+    return RevokeApiKeyResponse.newBuilder()
+        .message("API key revoked")
+        .id(id)
+        .build();
   }
 
   /**
@@ -73,12 +80,15 @@ public class ApiKeyGraphQLService {
    * @return the rotated key and its one-time plaintext
    */
   @Transactional
-  public IssuedApiKey rotateApiKey(String id) {
+  public RotateApiKeyResponse rotateApiKey(String id) {
     ApiKeyService.ApiKeyIssue issue = apiKeyService.rotate(UUID.fromString(id));
     logger.info("Rotated API key {}", id);
-    return IssuedApiKey.newBuilder()
-        .apiKey(apiKeyMapper.map(issue.apiKey()))
-        .plaintextKey(issue.plaintextKey())
+    return RotateApiKeyResponse.newBuilder()
+        .message("API key rotated")
+        .apiKey(IssuedApiKey.newBuilder()
+            .apiKey(apiKeyMapper.map(issue.apiKey()))
+            .plaintextKey(issue.plaintextKey())
+            .build())
         .build();
   }
 }

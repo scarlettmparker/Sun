@@ -4,10 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.sun.gaia.codegen.types.CreateIpWhitelistEntryResponse;
+import com.sun.gaia.codegen.types.DeleteIpWhitelistEntryResponse;
 import com.sun.gaia.codegen.types.IpWhitelistEntry;
 import com.sun.gaia.codegen.types.IpWhitelistEntryInput;
-import com.sun.gaia.codegen.types.QueryResult;
-import com.sun.gaia.codegen.types.QuerySuccess;
+import com.sun.gaia.codegen.types.UpdateIpWhitelistEntryResponse;
 import com.sun.gaia.graphql.services.IpWhitelistGraphQLService;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -37,10 +38,13 @@ class IpWhitelistDataFetcherTest {
   @Test
   void createIpWhitelistEntry_shouldDelegate() {
     IpWhitelistEntryInput input = IpWhitelistEntryInput.newBuilder().pattern("10.0.0.1").build();
-    QueryResult mock = QuerySuccess.newBuilder().message("IP whitelist entry created").id("id1").build();
+    CreateIpWhitelistEntryResponse mock = CreateIpWhitelistEntryResponse.newBuilder()
+        .message("IP whitelist entry created")
+        .entry(IpWhitelistEntry.newBuilder().id("id1").pattern("10.0.0.1").build())
+        .build();
     when(service.createIpWhitelistEntry(input)).thenReturn(mock);
 
-    QueryResult result = fetcher.createIpWhitelistEntry(input);
+    CreateIpWhitelistEntryResponse result = fetcher.createIpWhitelistEntry(input);
 
     assertThat(result).isEqualTo(mock);
     verify(service).createIpWhitelistEntry(input);
@@ -49,10 +53,13 @@ class IpWhitelistDataFetcherTest {
   @Test
   void updateIpWhitelistEntry_shouldDelegate() {
     IpWhitelistEntryInput input = IpWhitelistEntryInput.newBuilder().pattern("10.0.0.2").build();
-    QueryResult mock = QuerySuccess.newBuilder().message("IP whitelist entry updated").id("id1").build();
+    UpdateIpWhitelistEntryResponse mock = UpdateIpWhitelistEntryResponse.newBuilder()
+        .message("IP whitelist entry updated")
+        .entry(IpWhitelistEntry.newBuilder().id("id1").pattern("10.0.0.2").build())
+        .build();
     when(service.updateIpWhitelistEntry("id1", input)).thenReturn(mock);
 
-    QueryResult result = fetcher.updateIpWhitelistEntry("id1", input);
+    UpdateIpWhitelistEntryResponse result = fetcher.updateIpWhitelistEntry("id1", input);
 
     assertThat(result).isEqualTo(mock);
     verify(service).updateIpWhitelistEntry("id1", input);
@@ -60,10 +67,13 @@ class IpWhitelistDataFetcherTest {
 
   @Test
   void deleteIpWhitelistEntry_shouldDelegate() {
-    QueryResult mock = QuerySuccess.newBuilder().message("IP whitelist entry deleted").id("id1").build();
+    DeleteIpWhitelistEntryResponse mock = DeleteIpWhitelistEntryResponse.newBuilder()
+        .message("IP whitelist entry deleted")
+        .id("id1")
+        .build();
     when(service.deleteIpWhitelistEntry("id1")).thenReturn(mock);
 
-    QueryResult result = fetcher.deleteIpWhitelistEntry("id1");
+    DeleteIpWhitelistEntryResponse result = fetcher.deleteIpWhitelistEntry("id1");
 
     assertThat(result).isEqualTo(mock);
     verify(service).deleteIpWhitelistEntry("id1");

@@ -129,16 +129,61 @@ input IngestBlogInput {
   parentId: ID
 }
 
+type CreateBlogPostResponse {
+  message: String!
+  post: BlogPost!
+}
+
+type UpdateBlogPostResponse {
+  message: String!
+  post: BlogPost!
+}
+
+type CreateBlogPostTypeResponse {
+  message: String!
+  type: BlogPostType!
+}
+
+type AddRemoteObjectResponse {
+  message: String!
+  post: BlogPost!
+}
+
+type RemoveRemoteObjectResponse {
+  message: String!
+  post: BlogPost!
+}
+
+type IngestBlogFromSourceResponse {
+  message: String!
+  post: BlogPost!
+}
+
+type DeleteBlogPostResponse {
+  message: String!
+  id: ID!
+}
+
+type CreateBlogWithPropertiesResponse {
+  message: String!
+  post: BlogPost!
+}
+
+type UpdateBlogWithPropertiesResponse {
+  message: String!
+  post: BlogPost!
+}
+
 type BlogMutations {
-  createBlogPost(title: String!, input: BlogPostInput): QueryResult
-  updateBlogPost(id: ID!, input: BlogPostInput!): QueryResult
-  createBlogPostType(name: String!, description: String): QueryResult
-  addRemoteObject(postId: ID!, target: String!): QueryResult
-  removeRemoteObject(postId: ID!, target: String!): QueryResult
-  ingestBlogFromSource(input: IngestBlogInput!): QueryResult
-  deleteBlogPost(id: ID!): QueryResult
-  createBlogWithProperties(input: BlogWithPropertiesInput!): QueryResult!
-  updateBlogWithProperties(id: ID!, input: BlogWithPropertiesInput!): QueryResult!
+  createBlogPost(title: String!, input: BlogPostInput): CreateBlogPostResponse!
+  updateBlogPost(id: ID!, input: BlogPostInput!): UpdateBlogPostResponse!
+  createBlogPostType(name: String!, description: String): CreateBlogPostTypeResponse!
+  addRemoteObject(postId: ID!, target: String!): AddRemoteObjectResponse!
+  removeRemoteObject(postId: ID!, target: String!): RemoveRemoteObjectResponse!
+  ingestBlogFromSource(input: IngestBlogInput!): IngestBlogFromSourceResponse!
+  deleteBlogPost(id: ID!): DeleteBlogPostResponse!
+  createBlogWithProperties(input: BlogWithPropertiesInput!): CreateBlogWithPropertiesResponse!
+  updateBlogWithProperties(id: ID!, input: BlogWithPropertiesInput!): UpdateBlogWithPropertiesResponse!
 }
 
 extend type Query {

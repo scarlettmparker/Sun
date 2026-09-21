@@ -9,18 +9,23 @@ import com.sun.base.permify.PermifyUtil;
 import com.sun.base.util.FilterSpec;
 import com.sun.base.util.GraphQLSupport;
 import com.sun.base.util.PageRequests;
+import com.sun.briareus.codegen.types.AddRemoteObjectResponse;
 import com.sun.briareus.codegen.types.AttachedText;
 import com.sun.briareus.codegen.types.BlogPost;
 import com.sun.briareus.codegen.types.BlogPostInput;
 import com.sun.briareus.codegen.types.BlogPostType;
+import com.sun.briareus.codegen.types.CreateBlogPostResponse;
+import com.sun.briareus.codegen.types.CreateBlogPostTypeResponse;
+import com.sun.briareus.codegen.types.DeleteBlogPostResponse;
+import com.sun.briareus.codegen.types.IngestBlogFromSourceResponse;
 import com.sun.briareus.codegen.types.IngestBlogInput;
 import com.sun.briareus.codegen.types.PagedBlogPosts;
 import com.sun.briareus.codegen.types.PageInfo;
 import com.sun.briareus.codegen.types.PaginationInput;
-import com.sun.briareus.codegen.types.QueryResult;
-import com.sun.briareus.codegen.types.QuerySuccess;
+import com.sun.briareus.codegen.types.RemoveRemoteObjectResponse;
 import com.sun.briareus.codegen.types.SourceKind;
-import com.sun.briareus.codegen.types.StandardError;
+import com.sun.briareus.codegen.types.UpdateBlogPostResponse;
+import com.sun.base.error.MutationException;
 import com.sun.briareus.graphql.mappers.BlogPostMapper;
 import com.sun.briareus.graphql.mappers.BlogPostTypeMapper;
 import com.sun.briareus.model.BlogPostTypeEntity;
@@ -37,7 +42,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import com.sun.gaia.service.UserContextHolder;
 import org.slf4j.Logger;
@@ -228,17 +232,17 @@ public class BlogGraphQLService {
    *
    * @param name the type name
    * @param description an optional description
-   * @return the outcome of the creation
+   * @return the created blog post type
    */
   @Transactional
-  public QueryResult createBlogPostType(String name, String description) {
+  public CreateBlogPostTypeResponse createBlogPostType(String name, String description) {
     logger.info("Creating blog post type: {}", name);
 
     if (name == null || name.isBlank()) {
-      return StandardError.newBuilder().message("Blog post type name is required").build();
+      throw new MutationException("Blog post type name is required");
     }
     if (blogPostTypeService.findByName(name).isPresent()) {
-      return StandardError.newBuilder().message("Blog post type already exists: " + name).build();
+      throw new MutationException("Blog post type already exists: " + name);
     }
 
     BlogPostTypeEntity entity = new BlogPostTypeEntity();
@@ -247,9 +251,9 @@ public class BlogGraphQLService {
     BlogPostTypeEntity saved = blogPostTypeService.save(entity);
 
     logger.info("Created blog post type {} with id {}", name, saved.getId());
-    return QuerySuccess.newBuilder()
+    return CreateBlogPostTypeResponse.newBuilder()
         .message("Blog post type created")
-        .id(saved.getId().toString())
+        .type(blogPostTypeMapper.map(saved))
         .build();
   }
 
@@ -258,11 +262,13 @@ public class BlogGraphQLService {
    *
    * @param title the title of the blog post
    * @param input the input data for the blog post
-   * @return QueryResult indicating success or error
+   * @return the created blog post
    */
   @Transactional
-  public QueryResult createBlogPost(String title, BlogPostInput input) {
-    return mutate("createBlogPost", () -> {
+  public CreateBlogPostResponse createBlogPost(String title, BlogPostInput input) {
+    logger.info("Creating blog post with title: {}", title);
+
+    try {
       if (title == null || title.isBlank()) {
         throw new IllegalArgumentException("Title is required");
       }
@@ -270,8 +276,16 @@ public class BlogGraphQLService {
       PostEntity postEntity = blogPostMapper.mapInput(title, input);
       PostEntity savedEntity = briareusService.save(postEntity);
       writeOwnerTuple(savedEntity.getId());
-      return savedEntity.getId();
-    });
+
+      logger.info("Successfully created blog post with id: {}", savedEntity.getId());
+      return CreateBlogPostResponse.newBuilder()
+          .message("createBlogPost succeeded")
+          .post(blogPostMapper.map(savedEntity))
+          .build();
+    } catch (Exception e) {
+      logger.error("Failed to create blog post with title: {}", title, e);
+      throw new MutationException(e.getMessage(), e);
+    }
   }
 
   /**
@@ -279,11 +293,13 @@ public class BlogGraphQLService {
    *
    * @param id the post id
    * @param input the update input
-   * @return the result
+   * @return the updated blog post
    */
   @Transactional
-  public QueryResult updateBlogPost(String id, BlogPostInput input) {
-    return mutate("updateBlogPost", () -> {
+  public UpdateBlogPostResponse updateBlogPost(String id, BlogPostInput input) {
+    logger.info("Updating blog post with id: {}", id);
+
+    try {
       UUID postId = UUID.fromString(id);
       PostEntity post = briareusService.locatePost(postId)
           .orElseThrow(() -> new IllegalArgumentException("Post not found: " + id));
@@ -292,8 +308,16 @@ public class BlogGraphQLService {
       }
       blogPostMapper.update(post, input);
       PostEntity saved = briareusService.save(post);
-      return saved.getId();
-    });
+
+      logger.info("Successfully updated blog post with id: {}", saved.getId());
+      return UpdateBlogPostResponse.newBuilder()
+          .message("updateBlogPost succeeded")
+          .post(blogPostMapper.map(saved))
+          .build();
+    } catch (Exception e) {
+      logger.error("Failed to update blog post with id: {}", id, e);
+      throw new MutationException(e.getMessage(), e);
+    }
   }
 
   /**
@@ -327,22 +351,22 @@ public class BlogGraphQLService {
    *
    * @param postId the post id
    * @param target the remote-object string to add
-   * @return the outcome
+   * @return the updated blog post
    */
   @Transactional
-  public QueryResult addRemoteObject(String postId, String target) {
+  public AddRemoteObjectResponse addRemoteObject(String postId, String target) {
     logger.info("Adding remote object {} to post {}", target, postId);
 
     if (target == null || target.isBlank()) {
-      return StandardError.newBuilder().message("Target is required").build();
+      throw new MutationException("Target is required");
     }
     PostEntity post = briareusService.locatePost(UUID.fromString(postId))
         .orElse(null);
     if (post == null) {
-      return StandardError.newBuilder().message("Blog post not found: " + postId).build();
+      throw new MutationException("Blog post not found: " + postId);
     }
     if (!canEdit(post)) {
-      return StandardError.newBuilder().message("Not authorized to edit blog post: " + postId).build();
+      throw new MutationException("Not authorized to edit blog post: " + postId);
     }
     List<String> remoteObjects = post.getRemoteObject() == null
         ? new ArrayList<>()
@@ -353,7 +377,10 @@ public class BlogGraphQLService {
       briareusService.save(post);
     }
     logger.info("Added remote object {} to post {}", target, postId);
-    return QuerySuccess.newBuilder().message("Remote object added").id(postId).build();
+    return AddRemoteObjectResponse.newBuilder()
+        .message("Remote object added")
+        .post(blogPostMapper.map(post))
+        .build();
   }
 
   /**
@@ -361,22 +388,22 @@ public class BlogGraphQLService {
    *
    * @param postId the post id
    * @param target the remote-object string to remove
-   * @return the outcome
+   * @return the updated blog post
    */
   @Transactional
-  public QueryResult removeRemoteObject(String postId, String target) {
+  public RemoveRemoteObjectResponse removeRemoteObject(String postId, String target) {
     logger.info("Removing remote object {} from post {}", target, postId);
 
     if (target == null || target.isBlank()) {
-      return StandardError.newBuilder().message("Target is required").build();
+      throw new MutationException("Target is required");
     }
     PostEntity post = briareusService.locatePost(UUID.fromString(postId))
         .orElse(null);
     if (post == null) {
-      return StandardError.newBuilder().message("Blog post not found: " + postId).build();
+      throw new MutationException("Blog post not found: " + postId);
     }
     if (!canEdit(post)) {
-      return StandardError.newBuilder().message("Not authorized to edit blog post: " + postId).build();
+      throw new MutationException("Not authorized to edit blog post: " + postId);
     }
     List<String> remoteObjects = post.getRemoteObject() == null
         ? new ArrayList<>()
@@ -386,18 +413,23 @@ public class BlogGraphQLService {
       briareusService.save(post);
     }
     logger.info("Removed remote object {} from post {}", target, postId);
-    return QuerySuccess.newBuilder().message("Remote object removed").id(postId).build();
+    return RemoveRemoteObjectResponse.newBuilder()
+        .message("Remote object removed")
+        .post(blogPostMapper.map(post))
+        .build();
   }
 
   /**
    * Creates a blog from a Wikipedia or Wiktionary source.
    *
    * @param input the ingest input
-   * @return the outcome
+   * @return the ingested blog post
    */
   @Transactional
-  public QueryResult ingestBlogFromSource(IngestBlogInput input) {
-    return mutate("ingestBlogFromSource", () -> {
+  public IngestBlogFromSourceResponse ingestBlogFromSource(IngestBlogInput input) {
+    logger.info("Ingesting blog from source");
+
+    try {
       if (input == null) {
         throw new IllegalArgumentException("Input is required");
       }
@@ -464,8 +496,16 @@ public class BlogGraphQLService {
       }
       PostEntity saved = briareusService.save(post);
       writeOwnerTuple(saved.getId());
-      return saved.getId();
-    });
+
+      logger.info("Successfully ingested blog with id: {}", saved.getId());
+      return IngestBlogFromSourceResponse.newBuilder()
+          .message("ingestBlogFromSource succeeded")
+          .post(blogPostMapper.map(saved))
+          .build();
+    } catch (Exception e) {
+      logger.error("Failed to ingest blog from source", e);
+      throw new MutationException(e.getMessage(), e);
+    }
   }
 
   /**
@@ -515,11 +555,13 @@ public class BlogGraphQLService {
    * Deletes a blog post and all descendants, owner only.
    *
    * @param id the post id
-   * @return the result
+   * @return the deleted post id
    */
   @Transactional
-  public QueryResult deleteBlogPost(String id) {
-    return mutate("deleteBlogPost", () -> {
+  public DeleteBlogPostResponse deleteBlogPost(String id) {
+    logger.info("Deleting blog post with id: {}", id);
+
+    try {
       UUID postId = UUID.fromString(id);
       PostEntity post = briareusService.locatePost(postId)
           .orElseThrow(() -> new IllegalArgumentException("Post not found: " + id));
@@ -527,8 +569,16 @@ public class BlogGraphQLService {
         throw new IllegalArgumentException("Not authorized to delete post: " + id);
       }
       deleteWithChildren(postId);
-      return postId;
-    });
+
+      logger.info("Successfully deleted blog post with id: {}", postId);
+      return DeleteBlogPostResponse.newBuilder()
+          .message("deleteBlogPost succeeded")
+          .id(postId.toString())
+          .build();
+    } catch (Exception e) {
+      logger.error("Failed to delete blog post with id: {}", id, e);
+      throw new MutationException(e.getMessage(), e);
+    }
   }
 
   /**
@@ -559,20 +609,6 @@ public class BlogGraphQLService {
           PermifyUtil.object("briareus_post", postId), "owner", PermifyUtil.userSubject(viewer));
     } catch (Exception e) {
       logger.warn("Permify write owner failed for {}", postId, e);
-    }
-  }
-
-  /**
-   * Runs a mutation, returning QuerySuccess or StandardError.
-   */
-  private QueryResult mutate(String op, Supplier<UUID> action) {
-    try {
-      UUID id = action.get();
-      logger.info("{} succeeded for id {}", op, id);
-      return QuerySuccess.newBuilder().message(op + " succeeded").id(id.toString()).build();
-    } catch (Exception e) {
-      logger.error("{} failed", op, e);
-      return StandardError.newBuilder().message(e.getMessage()).build();
     }
   }
 

@@ -4,9 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.sun.gaia.codegen.types.QueryResult;
-import com.sun.gaia.codegen.types.QuerySuccess;
+import com.sun.gaia.codegen.types.CreateRoleResponse;
+import com.sun.gaia.codegen.types.DeleteRoleResponse;
 import com.sun.gaia.codegen.types.Role;
+import com.sun.gaia.codegen.types.SetAccountRolesResponse;
 import com.sun.gaia.graphql.mappers.RoleMapper;
 import com.sun.gaia.model.RoleEntity;
 import com.sun.gaia.service.RoleAdminService;
@@ -87,9 +88,9 @@ class RoleGraphQLServiceTest {
     when(roleAdminService.createRole("admin", "desc")).thenReturn(entity);
     when(roleMapper.map(entity)).thenReturn(mapped);
 
-    Role result = service.createRole("admin", "desc");
+    CreateRoleResponse result = service.createRole("admin", "desc");
 
-    assertThat(result).isEqualTo(mapped);
+    assertThat(result.getRole()).isEqualTo(mapped);
     verify(roleAdminService).createRole("admin", "desc");
   }
 
@@ -101,19 +102,19 @@ class RoleGraphQLServiceTest {
     when(roleAdminService.createRole("viewer", null)).thenReturn(entity);
     when(roleMapper.map(entity)).thenReturn(mapped);
 
-    Role result = service.createRole("viewer", null);
+    CreateRoleResponse result = service.createRole("viewer", null);
 
-    assertThat(result).isEqualTo(mapped);
+    assertThat(result.getRole()).isEqualTo(mapped);
   }
 
   @Test
   void deleteRole_delegatesAndReturnsSuccess() {
     UUID id = UUID.randomUUID();
 
-    QueryResult result = service.deleteRole(id.toString());
+    DeleteRoleResponse result = service.deleteRole(id.toString());
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
-    assertThat(((QuerySuccess) result).getId()).isEqualTo(id.toString());
+    assertThat(result.getMessage()).isEqualTo("Role deleted");
+    assertThat(result.getId()).isEqualTo(id.toString());
     verify(roleAdminService).deleteRole(id);
   }
 
@@ -122,10 +123,11 @@ class RoleGraphQLServiceTest {
     UUID accountId = UUID.randomUUID();
     List<String> roleNames = List.of("admin");
 
-    QueryResult result = service.setAccountRoles(accountId.toString(), roleNames);
+    SetAccountRolesResponse result = service.setAccountRoles(accountId.toString(), roleNames);
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
-    assertThat(((QuerySuccess) result).getId()).isEqualTo(accountId.toString());
+    assertThat(result.getMessage()).isEqualTo("Account roles updated");
+    assertThat(result.getAccountId()).isEqualTo(accountId.toString());
+    assertThat(result.getRoles()).containsExactly("admin");
     verify(roleAdminService).setAccountRoles(accountId, roleNames);
   }
 

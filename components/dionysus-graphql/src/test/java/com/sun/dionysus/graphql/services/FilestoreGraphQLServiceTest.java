@@ -1,5 +1,6 @@
 package com.sun.dionysus.graphql.services;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,22 +12,22 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.web.client.RestClient;
 import com.sun.dionysus.codegen.types.Bucket;
+import com.sun.dionysus.codegen.types.DeleteFileResponse;
+import com.sun.dionysus.codegen.types.DeleteKeyResponse;
 import com.sun.dionysus.codegen.types.KeyEntry;
 import com.sun.dionysus.codegen.types.KeyDetail;
-import com.sun.dionysus.codegen.types.RenameKeyResult;
+import com.sun.dionysus.codegen.types.PutKeyResponse;
+import com.sun.dionysus.codegen.types.RenameKeyResponse;
 import com.sun.dionysus.graphql.mappers.FileMapper;
 import com.sun.dionysus.graphql.mappers.KeyDetailMapper;
 import com.sun.dionysus.graphql.mappers.KeyEntryMapper;
 import com.sun.dionysus.model.KeyDetailEntity;
 import com.sun.dionysus.service.torrent.TorrentJobService;
-import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CommonPrefix;
 import software.amazon.awssdk.services.s3.model.S3Object;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.DeleteObjectResponse;
 import software.amazon.awssdk.services.s3.model.DeleteObjectsRequest;
@@ -35,7 +36,14 @@ import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
 import software.amazon.awssdk.services.s3.model.CopyObjectResponse;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 import software.amazon.awssdk.services.s3.paginators.ListObjectsV2Iterable;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 import com.sun.dionysus.service.KeyDetailService;
+import com.sun.net.httpserver.HttpServer;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.URL;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -60,6 +68,9 @@ class FilestoreGraphQLServiceTest {
   private S3Client s3Client;
 
   @Mock
+  private S3Presigner s3Presigner;
+
+  @Mock
   private FileMapper fileMapper;
 
   @Mock
@@ -79,11 +90,23 @@ class FilestoreGraphQLServiceTest {
 
   private RestClient restClient;
 
+  private HttpServer httpServer;
+
+  private URL putKeyUploadUrl;
+
   @BeforeEach
-  void setup() {
+  void setup() throws IOException {
     restClient = mock(RestClient.class);
     when(restClientBuilder.build()).thenReturn(restClient);
     filestoreGraphQLService.init();
+
+    httpServer = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
+    httpServer.createContext("/", exchange -> {
+      exchange.sendResponseHeaders(200, -1);
+      exchange.close();
+    });
+    httpServer.start();
+    putKeyUploadUrl = new URL("http://localhost:" + httpServer.getAddress().getPort() + "/upload");
 
     when(torrentJobService.findVisibleInBucketUnderPrefix(anyString(), nullable(String.class)))
         .thenReturn(List.of());
@@ -95,6 +118,13 @@ class FilestoreGraphQLServiceTest {
       return detail;
     });
     when(keyDetailService.locateByBucketAndKeyPath(anyString(), anyString())).thenReturn(Optional.empty());
+  }
+
+  @AfterEach
+  void teardown() {
+    if (httpServer != null) {
+      httpServer.stop(0);
+    }
   }
 
   @Test
@@ -121,16 +151,15 @@ class FilestoreGraphQLServiceTest {
 
   @Test
   void putKey_withExplicitName_createsDirectoryAsIs() {
-    when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
-        .thenReturn(PutObjectResponse.builder().build());
+    stubPutKeyUpload();
 
-    boolean result = filestoreGraphQLService.putKey("default-bucket", "explicit-folder");
+    PutKeyResponse result = filestoreGraphQLService.putKey("default-bucket", "explicit-folder");
 
-    assertThat(result).isTrue();
+    assertThat(result.getKey()).isEqualTo("explicit-folder/");
 
-    ArgumentCaptor<PutObjectRequest> captor = ArgumentCaptor.forClass(PutObjectRequest.class);
-    verify(s3Client).putObject(captor.capture(), any(RequestBody.class));
-    assertThat(captor.getValue().key()).isEqualTo("explicit-folder/");
+    ArgumentCaptor<PutObjectPresignRequest> captor = ArgumentCaptor.forClass(PutObjectPresignRequest.class);
+    verify(s3Presigner).presignPutObject(captor.capture());
+    assertThat(captor.getValue().putObjectRequest().key()).isEqualTo("explicit-folder/");
     verify(s3Client, times(0)).listObjectsV2(any(ListObjectsV2Request.class));
   }
 
@@ -138,32 +167,22 @@ class FilestoreGraphQLServiceTest {
   void putKey_withNullKey_noConflict_createsRootNewKey() {
     when(s3Client.listObjectsV2(any(ListObjectsV2Request.class)))
         .thenReturn(ListObjectsV2Response.builder().build());
-    when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
-        .thenReturn(PutObjectResponse.builder().build());
+    stubPutKeyUpload();
 
-    boolean result = filestoreGraphQLService.putKey("default-bucket", null);
+    PutKeyResponse result = filestoreGraphQLService.putKey("default-bucket", null);
 
-    assertThat(result).isTrue();
-
-    ArgumentCaptor<PutObjectRequest> captor = ArgumentCaptor.forClass(PutObjectRequest.class);
-    verify(s3Client).putObject(captor.capture(), any(RequestBody.class));
-    assertThat(captor.getValue().key()).isEqualTo("new-key/");
+    assertThat(result.getKey()).isEqualTo("new-key/");
   }
 
   @Test
   void putKey_withEmptyString_noConflict_createsRootNewKey() {
     when(s3Client.listObjectsV2(any(ListObjectsV2Request.class)))
         .thenReturn(ListObjectsV2Response.builder().build());
-    when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
-        .thenReturn(PutObjectResponse.builder().build());
+    stubPutKeyUpload();
 
-    boolean result = filestoreGraphQLService.putKey("default-bucket", "   ");
+    PutKeyResponse result = filestoreGraphQLService.putKey("default-bucket", "   ");
 
-    assertThat(result).isTrue();
-
-    ArgumentCaptor<PutObjectRequest> captor = ArgumentCaptor.forClass(PutObjectRequest.class);
-    verify(s3Client).putObject(captor.capture(), any(RequestBody.class));
-    assertThat(captor.getValue().key()).isEqualTo("new-key/");
+    assertThat(result.getKey()).isEqualTo("new-key/");
   }
 
   @Test
@@ -178,27 +197,22 @@ class FilestoreGraphQLServiceTest {
 
     when(s3Client.listObjectsV2(any(ListObjectsV2Request.class)))
         .thenReturn(hit0, hit1, empty);
-    when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
-        .thenReturn(PutObjectResponse.builder().build());
+    stubPutKeyUpload();
 
-    boolean result = filestoreGraphQLService.putKey("default-bucket", "parent/");
+    PutKeyResponse result = filestoreGraphQLService.putKey("default-bucket", "parent/");
 
-    assertThat(result).isTrue();
-
-    ArgumentCaptor<PutObjectRequest> captor = ArgumentCaptor.forClass(PutObjectRequest.class);
-    verify(s3Client).putObject(captor.capture(), any(RequestBody.class));
-    assertThat(captor.getValue().key()).isEqualTo("parent/new-key-2/");
+    assertThat(result.getKey()).isEqualTo("parent/new-key-2/");
     verify(s3Client, times(3)).listObjectsV2(any(ListObjectsV2Request.class));
   }
 
   @Test
-  void deleteFile_returnsTrue() {
+  void deleteFile_returnsKey() {
     when(s3Client.deleteObject(any(DeleteObjectRequest.class)))
         .thenReturn(DeleteObjectResponse.builder().build());
 
-    boolean result = filestoreGraphQLService.deleteFile("default-bucket", "test.txt");
+    DeleteFileResponse result = filestoreGraphQLService.deleteFile("default-bucket", "test.txt");
 
-    assertThat(result).isTrue();
+    assertThat(result.getKey()).isEqualTo("test.txt");
     verify(s3Client).deleteObject(any(DeleteObjectRequest.class));
   }
 
@@ -292,15 +306,15 @@ class FilestoreGraphQLServiceTest {
   }
 
   @Test
-  void deleteKey_returnsTrue() {
+  void deleteKey_returnsKey() {
     ListObjectsV2Iterable paginator = contentsPaginator();
     when(s3Client.listObjectsV2Paginator(any(ListObjectsV2Request.class))).thenReturn(paginator);
     when(s3Client.deleteObjects(any(DeleteObjectsRequest.class)))
         .thenReturn(DeleteObjectsResponse.builder().build());
 
-    boolean result = filestoreGraphQLService.deleteKey("default-bucket", "folder/");
+    DeleteKeyResponse result = filestoreGraphQLService.deleteKey("default-bucket", "folder/");
 
-    assertThat(result).isTrue();
+    assertThat(result.getKey()).isEqualTo("folder/");
     verify(s3Client).deleteObjects(any(DeleteObjectsRequest.class));
   }
 
@@ -313,9 +327,9 @@ class FilestoreGraphQLServiceTest {
     when(s3Client.deleteObjects(any(DeleteObjectsRequest.class)))
         .thenReturn(DeleteObjectsResponse.builder().build());
 
-    boolean result = filestoreGraphQLService.deleteKey("bucket", "dir");
+    DeleteKeyResponse result = filestoreGraphQLService.deleteKey("bucket", "dir");
 
-    assertThat(result).isTrue();
+    assertThat(result.getKey()).isEqualTo("dir");
     verify(s3Client).deleteObjects(any(DeleteObjectsRequest.class));
   }
 
@@ -328,9 +342,9 @@ class FilestoreGraphQLServiceTest {
     when(s3Client.deleteObjects(any(DeleteObjectsRequest.class)))
         .thenReturn(DeleteObjectsResponse.builder().build());
 
-    boolean result = filestoreGraphQLService.deleteKey("bkt", "big");
+    DeleteKeyResponse result = filestoreGraphQLService.deleteKey("bkt", "big");
 
-    assertThat(result).isTrue();
+    assertThat(result.getKey()).isEqualTo("big");
     verify(s3Client).deleteObjects(any(DeleteObjectsRequest.class));
   }
 
@@ -344,9 +358,9 @@ class FilestoreGraphQLServiceTest {
     when(s3Client.deleteObjects(any(DeleteObjectsRequest.class)))
         .thenReturn(DeleteObjectsResponse.builder().build());
 
-    boolean result = filestoreGraphQLService.deleteKey("bucket", "emptykey");
+    DeleteKeyResponse result = filestoreGraphQLService.deleteKey("bucket", "emptykey");
 
-    assertThat(result).isTrue();
+    assertThat(result.getKey()).isEqualTo("emptykey");
     verify(s3Client).deleteObjects(any(DeleteObjectsRequest.class));
   }
 
@@ -355,7 +369,7 @@ class FilestoreGraphQLServiceTest {
     ListObjectsV2Iterable paginator = contentsPaginator();
     when(s3Client.listObjectsV2Paginator(any(Consumer.class))).thenReturn(paginator);
 
-    RenameKeyResult result = filestoreGraphQLService.renameKey("bucket", "old.txt", "new.txt", false);
+    RenameKeyResponse result = filestoreGraphQLService.renameKey("bucket", "old.txt", "new.txt", false);
 
     assertThat(result.getSuccess()).isFalse();
     assertThat(result.getHasConflicts()).isFalse();
@@ -369,7 +383,7 @@ class FilestoreGraphQLServiceTest {
     when(s3Client.listObjectsV2Paginator(any(Consumer.class))).thenReturn(paginator);
     when(s3Client.headObject(any(Consumer.class))).thenReturn(HeadObjectResponse.builder().build());
 
-    RenameKeyResult result = filestoreGraphQLService.renameKey("bucket", "old.txt", "new.txt", false);
+    RenameKeyResponse result = filestoreGraphQLService.renameKey("bucket", "old.txt", "new.txt", false);
 
     assertThat(result.getSuccess()).isFalse();
     assertThat(result.getHasConflicts()).isTrue();
@@ -384,7 +398,7 @@ class FilestoreGraphQLServiceTest {
     when(s3Client.copyObject(any(CopyObjectRequest.class))).thenReturn(CopyObjectResponse.builder().build());
     when(s3Client.deleteObjects(any(DeleteObjectsRequest.class))).thenReturn(DeleteObjectsResponse.builder().build());
 
-    RenameKeyResult result = filestoreGraphQLService.renameKey("bucket", "old.txt", "new.txt", true);
+    RenameKeyResponse result = filestoreGraphQLService.renameKey("bucket", "old.txt", "new.txt", true);
 
     assertThat(result.getSuccess()).isTrue();
     assertThat(result.getHasConflicts()).isFalse();
@@ -426,6 +440,15 @@ class FilestoreGraphQLServiceTest {
     KeyDetail result = filestoreGraphQLService.locate("my-bucket", "missing.txt");
 
     assertThat(result).isNull();
+  }
+
+  /**
+   * Stubs the presigner so putKey's placeholder upload targets the local server.
+   */
+  private void stubPutKeyUpload() {
+    PresignedPutObjectRequest presigned = mock(PresignedPutObjectRequest.class);
+    when(presigned.url()).thenReturn(putKeyUploadUrl);
+    when(s3Presigner.presignPutObject(any(PutObjectPresignRequest.class))).thenReturn(presigned);
   }
 
   /**

@@ -8,6 +8,10 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.sun.dionysus.codegen.types.AddTorrentResponse;
+import com.sun.dionysus.codegen.types.CancelTorrentResponse;
+import com.sun.dionysus.codegen.types.PauseTorrentResponse;
+import com.sun.dionysus.codegen.types.ResumeTorrentResponse;
 import com.sun.dionysus.codegen.types.TorrentJob;
 import com.sun.dionysus.codegen.types.TorrentJobStatus;
 import com.sun.dionysus.graphql.mappers.TorrentJobMapper;
@@ -106,9 +110,9 @@ class TorrentGraphQLServiceTest {
     when(torrentClient.addFromMagnet("b", "path/", magnet)).thenReturn(entity);
     when(torrentJobMapper.map(entity)).thenReturn(mapped);
 
-    TorrentJob result = service.addTorrent("b", "path/", magnet, null);
+    AddTorrentResponse result = service.addTorrent("b", "path/", magnet, null);
 
-    assertThat(result).isEqualTo(mapped);
+    assertThat(result.getJob()).isEqualTo(mapped);
     verify(torrentClient).addFromMagnet("b", "path/", magnet);
   }
 
@@ -123,9 +127,9 @@ class TorrentGraphQLServiceTest {
     when(torrentClient.addFromTorrentFile(eq("b"), eq("p"), any(byte[].class))).thenReturn(entity);
     when(torrentJobMapper.map(entity)).thenReturn(mapped);
 
-    TorrentJob result = service.addTorrent("b", "p", null, base64);
+    AddTorrentResponse result = service.addTorrent("b", "p", null, base64);
 
-    assertThat(result).isEqualTo(mapped);
+    assertThat(result.getJob()).isEqualTo(mapped);
     verify(torrentClient).addFromTorrentFile(eq("b"), eq("p"), any(byte[].class));
   }
 
@@ -152,10 +156,10 @@ class TorrentGraphQLServiceTest {
     when(torrentJobService.findById(id)).thenReturn(Optional.of(entity));
     when(torrentJobMapper.map(entity)).thenReturn(mapped);
 
-    TorrentJob result = service.pauseTorrent(id.toString());
+    PauseTorrentResponse result = service.pauseTorrent(id.toString());
 
     verify(torrentClient).pauseJob(id);
-    assertThat(result.getStatus()).isEqualTo(TorrentJobStatus.PAUSED);
+    assertThat(result.getJob().getStatus()).isEqualTo(TorrentJobStatus.PAUSED);
   }
 
   @Test
@@ -169,10 +173,10 @@ class TorrentGraphQLServiceTest {
     when(torrentJobService.findById(id)).thenReturn(Optional.of(entity));
     when(torrentJobMapper.map(entity)).thenReturn(mapped);
 
-    TorrentJob result = service.resumeTorrent(id.toString());
+    ResumeTorrentResponse result = service.resumeTorrent(id.toString());
 
     verify(torrentClient).resumeJob(id);
-    assertThat(result.getStatus()).isEqualTo(TorrentJobStatus.DOWNLOADING);
+    assertThat(result.getJob().getStatus()).isEqualTo(TorrentJobStatus.DOWNLOADING);
   }
 
   @Test
@@ -186,10 +190,10 @@ class TorrentGraphQLServiceTest {
     when(torrentJobService.findById(id)).thenReturn(Optional.of(entity));
     when(torrentJobMapper.map(entity)).thenReturn(mapped);
 
-    TorrentJob result = service.cancelTorrent(id.toString());
+    CancelTorrentResponse result = service.cancelTorrent(id.toString());
 
     verify(torrentClient).cancelJob(id);
-    assertThat(result.getStatus()).isEqualTo(TorrentJobStatus.CANCELLED);
+    assertThat(result.getJob().getStatus()).isEqualTo(TorrentJobStatus.CANCELLED);
   }
 
   private TorrentJobEntity job(String bucket, TorrentStatus status) {

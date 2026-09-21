@@ -2,11 +2,10 @@ package com.sun.cerberus.graphql.services;
 
 import com.sun.cerberus.service.CerberusService;
 import com.sun.cerberus.graphql.mappers.GalleryItemMapper;
+import com.sun.cerberus.codegen.types.CreateGalleryItemResponse;
 import com.sun.cerberus.codegen.types.GalleryItem;
 import com.sun.cerberus.codegen.types.GalleryItemInput;
-import com.sun.cerberus.codegen.types.QueryResult;
-import com.sun.cerberus.codegen.types.QuerySuccess;
-import com.sun.cerberus.codegen.types.StandardError;
+import com.sun.base.error.MutationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -112,10 +111,10 @@ public class GalleryGraphQLService {
    * Creates a new gallery item.
    *
    * @param input the input data for the gallery item
-   * @return QueryResult indicating success or error
+   * @return the created gallery item
    */
   @Transactional
-  public QueryResult create(GalleryItemInput input) {
+  public CreateGalleryItemResponse create(GalleryItemInput input) {
     logger.info("Creating gallery item with title: {}", input.getTitle());
 
     try {
@@ -123,15 +122,13 @@ public class GalleryGraphQLService {
       GalleryItemEntity savedEntity = cerberusService.save(galleryItemEntity);
 
       logger.info("Successfully created gallery item with id: {}", savedEntity.getId());
-      return QuerySuccess.newBuilder()
+      return CreateGalleryItemResponse.newBuilder()
           .message("Gallery item created successfully")
-          .id(savedEntity.getId().toString())
+          .item(galleryItemMapper.map(savedEntity))
           .build();
     } catch (Exception e) {
       logger.error("Failed to create gallery item with title: {}", input.getTitle(), e);
-      return StandardError.newBuilder()
-          .message("Failed to create gallery item: " + e.getMessage())
-          .build();
+      throw new MutationException("Failed to create gallery item: " + e.getMessage(), e);
     }
   }
 }

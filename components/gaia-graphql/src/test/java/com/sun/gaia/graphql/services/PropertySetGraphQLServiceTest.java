@@ -1,15 +1,21 @@
 package com.sun.gaia.graphql.services;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.sun.base.error.MutationException;
+import com.sun.gaia.codegen.types.DeletePropertyEntryResponse;
 import com.sun.gaia.codegen.types.PropertySetEntry;
 import com.sun.gaia.codegen.types.PropertySetSchema;
 import com.sun.gaia.codegen.types.PropertySetSchemaInput;
+import com.sun.gaia.codegen.types.RegisterPropertySetSchemaResponse;
 import com.sun.gaia.codegen.types.RemoteUserType;
+import com.sun.gaia.codegen.types.SetPropertyResponse;
+import com.sun.gaia.codegen.types.UpsertPropertyEntryResponse;
 import com.sun.gaia.graphql.mappers.PropertySetMapper;
 import com.sun.gaia.model.PropertySetEntryEntity;
 import com.sun.gaia.model.PropertySetSchemaEntity;
@@ -153,9 +159,10 @@ class PropertySetGraphQLServiceTest {
         .thenReturn(entity);
     when(propertySetMapper.map(entity)).thenReturn(mapped);
 
-    PropertySetEntry result = service.upsertPropertyEntry("ReactApp", "themes", "greek", Map.of("a", "b"));
+    UpsertPropertyEntryResponse result =
+        service.upsertPropertyEntry("ReactApp", "themes", "greek", Map.of("a", "b"));
 
-    assertThat(result).isEqualTo(mapped);
+    assertThat(result.getEntry()).isEqualTo(mapped);
   }
 
   @Test
@@ -166,9 +173,10 @@ class PropertySetGraphQLServiceTest {
         .thenReturn(entity);
     when(propertySetMapper.map(entity)).thenReturn(mapped);
 
-    PropertySetEntry result = service.setProperty("ReactApp", "themes", "greek", "primary", "#fff");
+    SetPropertyResponse result =
+        service.setProperty("ReactApp", "themes", "greek", "primary", "#fff");
 
-    assertThat(result).isEqualTo(mapped);
+    assertThat(result.getEntry()).isEqualTo(mapped);
   }
 
   @Test
@@ -182,9 +190,9 @@ class PropertySetGraphQLServiceTest {
         .thenReturn(entity);
     when(propertySetMapper.map(entity)).thenReturn(mapped);
 
-    PropertySetSchema result = service.registerPropertySetSchema(input);
+    RegisterPropertySetSchemaResponse result = service.registerPropertySetSchema(input);
 
-    assertThat(result).isEqualTo(mapped);
+    assertThat(result.getSchema()).isEqualTo(mapped);
   }
 
   @Test
@@ -217,18 +225,19 @@ class PropertySetGraphQLServiceTest {
     when(propertySetService.deleteEntry("Blog", "review-attributes", "entry1"))
         .thenReturn(true);
 
-    var result = service.deletePropertyEntry("Blog", "review-attributes", "entry1");
+    DeletePropertyEntryResponse result =
+        service.deletePropertyEntry("Blog", "review-attributes", "entry1");
 
-    assertThat(result).isInstanceOf(com.sun.gaia.codegen.types.QuerySuccess.class);
+    assertThat(result.getId()).isEqualTo("entry1");
   }
 
   @Test
-  void deletePropertyEntry_returnsErrorWhenNotFound() {
+  void deletePropertyEntry_throwsWhenNotFound() {
     when(propertySetService.deleteEntry("Blog", "review-attributes", "missing"))
         .thenReturn(false);
 
-    var result = service.deletePropertyEntry("Blog", "review-attributes", "missing");
-
-    assertThat(result).isInstanceOf(com.sun.gaia.codegen.types.StandardError.class);
+    assertThatThrownBy(() -> service.deletePropertyEntry("Blog", "review-attributes", "missing"))
+        .isInstanceOf(MutationException.class)
+        .hasMessage("Entry not found");
   }
 }

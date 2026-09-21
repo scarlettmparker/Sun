@@ -1,16 +1,17 @@
 package com.sun.briareus.graphql.services;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import com.sun.briareus.codegen.types.BlogDetail;
-import com.sun.briareus.codegen.types.BlogWithPropertiesInput;
-import com.sun.briareus.codegen.types.QueryResult;
-import com.sun.briareus.codegen.types.QuerySuccess;
-import com.sun.briareus.codegen.types.StandardError;
 import com.sun.briareus.codegen.types.BlogPost;
+import com.sun.briareus.codegen.types.BlogPostInput;
+import com.sun.briareus.codegen.types.BlogWithPropertiesInput;
+import com.sun.briareus.codegen.types.CreateBlogWithPropertiesResponse;
+import com.sun.base.error.MutationException;
 import com.sun.briareus.graphql.mappers.AttachedTextMapper;
 import com.sun.briareus.graphql.mappers.BlogDetailMapper;
 import com.sun.briareus.graphql.mappers.BlogGalleryItemMapper;
@@ -119,7 +120,7 @@ class BlogDetailGqlServiceTest {
   }
 
   @Test
-  void createBlogWithProperties_shouldReturnSuccess() {
+  void createBlogWithProperties_shouldReturnResponse() {
     UUID typeId = UUID.randomUUID();
     BlogPostTypeEntity type = new BlogPostTypeEntity();
     type.setId(typeId);
@@ -130,7 +131,7 @@ class BlogDetailGqlServiceTest {
         .content("content")
         .typeId(typeId.toString())
         .build();
-    com.sun.briareus.codegen.types.BlogPostInput postInput = com.sun.briareus.codegen.types.BlogPostInput.newBuilder().content("content").typeId(typeId.toString()).build();
+    BlogPostInput postInput = BlogPostInput.newBuilder().content("content").typeId(typeId.toString()).build();
     when(blogPostMapper.toPostInput(input)).thenReturn(postInput);
     PostEntity mapped = new PostEntity();
     mapped.setTitle("title");
@@ -141,10 +142,12 @@ class BlogDetailGqlServiceTest {
     saved.setType(type);
     saved.setTitle("title");
     when(briareusService.save(any(PostEntity.class))).thenReturn(saved);
+    BlogPost blogPost = BlogPost.newBuilder().id(saved.getId().toString()).title("title").build();
+    when(blogPostMapper.map(saved)).thenReturn(blogPost);
 
-    QueryResult result = service.createBlogWithProperties(input);
+    CreateBlogWithPropertiesResponse result = service.createBlogWithProperties(input);
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
+    assertThat(result.getPost()).isEqualTo(blogPost);
   }
 
   @Test
@@ -169,9 +172,8 @@ class BlogDetailGqlServiceTest {
         .typeId(newTypeId.toString())
         .build();
 
-    QueryResult result = service.updateBlogWithProperties(postId.toString(), input);
-
-    assertThat(result).isInstanceOf(StandardError.class);
-    assertThat(((StandardError) result).getMessage()).contains("type immutable");
+    assertThatThrownBy(() -> service.updateBlogWithProperties(postId.toString(), input))
+        .isInstanceOf(MutationException.class)
+        .hasMessageContaining("type immutable");
   }
 }

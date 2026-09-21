@@ -312,6 +312,82 @@ type PagedTextViews {
   pageInfo: PageInfo!
 }
 
+type CreateSourceResponse {
+  message: String!
+  source: ReaderSource!
+}
+
+type CreateTextResponse {
+  message: String!
+  text: ReaderText!
+}
+
+type ArchiveTextResponse {
+  message: String!
+  text: ReaderText!
+}
+
+type MarkViewedResponse {
+  message: String!
+  textId: ID!
+}
+
+type CreateAnnotationResponse {
+  message: String!
+  annotation: ReaderAnnotation!
+}
+
+type EditAnnotationResponse {
+  message: String!
+  annotation: ReaderAnnotation!
+}
+
+type DeleteAnnotationResponse {
+  message: String!
+  id: ID!
+}
+
+type AddCommentResponse {
+  message: String!
+  comment: ReaderComment!
+}
+
+type EditCommentResponse {
+  message: String!
+  comment: ReaderComment!
+}
+
+type DeleteCommentResponse {
+  message: String!
+  id: ID!
+}
+
+type VoteResponse {
+  message: String!
+  annotation: ReaderAnnotation
+  comment: ReaderComment
+}
+
+type CreatePrivateNoteResponse {
+  message: String!
+  note: PrivateNote!
+}
+
+type DeletePrivateNoteResponse {
+  message: String!
+  id: ID!
+}
+
+type ShareNotesResponse {
+  message: String!
+  id: ID!
+}
+
+type AttachObjectResponse {
+  message: String!
+  id: ID!
+}
+
 """
 Read operations for the reader.
 """
@@ -351,27 +427,27 @@ type HadesQueries {
 Write operations for the reader.
 """
 type HadesMutations {
-  createSource(name: String!, url: String!): QueryResult
-  createText(input: ReaderTextInput!): QueryResult
-  archiveText(id: ID!): QueryResult
-  markViewed(textId: ID!): QueryResult
+  createSource(name: String!, url: String!): CreateSourceResponse!
+  createText(input: ReaderTextInput!): CreateTextResponse!
+  archiveText(id: ID!): ArchiveTextResponse!
+  markViewed(textId: ID!): MarkViewedResponse!
 
-  createAnnotation(input: AnnotationInput!): QueryResult
-  editAnnotation(id: ID!, body: String!): QueryResult
-  deleteAnnotation(id: ID!): QueryResult
+  createAnnotation(input: AnnotationInput!): CreateAnnotationResponse!
+  editAnnotation(id: ID!, body: String!): EditAnnotationResponse!
+  deleteAnnotation(id: ID!): DeleteAnnotationResponse!
 
-  addComment(input: CommentInput!): QueryResult
-  editComment(id: ID!, body: String!): QueryResult
-  deleteComment(id: ID!): QueryResult
+  addComment(input: CommentInput!): AddCommentResponse!
+  editComment(id: ID!, body: String!): EditCommentResponse!
+  deleteComment(id: ID!): DeleteCommentResponse!
 
-  vote(input: VoteInput!): QueryResult
-  removeVote(targetType: ReaderVoteTarget!, targetId: ID!): QueryResult
+  vote(input: VoteInput!): VoteResponse!
+  removeVote(targetType: ReaderVoteTarget!, targetId: ID!): VoteResponse!
 
-  createPrivateNote(input: PrivateNoteInput!): QueryResult
-  deletePrivateNote(id: ID!): QueryResult
-  shareNotes(input: ShareNotesInput!): QueryResult
+  createPrivateNote(input: PrivateNoteInput!): CreatePrivateNoteResponse!
+  deletePrivateNote(id: ID!): DeletePrivateNoteResponse!
+  shareNotes(input: ShareNotesInput!): ShareNotesResponse!
 
-  attachObject(source: ID!, target: String!): QueryResult
+  attachObject(source: ID!, target: String!): AttachObjectResponse!
   discordLogin(code: String!, state: String!): DiscordLoginResult
 }
 

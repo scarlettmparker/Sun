@@ -1,24 +1,32 @@
 package com.sun.icarus.graphql.services;
 
+import com.sun.base.error.MutationException;
 import com.sun.base.util.PageRequests;
+import com.sun.icarus.codegen.types.ArchiveThreadResponse;
+import com.sun.icarus.codegen.types.AttachObjectResponse;
 import com.sun.icarus.codegen.types.CreatePostInput;
+import com.sun.icarus.codegen.types.CreatePostResponse;
 import com.sun.icarus.codegen.types.CreateThreadInput;
+import com.sun.icarus.codegen.types.CreateThreadResponse;
+import com.sun.icarus.codegen.types.DeletePostResponse;
+import com.sun.icarus.codegen.types.EditPostResponse;
 import com.sun.icarus.codegen.types.ForumPost;
 import com.sun.icarus.codegen.types.ForumThread;
+import com.sun.icarus.codegen.types.LockThreadResponse;
 import com.sun.icarus.codegen.types.PageInfo;
 import com.sun.icarus.codegen.types.PagedForumPosts;
 import com.sun.icarus.codegen.types.PagedForumThreads;
 import com.sun.icarus.codegen.types.PaginationInput;
-import com.sun.icarus.codegen.types.QueryResult;
-import com.sun.icarus.codegen.types.QuerySuccess;
+import com.sun.icarus.codegen.types.RemoveVoteResponse;
+import com.sun.icarus.codegen.types.VoteResponse;
 import com.sun.icarus.codegen.types.ForumObjectReference;
 import com.sun.icarus.codegen.types.ForumVoteInput;
 import com.sun.icarus.codegen.types.RemoteUser;
 import com.sun.icarus.codegen.types.RemoteUserType;
-import com.sun.icarus.codegen.types.StandardError;
 import com.sun.icarus.graphql.mappers.ForumPostMapper;
 import com.sun.icarus.graphql.mappers.ForumThreadMapper;
 import com.sun.icarus.model.ForumPostEntity;
+import com.sun.icarus.model.ForumThreadEntity;
 import com.sun.icarus.model.enums.PostStatus;
 import com.sun.icarus.model.enums.ThreadStatus;
 import com.sun.icarus.model.enums.VoteValue;
@@ -27,7 +35,6 @@ import com.sun.icarus.service.ForumThreadService;
 import com.sun.icarus.service.ForumVoteService;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -178,50 +185,94 @@ public class IcarusGraphQLService {
    * Creates a thread attached to a remote object.
    *
    * @param input the create thread input
-   * @return a QueryResult
+   * @return the created thread
    */
   @Transactional
-  public QueryResult createThread(CreateThreadInput input) {
-    return mutate("createThread",
-        () -> threadService.create(input.getTitle(), input.getRemoteObject()));
+  public CreateThreadResponse createThread(CreateThreadInput input) {
+    try {
+      UUID id = threadService.create(input.getTitle(), input.getRemoteObject());
+      ForumThreadEntity thread = threadService.findById(id)
+          .orElseThrow(() -> new IllegalArgumentException("Thread not found: " + id));
+      logger.info("createThread succeeded for id {}", id);
+      return CreateThreadResponse.newBuilder()
+          .message("createThread succeeded")
+          .thread(threadMapper.map(thread))
+          .build();
+    } catch (Exception e) {
+      logger.error("createThread failed", e);
+      throw new MutationException("createThread failed: " + e.getMessage(), e);
+    }
   }
 
   /**
    * Locks a thread.
    *
    * @param id the thread id
-   * @return a QueryResult
+   * @return the updated thread
    */
   @Transactional
-  public QueryResult lockThread(String id) {
-    return mutate("lockThread",
-        () -> threadService.setStatus(UUID.fromString(id), ThreadStatus.LOCKED));
+  public LockThreadResponse lockThread(String id) {
+    try {
+      UUID threadId = threadService.setStatus(UUID.fromString(id), ThreadStatus.LOCKED);
+      ForumThreadEntity thread = threadService.findById(threadId)
+          .orElseThrow(() -> new IllegalArgumentException("Thread not found: " + threadId));
+      logger.info("lockThread succeeded for id {}", threadId);
+      return LockThreadResponse.newBuilder()
+          .message("lockThread succeeded")
+          .thread(threadMapper.map(thread))
+          .build();
+    } catch (Exception e) {
+      logger.error("lockThread failed", e);
+      throw new MutationException("lockThread failed: " + e.getMessage(), e);
+    }
   }
 
   /**
    * Archives a thread.
    *
    * @param id the thread id
-   * @return a QueryResult
+   * @return the updated thread
    */
   @Transactional
-  public QueryResult archiveThread(String id) {
-    return mutate("archiveThread",
-        () -> threadService.setStatus(UUID.fromString(id), ThreadStatus.ARCHIVED));
+  public ArchiveThreadResponse archiveThread(String id) {
+    try {
+      UUID threadId = threadService.setStatus(UUID.fromString(id), ThreadStatus.ARCHIVED);
+      ForumThreadEntity thread = threadService.findById(threadId)
+          .orElseThrow(() -> new IllegalArgumentException("Thread not found: " + threadId));
+      logger.info("archiveThread succeeded for id {}", threadId);
+      return ArchiveThreadResponse.newBuilder()
+          .message("archiveThread succeeded")
+          .thread(threadMapper.map(thread))
+          .build();
+    } catch (Exception e) {
+      logger.error("archiveThread failed", e);
+      throw new MutationException("archiveThread failed: " + e.getMessage(), e);
+    }
   }
 
   /**
    * Adds a post to a thread.
    *
    * @param input the create post input
-   * @return a QueryResult
+   * @return the created post
    */
   @Transactional
-  public QueryResult createPost(CreatePostInput input) {
-    return mutate("createPost", () -> postService.addPost(
-        UUID.fromString(input.getThreadId()),
-        input.getParentId() == null ? null : UUID.fromString(input.getParentId()),
-        input.getBody()));
+  public CreatePostResponse createPost(CreatePostInput input) {
+    try {
+      UUID id = postService.addPost(
+          UUID.fromString(input.getThreadId()),
+          input.getParentId() == null ? null : UUID.fromString(input.getParentId()),
+          input.getBody());
+      ForumPost post = mapPost(id);
+      logger.info("createPost succeeded for id {}", id);
+      return CreatePostResponse.newBuilder()
+          .message("createPost succeeded")
+          .post(post)
+          .build();
+    } catch (Exception e) {
+      logger.error("createPost failed", e);
+      throw new MutationException("createPost failed: " + e.getMessage(), e);
+    }
   }
 
   /**
@@ -229,45 +280,87 @@ public class IcarusGraphQLService {
    *
    * @param id the post id
    * @param body the new body
-   * @return a QueryResult
+   * @return the updated post
    */
   @Transactional
-  public QueryResult editPost(String id, String body) {
-    return mutate("editPost", () -> postService.editPost(UUID.fromString(id), body));
+  public EditPostResponse editPost(String id, String body) {
+    try {
+      UUID postId = postService.editPost(UUID.fromString(id), body);
+      ForumPost post = mapPost(postId);
+      logger.info("editPost succeeded for id {}", postId);
+      return EditPostResponse.newBuilder()
+          .message("editPost succeeded")
+          .post(post)
+          .build();
+    } catch (Exception e) {
+      logger.error("editPost failed", e);
+      throw new MutationException("editPost failed: " + e.getMessage(), e);
+    }
   }
 
   /**
    * Soft-deletes a post.
    *
    * @param id the post id
-   * @return a QueryResult
+   * @return the deleted post id
    */
   @Transactional
-  public QueryResult deletePost(String id) {
-    return mutate("deletePost", () -> postService.deletePost(UUID.fromString(id)));
+  public DeletePostResponse deletePost(String id) {
+    try {
+      UUID postId = postService.deletePost(UUID.fromString(id));
+      logger.info("deletePost succeeded for id {}", postId);
+      return DeletePostResponse.newBuilder()
+          .message("deletePost succeeded")
+          .id(postId.toString())
+          .build();
+    } catch (Exception e) {
+      logger.error("deletePost failed", e);
+      throw new MutationException("deletePost failed: " + e.getMessage(), e);
+    }
   }
 
   /**
    * Casts a vote on a post.
    *
    * @param input the vote input
-   * @return a QueryResult
+   * @return the voted post
    */
   @Transactional
-  public QueryResult vote(ForumVoteInput input) {
-    return mutate("vote", () -> voteService.vote(
-        UUID.fromString(input.getPostId()), input.getValue()));
+  public VoteResponse vote(ForumVoteInput input) {
+    try {
+      UUID postId = voteService.vote(UUID.fromString(input.getPostId()), input.getValue());
+      ForumPost post = mapPost(postId);
+      logger.info("vote succeeded for id {}", postId);
+      return VoteResponse.newBuilder()
+          .message("vote succeeded")
+          .post(post)
+          .build();
+    } catch (Exception e) {
+      logger.error("vote failed", e);
+      throw new MutationException("vote failed: " + e.getMessage(), e);
+    }
   }
 
   /**
    * Removes the caller's vote on a post.
    *
    * @param postId the post id
-   * @return a QueryResult
+   * @return the updated post
    */
   @Transactional
-  public QueryResult removeVote(String postId) {
-    return mutate("removeVote", () -> voteService.removeVote(UUID.fromString(postId)));
+  public RemoveVoteResponse removeVote(String postId) {
+    try {
+      UUID id = voteService.removeVote(UUID.fromString(postId));
+      ForumPost post = mapPost(id);
+      logger.info("removeVote succeeded for id {}", id);
+      return RemoveVoteResponse.newBuilder()
+          .message("removeVote succeeded")
+          .post(post)
+          .build();
+    } catch (Exception e) {
+      logger.error("removeVote failed", e);
+      throw new MutationException("removeVote failed: " + e.getMessage(), e);
+    }
   }
 
   /**
@@ -275,12 +368,34 @@ public class IcarusGraphQLService {
    *
    * @param source the thread id
    * @param target the remote object id
-   * @return a QueryResult
+   * @return the thread id
    */
   @Transactional
-  public QueryResult attachObject(String source, String target) {
-    return mutate("attachObject",
-        () -> threadService.attach(UUID.fromString(source), target));
+  public AttachObjectResponse attachObject(String source, String target) {
+    try {
+      UUID id = threadService.attach(UUID.fromString(source), target);
+      logger.info("attachObject succeeded for id {}", id);
+      return AttachObjectResponse.newBuilder()
+          .message("attachObject succeeded")
+          .id(id.toString())
+          .build();
+    } catch (Exception e) {
+      logger.error("attachObject failed", e);
+      throw new MutationException("attachObject failed: " + e.getMessage(), e);
+    }
+  }
+
+  /**
+   * Loads a post entity and maps it to GraphQL.
+   *
+   * @param id the post id
+   * @return the GraphQL ForumPost
+   */
+  private ForumPost mapPost(UUID id) {
+    ForumPostEntity entity = postService.findById(id)
+        .orElseThrow(() -> new IllegalArgumentException("Post not found: " + id));
+    VoteValue myVote = voteService.myVote(id).orElse(null);
+    return postMapper.map(entity, null, myVote);
   }
 
   /**
@@ -317,27 +432,4 @@ public class IcarusGraphQLService {
         .build();
   }
 
-  /**
-   * Runs a mutation, returning QuerySuccess with the affected id or StandardError
-   * on failure.
-   *
-   * @param op the operation name (for logging and messages)
-   * @param action the mutation, returning the affected entity id
-   * @return a QueryResult
-   */
-  private QueryResult mutate(String op, Supplier<UUID> action) {
-    try {
-      UUID id = action.get();
-      logger.info("{} succeeded for id {}", op, id);
-      return QuerySuccess.newBuilder()
-          .message(op + " succeeded")
-          .id(id == null ? null : id.toString())
-          .build();
-    } catch (Exception e) {
-      logger.error("{} failed", op, e);
-      return StandardError.newBuilder()
-          .message(op + " failed: " + e.getMessage())
-          .build();
-    }
-  }
 }

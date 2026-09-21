@@ -1,13 +1,15 @@
 package com.sun.hades.graphql.services;
 
+import com.sun.base.error.MutationException;
+import com.sun.hades.codegen.types.AttachObjectResponse;
+import com.sun.hades.codegen.types.CreateAnnotationResponse;
+import com.sun.hades.codegen.types.DeleteAnnotationResponse;
+import com.sun.hades.codegen.types.EditAnnotationResponse;
 import com.sun.hades.codegen.types.PagedReaderAnnotations;
 import com.sun.hades.codegen.types.PaginationInput;
-import com.sun.hades.codegen.types.QueryResult;
-import com.sun.hades.codegen.types.QuerySuccess;
 import com.sun.hades.codegen.types.ReaderAnnotation;
 import com.sun.hades.codegen.types.ReaderPosition;
 import com.sun.hades.codegen.types.RemoteUser;
-import com.sun.hades.codegen.types.StandardError;
 import com.sun.hades.graphql.mappers.ReaderAnnotationMapper;
 import com.sun.hades.graphql.mappers.ReaderPositionMapper;
 import com.sun.hades.graphql.mappers.RemoteUserMapper;
@@ -25,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -137,12 +138,24 @@ public class ReaderAnnotationGraphQLService {
    * @param startOffset the range start
    * @param endOffset the range end
    * @param body the markdown body
-   * @return a QueryResult
+   * @return the create-annotation response
    */
   @Transactional
-  public QueryResult createAnnotation(String textId, int startOffset, int endOffset, String body) {
-    return mutate("createAnnotation", () -> annotationService.createAnnotation(
-        UUID.fromString(textId), startOffset, endOffset, body));
+  public CreateAnnotationResponse createAnnotation(String textId, int startOffset, int endOffset, String body) {
+    try {
+      UUID id = annotationService.createAnnotation(
+          UUID.fromString(textId), startOffset, endOffset, body);
+      logger.info("createAnnotation succeeded for id {}", id);
+      ReaderAnnotationEntity annotation = annotationService.findById(id)
+          .orElseThrow(() -> new IllegalArgumentException("Annotation not found: " + id));
+      return CreateAnnotationResponse.newBuilder()
+          .message("Annotation created successfully")
+          .annotation(annotationMapper.map(annotation, null, null, 0, null))
+          .build();
+    } catch (Exception e) {
+      logger.error("createAnnotation failed", e);
+      throw new MutationException("createAnnotation failed: " + e.getMessage(), e);
+    }
   }
 
   /**
@@ -150,26 +163,44 @@ public class ReaderAnnotationGraphQLService {
    *
    * @param id the annotation id
    * @param body the new body
-   * @return a QueryResult
+   * @return the edit-annotation response
    */
   @Transactional
-  public QueryResult editAnnotation(String id, String body) {
-    return mutate("editAnnotation",
-        () -> annotationService.editAnnotation(UUID.fromString(id), body));
+  public EditAnnotationResponse editAnnotation(String id, String body) {
+    try {
+      UUID annotationId = annotationService.editAnnotation(UUID.fromString(id), body);
+      logger.info("editAnnotation succeeded for id {}", annotationId);
+      ReaderAnnotationEntity annotation = annotationService.findById(annotationId)
+          .orElseThrow(() -> new IllegalArgumentException("Annotation not found: " + annotationId));
+      return EditAnnotationResponse.newBuilder()
+          .message("Annotation updated successfully")
+          .annotation(annotationMapper.map(annotation, null, null, 0, null))
+          .build();
+    } catch (Exception e) {
+      logger.error("editAnnotation failed", e);
+      throw new MutationException("editAnnotation failed: " + e.getMessage(), e);
+    }
   }
 
   /**
    * Deletes an annotation.
    *
    * @param id the annotation id
-   * @return a QueryResult
+   * @return the delete-annotation response
    */
   @Transactional
-  public QueryResult deleteAnnotation(String id) {
-    return mutate("deleteAnnotation", () -> {
+  public DeleteAnnotationResponse deleteAnnotation(String id) {
+    try {
       annotationService.deleteAnnotation(UUID.fromString(id));
-      return UUID.fromString(id);
-    });
+      logger.info("deleteAnnotation succeeded for id {}", id);
+      return DeleteAnnotationResponse.newBuilder()
+          .message("Annotation deleted successfully")
+          .id(id)
+          .build();
+    } catch (Exception e) {
+      logger.error("deleteAnnotation failed", e);
+      throw new MutationException("deleteAnnotation failed: " + e.getMessage(), e);
+    }
   }
 
   /**
@@ -177,35 +208,20 @@ public class ReaderAnnotationGraphQLService {
    *
    * @param source the annotation id
    * @param target the remote object id
-   * @return a QueryResult
+   * @return the attach-object response
    */
   @Transactional
-  public QueryResult attachObject(String source, String target) {
-    return mutate("attachObject",
-        () -> annotationService.attach(UUID.fromString(source), target));
-  }
-
-  /**
-   * Runs a mutation, returning QuerySuccess with the affected id or StandardError
-   * on failure.
-   *
-   * @param op the operation name (for logging and messages)
-   * @param action the mutation, returning the affected entity id
-   * @return a QueryResult
-   */
-  private QueryResult mutate(String op, Supplier<UUID> action) {
+  public AttachObjectResponse attachObject(String source, String target) {
     try {
-      UUID id = action.get();
-      logger.info("{} succeeded for id {}", op, id);
-      return QuerySuccess.newBuilder()
-          .message(op + " succeeded")
-          .id(id == null ? null : id.toString())
+      UUID id = annotationService.attach(UUID.fromString(source), target);
+      logger.info("attachObject succeeded for id {}", id);
+      return AttachObjectResponse.newBuilder()
+          .message("Object attached successfully")
+          .id(id.toString())
           .build();
     } catch (Exception e) {
-      logger.error("{} failed", op, e);
-      return StandardError.newBuilder()
-          .message(op + " failed: " + e.getMessage())
-          .build();
+      logger.error("attachObject failed", e);
+      throw new MutationException("attachObject failed: " + e.getMessage(), e);
     }
   }
 }

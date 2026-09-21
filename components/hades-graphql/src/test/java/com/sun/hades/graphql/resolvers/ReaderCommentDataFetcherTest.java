@@ -4,11 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.sun.hades.codegen.types.AddCommentResponse;
 import com.sun.hades.codegen.types.CommentInput;
+import com.sun.hades.codegen.types.DeleteCommentResponse;
+import com.sun.hades.codegen.types.EditCommentResponse;
 import com.sun.hades.codegen.types.PagedReaderComments;
 import com.sun.hades.codegen.types.PaginationInput;
-import com.sun.hades.codegen.types.QueryResult;
-import com.sun.hades.codegen.types.QuerySuccess;
+import com.sun.hades.codegen.types.ReaderComment;
 import com.sun.hades.graphql.services.ReaderCommentGraphQLService;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -39,10 +41,13 @@ class ReaderCommentDataFetcherTest {
   @Test
   void addComment_shouldDelegateToService() {
     CommentInput input = CommentInput.newBuilder().annotationId("ann-id").body("body").build();
-    QueryResult mockResult = QuerySuccess.newBuilder().message("ok").id("id").build();
+    AddCommentResponse mockResult = AddCommentResponse.newBuilder()
+        .message("ok")
+        .comment(ReaderComment.newBuilder().id("id").body("body").build())
+        .build();
     when(readerCommentGraphQLService.addComment(input)).thenReturn(mockResult);
 
-    QueryResult result = fetcher.addComment(input);
+    AddCommentResponse result = fetcher.addComment(input);
 
     assertThat(result).isEqualTo(mockResult);
     verify(readerCommentGraphQLService).addComment(input);
@@ -50,10 +55,13 @@ class ReaderCommentDataFetcherTest {
 
   @Test
   void editComment_shouldDelegateToService() {
-    QueryResult mockResult = QuerySuccess.newBuilder().message("ok").id("id").build();
+    EditCommentResponse mockResult = EditCommentResponse.newBuilder()
+        .message("ok")
+        .comment(ReaderComment.newBuilder().id("id").body("new").build())
+        .build();
     when(readerCommentGraphQLService.editComment("id", "new")).thenReturn(mockResult);
 
-    QueryResult result = fetcher.editComment("id", "new");
+    EditCommentResponse result = fetcher.editComment("id", "new");
 
     assertThat(result).isEqualTo(mockResult);
     verify(readerCommentGraphQLService).editComment("id", "new");
@@ -61,10 +69,13 @@ class ReaderCommentDataFetcherTest {
 
   @Test
   void deleteComment_shouldDelegateToService() {
-    QueryResult mockResult = QuerySuccess.newBuilder().message("ok").id("id").build();
+    DeleteCommentResponse mockResult = DeleteCommentResponse.newBuilder()
+        .message("ok")
+        .id("id")
+        .build();
     when(readerCommentGraphQLService.deleteComment("id")).thenReturn(mockResult);
 
-    QueryResult result = fetcher.deleteComment("id");
+    DeleteCommentResponse result = fetcher.deleteComment("id");
 
     assertThat(result).isEqualTo(mockResult);
     verify(readerCommentGraphQLService).deleteComment("id");

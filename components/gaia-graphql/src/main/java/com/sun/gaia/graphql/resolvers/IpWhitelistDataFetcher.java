@@ -2,9 +2,11 @@ package com.sun.gaia.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
+import com.sun.gaia.codegen.types.CreateIpWhitelistEntryResponse;
+import com.sun.gaia.codegen.types.DeleteIpWhitelistEntryResponse;
 import com.sun.gaia.codegen.types.IpWhitelistEntry;
 import com.sun.gaia.codegen.types.IpWhitelistEntryInput;
-import com.sun.gaia.codegen.types.QueryResult;
+import com.sun.gaia.codegen.types.UpdateIpWhitelistEntryResponse;
 import com.sun.gaia.graphql.services.IpWhitelistGraphQLService;
 import java.util.List;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -41,7 +43,7 @@ public class IpWhitelistDataFetcher {
    */
   @DgsData(parentType = "GaiaMutations", field = "createIpWhitelistEntry")
   @PreAuthorize("@permissions.has('graphql.gaia.createIpWhitelistEntry')")
-  public QueryResult createIpWhitelistEntry(IpWhitelistEntryInput input) {
+  public CreateIpWhitelistEntryResponse createIpWhitelistEntry(IpWhitelistEntryInput input) {
     return ipWhitelistGraphQLService.createIpWhitelistEntry(input);
   }
 
@@ -54,7 +56,7 @@ public class IpWhitelistDataFetcher {
    */
   @DgsData(parentType = "GaiaMutations", field = "updateIpWhitelistEntry")
   @PreAuthorize("@permissions.has('graphql.gaia.updateIpWhitelistEntry')")
-  public QueryResult updateIpWhitelistEntry(String id, IpWhitelistEntryInput input) {
+  public UpdateIpWhitelistEntryResponse updateIpWhitelistEntry(String id, IpWhitelistEntryInput input) {
     return ipWhitelistGraphQLService.updateIpWhitelistEntry(id, input);
   }
 
@@ -66,7 +68,7 @@ public class IpWhitelistDataFetcher {
    */
   @DgsData(parentType = "GaiaMutations", field = "deleteIpWhitelistEntry")
   @PreAuthorize("@permissions.has('graphql.gaia.deleteIpWhitelistEntry')")
-  public QueryResult deleteIpWhitelistEntry(String id) {
+  public DeleteIpWhitelistEntryResponse deleteIpWhitelistEntry(String id) {
     return ipWhitelistGraphQLService.deleteIpWhitelistEntry(id);
   }
 }

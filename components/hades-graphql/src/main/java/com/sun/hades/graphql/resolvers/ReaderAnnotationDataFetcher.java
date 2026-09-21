@@ -4,9 +4,12 @@ import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
 import com.sun.base.ratelimit.RateLimit;
 import com.sun.hades.codegen.types.AnnotationInput;
+import com.sun.hades.codegen.types.AttachObjectResponse;
+import com.sun.hades.codegen.types.CreateAnnotationResponse;
+import com.sun.hades.codegen.types.DeleteAnnotationResponse;
+import com.sun.hades.codegen.types.EditAnnotationResponse;
 import com.sun.hades.codegen.types.PagedReaderAnnotations;
 import com.sun.hades.codegen.types.PaginationInput;
-import com.sun.hades.codegen.types.QueryResult;
 import com.sun.hades.codegen.types.ReaderAnnotation;
 import com.sun.hades.graphql.services.ReaderAnnotationGraphQLService;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -54,12 +57,12 @@ public class ReaderAnnotationDataFetcher {
    * Creates an annotation on a range.
    *
    * @param input the annotation input
-   * @return a QueryResult
+   * @return the create-annotation response
    */
   @DgsData(parentType = "HadesMutations", field = "createAnnotation")
   @PreAuthorize("@permissions.has('graphql.hades.createAnnotation')")
   @RateLimit(capacity = 1, refillPerSecond = 0.0667)
-  public QueryResult createAnnotation(AnnotationInput input) {
+  public CreateAnnotationResponse createAnnotation(AnnotationInput input) {
     return readerAnnotationGraphQLService.createAnnotation(
         input.getTextId(), input.getStartOffset(), input.getEndOffset(), input.getBody());
   }
@@ -69,11 +72,11 @@ public class ReaderAnnotationDataFetcher {
    *
    * @param id the annotation id
    * @param body the new body
-   * @return a QueryResult
+   * @return the edit-annotation response
    */
   @DgsData(parentType = "HadesMutations", field = "editAnnotation")
   @PreAuthorize("@permissions.has('graphql.hades.editAnnotation')")
-  public QueryResult editAnnotation(String id, String body) {
+  public EditAnnotationResponse editAnnotation(String id, String body) {
     return readerAnnotationGraphQLService.editAnnotation(id, body);
   }
 
@@ -81,11 +84,11 @@ public class ReaderAnnotationDataFetcher {
    * Deletes an annotation.
    *
    * @param id the annotation id
-   * @return a QueryResult
+   * @return the delete-annotation response
    */
   @DgsData(parentType = "HadesMutations", field = "deleteAnnotation")
   @PreAuthorize("@permissions.has('graphql.hades.deleteAnnotation')")
-  public QueryResult deleteAnnotation(String id) {
+  public DeleteAnnotationResponse deleteAnnotation(String id) {
     return readerAnnotationGraphQLService.deleteAnnotation(id);
   }
 
@@ -94,11 +97,11 @@ public class ReaderAnnotationDataFetcher {
    *
    * @param source the annotation id
    * @param target the remote object id
-   * @return a QueryResult
+   * @return the attach-object response
    */
   @DgsData(parentType = "HadesMutations", field = "attachObject")
   @PreAuthorize("@permissions.has('graphql.hades.attachObject')")
-  public QueryResult attachObject(String source, String target) {
+  public AttachObjectResponse attachObject(String source, String target) {
     return readerAnnotationGraphQLService.attachObject(source, target);
   }
 }

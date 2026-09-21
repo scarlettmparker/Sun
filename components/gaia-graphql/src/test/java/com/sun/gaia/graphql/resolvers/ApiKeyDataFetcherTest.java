@@ -4,9 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.sun.gaia.codegen.types.IssueApiKeyResponse;
 import com.sun.gaia.codegen.types.IssuedApiKey;
-import com.sun.gaia.codegen.types.QueryResult;
-import com.sun.gaia.codegen.types.QuerySuccess;
+import com.sun.gaia.codegen.types.RevokeApiKeyResponse;
+import com.sun.gaia.codegen.types.RotateApiKeyResponse;
 import com.sun.gaia.graphql.services.ApiKeyGraphQLService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,10 +24,13 @@ class ApiKeyDataFetcherTest {
 
   @Test
   void issueApiKey_shouldDelegate() {
-    IssuedApiKey mock = IssuedApiKey.newBuilder().plaintextKey("ns_plain").build();
+    IssueApiKeyResponse mock = IssueApiKeyResponse.newBuilder()
+        .message("API key issued")
+        .apiKey(IssuedApiKey.newBuilder().plaintextKey("ns_plain").build())
+        .build();
     when(service.issueApiKey("alice", "bot")).thenReturn(mock);
 
-    IssuedApiKey result = fetcher.issueApiKey("alice", "bot");
+    IssueApiKeyResponse result = fetcher.issueApiKey("alice", "bot");
 
     assertThat(result).isEqualTo(mock);
     verify(service).issueApiKey("alice", "bot");
@@ -34,10 +38,13 @@ class ApiKeyDataFetcherTest {
 
   @Test
   void revokeApiKey_shouldDelegate() {
-    QueryResult mock = QuerySuccess.newBuilder().message("API key revoked").id("id1").build();
+    RevokeApiKeyResponse mock = RevokeApiKeyResponse.newBuilder()
+        .message("API key revoked")
+        .id("id1")
+        .build();
     when(service.revokeApiKey("id1")).thenReturn(mock);
 
-    QueryResult result = fetcher.revokeApiKey("id1");
+    RevokeApiKeyResponse result = fetcher.revokeApiKey("id1");
 
     assertThat(result).isEqualTo(mock);
     verify(service).revokeApiKey("id1");
@@ -45,10 +52,13 @@ class ApiKeyDataFetcherTest {
 
   @Test
   void rotateApiKey_shouldDelegate() {
-    IssuedApiKey mock = IssuedApiKey.newBuilder().plaintextKey("ns_rotated").build();
+    RotateApiKeyResponse mock = RotateApiKeyResponse.newBuilder()
+        .message("API key rotated")
+        .apiKey(IssuedApiKey.newBuilder().plaintextKey("ns_rotated").build())
+        .build();
     when(service.rotateApiKey("id1")).thenReturn(mock);
 
-    IssuedApiKey result = fetcher.rotateApiKey("id1");
+    RotateApiKeyResponse result = fetcher.rotateApiKey("id1");
 
     assertThat(result).isEqualTo(mock);
     verify(service).rotateApiKey("id1");

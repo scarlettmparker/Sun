@@ -5,10 +5,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.netflix.graphql.dgs.DgsDataFetchingEnvironment;
+import com.sun.hades.codegen.types.ArchiveTextResponse;
+import com.sun.hades.codegen.types.CreateSourceResponse;
+import com.sun.hades.codegen.types.CreateTextResponse;
+import com.sun.hades.codegen.types.MarkViewedResponse;
 import com.sun.hades.codegen.types.PagedReaderTexts;
 import com.sun.hades.codegen.types.PaginationInput;
-import com.sun.hades.codegen.types.QueryResult;
-import com.sun.hades.codegen.types.QuerySuccess;
 import com.sun.hades.codegen.types.ReaderSource;
 import com.sun.hades.codegen.types.ReaderText;
 import com.sun.hades.codegen.types.ReaderTextInput;
@@ -145,10 +147,13 @@ class ReaderTextDataFetcherTest {
 
   @Test
   void createSource_shouldDelegateToService() {
-    QueryResult mockResult = QuerySuccess.newBuilder().message("ok").id("id").build();
+    CreateSourceResponse mockResult = CreateSourceResponse.newBuilder()
+        .message("ok")
+        .source(ReaderSource.newBuilder().id("id").name("N").url("url").build())
+        .build();
     when(readerTextGraphQLService.createSource("name", "url")).thenReturn(mockResult);
 
-    QueryResult result = fetcher.createSource("name", "url");
+    CreateSourceResponse result = fetcher.createSource("name", "url");
 
     assertThat(result).isEqualTo(mockResult);
     verify(readerTextGraphQLService).createSource("name", "url");
@@ -157,10 +162,13 @@ class ReaderTextDataFetcherTest {
   @Test
   void createText_shouldDelegateToService() {
     ReaderTextInput input = ReaderTextInput.newBuilder().title("T").content("c").language("fr").build();
-    QueryResult mockResult = QuerySuccess.newBuilder().message("ok").id("id").build();
+    CreateTextResponse mockResult = CreateTextResponse.newBuilder()
+        .message("ok")
+        .text(ReaderText.newBuilder().id("id").title("T").build())
+        .build();
     when(readerTextGraphQLService.createText(input)).thenReturn(mockResult);
 
-    QueryResult result = fetcher.createText(input);
+    CreateTextResponse result = fetcher.createText(input);
 
     assertThat(result).isEqualTo(mockResult);
     verify(readerTextGraphQLService).createText(input);
@@ -168,12 +176,29 @@ class ReaderTextDataFetcherTest {
 
   @Test
   void archiveText_shouldDelegateToService() {
-    QueryResult mockResult = QuerySuccess.newBuilder().message("ok").id("id").build();
+    ArchiveTextResponse mockResult = ArchiveTextResponse.newBuilder()
+        .message("ok")
+        .text(ReaderText.newBuilder().id("id").title("T").build())
+        .build();
     when(readerTextGraphQLService.archiveText("id")).thenReturn(mockResult);
 
-    QueryResult result = fetcher.archiveText("id");
+    ArchiveTextResponse result = fetcher.archiveText("id");
 
     assertThat(result).isEqualTo(mockResult);
     verify(readerTextGraphQLService).archiveText("id");
+  }
+
+  @Test
+  void markViewed_shouldDelegateToService() {
+    MarkViewedResponse mockResult = MarkViewedResponse.newBuilder()
+        .message("ok")
+        .textId("id")
+        .build();
+    when(readerTextGraphQLService.markViewed("id")).thenReturn(mockResult);
+
+    MarkViewedResponse result = fetcher.markViewed("id");
+
+    assertThat(result).isEqualTo(mockResult);
+    verify(readerTextGraphQLService).markViewed("id");
   }
 }

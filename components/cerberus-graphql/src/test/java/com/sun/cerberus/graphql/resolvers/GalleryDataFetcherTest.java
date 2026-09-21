@@ -14,10 +14,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import com.sun.cerberus.graphql.services.GalleryGraphQLService;
+import com.sun.cerberus.codegen.types.CreateGalleryItemResponse;
 import com.sun.cerberus.codegen.types.GalleryItem;
 import com.sun.cerberus.codegen.types.GalleryItemInput;
-import com.sun.cerberus.codegen.types.QueryResult;
-import com.sun.cerberus.codegen.types.QuerySuccess;
 
 @ExtendWith(MockitoExtension.class)
 class GalleryDataFetcherTest {
@@ -113,7 +112,7 @@ class GalleryDataFetcherTest {
   }
 
   @Test
-  void create_shouldReturnQueryResultFromService() {
+  void create_shouldReturnResponseFromService() {
     GalleryItemInput input = GalleryItemInput.newBuilder()
         .title("New Title")
         .description("New Description")
@@ -122,11 +121,13 @@ class GalleryDataFetcherTest {
         .remoteObject(Arrays.asList("new", "ids"))
         .build();
 
-    QueryResult mockResult = QuerySuccess.newBuilder().message("ok").build();
+    CreateGalleryItemResponse mockResult = CreateGalleryItemResponse.newBuilder()
+        .message("ok")
+        .build();
 
     when(galleryGraphQLService.create(input)).thenReturn(mockResult);
 
-    QueryResult result = galleryDataFetcher.create(input);
+    CreateGalleryItemResponse result = galleryDataFetcher.create(input);
 
     assertThat(result).isEqualTo(mockResult);
   }

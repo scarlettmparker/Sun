@@ -4,9 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.sun.gaia.codegen.types.QueryResult;
-import com.sun.gaia.codegen.types.QuerySuccess;
 import com.sun.gaia.codegen.types.RemoteUserType;
+import com.sun.gaia.codegen.types.SetAccountPermissionsResponse;
+import com.sun.gaia.codegen.types.SetRolePermissionsResponse;
 import com.sun.gaia.model.AccountEntity;
 import com.sun.gaia.model.enums.AccountStatus;
 import com.sun.gaia.repository.AccountRepository;
@@ -123,10 +123,11 @@ class PermissionGraphQLServiceTest {
     UUID accountId = UUID.randomUUID();
     List<String> perms = List.of("graphql.gaia.me");
 
-    QueryResult result = service.setAccountPermissions(accountId.toString(), perms);
+    SetAccountPermissionsResponse result = service.setAccountPermissions(accountId.toString(), perms);
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
-    assertThat(((QuerySuccess) result).getId()).isEqualTo(accountId.toString());
+    assertThat(result.getMessage()).isEqualTo("Account permissions updated");
+    assertThat(result.getAccountId()).isEqualTo(accountId.toString());
+    assertThat(result.getPermissions()).containsExactly("graphql.gaia.me");
     verify(roleAdminService).setAccountPermissions(accountId, perms);
   }
 
@@ -135,10 +136,11 @@ class PermissionGraphQLServiceTest {
     UUID roleId = UUID.randomUUID();
     List<String> perms = List.of("graphql.gaia.roles");
 
-    QueryResult result = service.setRolePermissions(roleId.toString(), perms);
+    SetRolePermissionsResponse result = service.setRolePermissions(roleId.toString(), perms);
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
-    assertThat(((QuerySuccess) result).getId()).isEqualTo(roleId.toString());
+    assertThat(result.getMessage()).isEqualTo("Role permissions updated");
+    assertThat(result.getRoleId()).isEqualTo(roleId.toString());
+    assertThat(result.getPermissions()).containsExactly("graphql.gaia.roles");
     verify(roleAdminService).setRolePermissions(roleId, perms);
   }
 
@@ -147,9 +149,9 @@ class PermissionGraphQLServiceTest {
     UUID accountId = UUID.randomUUID();
     List<String> perms = List.of();
 
-    QueryResult result = service.setAccountPermissions(accountId.toString(), perms);
+    SetAccountPermissionsResponse result = service.setAccountPermissions(accountId.toString(), perms);
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
+    assertThat(result.getPermissions()).isEmpty();
     verify(roleAdminService).setAccountPermissions(accountId, perms);
   }
 
@@ -158,9 +160,9 @@ class PermissionGraphQLServiceTest {
     UUID roleId = UUID.randomUUID();
     List<String> perms = List.of();
 
-    QueryResult result = service.setRolePermissions(roleId.toString(), perms);
+    SetRolePermissionsResponse result = service.setRolePermissions(roleId.toString(), perms);
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
+    assertThat(result.getPermissions()).isEmpty();
     verify(roleAdminService).setRolePermissions(roleId, perms);
   }
 }

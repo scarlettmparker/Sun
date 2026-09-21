@@ -2,18 +2,26 @@ package com.sun.icarus.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
+import com.sun.icarus.codegen.types.ArchiveThreadResponse;
+import com.sun.icarus.codegen.types.AttachObjectResponse;
 import com.sun.icarus.codegen.types.CreatePostInput;
+import com.sun.icarus.codegen.types.CreatePostResponse;
 import com.sun.icarus.codegen.types.CreateThreadInput;
+import com.sun.icarus.codegen.types.CreateThreadResponse;
+import com.sun.icarus.codegen.types.DeletePostResponse;
+import com.sun.icarus.codegen.types.EditPostResponse;
 import com.sun.icarus.codegen.types.ForumObjectReference;
 import com.sun.icarus.codegen.types.ForumPost;
 import com.sun.icarus.codegen.types.ForumThread;
 import com.sun.icarus.codegen.types.ForumVoteInput;
 import com.sun.icarus.codegen.types.IcarusMutations;
 import com.sun.icarus.codegen.types.IcarusQueries;
+import com.sun.icarus.codegen.types.LockThreadResponse;
 import com.sun.icarus.codegen.types.PagedForumPosts;
 import com.sun.icarus.codegen.types.PagedForumThreads;
 import com.sun.icarus.codegen.types.PaginationInput;
-import com.sun.icarus.codegen.types.QueryResult;
+import com.sun.icarus.codegen.types.RemoveVoteResponse;
+import com.sun.icarus.codegen.types.VoteResponse;
 import com.sun.icarus.graphql.services.IcarusGraphQLService;
 import com.sun.icarus.model.enums.VoteValue;
 import java.util.List;
@@ -115,11 +123,11 @@ public class IcarusDataFetcher {
    * Creates a thread attached to a remote object.
    *
    * @param input the create thread input
-   * @return a QueryResult
+   * @return the created thread
    */
   @DgsData(parentType = "IcarusMutations", field = "createThread")
   @PreAuthorize("@permissions.has('graphql.icarus.createThread')")
-  public QueryResult createThread(CreateThreadInput input) {
+  public CreateThreadResponse createThread(CreateThreadInput input) {
     return icarusGraphQLService.createThread(input);
   }
 
@@ -127,11 +135,11 @@ public class IcarusDataFetcher {
    * Locks a thread.
    *
    * @param id the thread id
-   * @return a QueryResult
+   * @return the updated thread
    */
   @DgsData(parentType = "IcarusMutations", field = "lockThread")
   @PreAuthorize("@permissions.has('graphql.icarus.lockThread')")
-  public QueryResult lockThread(String id) {
+  public LockThreadResponse lockThread(String id) {
     return icarusGraphQLService.lockThread(id);
   }
 
@@ -139,11 +147,11 @@ public class IcarusDataFetcher {
    * Archives a thread.
    *
    * @param id the thread id
-   * @return a QueryResult
+   * @return the updated thread
    */
   @DgsData(parentType = "IcarusMutations", field = "archiveThread")
   @PreAuthorize("@permissions.has('graphql.icarus.archiveThread')")
-  public QueryResult archiveThread(String id) {
+  public ArchiveThreadResponse archiveThread(String id) {
     return icarusGraphQLService.archiveThread(id);
   }
 
@@ -151,11 +159,11 @@ public class IcarusDataFetcher {
    * Adds a post to a thread.
    *
    * @param input the create post input
-   * @return a QueryResult
+   * @return the created post
    */
   @DgsData(parentType = "IcarusMutations", field = "createPost")
   @PreAuthorize("@permissions.has('graphql.icarus.createPost')")
-  public QueryResult createPost(CreatePostInput input) {
+  public CreatePostResponse createPost(CreatePostInput input) {
     return icarusGraphQLService.createPost(input);
   }
 
@@ -164,11 +172,11 @@ public class IcarusDataFetcher {
    *
    * @param id the post id
    * @param body the new body
-   * @return a QueryResult
+   * @return the updated post
    */
   @DgsData(parentType = "IcarusMutations", field = "editPost")
   @PreAuthorize("@permissions.has('graphql.icarus.editPost')")
-  public QueryResult editPost(String id, String body) {
+  public EditPostResponse editPost(String id, String body) {
     return icarusGraphQLService.editPost(id, body);
   }
 
@@ -176,11 +184,11 @@ public class IcarusDataFetcher {
    * Soft-deletes a post.
    *
    * @param id the post id
-   * @return a QueryResult
+   * @return the deleted post id
    */
   @DgsData(parentType = "IcarusMutations", field = "deletePost")
   @PreAuthorize("@permissions.has('graphql.icarus.deletePost')")
-  public QueryResult deletePost(String id) {
+  public DeletePostResponse deletePost(String id) {
     return icarusGraphQLService.deletePost(id);
   }
 
@@ -188,11 +196,11 @@ public class IcarusDataFetcher {
    * Casts a vote on a post.
    *
    * @param input the vote input
-   * @return a QueryResult
+   * @return the voted post
    */
   @DgsData(parentType = "IcarusMutations", field = "vote")
   @PreAuthorize("@permissions.has('graphql.icarus.vote')")
-  public QueryResult vote(ForumVoteInput input) {
+  public VoteResponse vote(ForumVoteInput input) {
     return icarusGraphQLService.vote(input);
   }
 
@@ -200,11 +208,11 @@ public class IcarusDataFetcher {
    * Removes the caller's vote on a post.
    *
    * @param postId the post id
-   * @return a QueryResult
+   * @return the updated post
    */
   @DgsData(parentType = "IcarusMutations", field = "removeVote")
   @PreAuthorize("@permissions.has('graphql.icarus.removeVote')")
-  public QueryResult removeVote(String postId) {
+  public RemoveVoteResponse removeVote(String postId) {
     return icarusGraphQLService.removeVote(postId);
   }
 
@@ -213,11 +221,11 @@ public class IcarusDataFetcher {
    *
    * @param source the thread id
    * @param target the remote object id
-   * @return a QueryResult
+   * @return the thread id
    */
   @DgsData(parentType = "IcarusMutations", field = "attachObject")
   @PreAuthorize("@permissions.has('graphql.icarus.attachObject')")
-  public QueryResult attachObject(String source, String target) {
+  public AttachObjectResponse attachObject(String source, String target) {
     return icarusGraphQLService.attachObject(source, target);
   }
 }

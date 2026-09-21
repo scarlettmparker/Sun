@@ -1,18 +1,22 @@
 package com.sun.jocasta.graphql.services;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.sun.base.error.MutationException;
 import com.sun.jocasta.codegen.types.Answer;
 import com.sun.jocasta.codegen.types.AnswerInput;
+import com.sun.jocasta.codegen.types.BulkCreateQuestionsResponse;
+import com.sun.jocasta.codegen.types.LinkQuestionResponse;
 import com.sun.jocasta.codegen.types.PagedAnswers;
 import com.sun.jocasta.codegen.types.PagedQuestions;
 import com.sun.jocasta.codegen.types.Question;
 import com.sun.jocasta.codegen.types.QuestionInput;
-import com.sun.jocasta.codegen.types.QuerySuccess;
-import com.sun.jocasta.codegen.types.StandardError;
+import com.sun.jocasta.codegen.types.SubmitAnswerResponse;
 import com.sun.jocasta.graphql.mappers.AnswerMapper;
 import com.sun.jocasta.graphql.mappers.QuestionMapper;
 import com.sun.jocasta.model.AnswerEntity;
@@ -52,7 +56,7 @@ class JocastaGraphQLServiceTest {
     entity.setId(UUID.randomUUID());
     entity.setStem("What is ____ [concept]?");
     Page<QuestionEntity> page = new PageImpl<>(List.of(entity), PageRequest.of(0, 20), 1);
-    when(questionService.listByRemoteObject("briareus:post:123", any())).thenReturn(page);
+    when(questionService.listByRemoteObject(eq("briareus:post:123"), any())).thenReturn(page);
     Question mapped = Question.newBuilder().id(entity.getId().toString()).stem("What is ____ [concept]?").answer("a").build();
     when(questionMapper.map(entity)).thenReturn(mapped);
 
@@ -60,7 +64,7 @@ class JocastaGraphQLServiceTest {
 
     assertThat(result.getItems()).hasSize(1);
     assertThat(result.getPageInfo().getTotalCount()).isEqualTo(1);
-    verify(questionService).listByRemoteObject("briareus:post:123", any());
+    verify(questionService).listByRemoteObject(eq("briareus:post:123"), any());
   }
 
   @Test
@@ -101,23 +105,26 @@ class JocastaGraphQLServiceTest {
     entity.setStem("What is ____ [concept]?");
     QuestionEntity saved = new QuestionEntity();
     saved.setId(UUID.randomUUID());
+    Question mapped = Question.newBuilder()
+        .id(saved.getId().toString()).stem("What is ____ [concept]?").answer("answer").build();
     when(questionMapper.mapInput(input)).thenReturn(entity);
     when(questionService.createBulk(any())).thenReturn(List.of(saved));
+    when(questionMapper.map(saved)).thenReturn(mapped);
 
-    var result = service.bulkCreateQuestions(List.of(input));
+    BulkCreateQuestionsResponse result = service.bulkCreateQuestions(List.of(input));
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
-    assertThat(((QuerySuccess) result).getId()).isEqualTo(saved.getId().toString());
+    assertThat(result.getQuestions()).containsExactly(mapped);
+    assertThat(result.getMessage()).isEqualTo("bulkCreateQuestions succeeded");
     verify(questionMapper).mapInput(input);
     verify(questionService).createBulk(any());
   }
 
   @Test
-  @DisplayName("bulkCreateQuestions returns error when empty")
-  void bulkCreateQuestions_returnsErrorWhenEmpty() {
-    var result = service.bulkCreateQuestions(List.of());
-
-    assertThat(result).isInstanceOf(StandardError.class);
+  @DisplayName("bulkCreateQuestions throws when empty")
+  void bulkCreateQuestions_throwsWhenEmpty() {
+    assertThatThrownBy(() -> service.bulkCreateQuestions(List.of()))
+        .isInstanceOf(MutationException.class)
+        .hasMessageContaining("Inputs required");
   }
 
   @Test
@@ -133,25 +140,29 @@ class JocastaGraphQLServiceTest {
     when(answerMapper.mapInput(qid.toString(), input)).thenReturn(mapped);
     AnswerEntity saved = new AnswerEntity();
     saved.setId(UUID.randomUUID());
+    Answer mappedAnswer = Answer.newBuilder()
+        .id(saved.getId().toString()).questionId(qid.toString())
+        .myAnswer("my").correct(true).correctAnswer("corr").build();
     when(answerService.submit(mapped)).thenReturn(saved);
+    when(answerMapper.map(saved)).thenReturn(mappedAnswer);
 
-    var result = service.submitAnswer(qid.toString(), input);
+    SubmitAnswerResponse result = service.submitAnswer(qid.toString(), input);
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
+    assertThat(result.getAnswer()).isEqualTo(mappedAnswer);
     verify(answerMapper).mapInput(qid.toString(), input);
     verify(answerService).submit(mapped);
   }
 
   @Test
-  @DisplayName("submitAnswer returns error when question missing")
-  void submitAnswer_returnsErrorWhenQuestionMissing() {
+  @DisplayName("submitAnswer throws when question missing")
+  void submitAnswer_throwsWhenQuestionMissing() {
     UUID qid = UUID.randomUUID();
     when(questionService.findById(qid)).thenReturn(Optional.empty());
     AnswerInput input = AnswerInput.newBuilder().myAnswer("my").correct(true).correctAnswer("corr").build();
 
-    var result = service.submitAnswer(qid.toString(), input);
-
-    assertThat(result).isInstanceOf(StandardError.class);
+    assertThatThrownBy(() -> service.submitAnswer(qid.toString(), input))
+        .isInstanceOf(MutationException.class)
+        .hasMessageContaining("Question not found");
   }
 
   @Test
@@ -162,9 +173,9 @@ class JocastaGraphQLServiceTest {
     entity.setId(qid);
     when(questionService.linkQuestion(qid, "briareus:post:999")).thenReturn(Optional.of(entity));
 
-    var result = service.linkQuestion(qid.toString(), "briareus:post:999");
+    LinkQuestionResponse result = service.linkQuestion(qid.toString(), "briareus:post:999");
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
+    assertThat(result.getId()).isEqualTo(qid.toString());
   }
 
   @Test
@@ -175,7 +186,7 @@ class JocastaGraphQLServiceTest {
     entity.setId(UUID.randomUUID());
     entity.setQuestionId(qid);
     Page<AnswerEntity> page = new PageImpl<>(List.of(entity), PageRequest.of(0, 20), 1);
-    when(answerService.listByQuestion(qid, any())).thenReturn(page);
+    when(answerService.listByQuestion(eq(qid), any())).thenReturn(page);
     Answer mapped = Answer.newBuilder()
         .id(entity.getId().toString()).questionId(qid.toString()).myAnswer("my").correct(true).correctAnswer("c").build();
     when(answerMapper.map(entity)).thenReturn(mapped);

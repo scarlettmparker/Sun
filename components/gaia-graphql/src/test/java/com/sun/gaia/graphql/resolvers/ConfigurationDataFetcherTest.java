@@ -4,10 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.sun.gaia.codegen.types.ApplyConfigurationResponse;
 import com.sun.gaia.codegen.types.Configuration;
 import com.sun.gaia.codegen.types.ConfigurationInput;
-import com.sun.gaia.codegen.types.QueryResult;
-import com.sun.gaia.codegen.types.QuerySuccess;
+import com.sun.gaia.codegen.types.CreateConfigurationResponse;
+import com.sun.gaia.codegen.types.DeleteConfigurationResponse;
+import com.sun.gaia.codegen.types.UpdateConfigurationResponse;
 import com.sun.gaia.graphql.services.ConfigurationGraphQLService;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -49,11 +51,13 @@ class ConfigurationDataFetcherTest {
   void createConfiguration_shouldDelegate() {
     ConfigurationInput input = ConfigurationInput.newBuilder().name("cfg").build();
     Configuration c = Configuration.newBuilder().id("id1").name("cfg").build();
-    when(service.createConfiguration(input)).thenReturn(c);
+    CreateConfigurationResponse mock = CreateConfigurationResponse.newBuilder()
+        .message("Configuration created").configuration(c).build();
+    when(service.createConfiguration(input)).thenReturn(mock);
 
-    Configuration result = fetcher.createConfiguration(input);
+    CreateConfigurationResponse result = fetcher.createConfiguration(input);
 
-    assertThat(result).isEqualTo(c);
+    assertThat(result).isEqualTo(mock);
     verify(service).createConfiguration(input);
   }
 
@@ -61,20 +65,23 @@ class ConfigurationDataFetcherTest {
   void updateConfiguration_shouldDelegate() {
     ConfigurationInput input = ConfigurationInput.newBuilder().name("cfg2").build();
     Configuration c = Configuration.newBuilder().id("id1").name("cfg2").build();
-    when(service.updateConfiguration("id1", input)).thenReturn(c);
+    UpdateConfigurationResponse mock = UpdateConfigurationResponse.newBuilder()
+        .message("Configuration updated").configuration(c).build();
+    when(service.updateConfiguration("id1", input)).thenReturn(mock);
 
-    Configuration result = fetcher.updateConfiguration("id1", input);
+    UpdateConfigurationResponse result = fetcher.updateConfiguration("id1", input);
 
-    assertThat(result).isEqualTo(c);
+    assertThat(result).isEqualTo(mock);
     verify(service).updateConfiguration("id1", input);
   }
 
   @Test
   void deleteConfiguration_shouldDelegate() {
-    QueryResult mock = QuerySuccess.newBuilder().message("Configuration deleted").id("id1").build();
+    DeleteConfigurationResponse mock = DeleteConfigurationResponse.newBuilder()
+        .message("Configuration deleted").id("id1").build();
     when(service.deleteConfiguration("id1")).thenReturn(mock);
 
-    QueryResult result = fetcher.deleteConfiguration("id1");
+    DeleteConfigurationResponse result = fetcher.deleteConfiguration("id1");
 
     assertThat(result).isEqualTo(mock);
     verify(service).deleteConfiguration("id1");
@@ -83,11 +90,13 @@ class ConfigurationDataFetcherTest {
   @Test
   void applyConfiguration_shouldDelegate() {
     Configuration c = Configuration.newBuilder().id("id1").name("cfg").build();
-    when(service.applyConfiguration("id1")).thenReturn(c);
+    ApplyConfigurationResponse mock = ApplyConfigurationResponse.newBuilder()
+        .message("Configuration applied").configuration(c).build();
+    when(service.applyConfiguration("id1")).thenReturn(mock);
 
-    Configuration result = fetcher.applyConfiguration("id1");
+    ApplyConfigurationResponse result = fetcher.applyConfiguration("id1");
 
-    assertThat(result).isEqualTo(c);
+    assertThat(result).isEqualTo(mock);
     verify(service).applyConfiguration("id1");
   }
 }

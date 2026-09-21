@@ -4,12 +4,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.sun.echo.codegen.types.AddItemResponse;
+import com.sun.echo.codegen.types.ArchiveChecklistResponse;
 import com.sun.echo.codegen.types.ChecklistDetail;
 import com.sun.echo.codegen.types.ChecklistEntry;
 import com.sun.echo.codegen.types.ChecklistEntryInput;
+import com.sun.echo.codegen.types.CompleteChecklistResponse;
+import com.sun.echo.codegen.types.CreateChecklistFromTemplateResponse;
+import com.sun.echo.codegen.types.CreateChecklistFromTemplatesResponse;
+import com.sun.echo.codegen.types.CreateChecklistResponse;
+import com.sun.echo.codegen.types.DeleteChecklistResponse;
 import com.sun.echo.codegen.types.PagedChecklistEntryItems;
 import com.sun.echo.codegen.types.PaginationInput;
-import com.sun.echo.codegen.types.QuerySuccess;
+import com.sun.echo.codegen.types.RemoveItemResponse;
+import com.sun.echo.codegen.types.SaveChecklistResponse;
+import com.sun.echo.codegen.types.SetItemStatusResponse;
 import com.sun.echo.graphql.services.ChecklistEntryGraphQLService;
 import com.sun.echo.model.enums.ItemStatus;
 import java.util.List;
@@ -76,7 +85,8 @@ class ChecklistEntryDataFetcherTest {
 
   @Test
   void createChecklist_delegatesToService() {
-    QuerySuccess expected = QuerySuccess.newBuilder().message("createChecklist succeeded").id(UUID.randomUUID().toString()).build();
+    CreateChecklistResponse expected = CreateChecklistResponse.newBuilder().message("Checklist created successfully")
+        .entry(ChecklistEntry.newBuilder().id(UUID.randomUUID().toString()).name("name").build()).build();
     when(checklistEntryGraphQLService.createChecklist("name")).thenReturn(expected);
 
     var result = fetcher.createChecklist("name");
@@ -88,7 +98,9 @@ class ChecklistEntryDataFetcherTest {
   @Test
   void createChecklistFromTemplate_delegatesToService() {
     String templateId = UUID.randomUUID().toString();
-    QuerySuccess expected = QuerySuccess.newBuilder().message("createChecklistFromTemplate succeeded").id(UUID.randomUUID().toString()).build();
+    CreateChecklistFromTemplateResponse expected = CreateChecklistFromTemplateResponse.newBuilder()
+        .message("Checklist created from template successfully")
+        .entry(ChecklistEntry.newBuilder().id(UUID.randomUUID().toString()).name("n").build()).build();
     when(checklistEntryGraphQLService.createChecklistFromTemplate(templateId, "n")).thenReturn(expected);
 
     var result = fetcher.createChecklistFromTemplate(templateId, "n");
@@ -100,7 +112,9 @@ class ChecklistEntryDataFetcherTest {
   @Test
   void createChecklistFromTemplates_delegatesToService() {
     List<String> ids = List.of(UUID.randomUUID().toString());
-    QuerySuccess expected = QuerySuccess.newBuilder().message("createChecklistFromTemplates succeeded").id(UUID.randomUUID().toString()).build();
+    CreateChecklistFromTemplatesResponse expected = CreateChecklistFromTemplatesResponse.newBuilder()
+        .message("Checklist created from templates successfully")
+        .entry(ChecklistEntry.newBuilder().id(UUID.randomUUID().toString()).name("n").build()).build();
     when(checklistEntryGraphQLService.createChecklistFromTemplates(ids, "n")).thenReturn(expected);
 
     var result = fetcher.createChecklistFromTemplates(ids, "n");
@@ -112,7 +126,8 @@ class ChecklistEntryDataFetcherTest {
   @Test
   void saveChecklist_delegatesToService() {
     ChecklistEntryInput input = ChecklistEntryInput.newBuilder().name("e").build();
-    QuerySuccess expected = QuerySuccess.newBuilder().message("saveChecklist succeeded").id(UUID.randomUUID().toString()).build();
+    SaveChecklistResponse expected = SaveChecklistResponse.newBuilder().message("Checklist saved successfully")
+        .entry(ChecklistEntry.newBuilder().id(UUID.randomUUID().toString()).name("e").build()).build();
     when(checklistEntryGraphQLService.saveChecklist(input)).thenReturn(expected);
 
     var result = fetcher.saveChecklist(input);
@@ -124,7 +139,8 @@ class ChecklistEntryDataFetcherTest {
   @Test
   void completeChecklist_delegatesToService() {
     String id = UUID.randomUUID().toString();
-    QuerySuccess expected = QuerySuccess.newBuilder().message("completeChecklist succeeded").id(id).build();
+    CompleteChecklistResponse expected = CompleteChecklistResponse.newBuilder().message("Checklist completed successfully")
+        .entry(ChecklistEntry.newBuilder().id(id).name("e").build()).build();
     when(checklistEntryGraphQLService.completeChecklist(id)).thenReturn(expected);
 
     var result = fetcher.completeChecklist(id);
@@ -136,7 +152,8 @@ class ChecklistEntryDataFetcherTest {
   @Test
   void archiveChecklist_delegatesToService() {
     String id = UUID.randomUUID().toString();
-    QuerySuccess expected = QuerySuccess.newBuilder().message("archiveChecklist succeeded").id(id).build();
+    ArchiveChecklistResponse expected = ArchiveChecklistResponse.newBuilder().message("Checklist archived successfully")
+        .entry(ChecklistEntry.newBuilder().id(id).name("e").build()).build();
     when(checklistEntryGraphQLService.archiveChecklist(id)).thenReturn(expected);
 
     var result = fetcher.archiveChecklist(id);
@@ -148,7 +165,7 @@ class ChecklistEntryDataFetcherTest {
   @Test
   void deleteChecklist_delegatesToService() {
     String id = UUID.randomUUID().toString();
-    QuerySuccess expected = QuerySuccess.newBuilder().message("deleteChecklist succeeded").id(id).build();
+    DeleteChecklistResponse expected = DeleteChecklistResponse.newBuilder().message("Checklist deleted successfully").id(id).build();
     when(checklistEntryGraphQLService.deleteChecklist(id)).thenReturn(expected);
 
     var result = fetcher.deleteChecklist(id);
@@ -161,7 +178,8 @@ class ChecklistEntryDataFetcherTest {
   void addItem_delegatesToService() {
     String entryId = UUID.randomUUID().toString();
     String itemId = UUID.randomUUID().toString();
-    QuerySuccess expected = QuerySuccess.newBuilder().message("addItem succeeded").id(UUID.randomUUID().toString()).build();
+    AddItemResponse expected = AddItemResponse.newBuilder().message("Checklist item added successfully")
+        .entry(ChecklistEntry.newBuilder().id(entryId).name("e").build()).build();
     when(checklistEntryGraphQLService.addItem(entryId, itemId, 0)).thenReturn(expected);
 
     var result = fetcher.addItem(entryId, itemId, 0);
@@ -174,7 +192,8 @@ class ChecklistEntryDataFetcherTest {
   void removeItem_delegatesToService() {
     String entryId = UUID.randomUUID().toString();
     String itemId = UUID.randomUUID().toString();
-    QuerySuccess expected = QuerySuccess.newBuilder().message("removeItem succeeded").id(entryId).build();
+    RemoveItemResponse expected = RemoveItemResponse.newBuilder().message("Checklist item removed successfully")
+        .entry(ChecklistEntry.newBuilder().id(entryId).name("e").build()).build();
     when(checklistEntryGraphQLService.removeItem(entryId, itemId)).thenReturn(expected);
 
     var result = fetcher.removeItem(entryId, itemId);
@@ -187,7 +206,9 @@ class ChecklistEntryDataFetcherTest {
   void setItemStatus_delegatesToService() {
     String entryId = UUID.randomUUID().toString();
     String itemId = UUID.randomUUID().toString();
-    QuerySuccess expected = QuerySuccess.newBuilder().message("setItemStatus succeeded").id(UUID.randomUUID().toString()).build();
+    SetItemStatusResponse expected = SetItemStatusResponse.newBuilder()
+        .message("Checklist item status updated successfully")
+        .entry(ChecklistEntry.newBuilder().id(entryId).name("e").build()).build();
     when(checklistEntryGraphQLService.setItemStatus(entryId, itemId, ItemStatus.COMPLETE)).thenReturn(expected);
 
     var result = fetcher.setItemStatus(entryId, itemId, ItemStatus.COMPLETE);

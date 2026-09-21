@@ -5,15 +5,22 @@ import com.sun.base.util.FilterSpec;
 import com.sun.base.util.GraphQLSupport;
 import com.sun.fates.model.PersonEntity;
 import com.sun.fates.service.PersonService;
+import com.sun.base.error.MutationException;
 import com.sun.gaia.codegen.types.Account;
 import com.sun.gaia.codegen.types.AuthResult;
+import com.sun.gaia.codegen.types.ChangePasswordResponse;
+import com.sun.gaia.codegen.types.ConfirmAccountReactivationResponse;
+import com.sun.gaia.codegen.types.DeactivateAccountResponse;
 import com.sun.gaia.codegen.types.LoginInput;
+import com.sun.gaia.codegen.types.LogoutResponse;
 import com.sun.gaia.codegen.types.PagedAccounts;
 import com.sun.gaia.codegen.types.PaginationInput;
-import com.sun.gaia.codegen.types.QueryResult;
-import com.sun.gaia.codegen.types.QuerySuccess;
 import com.sun.gaia.codegen.types.RegisterInput;
-import com.sun.gaia.codegen.types.StandardError;
+import com.sun.gaia.codegen.types.RequestAccountReactivationResponse;
+import com.sun.gaia.codegen.types.RequestPasswordResetResponse;
+import com.sun.gaia.codegen.types.ResetPasswordResponse;
+import com.sun.gaia.codegen.types.SuspendAccountResponse;
+import com.sun.gaia.codegen.types.UnsuspendAccountResponse;
 import com.sun.gaia.graphql.mappers.AccountMapper;
 import com.sun.gaia.graphql.services.support.GaiaGraphQLSupport;
 import com.sun.gaia.model.AccountEntity;
@@ -148,7 +155,7 @@ public class AccountGraphQLService {
    * Marks an account suspended and revokes all sessions.
    */
   @Transactional
-  public QueryResult suspendAccount(String id) {
+  public SuspendAccountResponse suspendAccount(String id) {
     AccountEntity account = accountService.findById(UUID.fromString(id))
         .orElseThrow(() -> new IllegalArgumentException("Account not found: " + id));
     account.setStatus(AccountStatus.SUSPENDED);
@@ -159,34 +166,38 @@ public class AccountGraphQLService {
       logger.warn("Failed to revoke sessions for suspended account {}", id, e);
     }
     logger.info("Suspended account {}", id);
-    return QuerySuccess.newBuilder().message("Account suspended").id(id).build();
+    return SuspendAccountResponse.newBuilder()
+        .message("Account suspended")
+        .account(accountMapper.map(account))
+        .build();
   }
 
   /**
    * Re-activates a suspended account.
    */
   @Transactional
-  public QueryResult unsuspendAccount(String id) {
+  public UnsuspendAccountResponse unsuspendAccount(String id) {
     AccountEntity account = accountService.findById(UUID.fromString(id))
         .orElseThrow(() -> new IllegalArgumentException("Account not found: " + id));
     account.setStatus(AccountStatus.ACTIVE);
     accountService.save(account);
     logger.info("Unsuspended account {}", id);
-    return QuerySuccess.newBuilder().message("Account unsuspended").id(id).build();
+    return UnsuspendAccountResponse.newBuilder()
+        .message("Account unsuspended")
+        .account(accountMapper.map(account))
+        .build();
   }
 
   /**
    * Deactivates the calling account, revoking its sessions.
    *
-   * @return a QuerySuccess result
+   * @return the deactivation result
    */
   @Transactional
-  public QueryResult deactivateAccount() {
+  public DeactivateAccountResponse deactivateAccount() {
     UUID userId = UserContextHolder.getUserId();
     if (userId == null) {
-      return StandardError.newBuilder()
-          .message("Not authenticated")
-          .build();
+      throw new MutationException("Not authenticated");
     }
     accountService.deactivateAccount(userId);
     try {
@@ -203,9 +214,8 @@ public class AccountGraphQLService {
       logger.warn("Failed to revoke token on deactivate {}", userId, e);
     }
     logger.info("Deactivated account {}", userId);
-    return QuerySuccess.newBuilder()
+    return DeactivateAccountResponse.newBuilder()
         .message("Account deactivated")
-        .id(userId.toString())
         .build();
   }
 
@@ -268,9 +278,9 @@ public class AccountGraphQLService {
   /**
    * Logs out the current account, revoking the current JWT.
    *
-   * @return a QuerySuccess result
+   * @return the logout result
    */
-  public QueryResult logout() {
+  public LogoutResponse logout() {
     try {
       ServletRequestAttributes attrs =
           (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
@@ -284,7 +294,7 @@ public class AccountGraphQLService {
     } catch (Exception e) {
       logger.warn("Failed to revoke token on logout", e);
     }
-    return QuerySuccess.newBuilder()
+    return LogoutResponse.newBuilder()
         .message("Logout succeeded")
         .build();
   }
@@ -293,10 +303,10 @@ public class AccountGraphQLService {
    * Requests a password reset email.
    *
    * @param email the email to send the reset link to
-   * @return a QuerySuccess result (always succeeds to prevent email enumeration)
+   * @return the request result (always succeeds to prevent email enumeration)
    */
   @Transactional
-  public QueryResult requestPasswordReset(String email) {
+  public RequestPasswordResetResponse requestPasswordReset(String email) {
     return accountService.findByPersonEmail(email).stream()
         .filter(a -> a.getProvider() == null || "local".equals(a.getProvider()))
         .findFirst()
@@ -304,14 +314,13 @@ public class AccountGraphQLService {
           var token = passwordResetService.createToken(account.getId());
           String resetLink = GaiaGraphQLSupport.resolveBaseUrl(appBaseUrl) + "/reset-password?token=" + token.getToken();
           emailService.sendPasswordResetEmail(email, resetLink);
-          return QuerySuccess.newBuilder()
+          return RequestPasswordResetResponse.newBuilder()
               .message("Password reset email sent")
-              .id(account.getId().toString())
               .build();
         })
         .orElseGet(() -> {
           logger.warn("Password reset requested for unknown email");
-          return QuerySuccess.newBuilder()
+          return RequestPasswordResetResponse.newBuilder()
               .message("Password reset email sent")
               .build();
         });
@@ -325,18 +334,15 @@ public class AccountGraphQLService {
    * @return the result of the reset operation
    */
   @Transactional
-  public QueryResult resetPassword(String token, String newPassword) {
+  public ResetPasswordResponse resetPassword(String token, String newPassword) {
     try {
       UUID accountId = passwordResetService.useToken(token);
       accountService.changePassword(accountId, newPassword);
-      return QuerySuccess.newBuilder()
+      return ResetPasswordResponse.newBuilder()
           .message("Password reset succeeded")
-          .id(accountId.toString())
           .build();
     } catch (Exception e) {
-      return StandardError.newBuilder()
-          .message(e.getMessage())
-          .build();
+      throw new MutationException(e.getMessage(), e);
     }
   }
 
@@ -348,27 +354,22 @@ public class AccountGraphQLService {
    * @return the result of the change operation
    */
   @Transactional
-  public QueryResult changePassword(String currentPassword, String newPassword) {
+  public ChangePasswordResponse changePassword(String currentPassword, String newPassword) {
     UUID userId = UserContextHolder.getUserId();
     if (userId == null) {
-      return StandardError.newBuilder()
-          .message("Not authenticated")
-          .build();
+      throw new MutationException("Not authenticated");
     }
 
     AccountEntity account = accountService.findById(userId)
         .orElseThrow(() -> new IllegalArgumentException("Account not found"));
 
     if (!accountService.verifyPassword(account, currentPassword)) {
-      return StandardError.newBuilder()
-          .message("Current password incorrect")
-          .build();
+      throw new MutationException("Current password incorrect");
     }
 
     accountService.changePassword(userId, newPassword);
-    return QuerySuccess.newBuilder()
+    return ChangePasswordResponse.newBuilder()
         .message("Password changed")
-        .id(userId.toString())
         .build();
   }
 
@@ -378,10 +379,10 @@ public class AccountGraphQLService {
    * <p>Always reports success to avoid email enumeration.
    *
    * @param email the account's email address
-   * @return a QuerySuccess result
+   * @return the request result
    */
   @Transactional
-  public QueryResult requestAccountReactivation(String email, String provider) {
+  public RequestAccountReactivationResponse requestAccountReactivation(String email, String provider) {
     return accountService.findByPersonEmail(email).stream()
         .filter(account -> account.getStatus() == AccountStatus.DEACTIVATED)
         .filter(account -> provider.equals(account.getProvider()))
@@ -392,20 +393,17 @@ public class AccountGraphQLService {
             String reactivationLink = GaiaGraphQLSupport.resolveBaseUrl(appBaseUrl) + "/reactivate?token=" + token.getToken();
             emailService.sendReactivationEmail(email, reactivationLink);
             logger.info("Reactivation email sent for account {}", account.getId());
-            return QuerySuccess.newBuilder()
+            return RequestAccountReactivationResponse.newBuilder()
                 .message("Reactivation email sent")
-                .id(account.getId().toString())
                 .build();
           } catch (Exception e) {
             logger.error("Failed to send reactivation email for account {}", account.getId(), e);
-            return StandardError.newBuilder()
-                .message("Failed to send reactivation email")
-                .build();
+            throw new MutationException("Failed to send reactivation email", e);
           }
         })
         .orElseGet(() -> {
           logger.warn("Reactivation requested for unknown or active email");
-          return QuerySuccess.newBuilder()
+          return RequestAccountReactivationResponse.newBuilder()
               .message("Reactivation email sent")
               .build();
         });
@@ -418,7 +416,7 @@ public class AccountGraphQLService {
    * @return the result of the reactivation
    */
   @Transactional
-  public QueryResult confirmAccountReactivation(String token) {
+  public ConfirmAccountReactivationResponse confirmAccountReactivation(String token) {
     try {
       UUID accountId = reactivationService.useToken(token);
       AccountEntity account = accountService.findById(accountId)
@@ -426,14 +424,11 @@ public class AccountGraphQLService {
       account.setStatus(AccountStatus.ACTIVE);
       accountService.save(account);
       logger.info("Reactivated account {}", accountId);
-      return QuerySuccess.newBuilder()
+      return ConfirmAccountReactivationResponse.newBuilder()
           .message("Account reactivated")
-          .id(accountId.toString())
           .build();
     } catch (Exception e) {
-      return StandardError.newBuilder()
-          .message(e.getMessage())
-          .build();
+      throw new MutationException(e.getMessage(), e);
     }
   }
 }

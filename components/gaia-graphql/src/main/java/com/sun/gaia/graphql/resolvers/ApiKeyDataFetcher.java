@@ -2,8 +2,9 @@ package com.sun.gaia.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
-import com.sun.gaia.codegen.types.IssuedApiKey;
-import com.sun.gaia.codegen.types.QueryResult;
+import com.sun.gaia.codegen.types.IssueApiKeyResponse;
+import com.sun.gaia.codegen.types.RevokeApiKeyResponse;
+import com.sun.gaia.codegen.types.RotateApiKeyResponse;
 import com.sun.gaia.graphql.services.ApiKeyGraphQLService;
 import org.springframework.security.access.prepost.PreAuthorize;
 
@@ -28,7 +29,7 @@ public class ApiKeyDataFetcher {
    */
   @DgsData(parentType = "GaiaMutations", field = "issueApiKey")
   @PreAuthorize("@permissions.has('graphql.gaia.issueApiKey')")
-  public IssuedApiKey issueApiKey(String accountUsername, String name) {
+  public IssueApiKeyResponse issueApiKey(String accountUsername, String name) {
     return apiKeyGraphQLService.issueApiKey(accountUsername, name);
   }
 
@@ -40,7 +41,7 @@ public class ApiKeyDataFetcher {
    */
   @DgsData(parentType = "GaiaMutations", field = "revokeApiKey")
   @PreAuthorize("@permissions.has('graphql.gaia.revokeApiKey')")
-  public QueryResult revokeApiKey(String id) {
+  public RevokeApiKeyResponse revokeApiKey(String id) {
     return apiKeyGraphQLService.revokeApiKey(id);
   }
 
@@ -52,7 +53,7 @@ public class ApiKeyDataFetcher {
    */
   @DgsData(parentType = "GaiaMutations", field = "rotateApiKey")
   @PreAuthorize("@permissions.has('graphql.gaia.rotateApiKey')")
-  public IssuedApiKey rotateApiKey(String id) {
+  public RotateApiKeyResponse rotateApiKey(String id) {
     return apiKeyGraphQLService.rotateApiKey(id);
   }
 }

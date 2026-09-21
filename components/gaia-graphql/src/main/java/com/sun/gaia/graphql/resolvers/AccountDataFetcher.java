@@ -5,11 +5,19 @@ import com.netflix.graphql.dgs.DgsData;
 import com.netflix.graphql.dgs.DgsEnableDataFetcherInstrumentation;
 import com.sun.gaia.codegen.types.Account;
 import com.sun.gaia.codegen.types.AuthResult;
+import com.sun.gaia.codegen.types.ChangePasswordResponse;
+import com.sun.gaia.codegen.types.ConfirmAccountReactivationResponse;
+import com.sun.gaia.codegen.types.DeactivateAccountResponse;
 import com.sun.gaia.codegen.types.LoginInput;
+import com.sun.gaia.codegen.types.LogoutResponse;
 import com.sun.gaia.codegen.types.PagedAccounts;
 import com.sun.gaia.codegen.types.PaginationInput;
-import com.sun.gaia.codegen.types.QueryResult;
 import com.sun.gaia.codegen.types.RegisterInput;
+import com.sun.gaia.codegen.types.RequestAccountReactivationResponse;
+import com.sun.gaia.codegen.types.RequestPasswordResetResponse;
+import com.sun.gaia.codegen.types.ResetPasswordResponse;
+import com.sun.gaia.codegen.types.SuspendAccountResponse;
+import com.sun.gaia.codegen.types.UnsuspendAccountResponse;
 import com.sun.gaia.graphql.services.AccountGraphQLService;
 import java.util.List;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -74,7 +82,7 @@ public class AccountDataFetcher {
    */
   @DgsData(parentType = "GaiaMutations", field = "suspendAccount")
   @PreAuthorize("@permissions.has('graphql.gaia.suspendAccount')")
-  public QueryResult suspendAccount(String id) {
+  public SuspendAccountResponse suspendAccount(String id) {
     return accountGraphQLService.suspendAccount(id);
   }
 
@@ -83,7 +91,7 @@ public class AccountDataFetcher {
    */
   @DgsData(parentType = "GaiaMutations", field = "unsuspendAccount")
   @PreAuthorize("@permissions.has('graphql.gaia.unsuspendAccount')")
-  public QueryResult unsuspendAccount(String id) {
+  public UnsuspendAccountResponse unsuspendAccount(String id) {
     return accountGraphQLService.unsuspendAccount(id);
   }
 
@@ -92,7 +100,7 @@ public class AccountDataFetcher {
    */
   @DgsData(parentType = "GaiaMutations", field = "deactivateAccount")
   @PreAuthorize("@permissions.isAuthenticated()")
-  public QueryResult deactivateAccount() {
+  public DeactivateAccountResponse deactivateAccount() {
     return accountGraphQLService.deactivateAccount();
   }
 
@@ -129,7 +137,7 @@ public class AccountDataFetcher {
    */
   @DgsData(parentType = "GaiaMutations", field = "logout")
   @PreAuthorize("@permissions.isAuthenticated()")
-  public QueryResult logout() {
+  public LogoutResponse logout() {
     return accountGraphQLService.logout();
   }
 
@@ -142,7 +150,7 @@ public class AccountDataFetcher {
   @DgsData(parentType = "GaiaMutations", field = "requestPasswordReset")
   @PreAuthorize("permitAll()")
   @DgsEnableDataFetcherInstrumentation(false)
-  public QueryResult requestPasswordReset(String email) {
+  public RequestPasswordResetResponse requestPasswordReset(String email) {
     return accountGraphQLService.requestPasswordReset(email);
   }
 
@@ -156,7 +164,7 @@ public class AccountDataFetcher {
   @DgsData(parentType = "GaiaMutations", field = "resetPassword")
   @PreAuthorize("permitAll()")
   @DgsEnableDataFetcherInstrumentation(false)
-  public QueryResult resetPassword(String token, String newPassword) {
+  public ResetPasswordResponse resetPassword(String token, String newPassword) {
     return accountGraphQLService.resetPassword(token, newPassword);
   }
 
@@ -169,7 +177,7 @@ public class AccountDataFetcher {
    */
   @DgsData(parentType = "GaiaMutations", field = "changePassword")
   @PreAuthorize("@permissions.isAuthenticated()")
-  public QueryResult changePassword(String currentPassword, String newPassword) {
+  public ChangePasswordResponse changePassword(String currentPassword, String newPassword) {
     return accountGraphQLService.changePassword(currentPassword, newPassword);
   }
 
@@ -179,7 +187,7 @@ public class AccountDataFetcher {
   @DgsData(parentType = "GaiaMutations", field = "requestAccountReactivation")
   @PreAuthorize("permitAll()")
   @DgsEnableDataFetcherInstrumentation(false)
-  public QueryResult requestAccountReactivation(String email, String provider) {
+  public RequestAccountReactivationResponse requestAccountReactivation(String email, String provider) {
     return accountGraphQLService.requestAccountReactivation(email, provider);
   }
 
@@ -189,7 +197,7 @@ public class AccountDataFetcher {
   @DgsData(parentType = "GaiaMutations", field = "confirmAccountReactivation")
   @PreAuthorize("permitAll()")
   @DgsEnableDataFetcherInstrumentation(false)
-  public QueryResult confirmAccountReactivation(String token) {
+  public ConfirmAccountReactivationResponse confirmAccountReactivation(String token) {
     return accountGraphQLService.confirmAccountReactivation(token);
   }
 }

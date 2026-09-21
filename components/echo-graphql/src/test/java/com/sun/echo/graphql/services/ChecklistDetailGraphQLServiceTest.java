@@ -4,8 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.sun.echo.codegen.types.QueryResult;
-import com.sun.echo.codegen.types.QuerySuccess;
+import com.sun.echo.codegen.types.AttachObjectResponse;
+import com.sun.echo.codegen.types.DetachObjectResponse;
 import com.sun.echo.codegen.types.RemoteObjectReference;
 import com.sun.echo.codegen.types.RemoteObjectType;
 import com.sun.echo.service.ChecklistDetailService;
@@ -48,9 +48,10 @@ class ChecklistDetailGraphQLServiceTest {
     UUID attached = UUID.randomUUID();
     when(detailService.attach(source, "target", "ENTRY")).thenReturn(attached);
 
-    QueryResult result = service.attachObject(source.toString(), "target", RemoteObjectType.ENTRY);
+    AttachObjectResponse result = service.attachObject(source.toString(), "target", RemoteObjectType.ENTRY);
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
+    assertThat(result.getId()).isEqualTo(attached.toString());
+    assertThat(result.getMessage()).contains("attached");
     verify(detailService).attach(source, "target", "ENTRY");
   }
 
@@ -60,9 +61,10 @@ class ChecklistDetailGraphQLServiceTest {
     UUID detached = UUID.randomUUID();
     when(detailService.detach(source, "target", "ITEM")).thenReturn(detached);
 
-    QueryResult result = service.detachObject(source.toString(), "target", RemoteObjectType.ITEM);
+    DetachObjectResponse result = service.detachObject(source.toString(), "target", RemoteObjectType.ITEM);
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
+    assertThat(result.getId()).isEqualTo(detached.toString());
+    assertThat(result.getMessage()).contains("detached");
     verify(detailService).detach(source, "target", "ITEM");
   }
 
@@ -72,9 +74,9 @@ class ChecklistDetailGraphQLServiceTest {
     UUID attached = UUID.randomUUID();
     when(detailService.attach(source, "target", null)).thenReturn(attached);
 
-    QueryResult result = service.attachObject(source.toString(), "target", null);
+    AttachObjectResponse result = service.attachObject(source.toString(), "target", null);
 
-    assertThat(result).isInstanceOf(QuerySuccess.class);
+    assertThat(result.getId()).isEqualTo(attached.toString());
     verify(detailService).attach(source, "target", null);
   }
 }
