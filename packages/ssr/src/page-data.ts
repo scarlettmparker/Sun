@@ -563,19 +563,6 @@ export function peekPageData<T>(
   return ((record.result as Record<string, unknown>)?.[key] as T) ?? null;
 }
 
-function parseInvalidationPatterns(cookieValue: string): string[] {
-  try {
-    const decoded = decodeURIComponent(cookieValue);
-    const parsed = JSON.parse(decoded);
-    if (Array.isArray(parsed)) {
-      return parsed;
-    }
-  } catch {
-    // do nothing
-  }
-  return [cookieValue];
-}
-
 function matchesParameter(
   expectedValue: unknown,
   actualValue: unknown,
@@ -653,14 +640,6 @@ export function invalidateCacheKeys(patterns: string[]): boolean {
   return true;
 }
 
-/**
- * Invalidates suspense-cache entries from a (legacy) redirect-driven
- * invalidation cookie payload. Used during SSR.
- */
-export function invalidateCache(invalidateCacheCookie: string): boolean {
-  return invalidateCacheKeys(parseInvalidationPatterns(invalidateCacheCookie));
-}
-
 // Framework-agnostic pub/sub so the React hook (react.ts) can react to
 // invalidation/revalidation without a circular import. Listeners receive the
 // cache keys that should be refreshed (or undefined for a blanket refresh).
@@ -699,6 +678,60 @@ export function invalidatePageData(patterns?: string[]): void {
  */
 export function revalidatePageData(cacheKeys?: string[]): void {
   emitDataInvalidation(cacheKeys);
+}
+
+// Separate channel for in-place writes. Patch listeners re-render from the cache
+// without a /__page-data round-trip, unlike invalidation listeners which refetch.
+const dataPatchSubscribers = new Set<InvalidationListener>();
+
+export function subscribeDataPatch(fn: InvalidationListener): () => void {
+  dataPatchSubscribers.add(fn);
+  return () => {
+    dataPatchSubscribers.delete(fn);
+  };
+}
+
+function emitDataPatch(cacheKeys?: string[]): void {
+  dataPatchSubscribers.forEach((fn) => fn(cacheKeys));
+}
+
+/**
+ * Writes a mutation result into the suspense cache in place and notifies
+ * subscribers. No network request. A no-op during SSR, where the response is
+ * rendered before the mutation exists.
+ *
+ * @param key Data key within the pattern's merged slice.
+ * @param pattern Route pattern the cache entry belongs to.
+ * @param params Loader parameters for the entry.
+ * @param updater Receives the current value and returns the next value.
+ */
+export function patchPageData<T>(
+  key: string,
+  pattern: string,
+  params: Record<string, unknown> | undefined,
+  updater: (current: T | null) => T,
+): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+  const cacheKey = makeCacheKey(`${pattern}:${key}`, params);
+  const record = activeCache().get(cacheKey);
+  const current = (record?.result?.[key] as T | undefined) ?? null;
+  const next = updater(current);
+  if (record) {
+    record.status = "resolved";
+    record.result = { ...(record.result ?? {}), [key]: next };
+    record.timestamp = Date.now();
+    record.promise = undefined;
+    record.error = undefined;
+  } else {
+    activeCache().set(cacheKey, {
+      status: "resolved",
+      result: { [key]: next },
+      timestamp: Date.now(),
+    });
+  }
+  emitDataPatch([cacheKey]);
 }
 
 /**

@@ -3,7 +3,6 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import type { ViteDevServer } from "vite";
 import type { ServerResponse } from "node:http";
-import type { MutationResult } from "./client-mutation";
 
 /** Default production manifest path, relative to the app's working directory. */
 const DEFAULT_MANIFEST_PATH = "./dist/client/.vite/manifest.json";
@@ -40,14 +39,6 @@ export type RenderAppOptions = {
    */
   frontendMode?: string;
   /**
-   * Toast payload from a prior redirect, if any.
-   */
-  mutationPayload?: MutationResult | null;
-  /**
-   * Invalidate-cache cookie value, if present.
-   */
-  invalidateCacheCookie?: string;
-  /**
    * Production manifest path; defaults to the standard Vite output.
    */
   manifestPath?: string;
@@ -70,8 +61,6 @@ type EntryRender = (options: {
   clientJs: string;
   clientCss: string[];
   isProduction: boolean;
-  mutationPayload?: MutationResult | null;
-  invalidateCacheCookie?: string;
   frontendMode?: string;
 }) => Promise<{
   statusCode: number;
@@ -89,7 +78,7 @@ export async function renderApp(
   opts: RenderAppOptions,
   res: ServerResponse,
 ): Promise<void> {
-  const { vite, isProduction, invalidateCacheCookie } = opts;
+  const { vite, isProduction } = opts;
   try {
     let render: EntryRender;
     let clientJs: string;
@@ -134,8 +123,6 @@ export async function renderApp(
       clientJs,
       clientCss,
       isProduction,
-      mutationPayload: opts.mutationPayload,
-      invalidateCacheCookie,
       frontendMode: opts.frontendMode,
     });
 

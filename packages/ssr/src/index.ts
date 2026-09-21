@@ -5,12 +5,13 @@ export {
   hydratePageData,
   suspenseCache,
   invalidateCacheKeys,
-  invalidateCache,
   invalidatePageData,
   revalidatePageData,
+  patchPageData,
   refetchEntry,
   fetchPageDataRpc,
   subscribeDataInvalidation,
+  subscribeDataPatch,
   onCacheHydrated,
   pageDataLoaders,
   pageDataRegistry,
@@ -35,12 +36,10 @@ export type {
 export { defineLoader } from "./page-data";
 export type { PageDataContext } from "./page-data";
 
-export { ServerRedirectError } from "./server-redirect";
-
 export { pageDataRpcHandler } from "./rpc-handler";
 
 export { executeMutation } from "./client-mutation";
-export type { BaseMutationResult, MutationResult } from "./client-mutation";
+export { MutationError } from "./mutation-error";
 
 export { getCsrfToken, CSRF_HEADER, CSRF_FIELD, CSRF_COOKIE } from "./csrf";
 
@@ -56,4 +55,5 @@ export type {
 export { initClientBootstrap } from "./client-bootstrap";
 export type { BootstrapI18n } from "./client-bootstrap";
 
-export { RoleCheck } from "./react";
+export { RoleCheck, useMutation } from "./react";
+export type { UseMutationOptions } from "./react";

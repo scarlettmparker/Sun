@@ -1,5 +1,4 @@
 import { executeMutation } from "./client-mutation";
-import type { MutationResult } from "./client-mutation";
 import type { VariablesOf } from "./mutations";
 
 /**
@@ -10,17 +9,17 @@ export type FormFieldSchema = Record<string, "string" | "number" | "boolean">;
 /**
  * Built action returned by {@link defineAction}.
  */
-export interface DefinedAction<TDoc> {
+export interface DefinedAction<TDoc, TResponse = unknown> {
   /**
    * Invokes the action with typed variables.
    */
-  run: (variables: VariablesOf<TDoc>) => Promise<MutationResult>;
+  run: (variables: VariablesOf<TDoc>) => Promise<TResponse>;
 }
 
 /**
  * Defines a typed client-side server action for a registered mutation path.
  */
-export function defineAction<TDoc>(opts: {
+export function defineAction<TDoc, TResponse = unknown>(opts: {
   /**
    * Registered mutation path the action posts to.
    */
@@ -29,23 +28,13 @@ export function defineAction<TDoc>(opts: {
    * Generated document supplying the variable type.
    */
   document: TDoc;
-  /**
-   * Optional override for Redirect results; defaults to a full-page navigation.
-   */
-  onRedirect?: (redirectTo: string) => void;
-}): DefinedAction<TDoc> {
+}): DefinedAction<TDoc, TResponse> {
   return {
-    run: async (variables) => {
-      const result = await executeMutation(
+    run: (variables) =>
+      executeMutation<TResponse>(
         opts.path,
         variables as Record<string, unknown>,
-      );
-      if (result.__typename === "Redirect") {
-        const onRedirect = opts.onRedirect ?? defaultRedirect;
-        onRedirect(result.redirectTo);
-      }
-      return result;
-    },
+      ),
   };
 }
 
@@ -81,10 +70,4 @@ export function parseForm<T extends FormFieldSchema>(
     }
   }
   return out;
-}
-
-function defaultRedirect(redirectTo: string): void {
-  if (typeof window !== "undefined") {
-    window.location.assign(redirectTo);
-  }
 }

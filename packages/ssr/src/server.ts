@@ -6,7 +6,7 @@ import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import type { ViteDevServer } from "vite";
 import { pageDataRpcHandler } from "./rpc-handler";
 import { mutationRegistry } from "./mutations";
-import { ServerRedirectError } from "./server-redirect";
+import { MutationError } from "./mutation-error";
 import { registerSecurity } from "./security";
 import { registerIpWhitelist, type IpWhitelistConfig } from "./ip-whitelist";
 import {
@@ -372,9 +372,8 @@ export async function createServer(
 }
 
 /**
- * Builds the POST /* mutation handler: dispatches to mutationRegistry, stamps the
- * redirect/payload/invalidate cookies on ServerRedirectError, and maps result
- * __typename values to HTTP status codes.
+ * Builds the POST /* mutation handler: dispatches to mutationRegistry and sends
+ * the handler's typed response, mapping MutationError to its HTTP status.
  *
  * @returns A Fastify POST route handler.
  */
@@ -391,63 +390,15 @@ export function mutationPostHandler(): (
         (request.body as Record<string, unknown>) ?? {},
         { cookie: request.headers.cookie },
       );
-
-      if (result.invalidated && result.invalidated.length) {
-        reply.header(
-          "Set-Cookie",
-          `invalidate_cache=${encodeURIComponent(JSON.stringify(result.invalidated))}; Path=/; Max-Age=31536000; SameSite=Lax;`,
-        );
-      }
-
-      if (result.__typename === "QuerySuccess") {
-        reply.send(result);
-        return;
-      }
-      if (result.__typename === "StandardError") {
-        reply.status(400).send(result);
-        return;
-      }
       reply.send(result);
     } catch (error) {
-      if (error instanceof ServerRedirectError) {
-        const payloadString = JSON.stringify(error.clientPayload ?? {});
-        const encodedPayload = Buffer.from(payloadString).toString("base64");
-
-        const cookieHeaders: string[] = [
-          `mutation_payload=${encodedPayload}; Path=/; Max-Age=5; SameSite=Lax;`,
-          `redirect_to=${error.redirectTo}; Path=/; Max-Age=5; SameSite=Lax;`,
-        ];
-
-        if (error.cacheInvalidateKey) {
-          const encodedCacheKey = encodeURIComponent(
-            JSON.stringify(
-              Array.isArray(error.cacheInvalidateKey)
-                ? error.cacheInvalidateKey
-                : [error.cacheInvalidateKey],
-            ),
-          );
-          cookieHeaders.push(
-            `invalidate_cache=${encodedCacheKey}; Path=/; Max-Age=31536000; SameSite=Lax;`,
-          );
-        }
-
-        if (error.cookies && error.cookies.length) {
-          cookieHeaders.push(...error.cookies);
-        }
-
-        reply.header("Set-Cookie", cookieHeaders);
-        reply.send({
-          __typename: "Redirect",
-          redirectTo: error.redirectTo,
-        });
+      if (error instanceof MutationError) {
+        reply.status(error.statusCode ?? 400).send({ message: error.message });
         return;
       }
 
       console.error("Error executing mutation:", error);
-      reply.status(500).send({
-        __typename: "StandardError",
-        message: "Internal server error",
-      });
+      reply.status(500).send({ message: "Internal server error" });
     }
   };
 }

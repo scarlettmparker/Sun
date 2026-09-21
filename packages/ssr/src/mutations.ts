@@ -3,8 +3,7 @@
  * Provides a registry for mutation handlers and a function to execute mutations.
  */
 
-import { MutationResult } from "./client-mutation";
-import { ServerRedirectError } from "./server-redirect";
+import { MutationError } from "./mutation-error";
 
 /**
  * Per-request context passed to mutation handlers, so they can forward auth
@@ -17,60 +16,52 @@ export type MutationContext = {
   cookie?: string;
 };
 
-export type MutationHandler<TResult = MutationResult> = (
+export type MutationHandler<TResponse = unknown> = (
   body: Record<string, unknown>,
   context: MutationContext,
-) => Promise<(TResult & { invalidated?: string[] }) | MutationResult>;
+) => Promise<TResponse>;
 
-const mutationHandlers: Record<string, MutationHandler> = {};
+const mutationHandlers: Record<string, MutationHandler<unknown>> = {};
 
 /**
  * Registers a mutation handler for a specific path.
+ *
  * @param path The route path (e.g., 'blog/create').
- * @param handler Function that handles the mutation.
+ * @param handler Function that handles the mutation and returns its typed response.
  */
-function registerMutationHandler(path: string, handler: MutationHandler): void {
-  mutationHandlers[path] = handler;
+function registerMutationHandler<TResponse>(
+  path: string,
+  handler: MutationHandler<TResponse>,
+): void {
+  mutationHandlers[path] = handler as MutationHandler<unknown>;
 }
 
 /**
  * Executes a mutation for a given path.
+ *
  * @param path The route path.
  * @param body The request body.
  * @param context Per-request context (e.g. the Cookie header) for the handler.
- * @returns Promise resolving to the mutation result.
+ * @returns Promise resolving to the handler's typed response.
  */
 async function executeMutation(
   path: string,
   body: Record<string, unknown>,
   context: MutationContext,
-): Promise<MutationResult> {
+): Promise<unknown> {
   const handler = mutationHandlers[path];
   if (!handler) {
-    return { __typename: "StandardError", message: "Unknown mutation path" };
+    throw new MutationError(`Unknown mutation path: ${path}`, 404);
   }
-  try {
-    return await handler(body, context);
-  } catch (error) {
-    if (error instanceof ServerRedirectError) {
-      throw error;
-    } // Only catch and log genuine internal errors
-
-    console.error(`Failed to execute mutation for path ${path}:`, error);
-    return { __typename: "StandardError", message: "Internal server error" };
-  }
+  return handler(body, context);
 }
 
 /**
  * Mutation registry interface.
  */
 interface MutationRegistry {
-  registerMutationHandler: (path: string, handler: MutationHandler) => void;
-  executeMutation: (
-    path: string,
-    body: Record<string, unknown>,
-    context: MutationContext,
-  ) => Promise<MutationResult>;
+  registerMutationHandler: typeof registerMutationHandler;
+  executeMutation: typeof executeMutation;
 }
 
 export const mutationRegistry: MutationRegistry = {
@@ -98,30 +89,25 @@ export type VariablesOf<TDoc> = TDoc extends {
   ? V
   : Record<string, unknown>;
 
-export interface MutationDefinition<TBody, TResult = MutationResult> {
+export interface MutationDefinition<TBody, TResponse = unknown> {
   /**
    * Registered URL path, e.g. "hades/createAnnotation".
    */
   path: string;
   /**
-   * Handler that receives the typed request body and returns the result.
+   * Handler that receives the typed request body and returns the typed response.
    */
-  handler: (
-    body: TBody,
-    context: MutationContext,
-  ) => Promise<(TResult & { invalidated?: string[] }) | MutationResult>;
+  handler: (body: TBody, context: MutationContext) => Promise<TResponse>;
 }
 
 /**
  * Registers a typed mutation handler. TBody is inferred from the handler's
  * first parameter, so call sites declare the body shape and need no casts.
  */
-export function defineMutation<TBody, TResult = MutationResult>(
-  definition: MutationDefinition<TBody, TResult>,
+export function defineMutation<TBody, TResponse = unknown>(
+  definition: MutationDefinition<TBody, TResponse>,
 ): void {
-  registerMutationHandler(
-    definition.path,
-    async (body, context) =>
-      definition.handler(body as TBody, context) as unknown as MutationResult,
+  registerMutationHandler(definition.path, (body, context) =>
+    definition.handler(body as TBody, context),
   );
 }

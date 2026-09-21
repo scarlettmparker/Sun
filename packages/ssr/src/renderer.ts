@@ -3,8 +3,7 @@ import path from "path";
 import type { ReactElement } from "react";
 import { renderToPipeableStream } from "react-dom/server";
 import { inlineCss, generateCssTag } from "@sun/utils/css-inlining";
-import { getRequestCache, invalidateCache } from "./page-data";
-import type { MutationResult } from "./client-mutation";
+import { getRequestCache } from "./page-data";
 import { getCspNonce } from "./csp-nonce";
 import { buildSecurityHeaders } from "@sun/security";
 
@@ -79,14 +78,6 @@ export type RenderOptions = {
    * True in production.
    */
   isProduction: boolean;
-  /**
-   * Toast payload from a prior redirect, if any.
-   */
-  mutationPayload?: MutationResult | null;
-  /**
-   * Invalidate-cache cookie value, if present.
-   */
-  invalidateCacheCookie?: string;
   /**
    * Frontend mode flag, emitted when configured.
    */
@@ -322,18 +313,12 @@ async function renderApp(
     clientJs,
     clientCss,
     isProduction,
-    invalidateCacheCookie,
     frontendMode,
     meta,
   } = options;
 
   if (!clientJs) {
     throw new Error("Missing required clientJs path");
-  }
-
-  let shouldDeleteCookie = false;
-  if (invalidateCacheCookie) {
-    shouldDeleteCookie = invalidateCache(invalidateCacheCookie);
   }
 
   // Capture the request cache now; onAllReady fires outside the ALS context.
@@ -381,10 +366,6 @@ async function renderApp(
           Vary: "Accept-Encoding",
           ...securityHeaders,
         };
-        if (shouldDeleteCookie) {
-          headers["Set-Cookie"] =
-            "invalidate_cache=; Path=/; Max-Age=0; SameSite=Lax;";
-        }
         const globals = Object.entries({
           __translations__: translations,
           __locale__: locale,
