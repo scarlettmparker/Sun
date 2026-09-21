@@ -1,16 +1,15 @@
-import { defineMutation, makeCacheKey, ServerRedirectError } from "@sun/ssr";
-import type { MutationResult } from "@sun/ssr";
+import { defineMutation, MutationError } from "@sun/ssr";
 import {
   mutateAddRemoteObject,
+  mutateCreateBlogPost,
   mutateDeleteBlogPost,
   mutateIngestBlogFromSource,
   mutateRemoveRemoteObject,
 } from "~/utils/api";
-import { mutateCreateBlogPost } from "~/utils/api";
 import type { BlogPostInput, IngestBlogInput } from "~/generated/graphql";
 
 /**
- * Creates a blog post and redirects to it.
+ * Creates a blog post and returns it.
  */
 defineMutation({
   path: "blog/create",
@@ -19,28 +18,15 @@ defineMutation({
     const content = (input as BlogPostInput)?.content;
 
     if (typeof title !== "string" || typeof content !== "string") {
-      return {
-        __typename: "StandardError",
-        message: "Invalid input: title and content must be strings",
-      };
+      throw new MutationError("Invalid input: title and content must be strings");
     }
 
     const result = await mutateCreateBlogPost(title, input as BlogPostInput);
-    const data = result.data?.blogMutations.createBlogPost as MutationResult;
-
-    if (data?.__typename === "QuerySuccess") {
-      const parentId = (input as BlogPostInput)?.parentId as string | undefined;
-      const invalidated = [makeCacheKey("blog:blogPosts", {})];
-      if (parentId) {
-        invalidated.push(makeCacheKey("blog/:id:children", { id: parentId }));
-      }
-      throw new ServerRedirectError(`/blog/${data.id}`, invalidated, data);
+    const response = result.data?.blogMutations.createBlogPost;
+    if (response == null) {
+      throw new MutationError(result.error ?? "Failed to create blog post");
     }
-
-    return {
-      __typename: "StandardError",
-      message: result.error || "Failed to create blog post",
-    };
+    return response;
   },
 });
 
@@ -53,24 +39,14 @@ defineMutation({
     const postId = body.postId as string | undefined;
     const target = body.target as string | undefined;
     if (typeof postId !== "string" || typeof target !== "string") {
-      return { __typename: "StandardError", message: "Invalid input" };
+      throw new MutationError("Invalid input");
     }
     const result = await mutateAddRemoteObject(postId, target);
-    const data = result.data?.blogMutations.addRemoteObject as
-      MutationResult | undefined;
-    if (data == null) {
-      return { __typename: "StandardError", message: result.error || "Failed" };
+    const response = result.data?.blogMutations.addRemoteObject;
+    if (response == null) {
+      throw new MutationError(result.error ?? "Failed to add remote object");
     }
-    if (data.__typename === "QuerySuccess") {
-      return {
-        ...data,
-        invalidated: [
-          makeCacheKey("blog/:id:blogPost", { id: postId }),
-          makeCacheKey("blog/gallery:galleryItems", { ids: "*", postId: "*" }),
-        ],
-      };
-    }
-    return data;
+    return response;
   },
 });
 
@@ -83,51 +59,33 @@ defineMutation({
     const postId = body.postId as string | undefined;
     const target = body.target as string | undefined;
     if (typeof postId !== "string" || typeof target !== "string") {
-      return { __typename: "StandardError", message: "Invalid input" };
+      throw new MutationError("Invalid input");
     }
     const result = await mutateRemoveRemoteObject(postId, target);
-    const data = result.data?.blogMutations.removeRemoteObject as
-      MutationResult | undefined;
-    if (data == null) {
-      return { __typename: "StandardError", message: result.error || "Failed" };
+    const response = result.data?.blogMutations.removeRemoteObject;
+    if (response == null) {
+      throw new MutationError(result.error ?? "Failed to remove remote object");
     }
-    if (data.__typename === "QuerySuccess") {
-      return {
-        ...data,
-        invalidated: [
-          makeCacheKey("blog/:id:blogPost", { id: postId }),
-          makeCacheKey("blog/gallery:galleryItems", { ids: "*", postId: "*" }),
-        ],
-      };
-    }
-    return data;
+    return response;
   },
 });
 
 /**
- * Deletes a blog post and its children, then redirects to blog list.
+ * Deletes a blog post and its children.
  */
 defineMutation({
   path: "blog/delete",
   async handler(body: Record<string, unknown>) {
     const id = body.id as string | undefined;
     if (typeof id !== "string" || !id.trim()) {
-      return { __typename: "StandardError", message: "Invalid input" };
+      throw new MutationError("Invalid input");
     }
     const result = await mutateDeleteBlogPost(id);
-    const data = result.data?.blogMutations.deleteBlogPost as
-      MutationResult | undefined;
-    if (data == null) {
-      return { __typename: "StandardError", message: result.error || "Failed" };
+    const response = result.data?.blogMutations.deleteBlogPost;
+    if (response == null) {
+      throw new MutationError(result.error ?? "Failed to delete blog post");
     }
-    if (data.__typename === "QuerySuccess") {
-      throw new ServerRedirectError(
-        "/blog",
-        [makeCacheKey("blog:blogPosts", {})],
-        data,
-      );
-    }
-    return data;
+    return response;
   },
 });
 
@@ -143,28 +101,13 @@ defineMutation({
       typeof input.title !== "string" ||
       typeof input.sourceId !== "string"
     ) {
-      return { __typename: "StandardError", message: "Invalid input" };
+      throw new MutationError("Invalid input");
     }
     const result = await mutateIngestBlogFromSource(input);
-    const data = result.data?.blogMutations.ingestBlogFromSource as
-      MutationResult | undefined;
-    if (data == null) {
-      return { __typename: "StandardError", message: result.error || "Failed" };
+    const response = result.data?.blogMutations.ingestBlogFromSource;
+    if (response == null) {
+      throw new MutationError(result.error ?? "Failed to ingest blog");
     }
-    if (data.__typename === "QuerySuccess" && data.id) {
-      const parentId = (input as IngestBlogInput)?.parentId as
-        string | undefined;
-      const invalidated = [
-        makeCacheKey("blog:blogPosts", {}),
-        makeCacheKey("home:home", {}),
-        makeCacheKey("blog/:id:blogPost", { id: data.id }),
-      ];
-      if (parentId) {
-        invalidated.push(makeCacheKey("blog/:id:children", { id: parentId }));
-        invalidated.push(makeCacheKey("blog/:id:blogPost", { id: parentId }));
-      }
-      throw new ServerRedirectError(`/blog/${data.id}`, invalidated, data);
-    }
-    return data;
+    return response;
   },
 });

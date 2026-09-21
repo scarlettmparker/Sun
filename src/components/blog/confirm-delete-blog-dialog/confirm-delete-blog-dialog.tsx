@@ -56,7 +56,7 @@ const ConfirmDeleteBlogDialog = (props: ConfirmDeleteBlogDialogProps) => {
           variant="destructive"
           onClick={() => {
             onClose();
-            deleteBlogPost(post.id);
+            void deleteBlogPost(post.id).catch(() => {});
           }}
         >
           {t("detail.delete-submit")}

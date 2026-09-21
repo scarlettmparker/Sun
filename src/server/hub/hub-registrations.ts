@@ -1,6 +1,5 @@
 import { timingSafeEqual } from "node:crypto";
-import { defineLoader, defineMutation, makeCacheKey } from "@sun/ssr";
-import type { MutationResult } from "@sun/ssr";
+import { defineLoader, defineMutation, MutationError } from "@sun/ssr";
 import { getCookieValue } from "@sun/api";
 import { AUTH_COOKIE } from "~/utils/auth";
 import type { HubAppConfig, HubMode, HubRegistry } from "./types";
@@ -16,25 +15,19 @@ import { emitStatusRescan } from "./status-events";
 
 const MODES: HubMode[] = ["dev", "serve"];
 
-const REGISTRY_CACHE_KEY = makeCacheKey("hub:hubRegistry", {});
-
 /**
- * Successful mutation result, requesting a status rescan.
+ * Successful mutation response, requesting a status rescan.
  */
-function ok(message: string): MutationResult {
+function ok(message: string): { message: string } {
   emitStatusRescan();
-  return {
-    __typename: "QuerySuccess",
-    message,
-    invalidated: [REGISTRY_CACHE_KEY],
-  };
+  return { message };
 }
 
 /**
- * Failed mutation result.
+ * Throws a MutationError with the given message.
  */
-function fail(message: string): MutationResult {
-  return { __typename: "StandardError", message };
+function fail(message: string): never {
+  throw new MutationError(message);
 }
 
 /**
@@ -83,13 +76,13 @@ function locateApp(registry: HubRegistry, key: string): HubAppConfig | null {
 }
 
 /**
- * Whether the registry write failed and should be surfaced.
+ * Persists the registry, throwing when the write fails.
  */
-async function persistOrFail(
-  registry: HubRegistry,
-): Promise<MutationResult | null> {
+async function persistOrFail(registry: HubRegistry): Promise<void> {
   const saved = await saveRegistry(registry);
-  return saved ? null : fail("Failed to save registry");
+  if (!saved) {
+    fail("Failed to save registry");
+  }
 }
 
 /**
@@ -136,10 +129,7 @@ defineMutation({
       return fail(`App already exists: ${app.key}`);
     }
     registry.apps.push(app);
-    const failed = await persistOrFail(registry);
-    if (failed) {
-      return failed;
-    }
+    await persistOrFail(registry);
     if (app.enabled && !app.self) {
       await startApp(app, registry.mode);
     }
@@ -165,10 +155,7 @@ defineMutation({
     }
     const previous = registry.apps[index];
     registry.apps[index] = patch;
-    const failed = await persistOrFail(registry);
-    if (failed) {
-      return failed;
-    }
+    await persistOrFail(registry);
     const runtimeChanged =
       previous.dir !== patch.dir ||
       previous.devPort !== patch.devPort ||
@@ -202,10 +189,7 @@ defineMutation({
       return fail("Cannot delete the current app");
     }
     registry.apps = registry.apps.filter((app) => app.key !== key);
-    const failed = await persistOrFail(registry);
-    if (failed) {
-      return failed;
-    }
+    await persistOrFail(registry);
     await stopApp(key);
     return ok(`Deleted ${key}`);
   },
@@ -284,10 +268,7 @@ defineMutation({
     }
     const registry = await getRegistry();
     registry.mode = mode;
-    const failed = await persistOrFail(registry);
-    if (failed) {
-      return failed;
-    }
+    await persistOrFail(registry);
     const restarted = await applyMode(registry, mode);
     return ok(`Mode set to ${mode}, restarted ${restarted.length}`);
   },

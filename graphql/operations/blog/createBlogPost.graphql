@@ -1,14 +1,9 @@
 mutation createBlogPost($title: String!, $input: BlogPostInput!) {
   blogMutations {
     createBlogPost(title: $title, input: $input) {
-      ... on QuerySuccess {
-        __typename
-        message
+      message
+      post {
         id
-      }
-      ... on StandardError {
-        __typename
-        message
       }
     }
   }

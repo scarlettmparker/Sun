@@ -26,12 +26,16 @@ const IngestBlogForm = () => {
       return;
     }
     startTransition(async () => {
-      await ingestBlogFromSource({
-        title: title.trim(),
-        typeName,
-        sourceKind,
-        sourceId: sourceId.trim(),
-      });
+      try {
+        await ingestBlogFromSource({
+          title: title.trim(),
+          typeName,
+          sourceKind,
+          sourceId: sourceId.trim(),
+        });
+      } catch {
+        // leave the form open on failure
+      }
     });
   };
 

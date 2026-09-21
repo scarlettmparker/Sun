@@ -4,7 +4,6 @@
  */
 import { renderApp } from "@sun/ssr/server";
 import { base, isProduction, manifestPath } from "../config.js";
-import { Buffer } from "buffer";
 import { getCookieValue } from "@sun/api";
 import {
   AUTH_COOKIE,
@@ -77,25 +76,6 @@ export function setupRoutes(app, vite) {
 
     await seedPageData(user);
 
-    const mutationPayloadCookie = getCookieValue(
-      request.headers.cookie,
-      "mutation_payload",
-    );
-    const invalidateCacheCookie = getCookieValue(
-      request.headers.cookie,
-      "invalidate_cache",
-    );
-    let mutationPayload = null;
-    if (mutationPayloadCookie) {
-      try {
-        mutationPayload = JSON.parse(
-          Buffer.from(mutationPayloadCookie, "base64").toString("utf-8"),
-        );
-      } catch (_) {
-        // Do nothing
-      }
-    }
-
     let url = pathname.replace(base, "");
     if (!url.startsWith("/")) url = "/" + url;
     if (requestUrl.search) url += requestUrl.search;
@@ -115,8 +95,6 @@ export function setupRoutes(app, vite) {
           url,
           locale,
           pageName,
-          mutationPayload,
-          invalidateCacheCookie,
           manifestPath,
         },
         reply.raw,

@@ -1,32 +1,31 @@
-import { MutationResult, executeMutation } from "@sun/ssr";
+import { executeMutation } from "@sun/ssr";
+import type {
+  AddRemoteObjectResponse,
+  CreateBlogPostResponse,
+  DeleteBlogPostResponse,
+  IngestBlogFromSourceResponse,
+  RemoveRemoteObjectResponse,
+} from "~/generated/graphql";
 
 /**
- * Creates a new blog post.
- * @param title The title of the blog post.
- * @param content The content of the blog post.
- * @param typeId Optional type id.
- * @param parentId Optional parent id.
- * @returns Promise resolving to the mutation result.
+ * Creates a new blog post and navigates to it.
  */
 export async function createBlogPost(
   title: string,
   content: string,
   typeId?: string,
   parentId?: string,
-): Promise<MutationResult> {
+): Promise<CreateBlogPostResponse> {
   if (
     typeof title !== "string" ||
     typeof content !== "string" ||
     !title.trim() ||
     !content.trim()
   ) {
-    return {
-      __typename: "StandardError",
-      message: "Invalid input: title and content must be non-empty strings",
-    };
+    throw new Error("Invalid input: title and content must be non-empty strings");
   }
 
-  const result = await executeMutation("blog/create", {
+  const response = await executeMutation<CreateBlogPostResponse>("blog/create", {
     title: title.trim(),
     input: {
       content: content.trim(),
@@ -35,11 +34,8 @@ export async function createBlogPost(
     },
   });
 
-  if (result.__typename === "Redirect") {
-    window.location.assign(result.redirectTo);
-  }
-
-  return result;
+  window.location.assign(`/blog/${response.post.id}`);
+  return response;
 }
 
 /**
@@ -48,8 +44,11 @@ export async function createBlogPost(
 export async function attachRemoteObject(
   postId: string,
   target: string,
-): Promise<MutationResult> {
-  return executeMutation("blog/add-remote-object", { postId, target });
+): Promise<AddRemoteObjectResponse> {
+  return executeMutation<AddRemoteObjectResponse>("blog/add-remote-object", {
+    postId,
+    target,
+  });
 }
 
 /**
@@ -58,23 +57,26 @@ export async function attachRemoteObject(
 export async function detachRemoteObject(
   postId: string,
   target: string,
-): Promise<MutationResult> {
-  return executeMutation("blog/remove-remote-object", { postId, target });
+): Promise<RemoveRemoteObjectResponse> {
+  return executeMutation<RemoveRemoteObjectResponse>(
+    "blog/remove-remote-object",
+    { postId, target },
+  );
 }
 
 /**
- * Deletes a blog post and its children.
+ * Deletes a blog post and its children, then navigates to the blog list.
  */
-export async function deleteBlogPost(id: string): Promise<MutationResult> {
-  const result = await executeMutation("blog/delete", { id });
-  if (result.__typename === "Redirect") {
-    window.location.assign(result.redirectTo);
-  }
-  return result;
+export async function deleteBlogPost(id: string): Promise<DeleteBlogPostResponse> {
+  const response = await executeMutation<DeleteBlogPostResponse>("blog/delete", {
+    id,
+  });
+  window.location.assign("/blog");
+  return response;
 }
 
 /**
- * Ingests a blog from a source.
+ * Ingests a blog from a source and navigates to it.
  */
 export async function ingestBlogFromSource(input: {
   title: string;
@@ -82,10 +84,11 @@ export async function ingestBlogFromSource(input: {
   sourceKind: string;
   sourceId: string;
   parentId?: string | null;
-}): Promise<MutationResult> {
-  const result = await executeMutation("blog/ingest-source", { input });
-  if (result.__typename === "Redirect") {
-    window.location.assign(result.redirectTo);
-  }
-  return result;
+}): Promise<IngestBlogFromSourceResponse> {
+  const response = await executeMutation<IngestBlogFromSourceResponse>(
+    "blog/ingest-source",
+    { input },
+  );
+  window.location.assign(`/blog/${response.post.id}`);
+  return response;
 }

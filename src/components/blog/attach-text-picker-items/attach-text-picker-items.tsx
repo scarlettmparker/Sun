@@ -1,6 +1,7 @@
 import { useTransition } from "react";
 import { useTranslation } from "react-i18next";
 import { usePageData } from "@sun/ssr/react";
+import { makeCacheKey, revalidatePageData } from "@sun/ssr";
 import { Badge, Button } from "@sun/components";
 import { PlusIcon } from "@heroicons/react/24/outline";
 import { attachRemoteObject } from "~/server/actions/blog-post";
@@ -52,7 +53,12 @@ const AttachTextPickerItems = (props: AttachTextPickerItemsProps) => {
 
   const handleAttach = (textId: string) => {
     startTransition(async () => {
-      await attachRemoteObject(postId, `hades:text:${textId}`);
+      try {
+        await attachRemoteObject(postId, `hades:text:${textId}`);
+        revalidatePageData([makeCacheKey("blog/:id:blogPost", { id: postId })]);
+      } catch {
+        // leave the picker open on failure
+      }
     });
   };
 

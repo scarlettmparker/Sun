@@ -5,8 +5,8 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { usePageData } from "@sun/ssr/react";
-import type { MutationResult } from "@sun/ssr";
+import { usePageData, useMutation } from "@sun/ssr/react";
+import { makeCacheKey, revalidatePageData } from "@sun/ssr";
 import { HubContext } from "./hub-context";
 import { getHubToken, setHubToken, useHubStatusStream } from "./api";
 import {
@@ -47,10 +47,38 @@ const HubProvider = ({ children }: HubProviderProps) => {
     setToken(getHubToken());
   }, []);
 
-  const run = useCallback(async (action: () => Promise<MutationResult>) => {
-    const result = await action();
-    setError(result.__typename === "StandardError" ? result.message : null);
-  }, []);
+  const run = useCallback(
+    async (action: () => Promise<{ message: string }>) => {
+      try {
+        await action();
+        setError(null);
+        revalidatePageData([makeCacheKey("hub:hubRegistry", {})]);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Action failed");
+      }
+    },
+    [],
+  );
+
+  const [optimisticRegistry, toggleEnabled] = useMutation<
+    { key: string; app: HubAppConfig },
+    { message: string },
+    HubRegistry
+  >({
+    base: registry,
+    reducer: (current, payload) => ({
+      ...current,
+      apps: current.apps.map((app) =>
+        app.key === payload.key ? { ...app, enabled: payload.app.enabled } : app,
+      ),
+    }),
+    action: (payload) => updateHubApp(payload.key, payload.app, token),
+    onSuccess: () => {
+      setError(null);
+      revalidatePageData([makeCacheKey("hub:hubRegistry", {})]);
+    },
+    onError: (err) => setError(err.message),
+  });
 
   const handleTokenChange = useCallback((value: string) => {
     setToken(value);
@@ -66,11 +94,9 @@ const HubProvider = ({ children }: HubProviderProps) => {
 
   const handleToggleEnabled = useCallback(
     (app: HubAppConfig) => {
-      void run(() =>
-        updateHubApp(app.key, { ...app, enabled: !app.enabled }, token),
-      );
+      toggleEnabled({ key: app.key, app: { ...app, enabled: !app.enabled } });
     },
-    [run, token],
+    [toggleEnabled],
   );
 
   const handleMode = useCallback(
@@ -115,9 +141,9 @@ const HubProvider = ({ children }: HubProviderProps) => {
 
   const value = useMemo(
     () => ({
-      registry,
+      registry: optimisticRegistry,
       statuses,
-      mode: registry?.mode ?? ("dev" as const),
+      mode: optimisticRegistry?.mode ?? ("dev" as const),
       token,
       error,
       editing,
@@ -137,7 +163,7 @@ const HubProvider = ({ children }: HubProviderProps) => {
       confirmDelete: handleConfirmDelete,
     }),
     [
-      registry,
+      optimisticRegistry,
       statuses,
       token,
       error,

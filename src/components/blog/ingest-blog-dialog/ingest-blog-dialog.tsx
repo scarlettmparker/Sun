@@ -52,14 +52,18 @@ const IngestBlogDialog = (props: IngestBlogDialogProps) => {
       return;
     }
     startTransition(async () => {
-      await ingestBlogFromSource({
-        title: title.trim(),
-        typeName,
-        sourceKind,
-        sourceId: sourceId.trim(),
-        parentId: parentId ?? null,
-      });
-      onOpenChange(false);
+      try {
+        await ingestBlogFromSource({
+          title: title.trim(),
+          typeName,
+          sourceKind,
+          sourceId: sourceId.trim(),
+          parentId: parentId ?? null,
+        });
+        onOpenChange(false);
+      } catch {
+        // leave the dialog open on failure
+      }
     });
   };
 

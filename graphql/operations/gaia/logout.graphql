@@ -1,13 +1,7 @@
 mutation logout {
   gaiaMutations {
     logout {
-      __typename
-      ... on QuerySuccess {
-        message
-      }
-      ... on StandardError {
-        message
-      }
+      message
     }
   }
 }

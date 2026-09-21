@@ -23,8 +23,13 @@ type GalleryQueries {
   listByRemoteObjects(ids: [String!]!): [GalleryItem]
 }
 
+type CreateGalleryItemResponse {
+  message: String!
+  item: GalleryItem!
+}
+
 type GalleryMutations {
-  create(input: GalleryItemInput): QueryResult
+  create(input: GalleryItemInput): CreateGalleryItemResponse!
 }
 
 extend type Query {

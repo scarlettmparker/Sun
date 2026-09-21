@@ -29,14 +29,16 @@ const CreateBlogPostPage = () => {
     const content = formData.get("content") as string;
     const typeId = formData.get("typeId") as string;
 
-    await createBlogPost(
-      title,
-      content,
-      typeId || undefined,
-      parentId || undefined,
-    );
-
-    setLoading(false);
+    try {
+      await createBlogPost(
+        title,
+        content,
+        typeId || undefined,
+        parentId || undefined,
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
