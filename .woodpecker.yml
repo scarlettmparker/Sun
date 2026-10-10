@@ -1,0 +1,31 @@
+when:
+  - event: push
+    branch: main
+
+steps:
+  build-frontend:
+    image: node:24
+    volumes:
+      - sun-npm-cache:/root/.npm
+    commands:
+      - npm ci --no-audit --no-fund
+      - npm run build
+
+  build-backend:
+    image: gradle:8.14-jdk21
+    volumes:
+      - sun-gradle-cache:/root/.gradle
+    commands:
+      - ./components/sun-graphql/gradlew -p components :sun-graphql:bootJar
+
+  deploy:
+    image: alpine:3.21
+    volumes:
+      - /opt/woodpecker/keys/ci-deploy:/root/.ssh/ci-deploy:ro
+      - /opt/woodpecker/keys/known_hosts:/root/.ssh/known_hosts:ro
+    environment:
+      SSH_KEY: /root/.ssh/ci-deploy
+    commands:
+      - apk add --no-cache openssh-client rsync bash
+      - printf 'Host *\n  BatchMode yes\n  IdentitiesOnly yes\n' > ~/.ssh/config
+      - ./deploy.sh all --skip-build
