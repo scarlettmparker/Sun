@@ -16,7 +16,7 @@ steps:
     volumes:
       - sun-gradle-cache:/home/gradle/.gradle
     commands:
-      - ./components/sun-graphql/gradlew -p components :sun-graphql:bootJar
+      - ./components/sun-graphql/gradlew -p components :sun-graphql:bootJar --no-daemon --build-cache
 
   deploy:
     image: alpine:3.21
