@@ -6,6 +6,8 @@ public/*
 !public/og-default.png
 !public/robots.txt
 !public/sitemap.xml
+!public/.well-known/
+!public/.well-known/security.txt
 !public/cv.pdf
 .env*
 

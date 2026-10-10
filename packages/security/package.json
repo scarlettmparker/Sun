@@ -1,6 +1,6 @@
 {
   "name": "@sun/security",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Shared security headers for Sun ecosystem (CSP/HSTS/COOP/Trusted Types)",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -22,12 +22,19 @@
   ],
   "scripts": {
     "build": "tsup",
-    "publish": "npm publish --ignore-scripts --registry https://registry.int.scarlettparker.co.uk"
+    "publish": "npm publish --ignore-scripts --registry https://registry.int.scarlettparker.co.uk",
+    "test": "jest --maxWorkers=50%",
+    "lint": "npx eslint"
   },
   "publishConfig": {
     "registry": "https://registry.int.scarlettparker.co.uk"
   },
   "devDependencies": {
+    "@swc/core": "^1.16.13",
+    "@swc/jest": "^0.2.39",
+    "@types/jest": "^30.0.0",
+    "jest": "^30.5.2",
+    "jest-environment-jsdom": "^30.5.2",
     "tsup": "^8.3.5",
     "typescript": "^5.7.2"
   }

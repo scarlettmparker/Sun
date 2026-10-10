@@ -26,7 +26,7 @@ export function buildCspHeader(nonce: string): string {
     "font-src 'self' data: https:",
     "img-src 'self' data: https: blob:",
     "media-src 'self' https: blob:",
-    "connect-src 'self' https://*.posthog.com https://eu.i.posthog.com https://app.posthog.com https://*.scarlettparker.co.uk https:",
+    "connect-src 'self' https://*.posthog.com https://eu.i.posthog.com https://app.posthog.com https://*.scarlettparker.co.uk",
     "frame-src 'self' https://open.spotify.com",
     "frame-ancestors 'none'",
     "base-uri 'none'",

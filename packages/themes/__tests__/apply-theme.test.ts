@@ -2,9 +2,8 @@ import {
   applyTheme,
   loadPersistedTheme,
   clearTheme,
-  THEME_STORAGE_KEY,
-  type ThemeValues,
-} from "../src";
+} from "../src/apply-theme";
+import { THEME_STORAGE_KEY, type ThemeValues } from "../src/types";
 
 const greekTheme: ThemeValues = {
   primary: "#1d4ed8",
@@ -83,6 +82,38 @@ describe("applyTheme", () => {
     expect(cssVar("primary")).toBe("#1d4ed8");
     expect(cssVar("custom-var")).toBe("#000000");
   });
+
+  it("drops values that can load remote resources", () => {
+    applyTheme({ primary: "url(https://evil.example/x)", accent: "#bfdbfe" });
+
+    expect(cssVar("primary")).toBe("");
+    expect(cssVar("accent")).toBe("#bfdbfe");
+    expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe(
+      JSON.stringify({ accent: "#bfdbfe" }),
+    );
+  });
+
+  it("drops expression and import payloads", () => {
+    applyTheme({
+      primary: "expression(alert(1))",
+      accent: "@import 'https://evil.example/x.css'",
+    });
+
+    expect(cssVar("primary")).toBe("");
+    expect(cssVar("accent")).toBe("");
+    expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe(
+      JSON.stringify({}),
+    );
+  });
+
+  it("drops keys outside the property-name shape", () => {
+    applyTheme({ "primary; --evil": "#1d4ed8", accent: "#bfdbfe" });
+
+    expect(cssVar("accent")).toBe("#bfdbfe");
+    expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe(
+      JSON.stringify({ accent: "#bfdbfe" }),
+    );
+  });
 });
 
 describe("loadPersistedTheme", () => {
@@ -112,6 +143,26 @@ describe("loadPersistedTheme", () => {
     loadPersistedTheme();
 
     expect(cssVar("primary")).toBe("");
+  });
+
+  it("ignores a persisted theme that is not an object", () => {
+    window.localStorage.setItem(THEME_STORAGE_KEY, "null");
+
+    loadPersistedTheme();
+
+    expect(cssVar("primary")).toBe("");
+  });
+
+  it("cleans unsafe entries out of a persisted theme", () => {
+    window.localStorage.setItem(
+      THEME_STORAGE_KEY,
+      JSON.stringify({ primary: "url(https://evil.example/x)", accent: "#bfdbfe" }),
+    );
+
+    loadPersistedTheme();
+
+    expect(cssVar("primary")).toBe("");
+    expect(cssVar("accent")).toBe("#bfdbfe");
   });
 });
 
