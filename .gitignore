@@ -30,5 +30,8 @@ opencode.json
 
 # Hub runtime state
 .hub/
-vm/
+vm/*
+!vm/systemd/
+!vm/systemd/*
 deploy.sh
+!deploy.sh
