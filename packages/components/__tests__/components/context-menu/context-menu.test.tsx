@@ -41,7 +41,7 @@ describe("ContextMenu", () => {
   });
 
   it("closes the menu after selecting an item", () => {
-    const onSelect = jest.fn();
+    const onSelect = vi.fn();
 
     render(
       <ContextMenu>
@@ -80,7 +80,7 @@ describe("ContextMenu", () => {
   });
 
   it("activates a menu item with the Enter key", () => {
-    const onSelect = jest.fn();
+    const onSelect = vi.fn();
 
     render(
       <ContextMenu>
@@ -212,7 +212,7 @@ describe("ContextMenu", () => {
   });
 
   it("does not select disabled menu item", () => {
-    const onSelect = jest.fn();
+    const onSelect = vi.fn();
     render(
       <ContextMenu>
         <ContextMenuTrigger>Open</ContextMenuTrigger>

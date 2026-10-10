@@ -8,7 +8,7 @@ import { MarkdownViewer } from "@sun/components";
 import {
   restoreConsoleError,
   suppressConsoleErrorsFromTests,
-} from "~/../testing/jest/mock";
+} from "~/../testing/vitest/mock";
 
 beforeAll(() => {
   // Due to some issue with re-rendering that we don't care about in test env
@@ -34,7 +34,7 @@ describe("MarkdownViewer", () => {
   });
 
   it("throws error when children is not a string", () => {
-    const consoleSpy = jest
+    const consoleSpy = vi
       .spyOn(console, "error")
       .mockImplementation(() => {});
     expect(() => {

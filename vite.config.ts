@@ -1,7 +1,7 @@
-import { defineConfig } from "vite";
+import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react-swc";
 import { visualizer } from "rollup-plugin-visualizer";
-import path from "path";
+import path from "node:path";
 
 export default defineConfig(() => {
   const allowedHosts =
@@ -13,7 +13,7 @@ export default defineConfig(() => {
     plugins: [react()],
     resolve: {
       alias: {
-        "~": path.resolve(__dirname, "./src"),
+        "~": path.resolve(import.meta.dirname, "./src"),
       },
     },
     server: {

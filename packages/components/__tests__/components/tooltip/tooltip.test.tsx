@@ -15,11 +15,11 @@ const OPEN_DELAY = 400;
 const CLOSE_DELAY = 650;
 
 beforeEach(() => {
-  jest.useFakeTimers();
+  vi.useFakeTimers();
 });
 
 afterEach(() => {
-  jest.useRealTimers();
+  vi.useRealTimers();
 });
 
 describe("Tooltip", () => {
@@ -49,7 +49,7 @@ describe("Tooltip", () => {
 
     fireEvent.mouseEnter(screen.getByText(/hover me/i));
     act(() => {
-      jest.advanceTimersByTime(OPEN_DELAY);
+      vi.advanceTimersByTime(OPEN_DELAY);
     });
     expect(screen.getByText("Tooltip text")).toBeInTheDocument();
   });
@@ -67,13 +67,13 @@ describe("Tooltip", () => {
     const trigger = screen.getByText(/hover me/i);
     fireEvent.mouseEnter(trigger);
     act(() => {
-      jest.advanceTimersByTime(OPEN_DELAY);
+      vi.advanceTimersByTime(OPEN_DELAY);
     });
     expect(screen.getByText("Tooltip text")).toBeInTheDocument();
 
     fireEvent.mouseLeave(trigger);
     act(() => {
-      jest.advanceTimersByTime(CLOSE_DELAY);
+      vi.advanceTimersByTime(CLOSE_DELAY);
     });
     expect(screen.queryByText("Tooltip text")).not.toBeInTheDocument();
   });
@@ -91,16 +91,16 @@ describe("Tooltip", () => {
     const trigger = screen.getByText(/hover me/i);
     fireEvent.mouseEnter(trigger);
     act(() => {
-      jest.advanceTimersByTime(OPEN_DELAY);
+      vi.advanceTimersByTime(OPEN_DELAY);
     });
 
     fireEvent.mouseLeave(trigger);
     act(() => {
-      jest.advanceTimersByTime(CLOSE_DELAY - 100);
+      vi.advanceTimersByTime(CLOSE_DELAY - 100);
     });
     fireEvent.mouseEnter(trigger);
     act(() => {
-      jest.advanceTimersByTime(CLOSE_DELAY);
+      vi.advanceTimersByTime(CLOSE_DELAY);
     });
     expect(screen.getByText("Tooltip text")).toBeInTheDocument();
   });
@@ -117,7 +117,7 @@ describe("Tooltip", () => {
 
     fireEvent.focus(screen.getByText(/focus me/i));
     act(() => {
-      jest.advanceTimersByTime(OPEN_DELAY);
+      vi.advanceTimersByTime(OPEN_DELAY);
     });
     expect(screen.getByText("Tooltip text")).toBeInTheDocument();
   });
@@ -135,12 +135,12 @@ describe("Tooltip", () => {
     const trigger = screen.getByText(/focus me/i);
     fireEvent.focus(trigger);
     act(() => {
-      jest.advanceTimersByTime(OPEN_DELAY);
+      vi.advanceTimersByTime(OPEN_DELAY);
     });
 
     fireEvent.blur(trigger);
     act(() => {
-      jest.advanceTimersByTime(CLOSE_DELAY);
+      vi.advanceTimersByTime(CLOSE_DELAY);
     });
     expect(screen.queryByText("Tooltip text")).not.toBeInTheDocument();
   });
@@ -195,13 +195,13 @@ describe("TooltipGroup", () => {
 
     fireEvent.mouseEnter(screen.getByText(/first/i));
     act(() => {
-      jest.advanceTimersByTime(OPEN_DELAY);
+      vi.advanceTimersByTime(OPEN_DELAY);
     });
     expect(screen.getByText("First tooltip")).toBeInTheDocument();
 
     fireEvent.mouseEnter(screen.getByText(/second/i));
     act(() => {
-      jest.advanceTimersByTime(0);
+      vi.advanceTimersByTime(0);
     });
     expect(screen.getByText("Second tooltip")).toBeInTheDocument();
   });
@@ -227,22 +227,22 @@ describe("TooltipGroup", () => {
     const first = screen.getByText(/first/i);
     fireEvent.mouseEnter(first);
     act(() => {
-      jest.advanceTimersByTime(OPEN_DELAY);
+      vi.advanceTimersByTime(OPEN_DELAY);
     });
 
     fireEvent.mouseLeave(first);
     act(() => {
-      jest.advanceTimersByTime(CLOSE_DELAY);
+      vi.advanceTimersByTime(CLOSE_DELAY);
     });
 
     fireEvent.mouseEnter(screen.getByText(/second/i));
     act(() => {
-      jest.advanceTimersByTime(OPEN_DELAY - 100);
+      vi.advanceTimersByTime(OPEN_DELAY - 100);
     });
     expect(screen.queryByText("Second tooltip")).not.toBeInTheDocument();
 
     act(() => {
-      jest.advanceTimersByTime(100);
+      vi.advanceTimersByTime(100);
     });
     expect(screen.getByText("Second tooltip")).toBeInTheDocument();
   });

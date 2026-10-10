@@ -41,7 +41,7 @@ describe("Label", () => {
   });
 
   it("handles onClick event", () => {
-    const handleClick = jest.fn();
+    const handleClick = vi.fn();
     render(<Label onClick={handleClick}>Clickable label</Label>);
     const label = screen.getByText("Clickable label");
     label.click();

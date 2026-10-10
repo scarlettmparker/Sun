@@ -1,8 +1,10 @@
+// @vitest-environment jsdom
+
 /**
  * Tests for blog post server actions.
  */
 
-import type { StandardError, QuerySuccess } from "~/generated/graphql";
+import type { CreateBlogPostResponse } from "~/generated/graphql";
 import { createBlogPost } from "~/server/actions/blog-post";
 
 const { mockExecuteMutation } = vi.hoisted(() => ({
@@ -13,35 +15,43 @@ vi.mock("@sun/ssr", () => ({
   executeMutation: (...args: unknown[]) => mockExecuteMutation(...args),
 }));
 
+const assignMock = vi.fn();
+
 describe("createBlogPost", () => {
   beforeEach(() => {
     mockExecuteMutation.mockReset();
+    assignMock.mockClear();
+    Object.defineProperty(window, "location", {
+      value: { assign: assignMock },
+      writable: true,
+    });
   });
 
   it("should return success response for valid blog post creation", async () => {
     mockExecuteMutation.mockResolvedValue({
-      __typename: "QuerySuccess",
+      __typename: "CreateBlogPostResponse",
       message: "Blog post created",
-      id: "1",
+      post: { __typename: "BlogPost", id: "1" },
     });
 
     const result = (await createBlogPost(
       "Test Title",
       "Test Content",
-    )) as QuerySuccess;
+    )) as CreateBlogPostResponse;
 
-    expect(result.__typename).toBe("QuerySuccess");
+    expect(result.message).toBe("Blog post created");
     expect(mockExecuteMutation).toHaveBeenCalledWith("blog/create", {
       title: "Test Title",
       input: { content: "Test Content" },
     });
+    expect(assignMock).toHaveBeenCalledWith("/blog/1");
   });
 
   it("should trim title and content before delegating", async () => {
     mockExecuteMutation.mockResolvedValue({
-      __typename: "QuerySuccess",
+      __typename: "CreateBlogPostResponse",
       message: "Blog post created",
-      id: "1",
+      post: { __typename: "BlogPost", id: "1" },
     });
 
     await createBlogPost("  Title  ", "  Content  ");
@@ -54,48 +64,51 @@ describe("createBlogPost", () => {
 
   it("should return the mutation result unchanged on failure", async () => {
     mockExecuteMutation.mockResolvedValue({
-      __typename: "StandardError",
+      __typename: "CreateBlogPostResponse",
       message: "Validation failed",
+      post: { __typename: "BlogPost", id: "" },
     });
 
     const result = await createBlogPost("Title", "Content");
 
-    expect((result as StandardError).__typename).toBe("StandardError");
-    expect((result as StandardError).message).toBe("Validation failed");
+    expect(result.message).toBe("Validation failed");
   });
 
-  it("should return error for invalid input types", async () => {
-    const result = await createBlogPost(123 as unknown as string, "Content");
+  it("should throw for invalid input types", async () => {
+    await expect(
+      createBlogPost(123 as unknown as string, "Content"),
+    ).rejects.toThrow("Invalid input");
 
-    expect((result as StandardError).__typename).toBe("StandardError");
     expect(mockExecuteMutation).not.toHaveBeenCalled();
   });
 
-  it("should return error for empty title", async () => {
-    const result = await createBlogPost("", "Content");
+  it("should throw for empty title", async () => {
+    await expect(createBlogPost("", "Content")).rejects.toThrow(
+      "Invalid input",
+    );
 
-    expect((result as StandardError).__typename).toBe("StandardError");
     expect(mockExecuteMutation).not.toHaveBeenCalled();
   });
 
-  it("should return error for empty content", async () => {
-    const result = await createBlogPost("Title", "");
+  it("should throw for empty content", async () => {
+    await expect(createBlogPost("Title", "")).rejects.toThrow("Invalid input");
 
-    expect((result as StandardError).__typename).toBe("StandardError");
     expect(mockExecuteMutation).not.toHaveBeenCalled();
   });
 
-  it("should return error for whitespace-only title", async () => {
-    const result = await createBlogPost("   ", "Content");
+  it("should throw for whitespace-only title", async () => {
+    await expect(createBlogPost("   ", "Content")).rejects.toThrow(
+      "Invalid input",
+    );
 
-    expect((result as StandardError).__typename).toBe("StandardError");
     expect(mockExecuteMutation).not.toHaveBeenCalled();
   });
 
-  it("should return error for whitespace-only content", async () => {
-    const result = await createBlogPost("Title", "   ");
+  it("should throw for whitespace-only content", async () => {
+    await expect(createBlogPost("Title", "   ")).rejects.toThrow(
+      "Invalid input",
+    );
 
-    expect((result as StandardError).__typename).toBe("StandardError");
     expect(mockExecuteMutation).not.toHaveBeenCalled();
   });
 });

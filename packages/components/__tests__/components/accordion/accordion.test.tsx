@@ -6,14 +6,17 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { Accordion, AccordionTrigger, AccordionContent } from "@sun/components";
 
-jest.mock("~/components/accordion/accordion.module.css", () => ({
-  accordion: "accordion",
-  trigger: "trigger",
-  trigger_label: "trigger_label",
-  chevron: "chevron",
-  chevron_open: "chevron_open",
-  content: "content",
-}));
+vi.mock("~/components/accordion/accordion.module.css", () => {
+  const classes = {
+    accordion: "accordion",
+    trigger: "trigger",
+    trigger_label: "trigger_label",
+    chevron: "chevron",
+    chevron_open: "chevron_open",
+    content: "content",
+  };
+  return { ...classes, default: classes };
+});
 
 describe("Accordion", () => {
   it("hides content until the trigger is clicked", () => {

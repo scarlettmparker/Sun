@@ -15,7 +15,7 @@ import { MarkdownEditor } from "@sun/components";
 import {
   restoreConsoleError,
   suppressConsoleErrorsFromTests,
-} from "~/../testing/jest/mock";
+} from "~/../testing/vitest/mock";
 
 beforeAll(() => {
   // Due to some issue with re-rendering that we don't care about in test env
@@ -84,7 +84,7 @@ describe("MarkdownEditor", () => {
 
   it("updates value on user input and calls onChange", async () => {
     const user = userEvent.setup();
-    const onChange = jest.fn();
+    const onChange = vi.fn();
     const initialValue = "Initial text";
     render(
       <MarkdownEditor
@@ -150,7 +150,7 @@ describe("MarkdownEditor", () => {
       cancelable: true,
     });
 
-    const preventDefaultSpy = jest.spyOn(event, "preventDefault");
+    const preventDefaultSpy = vi.spyOn(event, "preventDefault");
 
     fireEvent(editor, event);
 
@@ -161,7 +161,7 @@ describe("MarkdownEditor", () => {
     render(<MarkdownEditor name="content" data-testid="editor" />);
 
     const editor = screen.getByTestId("editor");
-    const mockPreventDefault = jest.fn();
+    const mockPreventDefault = vi.fn();
     fireEvent.keyDown(editor, {
       key: "Enter",
       shiftKey: true,
@@ -231,7 +231,7 @@ describe("MarkdownEditor", () => {
 
   it("handles rapid typing", async () => {
     const user = userEvent.setup();
-    const onChange = jest.fn();
+    const onChange = vi.fn();
     render(
       <MarkdownEditor
         onChange={onChange}
@@ -267,7 +267,7 @@ describe("MarkdownEditor", () => {
   });
 
   it("handles paste events", async () => {
-    const onChange = jest.fn();
+    const onChange = vi.fn();
     render(
       <MarkdownEditor
         onChange={onChange}
@@ -295,7 +295,7 @@ describe("MarkdownEditor", () => {
   });
 
   it("correctly pastes at cursor position", async () => {
-    const onChange = jest.fn();
+    const onChange = vi.fn();
     const initialValue = "Hello ";
     render(
       <MarkdownEditor
@@ -337,7 +337,7 @@ describe("MarkdownEditor", () => {
 
   it("handles undo with Ctrl+Z", async () => {
     const user = userEvent.setup();
-    const onChange = jest.fn();
+    const onChange = vi.fn();
     render(
       <MarkdownEditor
         onChange={onChange}
@@ -361,7 +361,7 @@ describe("MarkdownEditor", () => {
 
   it("handles redo with Ctrl+Y", async () => {
     const user = userEvent.setup();
-    const onChange = jest.fn();
+    const onChange = vi.fn();
     render(
       <MarkdownEditor
         onChange={onChange}
@@ -386,7 +386,7 @@ describe("MarkdownEditor", () => {
 
   it("handles redo with Ctrl+Shift+Z", async () => {
     const user = userEvent.setup();
-    const onChange = jest.fn();
+    const onChange = vi.fn();
     render(
       <MarkdownEditor
         onChange={onChange}
@@ -414,7 +414,7 @@ describe("MarkdownEditor", () => {
   });
 
   it("handles paste without selection", async () => {
-    const onChange = jest.fn();
+    const onChange = vi.fn();
     render(
       <MarkdownEditor
         onChange={onChange}
@@ -441,7 +441,7 @@ describe("MarkdownEditor", () => {
   });
 
   it("does not commit or highlight during IME composition", () => {
-    const onChange = jest.fn();
+    const onChange = vi.fn();
     render(
       <MarkdownEditor
         onChange={onChange}
@@ -464,7 +464,7 @@ describe("MarkdownEditor", () => {
   });
 
   it("commits composed text with diacritics on compositionend", () => {
-    const onChange = jest.fn();
+    const onChange = vi.fn();
     render(
       <MarkdownEditor
         onChange={onChange}
@@ -490,7 +490,7 @@ describe("MarkdownEditor", () => {
   });
 
   it("keeps the diacritic combined instead of a standalone mark", () => {
-    const onChange = jest.fn();
+    const onChange = vi.fn();
     render(
       <MarkdownEditor
         onChange={onChange}

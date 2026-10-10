@@ -4,7 +4,7 @@ const originalConsoleError = console.error;
  * Only console error if inside component.
  */
 export const suppressConsoleErrorsFromTests = () => {
-  jest.spyOn(console, "error").mockImplementation((...args) => {
+  vi.spyOn(console, "error").mockImplementation((...args) => {
     const maybeError = args.find((arg) => arg instanceof Error);
 
     // Check if stack includes runTest (means it comes from component)
@@ -18,5 +18,5 @@ export const suppressConsoleErrorsFromTests = () => {
 };
 
 export const restoreConsoleError = () => {
-  jest.restoreAllMocks();
+  vi.restoreAllMocks();
 };

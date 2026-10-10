@@ -41,7 +41,7 @@ describe("useStemPlayer", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockGainNodes.length = 0;
-    (global.fetch as Mock).mockResolvedValue({
+    (global.fetch as unknown as Mock).mockResolvedValue({
       arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(8)),
     });
     (mockAudioContext.decodeAudioData as Mock).mockResolvedValue(
@@ -210,7 +210,7 @@ describe("useStemPlayer", () => {
     });
 
     it("handles fetch failure for one stem", async () => {
-      (global.fetch as Mock)
+      (global.fetch as unknown as Mock)
         .mockResolvedValueOnce({
           arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(8)),
         })

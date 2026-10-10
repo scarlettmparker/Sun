@@ -3,13 +3,13 @@ import { usePageData } from "@sun/ssr/react";
 import { Badge, Card, CardBody, CardHeader, CardTitle } from "@sun/components";
 import { CEFR_TO_KEY } from "~/utils/cefr";
 import styles from "./attached-texts.module.css";
-import { Maybe, ReaderText } from "~/generated/graphql";
+import { AttachedText, Maybe, ReaderText } from "~/generated/graphql";
 
 type AttachedTextsProps = {
   /**
    * Attached texts for the post.
    */
-  attachedTexts: Maybe<ReaderText[]> | undefined;
+  attachedTexts: Maybe<Array<ReaderText | AttachedText>> | undefined;
 };
 
 /**

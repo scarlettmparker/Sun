@@ -35,13 +35,13 @@ describe("Menu primitives", () => {
         return this;
       },
     };
-    Element.prototype.getBoundingClientRect = jest.fn(() => rect as any);
+    Element.prototype.getBoundingClientRect = vi.fn(() => rect as any);
     window.innerWidth = 1024;
     window.innerHeight = 768;
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it("useMenuIds generates stable prefixed ids", () => {
@@ -66,9 +66,9 @@ describe("Menu primitives", () => {
   });
 
   it("MenuItem renders, handles click/Enter/Space, calls onSelect+closeMenu, skips when disabled", () => {
-    const onSelect = jest.fn();
-    const closeMenu = jest.fn();
-    const onClick = jest.fn();
+    const onSelect = vi.fn();
+    const closeMenu = vi.fn();
+    const onClick = vi.fn();
 
     render(
       <div>
@@ -99,8 +99,8 @@ describe("Menu primitives", () => {
   });
 
   it("MenuItem supports asChild cloning and forwards handlers", () => {
-    const closeMenu = jest.fn();
-    const onSelect = jest.fn();
+    const closeMenu = vi.fn();
+    const onSelect = vi.fn();
 
     render(
       <MenuItem closeMenu={closeMenu} onSelect={onSelect} asChild>
@@ -116,7 +116,7 @@ describe("Menu primitives", () => {
   });
 
   it("MenuItem asChild handles key events on cloned element", () => {
-    const closeMenu = jest.fn();
+    const closeMenu = vi.fn();
     render(
       <MenuItem closeMenu={closeMenu} asChild>
         <button>KeyChild</button>
@@ -128,7 +128,7 @@ describe("Menu primitives", () => {
   });
 
   it("throws when MenuSubTrigger used outside MenuSub", () => {
-    const consoleError = jest
+    const consoleError = vi
       .spyOn(console, "error")
       .mockImplementation(() => {});
     expect(() => {
@@ -162,7 +162,7 @@ describe("Menu primitives", () => {
       <MenuSub resetNonce={0}>
         <MenuSubTrigger>Trigger2</MenuSubTrigger>
         <MenuSubContent>
-          <MenuItem closeMenu={jest.fn()}>Item</MenuItem>
+          <MenuItem closeMenu={vi.fn()}>Item</MenuItem>
         </MenuSubContent>
       </MenuSub>,
     );
@@ -191,7 +191,7 @@ describe("Menu primitives", () => {
 
   it("MenuContent renders only when open, wires keyboard nav and stopPropagation", () => {
     const ref = React.createRef<HTMLDivElement>();
-    const onKeyDown = jest.fn();
+    const onKeyDown = vi.fn();
     const { rerender } = render(
       <MenuContent
         open={false}
@@ -202,8 +202,8 @@ describe("Menu primitives", () => {
         contentDataAttr="test-content"
         onKeyDown={onKeyDown}
       >
-        <MenuItem closeMenu={jest.fn()}>One</MenuItem>
-        <MenuItem closeMenu={jest.fn()}>Two</MenuItem>
+        <MenuItem closeMenu={vi.fn()}>One</MenuItem>
+        <MenuItem closeMenu={vi.fn()}>Two</MenuItem>
       </MenuContent>,
     );
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
@@ -218,8 +218,8 @@ describe("Menu primitives", () => {
         contentDataAttr="test-content"
         onKeyDown={onKeyDown}
       >
-        <MenuItem closeMenu={jest.fn()}>One</MenuItem>
-        <MenuItem closeMenu={jest.fn()}>Two</MenuItem>
+        <MenuItem closeMenu={vi.fn()}>One</MenuItem>
+        <MenuItem closeMenu={vi.fn()}>Two</MenuItem>
       </MenuContent>,
     );
 
@@ -317,7 +317,7 @@ describe("Menu primitives", () => {
   });
 
   it("MenuItem supports destructive variant", () => {
-    const closeMenu = jest.fn();
+    const closeMenu = vi.fn();
     render(
       <MenuItem closeMenu={closeMenu} variant="destructive">
         Delete

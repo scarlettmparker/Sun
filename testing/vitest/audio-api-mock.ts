@@ -32,6 +32,6 @@ global.AudioContext = vi.fn(() => mockAudioContext) as unknown as {
   new (contextOptions?: AudioContextOptions | undefined): AudioContext;
   prototype: AudioContext;
 };
-global.fetch = vi.fn();
+global.fetch = vi.fn() as unknown as typeof fetch;
 global.requestAnimationFrame = vi.fn();
 global.cancelAnimationFrame = vi.fn();

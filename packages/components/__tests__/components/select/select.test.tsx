@@ -7,7 +7,7 @@ import { render, screen, fireEvent, within } from "@testing-library/react";
 import {
   restoreConsoleError,
   suppressConsoleErrorsFromTests,
-} from "~/../testing/jest/mock";
+} from "~/../testing/vitest/mock";
 import { Select, SelectOption } from "@sun/components";
 
 describe("Select", () => {
@@ -67,7 +67,7 @@ describe("Select", () => {
   });
 
   it("handles value changes correctly", () => {
-    const handleChange = jest.fn();
+    const handleChange = vi.fn();
 
     render(
       <Select data-testid="select" onChange={handleChange}>
@@ -146,7 +146,7 @@ describe("Select", () => {
     });
 
     it("selects option and closes dropdown when option is clicked", () => {
-      const handleChange = jest.fn();
+      const handleChange = vi.fn();
       render(
         <Select data-testid="select" onChange={handleChange}>
           <SelectOption value="option1">Option 1</SelectOption>
@@ -246,7 +246,7 @@ describe("Select", () => {
     });
 
     it("selects option on Enter key press in dropdown", () => {
-      const handleChange = jest.fn();
+      const handleChange = vi.fn();
       render(
         <Select data-testid="select" onChange={handleChange}>
           <SelectOption value="option1">Option 1</SelectOption>

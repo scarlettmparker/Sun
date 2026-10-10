@@ -5,14 +5,14 @@
 import type { MockedFunction } from "vitest";
 import { pageDataLoaders } from "@sun/ssr";
 import "~/routes/stem-player/stem-player-data";
-import { fetchListSongs } from "~/utils/api";
+import { executeDocument } from "@sun/api";
 
-vi.mock("~/utils/api", () => ({
-  fetchListSongs: vi.fn(),
+vi.mock("@sun/api", () => ({
+  executeDocument: vi.fn(),
 }));
 
-const mockFetchListSongs = fetchListSongs as MockedFunction<
-  typeof fetchListSongs
+const mockExecuteDocument = executeDocument as MockedFunction<
+  typeof executeDocument
 >;
 
 /**
@@ -37,36 +37,36 @@ describe("Stem Player Data Loader", () => {
 
   it("returns songs when the fetch succeeds", async () => {
     const mockSongs = [{ id: "1", name: "Song 1" }];
-    mockFetchListSongs.mockResolvedValue({
+    mockExecuteDocument.mockResolvedValue({
       success: true,
       data: { stemPlayerQueries: { list: mockSongs } },
     });
 
     await expect(loadSongs()).resolves.toEqual({ songs: mockSongs });
-    expect(mockFetchListSongs).toHaveBeenCalledTimes(1);
+    expect(mockExecuteDocument).toHaveBeenCalledTimes(1);
   });
 
   it("returns an empty song list when the fetch fails", async () => {
-    mockFetchListSongs.mockResolvedValue({
+    mockExecuteDocument.mockResolvedValue({
       success: false,
       error: "API Error",
     });
 
     await expect(loadSongs()).resolves.toEqual({ songs: [] });
-    expect(mockFetchListSongs).toHaveBeenCalledTimes(1);
+    expect(mockExecuteDocument).toHaveBeenCalledTimes(1);
   });
 
   it("returns an empty song list when the fetch throws", async () => {
-    mockFetchListSongs.mockRejectedValue(new Error("Network error"));
+    mockExecuteDocument.mockRejectedValue(new Error("Network error"));
 
     await expect(loadSongs()).resolves.toEqual({ songs: [] });
-    expect(mockFetchListSongs).toHaveBeenCalledTimes(1);
+    expect(mockExecuteDocument).toHaveBeenCalledTimes(1);
   });
 
   it("returns an empty song list when the response is missing data", async () => {
-    mockFetchListSongs.mockResolvedValue({ success: true, data: null });
+    mockExecuteDocument.mockResolvedValue({ success: true, data: null });
 
     await expect(loadSongs()).resolves.toEqual({ songs: [] });
-    expect(mockFetchListSongs).toHaveBeenCalledTimes(1);
+    expect(mockExecuteDocument).toHaveBeenCalledTimes(1);
   });
 });

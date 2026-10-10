@@ -91,7 +91,7 @@ describe("Dialog", () => {
   });
 
   it("renders the built-in top-right close button and fires onOpenChange when clicked", async () => {
-    const handleOpenChange = jest.fn();
+    const handleOpenChange = vi.fn();
     render(
       <Dialog open={true} onOpenChange={handleOpenChange}>
         Content
@@ -219,7 +219,7 @@ describe("DialogFooter", () => {
 
 describe("DialogClose", () => {
   it("renders standard button element and triggers change event on click", async () => {
-    const handleOpenChange = jest.fn();
+    const handleOpenChange = vi.fn();
     render(
       <Dialog open={true} onOpenChange={handleOpenChange}>
         <DialogClose>Cancel</DialogClose>
@@ -234,7 +234,7 @@ describe("DialogClose", () => {
   });
 
   it("supports asChild property to mutate layout elements while executing context state logic", async () => {
-    const handleOpenChange = jest.fn();
+    const handleOpenChange = vi.fn();
     render(
       <Dialog open={true} onOpenChange={handleOpenChange}>
         <DialogClose asChild>
@@ -286,7 +286,7 @@ describe("Dialog draggable", () => {
   });
 
   it("calls onOpenChange when close button is clicked in draggable mode", () => {
-    const onOpenChange = jest.fn();
+    const onOpenChange = vi.fn();
     render(
       <Dialog open={true} draggable={true} onOpenChange={onOpenChange}>
         <DialogBody>Content</DialogBody>

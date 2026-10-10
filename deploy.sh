@@ -31,7 +31,7 @@ build_backend() {
 build_frontend() {
   echo "==> Building Sun frontend..."
   cd "$APP_DIR"
-  npm run build --quiet
+  bun run build --quiet
   echo "    dist/client/ $(du -sh dist/client | cut -f1)"
   echo "    dist/server/ $(du -sh dist/server | cut -f1)"
 }
@@ -173,8 +173,9 @@ deploy_frontend() {
   rsync -avz \
     -e "ssh -i $SSH_KEY" \
     "$APP_DIR/server.js" "$APP_DIR/config.js" \
-    "$APP_DIR/config.d.ts" "$APP_DIR/css-loader.mjs" \
+    "$APP_DIR/config.d.ts" "$APP_DIR/css-plugin.ts" \
     "$APP_DIR/package.json" "$APP_DIR/tsconfig.json" \
+    "$APP_DIR/bunfig.toml" "$APP_DIR/bun.lock" "$APP_DIR/.bun-version" \
     "$VM:$DEPLOY_DIR/"
   rsync -avz \
     -e "ssh -i $SSH_KEY" \
@@ -191,10 +192,11 @@ deploy_frontend() {
     "$APP_DIR/utils/" "$VM:$DEPLOY_DIR/utils/"
   rsync -avz \
     -e "ssh -i $SSH_KEY" \
-    "$APP_DIR/.npmrc" "$APP_DIR/package-lock.json" "$VM:$DEPLOY_DIR/" 2>/dev/null || rsync -avz -e "ssh -i $SSH_KEY" "$APP_DIR/.npmrc" "$VM:$DEPLOY_DIR/"
+    "$APP_DIR/bunfig.toml" "$APP_DIR/bun.lock" "$VM:$DEPLOY_DIR/" 2>/dev/null || rsync -avz -e "ssh -i $SSH_KEY" "$APP_DIR/bunfig.toml" "$VM:$DEPLOY_DIR/"
 
   echo "    Installing production dependencies..."
-  $SSH "cd $DEPLOY_DIR && npm install --omit=dev --no-audit --quiet 2>/dev/null"
+  $SSH "export PATH=\$HOME/.bun/bin:\$PATH && command -v bun >/dev/null || curl -fsSL https://bun.sh/install | bash"
+  $SSH "export PATH=\$HOME/.bun/bin:\$PATH && cd $DEPLOY_DIR && bun install --production --frozen-lockfile 2>/dev/null"
 
   # Zero-downtime blue-green swap
   $SSH bash -s <<'SWAP'

@@ -13,16 +13,15 @@
   },
   "scripts": {
     "build": "tsup",
-    "test": "jest --maxWorkers=50%",
-    "publish": "npm publish --ignore-scripts --registry https://registry.int.scarlettparker.co.uk"
+    "test": "bunx vitest run --passWithNoTests",
+    "test:watch": "bunx vitest",
+    "test:coverage": "bunx vitest run --coverage --passWithNoTests",
+    "publish": "bun publish --registry https://registry.int.scarlettparker.co.uk"
   },
   "devDependencies": {
-    "@types/jest": "^30.0.0",
-    "jest": "^30.2.0",
-    "jest-environment-jsdom": "^30.2.0",
-    "ts-jest": "^29.4.5",
     "tsup": "^8.3.5",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vitest": "^3.2.4"
   },
   "publishConfig": {
     "registry": "https://registry.int.scarlettparker.co.uk"

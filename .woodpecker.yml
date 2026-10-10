@@ -4,12 +4,12 @@ when:
 
 steps:
   build-frontend:
-    image: node:24
+    image: oven/bun:1.4.3
     volumes:
-      - sun-npm-cache:/root/.npm
+      - sun-bun-cache:/root/.bun/install/cache
     commands:
-      - npm ci --no-audit --no-fund
-      - npm run build
+      - bun install --frozen-lockfile --no-progress
+      - bun run build
 
   build-backend:
     image: gradle:8.14-jdk21

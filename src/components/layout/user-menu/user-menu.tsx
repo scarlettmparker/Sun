@@ -71,7 +71,7 @@ const UserMenuContent = () => {
           <SeededAvatar username={currentUser.username} size={32} />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className={styles.content}>
+      <DropdownMenuContent className={styles.content}>
         <Card className={styles.card}>
           <CardHeader className={styles.header}>
             <SeededAvatar

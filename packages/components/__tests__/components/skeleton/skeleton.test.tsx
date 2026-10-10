@@ -6,9 +6,12 @@
 import { render, screen } from "@testing-library/react";
 import { Skeleton } from "@sun/components";
 
-jest.mock("~/components/skeleton/skeleton.module.css", () => ({
-  skeleton: "skeleton",
-}));
+vi.mock("~/components/skeleton/skeleton.module.css", () => {
+  const classes = {
+    skeleton: "skeleton",
+  };
+  return { ...classes, default: classes };
+});
 
 describe("Skeleton", () => {
   it("renders a div with skeleton class and data-slot", () => {
