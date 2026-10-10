@@ -80,9 +80,9 @@ deploy_permify() {
   fi
   # Copy binary, yaml, schema to VM
   $SSH "sudo mkdir -p /opt/permify && sudo chown ubuntu:ubuntu /opt/permify"
-  rsync -avz -e "ssh -i $SSH_KEY" "$PERMIFY_BIN" "$VM:/opt/permify/permify"
+  rsync -az -e "ssh -i $SSH_KEY" "$PERMIFY_BIN" "$VM:/opt/permify/permify"
   $SSH "chmod +x /opt/permify/permify"
-  rsync -avz -e "ssh -i $SSH_KEY" "$APP_DIR/permify/permify.yaml" "$APP_DIR/permify/schema.zed" "$VM:/opt/permify/"
+  rsync -az -e "ssh -i $SSH_KEY" "$APP_DIR/permify/permify.yaml" "$APP_DIR/permify/schema.zed" "$VM:/opt/permify/"
   rm -rf "$TMPDIR"
   # Render permify.yaml with actual password from backend .env and install systemd unit
   $SSH bash -s <<'REMOTE'
@@ -141,13 +141,13 @@ setup_vm() {
     sudo chown ubuntu:ubuntu /opt/sun/backend /opt/sun/web /opt/permify
     sudo loginctl enable-linger ubuntu 2>/dev/null || true
 REMOTE
-  rsync -avz -e "ssh -i $SSH_KEY" \
+  rsync -az -e "ssh -i $SSH_KEY" \
     "$APP_DIR/vm/systemd/" "$VM:~/.config/systemd/user/"
 }
 
 deploy_backend() {
   echo "==> Deploying backend to VM..."
-  rsync -avz --delete \
+  rsync -az --delete \
     -e "ssh -i $SSH_KEY" \
     "$APP_DIR/components/sun-graphql/build/libs/sun-graphql-0.0.1-SNAPSHOT.jar" \
     "$VM:/opt/sun/backend/sun-graphql.jar"
@@ -161,38 +161,38 @@ deploy_frontend() {
 
   # Rsync code
   $SSH "mkdir -p $DEPLOY_DIR/dist/client $DEPLOY_DIR/dist/server"
-  rsync -avz --delete \
+  rsync -az --delete \
     -e "ssh -i $SSH_KEY" \
     --exclude node_modules \
     --exclude .env \
     --exclude .env.production \
     "$APP_DIR/dist/client/" "$VM:$DEPLOY_DIR/dist/client/"
-  rsync -avz --delete \
+  rsync -az --delete \
     -e "ssh -i $SSH_KEY" \
     "$APP_DIR/dist/server/" "$VM:$DEPLOY_DIR/dist/server/"
-  rsync -avz \
+  rsync -az \
     -e "ssh -i $SSH_KEY" \
     "$APP_DIR/server.js" "$APP_DIR/config.js" \
     "$APP_DIR/config.d.ts" "$APP_DIR/css-plugin.ts" \
     "$APP_DIR/package.json" "$APP_DIR/tsconfig.json" \
     "$APP_DIR/bunfig.toml" "$APP_DIR/bun.lock" "$APP_DIR/.bun-version" \
     "$VM:$DEPLOY_DIR/"
-  rsync -avz \
+  rsync -az \
     -e "ssh -i $SSH_KEY" \
     "$APP_DIR/routes/" "$VM:$DEPLOY_DIR/routes/"
-  rsync -avz \
+  rsync -az \
     -e "ssh -i $SSH_KEY" \
     "$APP_DIR/messages/" "$VM:$DEPLOY_DIR/messages/"
-  rsync -avz \
+  rsync -az \
     -e "ssh -i $SSH_KEY" \
     --exclude node_modules \
     "$APP_DIR/src/" "$VM:$DEPLOY_DIR/src/"
-  rsync -avz \
+  rsync -az \
     -e "ssh -i $SSH_KEY" \
     "$APP_DIR/utils/" "$VM:$DEPLOY_DIR/utils/"
-  rsync -avz \
+  rsync -az \
     -e "ssh -i $SSH_KEY" \
-    "$APP_DIR/bunfig.toml" "$APP_DIR/bun.lock" "$VM:$DEPLOY_DIR/" 2>/dev/null || rsync -avz -e "ssh -i $SSH_KEY" "$APP_DIR/bunfig.toml" "$VM:$DEPLOY_DIR/"
+    "$APP_DIR/bunfig.toml" "$APP_DIR/bun.lock" "$VM:$DEPLOY_DIR/" 2>/dev/null || rsync -az -e "ssh -i $SSH_KEY" "$APP_DIR/bunfig.toml" "$VM:$DEPLOY_DIR/"
 
   echo "    Installing production dependencies..."
   $SSH "export PATH=\$HOME/.bun/bin:\$PATH && command -v bun >/dev/null || curl -fsSL https://bun.sh/install | bash"
