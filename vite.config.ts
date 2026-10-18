@@ -1,5 +1,6 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react-swc";
+import { compression } from "@sun/build";
 import { visualizer } from "rollup-plugin-visualizer";
 import path from "node:path";
 
@@ -10,7 +11,7 @@ export default defineConfig(() => {
       .filter(Boolean) ?? [];
 
   return {
-    plugins: [react()],
+    plugins: [react(), compression()],
     resolve: {
       alias: {
         "~": path.resolve(import.meta.dirname, "./src"),

@@ -13,7 +13,7 @@ LIVE_PORT=5173
 STANDBY_PORT=15173
 
 usage() {
-  echo "Usage: deploy.sh <backend|frontend|all> [--skip-build]"
+  echo "Usage: deploy.sh <backend|frontend|nginx|all> [--skip-build]"
   exit 1
 }
 
@@ -272,12 +272,18 @@ SWAP
   echo "    Frontend deployed (zero-downtime)."
 }
 
+deploy_nginx() {
+  echo "==> Installing nginx edge config..."
+  "$APP_DIR/vm/nginx/install.sh"
+}
+
 # --skip-build flag
 if [ "$SKIP_BUILD" != "--skip-build" ]; then
   case "$TARGET" in
     backend)  build_backend ;;
     frontend) build_frontend ;;
     all)      build_backend; build_frontend ;;
+    nginx)    ;;
     *)        usage ;;
   esac
 fi
@@ -287,7 +293,8 @@ setup_vm
 case "$TARGET" in
   backend)  deploy_backend ;;
   frontend) deploy_frontend ;;
-  all)      deploy_backend; deploy_frontend ;;
+  nginx)    deploy_nginx ;;
+  all)      deploy_nginx; deploy_backend; deploy_frontend ;;
   *)        usage ;;
 esac
 

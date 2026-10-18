@@ -38,6 +38,7 @@
         "@graphql-codegen/schema-ast": "^5.0.2",
         "@graphql-codegen/typescript": "^5.0.2",
         "@graphql-codegen/typescript-operations": "^5.0.2",
+        "@sun/build": "^0.1.1",
         "@testing-library/react": "^16.3.0",
         "@types/node": "^25.8.0",
         "@types/react-dom": "^19.1.2",
@@ -459,6 +460,8 @@
     "@rollup/rollup-win32-x64-msvc": ["@rollup/rollup-win32-x64-msvc@4.64.5", "", { "os": "win32", "cpu": "x64" }, "sha512-IhV6ew/DuzUWwHaYmlh7MrPCV3lKFUq/amTEwysi4r/mwNPAEfAMh5dYWeTSPTeMy2pFHGMEWYtPkHzfX3tG5A=="],
 
     "@sun/api": ["@sun/api@0.2.8", "https://registry.int.scarlettparker.co.uk/@sun/api/-/api-0.2.8.tgz", { "peerDependencies": { "@sun/ssr": "*", "graphql": "*" } }, "sha512-gDC4sNQD4EHt/PIJ7VlTkzOMdGwSW2Ql7LqX/La7Q3K09bSOnnzAmagZhgF94IEUEpCJwqE7kufpZMNKNVypKw=="],
+
+    "@sun/build": ["@sun/build@0.1.1", "https://registry.int.scarlettparker.co.uk/@sun/build/-/build-0.1.1.tgz", { "peerDependencies": { "vite": ">=5" } }, "sha512-A8WxkZ8tVS0yKAhwt5RAUJiCLb+F/s70uw3GX+vYQDINuF6QCw682TZRGkhMJJHK2fPjdDrXKAmDZt/WyArYcQ=="],
 
     "@sun/components": ["@sun/components@0.12.7", "https://registry.int.scarlettparker.co.uk/@sun/components/-/components-0.12.7.tgz", { "dependencies": { "@sun/shared": "^0.2.0", "@sun/utils": "^0.1.21" }, "peerDependencies": { "react": "^19.0.0", "react-dom": "^19.0.0" } }, "sha512-supeNROFnflgZLGscSkZR+veQUpOHsDZHPgKBbhEaI9TjJmUUzUC1anHNYqUhbekVgseJra5FuiRyZr9L8vtIg=="],
 

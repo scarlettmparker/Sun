@@ -45,5 +45,7 @@ vm/*
 !vm/systemd/*
 !vm/sun/
 !vm/sun/*
+!vm/nginx/
+!vm/nginx/*
 deploy.sh
 !deploy.sh
