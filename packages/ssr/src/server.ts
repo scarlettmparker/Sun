@@ -1,5 +1,4 @@
 import path from "path";
-import zlib from "node:zlib";
 import { AsyncLocalStorage } from "node:async_hooks";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
@@ -38,15 +37,6 @@ export type {
   RouteMeta,
 } from "./renderer";
 export { autoDiscoverRegistrations } from "./auto-discover";
-
-/**
- * Responses smaller than this are sent uncompressed.
- */
-const GZIP_THRESHOLD = 1024;
-/**
- * Content types worth gzipping. Excludes already-compressed binary (images, video, fonts).
- */
-const COMPRESSIBLE_CONTENT_TYPES = /text\/|\+?json|\+?xml|javascript|csv|svg/i;
 
 /**
  * Per-request page-data cache.
@@ -259,44 +249,6 @@ export async function createServer(
       reply.header("Referrer-Policy", "strict-origin-when-cross-origin");
       reply.header("Permissions-Policy", "geolocation=(), camera=(), microphone=(), payment=()");
     }
-  });
-
-  // App-layer gzip for buffered (string/Buffer) JSON/text responses.
-  app.addHook("onSend", (req, reply, payload, done) => {
-    if (payload == null) {
-      return done();
-    }
-
-    if (typeof payload !== "string" && !Buffer.isBuffer(payload)) {
-      return done();
-    }
-
-    if (reply.getHeader("content-encoding")) {
-      return done();
-    }
-
-    const acceptEncoding = req.headers["accept-encoding"] ?? "";
-    if (
-      typeof acceptEncoding !== "string" ||
-      !acceptEncoding.includes("gzip")
-    ) {
-      return done();
-    }
-    const contentType = String(reply.getHeader("content-type") ?? "");
-    if (contentType && !COMPRESSIBLE_CONTENT_TYPES.test(contentType)) {
-      return done();
-    }
-
-    const buf = Buffer.isBuffer(payload) ? payload : Buffer.from(payload);
-
-    if (buf.length < GZIP_THRESHOLD) {
-      return done();
-    }
-
-    reply.header("content-encoding", "gzip");
-    reply.header("vary", "accept-encoding");
-    reply.removeHeader("content-length");
-    done(null, zlib.gzipSync(buf));
   });
 
   if (configure) {

@@ -1,0 +1,35 @@
+{
+  "name": "@sun/build",
+  "version": "0.1.1",
+  "description": "Shared Vite build plugins for Sun ecosystem apps",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "publish": "bun publish --registry https://registry.int.scarlettparker.co.uk",
+    "test": "bunx vitest run",
+    "lint": "bunx eslint"
+  },
+  "publishConfig": {
+    "registry": "https://registry.int.scarlettparker.co.uk"
+  },
+  "peerDependencies": {
+    "vite": ">=5"
+  },
+  "devDependencies": {
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.0"
+  }
+}

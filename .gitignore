@@ -25,7 +25,7 @@ coverage/
 
 # Java stuff
 .gradle/
-build/
+components/**/build/
 bin/
 /gradlew text eol=lf
 *.bat text eol=crlf
