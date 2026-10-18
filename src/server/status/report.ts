@@ -1,7 +1,7 @@
 import net from "node:net";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import { ENVIRONMENT, getManifest, type AppEntry } from "../../../vm/sun/apps";
+import { ENVIRONMENT, getManifest, type AppEntry } from "../../../vm/sun/apps.ts";
 import type { AppStatus, StatusReport } from "./types";
 
 const execFileAsync = promisify(execFile);
@@ -91,11 +91,14 @@ async function unitState(
 }
 
 /**
- * Resolves the concrete unit for an app, following a blue-green pattern.
+ * Resolves the live unit for an app, following a blue-green pattern, and the
+ * port that instance listens on.
  */
-async function resolveUnit(app: AppEntry): Promise<string> {
+async function resolveUnit(
+  app: AppEntry,
+): Promise<{ unit: string; port: number }> {
   if (!app.unitPattern) {
-    return app.unit;
+    return { unit: app.unit, port: app.port };
   }
   try {
     const { stdout } = await execFileAsync("systemctl", [
@@ -109,13 +112,14 @@ async function resolveUnit(app: AppEntry): Promise<string> {
     for (const line of stdout.trim().split("\n")) {
       const [unit, , state] = line.trim().split(/\s+/);
       if (unit && state === "active") {
-        return unit;
+        const match = /@(\d+)/.exec(unit);
+        return { unit, port: match ? Number(match[1]) : app.port };
       }
     }
   } catch {
-    return app.unit;
+    return { unit: app.unit, port: app.port };
   }
-  return app.unit;
+  return { unit: app.unit, port: app.port };
 }
 
 /**
@@ -140,9 +144,9 @@ export async function buildReport(): Promise<StatusReport> {
   const manifest = getManifest();
   const apps = await Promise.all(
     manifest.apps.map(async (app): Promise<AppStatus> => {
-      const unit = await resolveUnit(app);
+      const { unit, port } = await resolveUnit(app);
       const [open, state] = await Promise.all([
-        isPortOpen(app.port),
+        isPortOpen(port),
         unitState(unit),
       ]);
       return {
@@ -150,7 +154,7 @@ export async function buildReport(): Promise<StatusReport> {
         name: app.name,
         host: app.host,
         url: `https://${app.host}`,
-        port: open ? app.port : null,
+        port: open ? port : null,
         state: open ? "up" : "down",
         since: state.since,
         sinceLabel: formatSince(state.since),

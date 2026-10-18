@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { buildReport } from "./report";
+import { buildReport } from "./report.ts";
 
 /**
  * Registers the status JSON endpoint.

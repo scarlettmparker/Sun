@@ -1,0 +1,16 @@
+[Unit]
+Description=Sun Frontend (Fastify SSR) on port %i
+After=network.target sun-backend.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/sun/web
+ExecStart=/usr/bin/npx tsx --loader ./css-loader.mjs server.js
+Environment=NODE_ENV=production
+Environment=SERVER_PORT=%i
+Environment=SUN_ENV=prod
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

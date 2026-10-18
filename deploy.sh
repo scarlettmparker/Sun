@@ -190,6 +190,11 @@ deploy_frontend() {
   rsync -az \
     -e "ssh -i $SSH_KEY" \
     "$APP_DIR/utils/" "$VM:$DEPLOY_DIR/utils/"
+  # Status manifest, imported at runtime by the /status.json route
+  $SSH "mkdir -p $DEPLOY_DIR/vm/sun"
+  rsync -az \
+    -e "ssh -i $SSH_KEY" \
+    "$APP_DIR/vm/sun/apps.ts" "$VM:$DEPLOY_DIR/vm/sun/apps.ts"
   rsync -az \
     -e "ssh -i $SSH_KEY" \
     "$APP_DIR/bunfig.toml" "$APP_DIR/bun.lock" "$VM:$DEPLOY_DIR/" 2>/dev/null || rsync -az -e "ssh -i $SSH_KEY" "$APP_DIR/bunfig.toml" "$VM:$DEPLOY_DIR/"
@@ -208,7 +213,8 @@ DOMAIN="sun.scarlettparker.co.uk"
 SERVICE="sun-frontend"
 
 # Detect which port is currently live from the nginx config
-CURRENT=$(grep -oP '127\.0\.0\.1:\K[0-9]+' "/etc/nginx/sites-enabled/$DOMAIN" 2>/dev/null || echo "$LIVE_PORT")
+CURRENT=$(grep -oP '127\.0\.0\.1:\K[0-9]+' "/etc/nginx/sites-enabled/$DOMAIN" 2>/dev/null | head -n1 || true)
+[ -z "$CURRENT" ] && CURRENT="$LIVE_PORT"
 if [ "$CURRENT" = "$LIVE_PORT" ]; then
   NEW_PORT=$STANDBY_PORT
   SWAP_TO="standby"
@@ -219,9 +225,13 @@ fi
 
 echo "    Live: $CURRENT -> Deploying to: $NEW_PORT"
 
-# Step 1: Start new instance on standby (old is still serving)
+systemctl --user daemon-reload
+
+# Step 1: Start a fresh instance on the standby port (old is still serving).
+# `restart` guarantees the new build is loaded even if a stale instance from a
+# previous deploy is still holding the port.
 echo "    Starting new instance on port $NEW_PORT..."
-systemctl --user start "$SERVICE@$NEW_PORT"
+systemctl --user restart "$SERVICE@$NEW_PORT"
 
 # Step 2: Health-check new instance (up to 30s)
 echo "    Health-checking..."
@@ -246,9 +256,15 @@ echo "    Swapping nginx to port $NEW_PORT..."
 sudo ln -sf "/etc/nginx/sites-available/$DOMAIN.$SWAP_TO" "/etc/nginx/sites-enabled/$DOMAIN"
 sudo nginx -t 2>&1 && sudo nginx -s reload 2>&1
 
-# Step 4: Stop old instance (no longer receiving traffic)
-echo "    Stopping old instance on port $CURRENT..."
-systemctl --user stop "$SERVICE@$CURRENT" 2>/dev/null || true
+# Step 4: Stop every other instance of this service (including stragglers left
+# by earlier deploys, which would otherwise keep serving a stale manifest)
+echo "    Stopping other instances..."
+for unit in $(systemctl --user list-units --all --plain --no-legend "$SERVICE@*.service" | awk '{print $1}'); do
+  if [ "$unit" != "$SERVICE@$NEW_PORT.service" ]; then
+    echo "      stopping $unit"
+    systemctl --user stop "$unit" 2>/dev/null || true
+  fi
+done
 
 echo "    Deploy complete: $DOMAIN now on port $NEW_PORT"
 SWAP
