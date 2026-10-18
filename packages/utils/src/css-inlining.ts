@@ -2,15 +2,6 @@ import fs from "fs/promises";
 import { statSync } from "fs";
 import path from "path";
 
-/**
- * Inlines CSS content for production builds by reading global styles and manifest CSS files.
- *
- * @param isProduction - Whether the application is running in production mode.
- * @param clientCss - Array of client CSS file paths from the manifest.
- *
- * @returns Concatenated CSS content as a string, or empty string if not in production.
- */
-
 let cachedKey = "";
 let cachedCss = "";
 
@@ -35,6 +26,14 @@ function buildMtimeKey(paths: string[]): string {
   return key;
 }
 
+/**
+ * Inlines CSS content for production builds by reading global styles and manifest CSS files.
+ *
+ * @param isProduction - Whether the application is running in production mode.
+ * @param clientCss - Array of client CSS file paths from the manifest.
+ *
+ * @returns Concatenated CSS content as a string, or empty string if not in production.
+ */
 export async function inlineCss(
   isProduction: boolean,
   clientCss: string[],

@@ -11,6 +11,9 @@ import { buildSecurityHeaders } from "@sun/security";
 /** Locale candidates tried, in order, when loading the consolidated messages file. */
 const LOCALE_FALLBACK = ["en-GB", "en"];
 
+/** Memoised production CSS bundle for the process. */
+let cssPromise: Promise<string> | null = null;
+
 /**
  * Per-route SEO metadata injected into the document head.
  */
@@ -182,18 +185,52 @@ export type RenderResult = {
   stream: ReturnType<typeof renderToPipeableStream>;
 };
 
+const translationCache = new Map<string, Record<string, unknown>>();
+const jsonCache = new WeakMap<object, string>();
+
+/**
+ * Loads and memoises the consolidated messages file for a locale.
+ *
+ * @param locale The resolved locale code.
+ * @returns The parsed messages.
+ */
 function loadTranslations(locale: string): Record<string, unknown> {
+  const cached = translationCache.get(locale);
+  if (cached) return cached;
+
+  let result: Record<string, unknown> = {};
   for (const candidate of [locale, ...LOCALE_FALLBACK]) {
     const filePath = path.resolve(process.cwd(), `messages/${candidate}.json`);
-    if (fs.existsSync(filePath)) {
-      try {
-        return JSON.parse(fs.readFileSync(filePath, "utf-8"));
-      } catch {
-        return {};
-      }
+    if (!fs.existsSync(filePath)) continue;
+    try {
+      result = JSON.parse(fs.readFileSync(filePath, "utf-8")) as Record<
+        string,
+        unknown
+      >;
+    } catch {
+      result = {};
     }
+    break;
   }
-  return {};
+  translationCache.set(locale, result);
+  return result;
+}
+
+/**
+ * Serialises a value, memoising object inputs by reference.
+ *
+ * @param value The value to serialise.
+ * @returns The JSON string.
+ */
+function stableJson(value: unknown): string {
+  if (value && typeof value === "object") {
+    const cached = jsonCache.get(value);
+    if (cached !== undefined) return cached;
+    const json = JSON.stringify(value);
+    jsonCache.set(value, json);
+    return json;
+  }
+  return JSON.stringify(value);
 }
 
 function escapeAttr(value: string): string {
@@ -363,7 +400,10 @@ async function renderApp(
 
   const extraGlobals = config.windowGlobals?.(options) ?? {};
 
-  const cssContent = await inlineCss(isProduction, clientCss);
+  if (isProduction && !cssPromise) {
+    cssPromise = inlineCss(isProduction, clientCss);
+  }
+  const cssContent = cssPromise ? await cssPromise : "";
 
   return new Promise((resolve) => {
     let resolved = false;
@@ -378,8 +418,10 @@ async function renderApp(
       {
       nonce,
       onShellReady() {
-        const rawCssTag = generateCssTag(isProduction, cssContent, clientCss);
-        const cssTag = rawCssTag.replace("<style>", `<style nonce="${nonce}">`);
+        const cssTag =
+          isProduction && cssContent
+            ? `<style${nonceAttr}>${cssContent}</style>`
+            : generateCssTag(isProduction, cssContent, clientCss);
         const securityHeaders = buildSecurityHeaders({
           isProduction,
           nonce,
@@ -403,7 +445,7 @@ async function renderApp(
         })
           .map(
             ([k, v]) =>
-              `window.${k} = ${k.startsWith("__locale") ? `'${v}'` : JSON.stringify(v)};`,
+              `window.${k} = ${k.startsWith("__locale") ? `'${v}'` : stableJson(v)};`,
           )
           .join("\n              ");
 
