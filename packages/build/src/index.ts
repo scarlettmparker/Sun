@@ -87,3 +87,27 @@ export function compression(options: CompressionOptions = {}): Plugin {
     },
   };
 }
+
+/**
+ * Fails the build when a forbidden package is pulled into a bundle.
+ *
+ * @param names Package names to reject.
+ * @returns The Vite plugin.
+ */
+export function forbidModules(names: string[]): Plugin {
+  return {
+    name: "@sun/build:forbid-modules",
+    apply: "build",
+    enforce: "pre",
+    transform(_code, id) {
+      for (const name of names) {
+        if (id.includes(`/node_modules/${name}/`)) {
+          this.error(
+            `forbidden module "${name}" was bundled from ${id}`,
+          );
+        }
+      }
+      return null;
+    },
+  };
+}
