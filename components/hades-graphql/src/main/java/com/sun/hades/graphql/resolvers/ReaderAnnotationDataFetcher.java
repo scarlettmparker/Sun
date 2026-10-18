@@ -2,6 +2,7 @@ package com.sun.hades.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
+import com.sun.base.error.MutationException;
 import com.sun.base.ratelimit.RateLimit;
 import com.sun.hades.codegen.types.AnnotationInput;
 import com.sun.hades.codegen.types.AttachReaderObjectResponse;
@@ -11,8 +12,33 @@ import com.sun.hades.codegen.types.EditAnnotationResponse;
 import com.sun.hades.codegen.types.PagedReaderAnnotations;
 import com.sun.hades.codegen.types.PaginationInput;
 import com.sun.hades.codegen.types.ReaderAnnotation;
-import com.sun.hades.graphql.services.ReaderAnnotationGraphQLService;
+import com.sun.hades.codegen.types.ReaderPosition;
+import com.sun.hades.codegen.types.RemoteUser;
+import com.sun.hades.graphql.mappers.ReaderAnnotationMapper;
+import com.sun.hades.graphql.mappers.ReaderPositionMapper;
+import com.sun.hades.graphql.mappers.RemoteUserMapper;
+import com.sun.hades.graphql.services.HadesGraphQLSupport;
+import com.sun.hades.model.ReaderAnnotationEntity;
+import com.sun.hades.model.ReaderPositionEntity;
+import com.sun.hades.model.enums.ReaderVoteTarget;
+import com.sun.hades.model.enums.VoteValue;
+import com.sun.hades.service.ReaderAccountService;
+import com.sun.hades.service.ReaderAnnotationService;
+import com.sun.hades.service.ReaderCommentService;
+import com.sun.hades.service.ReaderPositionService;
+import com.sun.hades.service.ReaderVoteService;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Data fetchers for the reader queries and mutations.
@@ -20,10 +46,30 @@ import org.springframework.security.access.prepost.PreAuthorize;
 @DgsComponent
 public class ReaderAnnotationDataFetcher {
 
-  private final ReaderAnnotationGraphQLService readerAnnotationGraphQLService;
+  private static final Logger logger = LoggerFactory.getLogger(ReaderAnnotationDataFetcher.class);
 
-  public ReaderAnnotationDataFetcher(ReaderAnnotationGraphQLService readerAnnotationGraphQLService) {
-    this.readerAnnotationGraphQLService = readerAnnotationGraphQLService;
+  private final ReaderAnnotationService annotationService;
+  private final ReaderPositionService positionService;
+  private final ReaderAccountService accountService;
+  private final ReaderCommentService commentService;
+  private final ReaderVoteService voteService;
+  private final ReaderAnnotationMapper annotationMapper;
+  private final ReaderPositionMapper positionMapper;
+  private final RemoteUserMapper remoteUserMapper;
+
+  public ReaderAnnotationDataFetcher(ReaderAnnotationService annotationService,
+      ReaderPositionService positionService, ReaderAccountService accountService,
+      ReaderCommentService commentService, ReaderVoteService voteService,
+      ReaderAnnotationMapper annotationMapper, ReaderPositionMapper positionMapper,
+      RemoteUserMapper remoteUserMapper) {
+    this.annotationService = annotationService;
+    this.positionService = positionService;
+    this.accountService = accountService;
+    this.commentService = commentService;
+    this.voteService = voteService;
+    this.annotationMapper = annotationMapper;
+    this.positionMapper = positionMapper;
+    this.remoteUserMapper = remoteUserMapper;
   }
 
   /**
@@ -36,9 +82,40 @@ public class ReaderAnnotationDataFetcher {
    */
   @DgsData(parentType = "HadesQueries", field = "annotations")
   @PreAuthorize("@permissions.has('graphql.hades.annotations')")
+  @Transactional(readOnly = true)
   public PagedReaderAnnotations annotations(
       String textId, Boolean includeHidden, PaginationInput pagination) {
-    return readerAnnotationGraphQLService.annotations(textId, includeHidden, pagination);
+    UUID id = UUID.fromString(textId);
+    Pageable pageable = HadesGraphQLSupport.toPageable(pagination, "createdAt", Sort.Direction.DESC);
+    var page = annotationService.listForTextPaged(
+        id, Boolean.TRUE.equals(includeHidden), pageable);
+    Map<UUID, ReaderPosition> positions =
+        positionService.listForText(id).stream()
+            .collect(Collectors.toMap(
+                ReaderPositionEntity::getId, positionMapper::map, (a, b) -> a));
+    Map<UUID, RemoteUser> authors = new HashMap<>();
+    List<UUID> authorIds = page.getContent().stream()
+        .map(ReaderAnnotationEntity::getCreatedBy)
+        .filter(Objects::nonNull)
+        .distinct()
+        .toList();
+    accountService.findByGaiaAccountIdIn(authorIds).forEach(acc ->
+        authors.put(acc.getGaiaAccountId(), remoteUserMapper.discord(acc.getDiscordId())));
+    Map<UUID, VoteValue> myVotes = voteService.myVotes(
+        ReaderVoteTarget.ANNOTATION,
+        page.getContent().stream().map(ReaderAnnotationEntity::getId).toList());
+    Map<UUID, Long> replyCounts = commentService.countByAnnotationIds(
+        page.getContent().stream().map(ReaderAnnotationEntity::getId).toList());
+    List<ReaderAnnotation> items = page.getContent().stream()
+        .map(a -> annotationMapper.map(a, positions.get(a.getPositionId()),
+            authors.get(a.getCreatedBy()),
+            replyCounts.getOrDefault(a.getId(), 0L).intValue(),
+            myVotes.get(a.getId())))
+        .toList();
+    return PagedReaderAnnotations.newBuilder()
+        .items(items)
+        .pageInfo(HadesGraphQLSupport.pageInfo(page))
+        .build();
   }
 
   /**
@@ -49,8 +126,18 @@ public class ReaderAnnotationDataFetcher {
    */
   @DgsData(parentType = "HadesQueries", field = "annotation")
   @PreAuthorize("@permissions.has('graphql.hades.annotation')")
+  @Transactional(readOnly = true)
   public ReaderAnnotation annotation(String id) {
-    return readerAnnotationGraphQLService.annotation(id);
+    UUID annotationId = UUID.fromString(id);
+    return annotationService.findById(annotationId)
+        .map(a -> {
+          int replyCount = commentService
+              .countByAnnotationIds(List.of(annotationId))
+              .getOrDefault(annotationId, 0L)
+              .intValue();
+          return annotationMapper.map(a, null, null, replyCount, null);
+        })
+        .orElse(null);
   }
 
   /**
@@ -62,9 +149,22 @@ public class ReaderAnnotationDataFetcher {
   @DgsData(parentType = "HadesMutations", field = "createAnnotation")
   @PreAuthorize("@permissions.has('graphql.hades.createAnnotation')")
   @RateLimit(capacity = 1, refillPerSecond = 0.0667)
+  @Transactional
   public CreateAnnotationResponse createAnnotation(AnnotationInput input) {
-    return readerAnnotationGraphQLService.createAnnotation(
-        input.getTextId(), input.getStartOffset(), input.getEndOffset(), input.getBody());
+    try {
+      UUID id = annotationService.createAnnotation(
+          UUID.fromString(input.getTextId()), input.getStartOffset(), input.getEndOffset(), input.getBody());
+      logger.info("createAnnotation succeeded for id {}", id);
+      ReaderAnnotationEntity annotation = annotationService.findById(id)
+          .orElseThrow(() -> new IllegalArgumentException("Annotation not found: " + id));
+      return CreateAnnotationResponse.newBuilder()
+          .message("Annotation created successfully")
+          .annotation(annotationMapper.map(annotation, null, null, 0, null))
+          .build();
+    } catch (Exception e) {
+      logger.error("createAnnotation failed", e);
+      throw new MutationException("createAnnotation failed: " + e.getMessage(), e);
+    }
   }
 
   /**
@@ -76,8 +176,21 @@ public class ReaderAnnotationDataFetcher {
    */
   @DgsData(parentType = "HadesMutations", field = "editAnnotation")
   @PreAuthorize("@permissions.has('graphql.hades.editAnnotation')")
+  @Transactional
   public EditAnnotationResponse editAnnotation(String id, String body) {
-    return readerAnnotationGraphQLService.editAnnotation(id, body);
+    try {
+      UUID annotationId = annotationService.editAnnotation(UUID.fromString(id), body);
+      logger.info("editAnnotation succeeded for id {}", annotationId);
+      ReaderAnnotationEntity annotation = annotationService.findById(annotationId)
+          .orElseThrow(() -> new IllegalArgumentException("Annotation not found: " + annotationId));
+      return EditAnnotationResponse.newBuilder()
+          .message("Annotation updated successfully")
+          .annotation(annotationMapper.map(annotation, null, null, 0, null))
+          .build();
+    } catch (Exception e) {
+      logger.error("editAnnotation failed", e);
+      throw new MutationException("editAnnotation failed: " + e.getMessage(), e);
+    }
   }
 
   /**
@@ -88,8 +201,19 @@ public class ReaderAnnotationDataFetcher {
    */
   @DgsData(parentType = "HadesMutations", field = "deleteAnnotation")
   @PreAuthorize("@permissions.has('graphql.hades.deleteAnnotation')")
+  @Transactional
   public DeleteAnnotationResponse deleteAnnotation(String id) {
-    return readerAnnotationGraphQLService.deleteAnnotation(id);
+    try {
+      annotationService.deleteAnnotation(UUID.fromString(id));
+      logger.info("deleteAnnotation succeeded for id {}", id);
+      return DeleteAnnotationResponse.newBuilder()
+          .message("Annotation deleted successfully")
+          .id(id)
+          .build();
+    } catch (Exception e) {
+      logger.error("deleteAnnotation failed", e);
+      throw new MutationException("deleteAnnotation failed: " + e.getMessage(), e);
+    }
   }
 
   /**
@@ -101,7 +225,18 @@ public class ReaderAnnotationDataFetcher {
    */
   @DgsData(parentType = "HadesMutations", field = "attachObject")
   @PreAuthorize("@permissions.has('graphql.hades.attachObject')")
+  @Transactional
   public AttachReaderObjectResponse attachObject(String source, String target) {
-    return readerAnnotationGraphQLService.attachObject(source, target);
+    try {
+      UUID id = annotationService.attach(UUID.fromString(source), target);
+      logger.info("attachObject succeeded for id {}", id);
+      return AttachReaderObjectResponse.newBuilder()
+          .message("Object attached successfully")
+          .id(id.toString())
+          .build();
+    } catch (Exception e) {
+      logger.error("attachObject failed", e);
+      throw new MutationException("attachObject failed: " + e.getMessage(), e);
+    }
   }
 }

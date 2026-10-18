@@ -2,12 +2,23 @@ package com.sun.hades.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
+import com.sun.base.error.MutationException;
 import com.sun.hades.codegen.types.VoteInput;
 import com.sun.hades.codegen.types.VoteReaderResponse;
-import com.sun.hades.graphql.services.ReaderVoteGraphQLService;
+import com.sun.hades.graphql.mappers.ReaderAnnotationMapper;
+import com.sun.hades.graphql.mappers.ReaderCommentMapper;
+import com.sun.hades.model.ReaderAnnotationEntity;
+import com.sun.hades.model.ReaderCommentEntity;
 import com.sun.hades.model.enums.ReaderVoteTarget;
 import com.sun.hades.model.enums.VoteValue;
+import com.sun.hades.service.ReaderAnnotationService;
+import com.sun.hades.service.ReaderCommentService;
+import com.sun.hades.service.ReaderVoteService;
+import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Data fetchers for the reader queries and mutations.
@@ -15,10 +26,22 @@ import org.springframework.security.access.prepost.PreAuthorize;
 @DgsComponent
 public class ReaderVoteDataFetcher {
 
-  private final ReaderVoteGraphQLService readerVoteGraphQLService;
+  private static final Logger logger = LoggerFactory.getLogger(ReaderVoteDataFetcher.class);
 
-  public ReaderVoteDataFetcher(ReaderVoteGraphQLService readerVoteGraphQLService) {
-    this.readerVoteGraphQLService = readerVoteGraphQLService;
+  private final ReaderVoteService voteService;
+  private final ReaderAnnotationService annotationService;
+  private final ReaderCommentService commentService;
+  private final ReaderAnnotationMapper annotationMapper;
+  private final ReaderCommentMapper commentMapper;
+
+  public ReaderVoteDataFetcher(ReaderVoteService voteService,
+      ReaderAnnotationService annotationService, ReaderCommentService commentService,
+      ReaderAnnotationMapper annotationMapper, ReaderCommentMapper commentMapper) {
+    this.voteService = voteService;
+    this.annotationService = annotationService;
+    this.commentService = commentService;
+    this.annotationMapper = annotationMapper;
+    this.commentMapper = commentMapper;
   }
 
   /**
@@ -30,8 +53,9 @@ public class ReaderVoteDataFetcher {
    */
   @DgsData(parentType = "HadesQueries", field = "myVote")
   @PreAuthorize("@permissions.has('graphql.hades.myVote')")
+  @Transactional(readOnly = true)
   public VoteValue myVote(ReaderVoteTarget targetType, String targetId) {
-    return readerVoteGraphQLService.myVote(targetType, targetId);
+    return voteService.myVote(targetType, UUID.fromString(targetId)).orElse(null);
   }
 
   /**
@@ -42,8 +66,19 @@ public class ReaderVoteDataFetcher {
    */
   @DgsData(parentType = "HadesMutations", field = "vote")
   @PreAuthorize("@permissions.has('graphql.hades.vote')")
+  @Transactional
   public VoteReaderResponse vote(VoteInput input) {
-    return readerVoteGraphQLService.vote(input);
+    try {
+      UUID id = voteService.vote(
+          input.getTargetType(),
+          UUID.fromString(input.getTargetId()),
+          input.getValue());
+      logger.info("vote succeeded for id {}", id);
+      return response("Vote recorded successfully", input.getTargetType(), id);
+    } catch (Exception e) {
+      logger.error("vote failed", e);
+      throw new MutationException("vote failed: " + e.getMessage(), e);
+    }
   }
 
   /**
@@ -55,7 +90,35 @@ public class ReaderVoteDataFetcher {
    */
   @DgsData(parentType = "HadesMutations", field = "removeVote")
   @PreAuthorize("@permissions.has('graphql.hades.removeVote')")
+  @Transactional
   public VoteReaderResponse removeVote(ReaderVoteTarget targetType, String targetId) {
-    return readerVoteGraphQLService.removeVote(targetType, targetId);
+    try {
+      UUID id = voteService.removeVote(targetType, UUID.fromString(targetId));
+      logger.info("removeVote succeeded for id {}", id);
+      return response("Vote removed successfully", targetType, id);
+    } catch (Exception e) {
+      logger.error("removeVote failed", e);
+      throw new MutationException("removeVote failed: " + e.getMessage(), e);
+    }
+  }
+
+  /**
+   * Builds a vote response for the affected annotation or comment.
+   *
+   * @param message the success message
+   * @param targetType whether the target is an annotation or comment
+   * @param id the target id
+   * @return the vote response
+   */
+  private VoteReaderResponse response(String message, ReaderVoteTarget targetType, UUID id) {
+    VoteReaderResponse.Builder builder = VoteReaderResponse.newBuilder().message(message);
+    if (targetType == ReaderVoteTarget.ANNOTATION) {
+      ReaderAnnotationEntity annotation = annotationService.findById(id)
+          .orElseThrow(() -> new IllegalArgumentException("Annotation not found: " + id));
+      return builder.annotation(annotationMapper.map(annotation, null, null, 0, null)).build();
+    }
+    ReaderCommentEntity comment = commentService.findById(id)
+        .orElseThrow(() -> new IllegalArgumentException("Comment not found: " + id));
+    return builder.comment(commentMapper.map(comment, null, null)).build();
   }
 }

@@ -1,83 +1,179 @@
 package com.sun.hades.graphql.resolvers;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.sun.base.error.MutationException;
 import com.sun.hades.codegen.types.AddCommentResponse;
 import com.sun.hades.codegen.types.CommentInput;
 import com.sun.hades.codegen.types.DeleteCommentResponse;
 import com.sun.hades.codegen.types.EditCommentResponse;
 import com.sun.hades.codegen.types.PagedReaderComments;
-import com.sun.hades.codegen.types.PaginationInput;
 import com.sun.hades.codegen.types.ReaderComment;
-import com.sun.hades.graphql.services.ReaderCommentGraphQLService;
+import com.sun.hades.graphql.mappers.ReaderCommentMapper;
+import com.sun.hades.graphql.mappers.RemoteUserMapper;
+import com.sun.hades.model.ReaderCommentEntity;
+import com.sun.hades.model.enums.ReaderStatus;
+import com.sun.hades.model.enums.ReaderVoteTarget;
+import com.sun.hades.service.ReaderAccountService;
+import com.sun.hades.service.ReaderCommentService;
+import com.sun.hades.service.ReaderVoteService;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 @ExtendWith(MockitoExtension.class)
 class ReaderCommentDataFetcherTest {
 
-  @Mock private ReaderCommentGraphQLService readerCommentGraphQLService;
+  @Mock private ReaderCommentService commentService;
+  @Mock private ReaderAccountService accountService;
+  @Mock private ReaderVoteService voteService;
+  @Mock private ReaderCommentMapper commentMapper;
+  @Mock private RemoteUserMapper remoteUserMapper;
 
   @InjectMocks private ReaderCommentDataFetcher fetcher;
 
   @Test
-  void comments_shouldDelegateToService() {
-    PagedReaderComments page = PagedReaderComments.newBuilder().items(List.of()).build();
-    PaginationInput pagination = PaginationInput.newBuilder().page(0).size(10).build();
-    when(readerCommentGraphQLService.comments("ann-id", false, pagination)).thenReturn(page);
+  void comments_returnsPaged() {
+    UUID annotationId = UUID.randomUUID();
+    ReaderCommentEntity entity = new ReaderCommentEntity();
+    entity.setId(UUID.randomUUID());
+    entity.setAnnotationId(annotationId);
+    entity.setBody("hello");
+    entity.setStatus(ReaderStatus.ACTIVE);
+    Page<ReaderCommentEntity> page = new PageImpl<>(List.of(entity), PageRequest.of(0, 10), 1);
+    when(commentService.listForAnnotation(eq(annotationId), any())).thenReturn(page);
+    when(voteService.myVotes(eq(ReaderVoteTarget.COMMENT), anyList())).thenReturn(Map.of());
+    ReaderComment mapped = ReaderComment.newBuilder().id(entity.getId().toString()).body("hello").build();
+    when(commentMapper.map(eq(entity), any(), any())).thenReturn(mapped);
 
-    PagedReaderComments result = fetcher.comments("ann-id", false, pagination);
+    PagedReaderComments result = fetcher.comments(annotationId.toString(), false, null);
 
-    assertThat(result).isEqualTo(page);
-    verify(readerCommentGraphQLService).comments("ann-id", false, pagination);
+    assertThat(result.getItems()).hasSize(1);
+    assertThat(result.getItems().get(0).getBody()).isEqualTo("hello");
+    assertThat(result.getPageInfo().getTotalCount()).isEqualTo(1);
   }
 
   @Test
-  void addComment_shouldDelegateToService() {
-    CommentInput input = CommentInput.newBuilder().annotationId("ann-id").body("body").build();
-    AddCommentResponse mockResult = AddCommentResponse.newBuilder()
-        .message("ok")
-        .comment(ReaderComment.newBuilder().id("id").body("body").build())
-        .build();
-    when(readerCommentGraphQLService.addComment(input)).thenReturn(mockResult);
+  void comments_filtersHiddenWhenNotIncluded() {
+    UUID annotationId = UUID.randomUUID();
+    ReaderCommentEntity active = new ReaderCommentEntity();
+    active.setId(UUID.randomUUID());
+    active.setAnnotationId(annotationId);
+    active.setBody("active");
+    active.setStatus(ReaderStatus.ACTIVE);
+    ReaderCommentEntity hidden = new ReaderCommentEntity();
+    hidden.setId(UUID.randomUUID());
+    hidden.setAnnotationId(annotationId);
+    hidden.setBody("hidden");
+    hidden.setStatus(ReaderStatus.HIDDEN);
+    Page<ReaderCommentEntity> page = new PageImpl<>(List.of(active, hidden), PageRequest.of(0, 10), 2);
+    when(commentService.listForAnnotation(eq(annotationId), any())).thenReturn(page);
+    when(voteService.myVotes(eq(ReaderVoteTarget.COMMENT), anyList())).thenReturn(Map.of());
+    ReaderComment mapped = ReaderComment.newBuilder().id(active.getId().toString()).body("active").build();
+    when(commentMapper.map(eq(active), any(), any())).thenReturn(mapped);
+
+    PagedReaderComments result = fetcher.comments(annotationId.toString(), false, null);
+
+    assertThat(result.getItems()).hasSize(1);
+    assertThat(result.getItems().get(0).getBody()).isEqualTo("active");
+  }
+
+  @Test
+  void addComment_delegates() {
+    UUID annotationId = UUID.randomUUID();
+    UUID returned = UUID.randomUUID();
+    CommentInput input = CommentInput.newBuilder()
+        .annotationId(annotationId.toString()).body("body").build();
+    ReaderCommentEntity entity = new ReaderCommentEntity();
+    entity.setId(returned);
+    ReaderComment mapped = ReaderComment.newBuilder().id(returned.toString()).body("body").build();
+    when(commentService.addComment(eq(annotationId), eq(null), eq("body"))).thenReturn(returned);
+    when(commentService.findById(returned)).thenReturn(Optional.of(entity));
+    when(commentMapper.map(eq(entity), any(), any())).thenReturn(mapped);
 
     AddCommentResponse result = fetcher.addComment(input);
 
-    assertThat(result).isEqualTo(mockResult);
-    verify(readerCommentGraphQLService).addComment(input);
+    assertThat(result.getComment()).isEqualTo(mapped);
   }
 
   @Test
-  void editComment_shouldDelegateToService() {
-    EditCommentResponse mockResult = EditCommentResponse.newBuilder()
-        .message("ok")
-        .comment(ReaderComment.newBuilder().id("id").body("new").build())
-        .build();
-    when(readerCommentGraphQLService.editComment("id", "new")).thenReturn(mockResult);
+  void addComment_withParentId_delegates() {
+    UUID annotationId = UUID.randomUUID();
+    UUID parentId = UUID.randomUUID();
+    UUID returned = UUID.randomUUID();
+    CommentInput input = CommentInput.newBuilder()
+        .annotationId(annotationId.toString()).parentId(parentId.toString()).body("reply").build();
+    ReaderCommentEntity entity = new ReaderCommentEntity();
+    entity.setId(returned);
+    ReaderComment mapped = ReaderComment.newBuilder().id(returned.toString()).body("reply").build();
+    when(commentService.addComment(eq(annotationId), eq(parentId), eq("reply"))).thenReturn(returned);
+    when(commentService.findById(returned)).thenReturn(Optional.of(entity));
+    when(commentMapper.map(eq(entity), any(), any())).thenReturn(mapped);
 
-    EditCommentResponse result = fetcher.editComment("id", "new");
+    AddCommentResponse result = fetcher.addComment(input);
 
-    assertThat(result).isEqualTo(mockResult);
-    verify(readerCommentGraphQLService).editComment("id", "new");
+    assertThat(result.getComment()).isEqualTo(mapped);
   }
 
   @Test
-  void deleteComment_shouldDelegateToService() {
-    DeleteCommentResponse mockResult = DeleteCommentResponse.newBuilder()
-        .message("ok")
-        .id("id")
-        .build();
-    when(readerCommentGraphQLService.deleteComment("id")).thenReturn(mockResult);
+  void addComment_throwsOnFailure() {
+    UUID annotationId = UUID.randomUUID();
+    CommentInput input = CommentInput.newBuilder()
+        .annotationId(annotationId.toString()).body("").build();
+    when(commentService.addComment(any(), any(), any())).thenThrow(new IllegalArgumentException("Invalid comment"));
 
-    DeleteCommentResponse result = fetcher.deleteComment("id");
+    assertThatThrownBy(() -> fetcher.addComment(input))
+        .isInstanceOf(MutationException.class);
+  }
 
-    assertThat(result).isEqualTo(mockResult);
-    verify(readerCommentGraphQLService).deleteComment("id");
+  @Test
+  void editComment_delegates() {
+    UUID id = UUID.randomUUID();
+    UUID returned = UUID.randomUUID();
+    ReaderCommentEntity entity = new ReaderCommentEntity();
+    entity.setId(returned);
+    ReaderComment mapped = ReaderComment.newBuilder().id(returned.toString()).body("new").build();
+    when(commentService.editComment(id, "new")).thenReturn(returned);
+    when(commentService.findById(returned)).thenReturn(Optional.of(entity));
+    when(commentMapper.map(eq(entity), any(), any())).thenReturn(mapped);
+
+    EditCommentResponse result = fetcher.editComment(id.toString(), "new");
+
+    assertThat(result.getComment()).isEqualTo(mapped);
+  }
+
+  @Test
+  void deleteComment_delegates() {
+    UUID id = UUID.randomUUID();
+
+    DeleteCommentResponse result = fetcher.deleteComment(id.toString());
+
+    assertThat(result.getId()).isEqualTo(id.toString());
+    verify(commentService).deleteComment(id);
+  }
+
+  @Test
+  void deleteComment_throwsWhenThrows() {
+    UUID id = UUID.randomUUID();
+    org.mockito.Mockito.doThrow(new IllegalArgumentException("not found"))
+        .when(commentService).deleteComment(id);
+
+    assertThatThrownBy(() -> fetcher.deleteComment(id.toString()))
+        .isInstanceOf(MutationException.class);
   }
 }
