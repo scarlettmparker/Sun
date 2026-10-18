@@ -1,4 +1,3 @@
-import { Writable } from "node:stream";
 import path from "node:path";
 import fs from "node:fs/promises";
 import type { ViteDevServer } from "vite";
@@ -65,14 +64,12 @@ type EntryRender = (options: {
 }) => Promise<{
   statusCode: number;
   headers: Record<string, string>;
-  prelude: string;
-  postlude: string | (() => string);
-  stream: NodeJS.ReadableStream;
+  html: string;
 }>;
 
 /**
  * Loads the app's entry-server render fn, resolves clientJs/clientCss, renders,
- * and pipes the HTML to the response.
+ * and writes the HTML to the response.
  */
 export async function renderApp(
   opts: RenderAppOptions,
@@ -130,27 +127,7 @@ export async function renderApp(
     for (const [key, value] of Object.entries(rendered.headers)) {
       res.setHeader(key, value);
     }
-    res.write(rendered.prelude);
-
-    // Pipe React's stream into the response; the postlude (closing tags +
-    // cache hydration + client script) is written once the stream ends.
-    const writable = new Writable({
-      write(chunk, _encoding, callback) {
-        res.write(chunk);
-        callback();
-      },
-      final(callback) {
-        const postludeContent =
-          typeof rendered.postlude === "function"
-            ? rendered.postlude()
-            : rendered.postlude;
-        res.write(postludeContent);
-        res.end();
-        callback();
-      },
-    });
-
-    rendered.stream.pipe(writable);
+    res.end(rendered.html);
   } catch (e) {
     if (!isProduction && vite) {
       vite.ssrFixStacktrace(e as Error);

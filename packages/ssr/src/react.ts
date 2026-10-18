@@ -4,10 +4,9 @@ import {
   type ReactNode,
   useCallback,
   useEffect,
-  useReducer,
   useRef,
   useState,
-} from "react";
+} from "preact/compat";
 import { trackPageView } from "@sun/analytics";
 import {
   getPageData,
@@ -19,6 +18,16 @@ import {
 } from "./page-data";
 import { MutationError } from "./mutation-error";
 import { CSRF_FIELD, getCsrfToken } from "./csrf";
+
+/**
+ * Returns a function that forces a re-render.
+ *
+ * @returns The re-render trigger.
+ */
+function useForceUpdate(): () => void {
+  const [, setVersion] = useState(0);
+  return () => setVersion((version) => version + 1);
+}
 
 /**
  * Suspense-aware page-data hook.
@@ -33,7 +42,7 @@ export function usePageData<T>(
   params?: Record<string, unknown>,
 ): { data: T } {
   const cacheKey = makeCacheKey(`${pattern}:${key}`, params);
-  const [, forceUpdate] = useReducer((x: number) => x + 1, 0);
+  const forceUpdate = useForceUpdate();
 
   useEffect(() => {
     const unsubscribeInvalidation = subscribeDataInvalidation((affected) => {
@@ -98,7 +107,7 @@ export const RoleCheck = ({
 }: RoleCheckProps) => {
   if (!roles.length) return null;
   const cacheKey = makeCacheKey("currentRoles:currentRoles", {});
-  const [, forceUpdate] = useReducer((x: number) => x + 1, 0);
+  const forceUpdate = useForceUpdate();
 
   useEffect(() => {
     return subscribeDataInvalidation((affected) => {

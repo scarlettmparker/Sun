@@ -1,7 +1,8 @@
 import fs from "fs";
 import path from "path";
 import type { ReactElement } from "react";
-import { renderToPipeableStream } from "react-dom/server";
+import { renderToStringAsync } from "preact-render-to-string";
+import type { VNode } from "preact";
 import { inlineCss, generateCssTag } from "@sun/utils/css-inlining";
 import { getRequestCache } from "./page-data";
 import { getCspNonce } from "./csp-nonce";
@@ -142,17 +143,9 @@ export type RenderResult = {
    */
   headers: Record<string, string>;
   /**
-   * HTML from DOCTYPE through the opening #app div.
+   * Complete HTML document.
    */
-  prelude: string;
-  /**
-   * Closing HTML, or a builder called once the stream ends.
-   */
-  postlude: string | (() => string);
-  /**
-   * The React pipeable stream.
-   */
-  stream: ReturnType<typeof renderToPipeableStream>;
+  html: string;
 };
 
 function loadTranslations(locale: string): Record<string, unknown> {
@@ -338,50 +331,43 @@ async function renderApp(
 
   const cssContent = await inlineCss(isProduction, clientCss);
 
-  return new Promise((resolve) => {
-    let resolved = false;
-    let postludeData = "";
-    const nonce = getCspNonce() ?? "fallback-nonce";
-    const nonceAttr = ` nonce="${nonce}"`;
+  const nonce = getCspNonce() ?? "fallback-nonce";
+  const nonceAttr = ` nonce="${nonce}"`;
 
-    // Never pass bootstrapModules: it lands before the postlude fills
-    // window.__serverCacheData__, so the client boots too early on first load.
-    const stream = renderToPipeableStream(app, {
-      onShellReady() {
-        const rawCssTag = generateCssTag(isProduction, cssContent, clientCss);
-        const cssTag = rawCssTag.replace("<style>", `<style nonce="${nonce}">`);
-        const securityHeaders = buildSecurityHeaders({
-          isProduction,
-          nonce,
-        });
-        const headers: Record<string, string> = {
-          "Content-Type": "text/html; charset=utf-8",
-          "Cache-Control": "private, max-age=0, must-revalidate",
-          Vary: "Accept-Encoding",
-          ...securityHeaders,
-        };
-        const globals = Object.entries({
-          __translations__: translations,
-          __locale__: locale,
-          __theme__: currentTheme,
-          __themes__: themes,
-          __serverCacheData__: {},
-          ...(config.emitFrontendMode && frontendMode
-            ? { __FRONTEND_MODE__: frontendMode }
-            : {}),
-          ...extraGlobals,
-        })
-          .map(
-            ([k, v]) =>
-              `window.${k} = ${k.startsWith("__locale") ? `'${v}'` : JSON.stringify(v)};`,
-          )
-          .join("\n              ");
+  const rawCssTag = generateCssTag(isProduction, cssContent, clientCss);
+  const cssTag = rawCssTag.replace("<style>", `<style nonce="${nonce}">`);
+  const securityHeaders = buildSecurityHeaders({
+    isProduction,
+    nonce,
+  });
+  const headers: Record<string, string> = {
+    "Content-Type": "text/html; charset=utf-8",
+    "Cache-Control": "private, max-age=0, must-revalidate",
+    Vary: "Accept-Encoding",
+    ...securityHeaders,
+  };
+  const globals = Object.entries({
+    __translations__: translations,
+    __locale__: locale,
+    __theme__: currentTheme,
+    __themes__: themes,
+    __serverCacheData__: {},
+    ...(config.emitFrontendMode && frontendMode
+      ? { __FRONTEND_MODE__: frontendMode }
+      : {}),
+    ...extraGlobals,
+  })
+    .map(
+      ([k, v]) =>
+        `window.${k} = ${k.startsWith("__locale") ? `'${v}'` : JSON.stringify(v)};`,
+    )
+    .join("\n              ");
 
-        const imagePreload =
-          options.url === "/"
-            ? `<link rel="preload" as="image" href="/art-64.webp" imagesrcset="/art-64.webp 1x, /art-128.webp 2x" imagesizes="64px" />`
-            : "";
-        const prelude = `<!DOCTYPE html>
+  const imagePreload =
+    options.url === "/"
+      ? `<link rel="preload" as="image" href="/art-64.webp" imagesrcset="/art-64.webp 1x, /art-128.webp 2x" imagesizes="64px" />`
+      : "";
+  const prelude = `<!DOCTYPE html>
           <html lang="${escapeAttr(locale)}">
             <head>
               <meta charset="UTF-8" />
@@ -399,25 +385,16 @@ async function renderApp(
             </script>
             <body>
               <div id="app">`;
-        if (!resolved) {
-          resolved = true;
-          resolve({
-            statusCode: didMatch ? 200 : 404,
-            headers,
-            prelude,
-            postlude: () => postludeData,
-            stream,
-          });
-        }
-      },
-      onAllReady() {
-        const serverCacheData: Record<string, unknown> = {};
-        for (const [key, record] of requestCache.entries()) {
-          if (record.status === "resolved") {
-            serverCacheData[key] = record.result;
-          }
-        }
-        postludeData = `</div>
+
+  const body = await renderToStringAsync(app as unknown as VNode);
+
+  const serverCacheData: Record<string, unknown> = {};
+  for (const [key, record] of requestCache.entries()) {
+    if (record.status === "resolved") {
+      serverCacheData[key] = record.result;
+    }
+  }
+  const postlude = `</div>
           <script${nonceAttr}>
           if (window.__serverCacheData__ !== undefined) {
             Object.assign(window.__serverCacheData__, ${JSON.stringify(serverCacheData)});
@@ -429,7 +406,10 @@ async function renderApp(
           <script type="module" src="${clientJs}"${nonceAttr}></script>
         </body>
       </html>`;
-      },
-    });
-  });
+
+  return {
+    statusCode: didMatch ? 200 : 404,
+    headers,
+    html: prelude + body + postlude,
+  };
 }

@@ -8,9 +8,10 @@ export default defineConfig({
   minify: false,
   sourcemap: true,
   external: [
-    "react",
-    "react-dom",
-    "react-dom/server",
+    "preact",
+    "preact/compat",
+    "preact/hooks",
+    "preact-render-to-string",
     "@sun/analytics",
     "@sun/utils",
     "posthog-node",
