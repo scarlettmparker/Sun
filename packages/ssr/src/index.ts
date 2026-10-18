@@ -36,6 +36,13 @@ export type {
 export { defineLoader } from "./page-data";
 export type { PageDataContext } from "./page-data";
 
+export {
+  sharedCall,
+  invalidateSharedCache,
+  clearSharedCache,
+  SHARED_TTL,
+} from "./shared-cache";
+
 export { pageDataRpcHandler } from "./rpc-handler";
 
 export { executeMutation } from "./client-mutation";

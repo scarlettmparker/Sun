@@ -23,15 +23,8 @@ export function parseThemes(propertySet: unknown): ResolvedTheme {
     return { current: null, all: [] };
   }
   const themeMap = propertySet as Record<string, Record<string, string>>;
-  if (!Object.keys(themeMap).length) {
-    return { current: null, all: [] };
-  }
   return {
-    current:
-      themeMap["nature"] ??
-      themeMap["sun"] ??
-      Object.values(themeMap)[0] ??
-      null,
+    current: Object.values(themeMap)[0] ?? null,
     all: Object.entries(themeMap).map(([name, values]) => ({
       name,
       values,

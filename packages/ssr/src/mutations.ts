@@ -4,6 +4,7 @@
  */
 
 import { MutationError } from "./mutation-error";
+import { invalidateSharedCache } from "./shared-cache";
 
 /**
  * Per-request context passed to mutation handlers, so they can forward auth
@@ -53,7 +54,16 @@ async function executeMutation(
   if (!handler) {
     throw new MutationError(`Unknown mutation path: ${path}`, 404);
   }
-  return handler(body, context);
+  const result = await handler(body, context);
+  // A handler that declares the keys it changed flushes the shared reads.
+  if (
+    result &&
+    typeof result === "object" &&
+    Array.isArray((result as { invalidated?: unknown }).invalidated)
+  ) {
+    invalidateSharedCache((result as { invalidated: string[] }).invalidated);
+  }
+  return result;
 }
 
 /**

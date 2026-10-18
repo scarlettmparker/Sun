@@ -4,6 +4,7 @@
  */
 
 import { CSRF_HEADER, getCsrfToken } from "./csrf";
+import { invalidateSharedCache } from "./shared-cache";
 
 /**
  * Per-request context passed to page-data loaders, so they can forward auth
@@ -638,6 +639,7 @@ export function invalidateCacheKeys(patterns: string[]): boolean {
     }
   }
 
+  invalidateSharedCache(patterns);
   return true;
 }
 
