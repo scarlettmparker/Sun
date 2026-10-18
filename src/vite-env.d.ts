@@ -28,14 +28,6 @@ export declare global {
      */
     __themes__?: { name: string; values: Record<string, string> }[];
     /**
-     * Posthog Key.
-     */
-    __posthog_key__?: string;
-    /**
-     * Posthog Host.
-     */
-    __posthog_host__?: string;
-    /**
      * Trusted Types factory when the browser supports it.
      */
     trustedTypes?: {

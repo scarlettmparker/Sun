@@ -9,7 +9,6 @@ import Layout from "./components/layout";
 import { initClientBootstrap } from "@sun/ssr";
 import { ensureDefaultTrustedPolicy } from "@sun/security/trusted-types";
 import { loadPersistedTheme, applyTheme } from "@sun/themes";
-import { PostHogProvider } from "./utils/hooks/posthog";
 import "./utils/configure-framework";
 import "@sun/components/style.css";
 import "@sun/themes/style.css";
@@ -30,19 +29,17 @@ i18n.use(initReactI18next);
 initClientBootstrap({ i18n }).then(() => {
   ReactDOM.hydrateRoot(
     document.getElementById("app") as HTMLElement,
-    <PostHogProvider client>
-      <BrowserRouter>
-        <Layout>
-          <ErrorBoundary>
-            <Suspense
-              fallback={<div className={styles.fallback} aria-hidden />}
-            >
-              <Router />
-            </Suspense>
-          </ErrorBoundary>
-        </Layout>
-      </BrowserRouter>
-    </PostHogProvider>,
+    <BrowserRouter>
+      <Layout>
+        <ErrorBoundary>
+          <Suspense
+            fallback={<div className={styles.fallback} aria-hidden />}
+          >
+            <Router />
+          </Suspense>
+        </ErrorBoundary>
+      </Layout>
+    </BrowserRouter>,
   );
   if (typeof performance !== "undefined" && performance.mark) {
     performance.mark("router:ready");

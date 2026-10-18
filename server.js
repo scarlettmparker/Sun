@@ -15,6 +15,7 @@ import {
   clientSecret,
 } from "./config.js";
 import { setupRoutes } from "./routes/index.js";
+import { AUTH_COOKIE } from "./src/utils/auth.ts";
 
 const configure = async (app) => {
   const { default: formbody } = await import("@fastify/formbody");
@@ -40,4 +41,8 @@ await createServer({
   },
   setupRoutes,
   configure,
+  analytics: {
+    app: "sun",
+    authCookie: AUTH_COOKIE,
+  },
 });

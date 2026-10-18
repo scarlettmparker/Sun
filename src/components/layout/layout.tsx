@@ -4,6 +4,8 @@ import { NavPortalProvider } from "./menu/top-nav-bar/nav-portal-context";
 import styles from "./layout.module.css";
 import { ThemeSwitcher, type ThemeOption } from "@sun/themes";
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
+import { usePageViewTracking } from "@sun/ssr";
 
 type LayoutProps = React.PropsWithChildren;
 
@@ -12,6 +14,8 @@ type LayoutProps = React.PropsWithChildren;
  */
 const Layout = (props: LayoutProps) => {
   const { children } = props;
+  const { pathname } = useLocation();
+  usePageViewTracking(pathname);
   const [themes, setThemes] = useState<ThemeOption[]>([]);
 
   useEffect(() => {

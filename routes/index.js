@@ -3,6 +3,7 @@
  * @module routes
  */
 import { renderApp } from "@sun/ssr/server";
+import { trackPageView, trackSignIn, trackSignOut } from "@sun/analytics/server";
 import { base, isProduction, manifestPath } from "../config.js";
 import { getCookieValue } from "@sun/api";
 import {
@@ -31,6 +32,12 @@ export function setupRoutes(app, vite) {
     const { username, password } = request.body ?? {};
     const token = await loginViaGaia(username, password);
     if (!token) return reply.redirect("/login?error=1");
+    trackSignIn({
+      app: "sun",
+      token,
+      ip: request.ip,
+      userAgent: request.headers["user-agent"],
+    });
     reply.header("Set-Cookie", buildAuthCookie(token));
     return reply.redirect("/");
   });
@@ -38,6 +45,12 @@ export function setupRoutes(app, vite) {
   app.post("/__logout", async (request, reply) => {
     const token = getCookieValue(request.headers.cookie, AUTH_COOKIE);
     await logoutViaBackend(token);
+    trackSignOut({
+      app: "sun",
+      token,
+      ip: request.ip,
+      userAgent: request.headers["user-agent"],
+    });
     reply.header("Set-Cookie", clearAuthCookie());
     return reply.redirect("/login");
   });
@@ -86,6 +99,17 @@ export function setupRoutes(app, vite) {
     const pathOnly = url.split("?")[0];
     const pageName =
       pathOnly === "/" ? "home" : pathOnly.split("/")[1] || "home";
+
+    trackPageView({
+      app: "sun",
+      url: `${request.protocol}://${request.headers.host}${request.raw.url}`,
+      path: pathname,
+      authCookie: AUTH_COOKIE,
+      cookie: request.headers.cookie,
+      ip: request.ip,
+      userAgent: request.headers["user-agent"],
+      referrer: request.headers.referer,
+    });
 
     try {
       await renderApp(
