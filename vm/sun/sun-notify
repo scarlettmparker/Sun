@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+target="${1:-}"
+if [ -z "$target" ]; then
+  echo "usage: sun-notify <key|unit>" >&2
+  exit 1
+fi
+
+case "$target" in
+  *.*) unit="$target" ;;
+  *) unit="sun-app@$target.service" ;;
+esac
+
+if ! systemctl --user cat "$unit" >/dev/null 2>&1; then
+  exit 0
+fi
+
+systemctl --user try-restart "$unit"

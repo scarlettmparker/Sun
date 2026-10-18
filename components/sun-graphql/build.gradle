@@ -78,3 +78,12 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+tasks.named('bootJar') {
+    doLast {
+        project.providers.exec {
+            commandLine 'bash', '-c',
+                'systemctl --user try-restart sun-backend.service 2>/dev/null || true'
+        }.result.get()
+    }
+}

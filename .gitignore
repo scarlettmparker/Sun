@@ -17,6 +17,7 @@ coverage/
 # Java stuff
 .gradle/
 build/
+bin/
 /gradlew text eol=lf
 *.bat text eol=crlf
 *.jar binary
@@ -33,5 +34,7 @@ opencode.json
 vm/*
 !vm/systemd/
 !vm/systemd/*
+!vm/sun/
+!vm/sun/*
 deploy.sh
 !deploy.sh

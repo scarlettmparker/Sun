@@ -13,7 +13,11 @@ export const renderMarkdown = (text: string): string => {
   const blocks: string[] = [];
 
   for (let i = 0; i < lines.length;) {
-    if (
+    if (parseFence(lines[i]) !== null) {
+      const { html, nextIndex } = parseFenceBlockViewer(lines, i);
+      blocks.push(html);
+      i = nextIndex;
+    } else if (
       isTableRow(lines[i]) &&
       i + 1 < lines.length &&
       isDelimiterRow(lines[i + 1])
@@ -30,8 +34,163 @@ export const renderMarkdown = (text: string): string => {
     }
   }
 
-  return blocks.join("\n").replace(/\n/g, "<br>\n");
+  // Fenced code keeps its own line breaks, so shield it from the <br> pass.
+  const codeBlocks: string[] = [];
+  const shielded = blocks.map((block) => {
+    if (!block.startsWith('<div class="md-code-wrap">')) return block;
+    const token = `\u00a7\u00a7CODE${codeBlocks.length}\u00a7\u00a7`;
+    codeBlocks.push(block);
+    return token;
+  });
+
+  return shielded
+    .join("\n")
+    .replace(/\n/g, "<br>\n")
+    .replace(/\u00a7\u00a7CODE(\d+)\u00a7\u00a7/g, (_match, index) => codeBlocks[Number(index)]);
 };
+
+/**
+ * Returns the info string when a line opens a fenced code block.
+ *
+ * @param line - raw line
+ * @returns fence info string, or null when the line is not a fence
+ */
+function parseFence(line: string): string | null {
+  const match = /^\s*```(.*)$/.exec(line);
+  return match ? match[1].trim() : null;
+}
+
+/**
+ * JavaScript keywords highlighted in code blocks.
+ */
+const JS_KEYWORDS = new Set([
+  "async",
+  "await",
+  "break",
+  "case",
+  "catch",
+  "class",
+  "const",
+  "continue",
+  "debugger",
+  "default",
+  "delete",
+  "do",
+  "else",
+  "export",
+  "extends",
+  "finally",
+  "for",
+  "from",
+  "function",
+  "get",
+  "if",
+  "import",
+  "in",
+  "instanceof",
+  "let",
+  "new",
+  "of",
+  "return",
+  "set",
+  "static",
+  "super",
+  "switch",
+  "this",
+  "throw",
+  "try",
+  "typeof",
+  "var",
+  "void",
+  "while",
+  "with",
+  "yield",
+  "null",
+  "undefined",
+  "true",
+  "false",
+]);
+
+/**
+ * Highlights JavaScript-ish code with token spans.
+ *
+ * @param code - raw code text
+ * @returns HTML with escaped text and token spans
+ */
+function highlightCode(code: string): string {
+  const pattern = new RegExp(
+    "(\\/\\*[\\s\\S]*?(?:\\*\\/|$))" +
+      "|(\\/\\/[^\\n]*)" +
+      "|(`(?:[^`\\\\]|\\\\[\\s\\S])*(?:`|$)" +
+      "|'(?:[^'\\\\\\n]|\\\\.)*(?:'|$)" +
+      '|"(?:[^"\\\\\\n]|\\\\.)*(?:"|$))' +
+      "|\\b(0[xX][\\d_a-fA-F]+|0[bB][01_]+|0[oO][0-7_]+" +
+      "|\\d[\\d_]*(?:\\.\\d[\\d_]*)?(?:[eE][+-]?\\d[\\d_]*)?n?)\\b" +
+      "|\\b([A-Za-z_$][\\w$]*)\\b",
+    "g",
+  );
+  let out = "";
+  let pos = 0;
+  let match: RegExpExecArray | null;
+  while ((match = pattern.exec(code)) !== null) {
+    out += escapeHtml(code.slice(pos, match.index));
+    const full = match[0];
+    const blockComment = match[1];
+    const lineComment = match[2];
+    const str = match[3];
+    const num = match[4];
+    const word = match[5];
+    if (blockComment ?? lineComment) {
+      out += `<span class="md-tk-com">${escapeHtml(full)}</span>`;
+    } else if (str) {
+      out += `<span class="md-tk-str">${escapeHtml(full)}</span>`;
+    } else if (num) {
+      out += `<span class="md-tk-num">${escapeHtml(full)}</span>`;
+    } else if (word) {
+      if (JS_KEYWORDS.has(word)) {
+        out += `<span class="md-tk-kw">${escapeHtml(full)}</span>`;
+      } else if (/^\s*\(/.test(code.slice(pattern.lastIndex))) {
+        out += `<span class="md-tk-fn">${escapeHtml(full)}</span>`;
+      } else {
+        out += escapeHtml(full);
+      }
+    }
+    pos = match.index + full.length;
+  }
+  out += escapeHtml(code.slice(pos));
+  return out;
+}
+
+/**
+ * Parses a fenced code block for the viewer.
+ *
+ * @param lines - all lines
+ * @param start - index of the opening fence
+ * @returns HTML and next index
+ */
+function parseFenceBlockViewer(
+  lines: string[],
+  start: number,
+): { html: string; nextIndex: number } {
+  const language = parseFence(lines[start]) ?? "";
+  const code: string[] = [];
+  let idx = start + 1;
+  while (idx < lines.length && parseFence(lines[idx]) === null) {
+    code.push(lines[idx]);
+    idx += 1;
+  }
+  if (idx < lines.length) idx += 1;
+  const langAttr = language ? ` data-lang="${escapeAttr(language)}"` : "";
+  const html =
+    `<div class="md-code-wrap">` +
+    `<div class="md-code-actions">` +
+    `<button type="button" class="md-code-btn" data-md-code-action="copy" title="Copy code">Copy</button>` +
+    `<button type="button" class="md-code-btn" data-md-code-action="insert" title="Insert code at cursor">Insert at cursor</button>` +
+    `</div>` +
+    `<pre class="md-pre"><code class="md-code-block"${langAttr}>${highlightCode(code.join("\n"))}</code></pre>` +
+    `</div>`;
+  return { html, nextIndex: idx };
+}
 
 /**
  * Renders a single line.
@@ -54,7 +213,7 @@ function renderLine(line: string): string {
     return `<span class="md-h6">${renderInline(line.slice(7))}</span>`;
   if (line.startsWith("- ") || line.startsWith("* ") || line.startsWith("+ ")) {
     const rest = line.slice(2);
-    return `<span class="md-list">•</span> ${renderInline(rest)}`;
+    return `<span class="md-list">\u2022</span> ${renderInline(rest)}`;
   }
   if (line.startsWith("> ")) {
     return `<span class="md-quote">${renderInline(line.slice(2))}</span>`;
@@ -424,7 +583,7 @@ function splitRow(row: string): string[] {
   // Remove leading/trailing pipe
   const inner = trimmed.replace(/^\|/, "").replace(/\|$/, "");
   // Protect escaped pipes
-  const placeholder = "§§PIPE§§";
+  const placeholder = "\u00a7\u00a7PIPE\u00a7\u00a7";
   const protectedRow = inner.replace(/\\\|/g, placeholder);
   const rawCells = protectedRow.split("|");
   return rawCells.map((c) =>
@@ -496,7 +655,7 @@ export const stripMarkdown = (html: string): string => {
 
   result = result.replace(
     /<span class="md-list">([-*+])\s*<\/span>\s*/g,
-    '<span class="md-list">•</span> ',
+    '<span class="md-list">\u2022</span> ',
   );
 
   result = result.replace(
@@ -537,14 +696,14 @@ export const stripMarkdown = (html: string): string => {
   // Protect block elements from <br> insertion, then replace remaining newlines
   const tableTokens: string[] = [];
   result = result.replace(/<table class="md-table">[\s\S]*?<\/table>/g, (m) => {
-    const token = `§§TABLE${tableTokens.length}§§`;
+    const token = `\u00a7\u00a7TABLE${tableTokens.length}\u00a7\u00a7`;
     tableTokens.push(m);
     return token;
   });
 
   const hrTokens: string[] = [];
   result = result.replace(/<hr>/g, (m) => {
-    const token = `§§HR${hrTokens.length}§§`;
+    const token = `\u00a7\u00a7HR${hrTokens.length}\u00a7\u00a7`;
     hrTokens.push(m);
     return token;
   });
@@ -552,11 +711,11 @@ export const stripMarkdown = (html: string): string => {
   result = result.replace(/\n/g, "<br>\n");
 
   for (let i = 0; i < hrTokens.length; i++) {
-    result = result.replace(`§§HR${i}§§`, hrTokens[i]);
+    result = result.replace(`\u00a7\u00a7HR${i}\u00a7\u00a7`, hrTokens[i]);
   }
 
   for (let i = 0; i < tableTokens.length; i++) {
-    result = result.replace(`§§TABLE${i}§§`, tableTokens[i]);
+    result = result.replace(`\u00a7\u00a7TABLE${i}\u00a7\u00a7`, tableTokens[i]);
   }
 
   return result;
@@ -614,7 +773,7 @@ function processInline(text: string): string {
   const { tokenized: spanTokenized, tokens: spanTokens } = extractSpans(text);
 
   // Also protect table tokens if any slipped through (defensive)
-  if (spanTokenized.includes("§§TABLE"))
+  if (spanTokenized.includes("\u00a7\u00a7TABLE"))
     return restoreSpans(spanTokenized, spanTokens);
 
   // First, protect links so they can be nested inside other inline (e.g., italic)
@@ -622,7 +781,7 @@ function processInline(text: string): string {
   const linkTokens: string[] = [];
   let linkIdx = 0;
   const linkTokenized = replaceLinksBalanced(spanTokenized, (raw) => {
-    const t = `§§LINK${linkIdx}§§`;
+    const t = `\u00a7\u00a7LINK${linkIdx}\u00a7\u00a7`;
     linkTokens.push(raw);
     linkIdx++;
     return t;
@@ -650,7 +809,7 @@ function processInline(text: string): string {
     let out = s;
     for (let i = 0; i < linkTokens.length; i++) {
       out = out.replace(
-        `§§LINK${i}§§`,
+        `\u00a7\u00a7LINK${i}\u00a7\u00a7`,
         `<span class="md-link">${linkTokens[i]}</span>`,
       );
     }
@@ -728,7 +887,7 @@ function extractSpans(input: string) {
   const tokens: string[] = [];
   let idx = 0;
   const tokenized = input.replace(/<span[^>]*>[\s\S]*?<\/span>/g, (m) => {
-    const t = `§§SPAN${idx}§§`;
+    const t = `\u00a7\u00a7SPAN${idx}\u00a7\u00a7`;
     tokens.push(m);
     idx++;
     return t;
@@ -746,7 +905,7 @@ function extractSpans(input: string) {
 function restoreSpans(input: string, tokens: string[]) {
   let out = input;
   for (let i = 0; i < tokens.length; i++) {
-    out = out.replace(`§§SPAN${i}§§`, tokens[i]);
+    out = out.replace(`\u00a7\u00a7SPAN${i}\u00a7\u00a7`, tokens[i]);
   }
   return out;
 }

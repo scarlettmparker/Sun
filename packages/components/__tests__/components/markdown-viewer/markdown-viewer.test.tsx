@@ -208,4 +208,79 @@ Some text with **bold**, *italic*, and \`code\`.
     expect(viewer.innerHTML).toContain("a | b | c");
     expect(viewer.innerHTML).not.toContain('<table class="md-table">');
   });
+
+  it("renders fenced code blocks", () => {
+    const markdown = "```js\nconst answer = 42;\n```";
+    render(<MarkdownViewer data-testid="viewer">{markdown}</MarkdownViewer>);
+    const viewer = screen.getByTestId("viewer");
+    expect(viewer.innerHTML).toContain('<pre class="md-pre">');
+    expect(viewer.innerHTML).toContain(
+      '<code class="md-code-block" data-lang="js">',
+    );
+    expect(viewer.innerHTML).toContain(
+      '<span class="md-tk-kw">const</span> answer = <span class="md-tk-num">42</span>;',
+    );
+    expect(viewer.innerHTML).not.toContain("```");
+  });
+
+  it("renders fenced code blocks without a language", () => {
+    const markdown = "```\nplain text\n```";
+    render(<MarkdownViewer data-testid="viewer">{markdown}</MarkdownViewer>);
+    const viewer = screen.getByTestId("viewer");
+    expect(viewer.innerHTML).toContain('<code class="md-code-block">');
+    expect(viewer.innerHTML).toContain("plain text");
+  });
+
+  it("keeps code line breaks and escapes html", () => {
+    const markdown = "```\nif (a < b) {\n  return;\n}\n```";
+    render(<MarkdownViewer data-testid="viewer">{markdown}</MarkdownViewer>);
+    const viewer = screen.getByTestId("viewer");
+    expect(viewer.innerHTML).toContain("a &lt; b");
+    expect(viewer.innerHTML).toContain("{\n  ");
+  });
+
+  it("leaves inline code untouched", () => {
+    const markdown = "Use `document.querySelector` here.";
+    render(<MarkdownViewer data-testid="viewer">{markdown}</MarkdownViewer>);
+    const viewer = screen.getByTestId("viewer");
+    expect(viewer.innerHTML).toContain(
+      '<span class="md-code">document.querySelector</span>',
+    );
+    expect(viewer.innerHTML).not.toContain("md-pre");
+  });
+
+  it("adds copy and insert buttons to fenced code blocks", () => {
+    const markdown = "```js\nconst answer = 42;\n```";
+    render(<MarkdownViewer data-testid="viewer">{markdown}</MarkdownViewer>);
+    const viewer = screen.getByTestId("viewer");
+    expect(viewer.innerHTML).toContain('<div class="md-code-wrap">');
+    expect(viewer.innerHTML).toContain('<div class="md-code-actions">');
+    expect(viewer.innerHTML).toContain('data-md-code-action="copy"');
+    expect(viewer.innerHTML).toContain('data-md-code-action="insert"');
+  });
+
+  it("highlights javascript tokens in fenced code blocks", () => {
+    const markdown =
+      "```js\n// pick a node\nconst node = document.getElementById(\"id\");\n```";
+    render(<MarkdownViewer data-testid="viewer">{markdown}</MarkdownViewer>);
+    const viewer = screen.getByTestId("viewer");
+    expect(viewer.innerHTML).toContain(
+      '<span class="md-tk-com">// pick a node</span>',
+    );
+    expect(viewer.innerHTML).toContain('<span class="md-tk-kw">const</span>');
+    expect(viewer.innerHTML).toContain(
+      '<span class="md-tk-fn">getElementById</span>',
+    );
+    expect(viewer.innerHTML).toContain('<span class="md-tk-str">"id"</span>');
+  });
+
+  it("highlights numbers and escapes html in code", () => {
+    const markdown = "```\nif (a < b) {\n  take(42);\n}\n```";
+    render(<MarkdownViewer data-testid="viewer">{markdown}</MarkdownViewer>);
+    const viewer = screen.getByTestId("viewer");
+    expect(viewer.innerHTML).toContain('<span class="md-tk-kw">if</span>');
+    expect(viewer.innerHTML).toContain("a &lt; b");
+    expect(viewer.innerHTML).toContain('<span class="md-tk-num">42</span>');
+    expect(viewer.innerHTML).toContain('<span class="md-tk-fn">take</span>');
+  });
 });

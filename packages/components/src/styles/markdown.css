@@ -69,11 +69,76 @@ h5 {
 }
 
 .md-code {
-  font-family: monospace;
-  background-color: rgba(0, 0, 0, 0.08);
+  font-family: var(--vscode-editor-font-family, monospace);
+  background-color: var(--vscode-textPreformat-background, rgba(0, 0, 0, 0.08));
+  color: var(--vscode-textPreformat-foreground, var(--text-primary, var(--primary)));
   padding: 0 var(--sm);
   border-radius: var(--sm);
-  color: var(--text-primary, var(--primary));
+}
+
+.md-pre {
+  margin: var(--md) 0;
+  padding: var(--md) var(--lg);
+  border: 1px solid var(--muted-foreground);
+  border-radius: var(--sm);
+  background: var(--vscode-editor-background, var(--secondary-hover));
+  overflow-x: auto;
+}
+
+.md-code-block {
+  display: block;
+  padding: 0;
+  background: transparent;
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: var(--text-sm);
+  color: var(--vscode-editor-foreground, var(--text));
+  white-space: pre;
+}
+
+.md-code-wrap {
+  position: relative;
+}
+
+.md-code-actions {
+  position: absolute;
+  top: var(--sm);
+  right: var(--sm);
+  display: flex;
+  gap: var(--sm);
+}
+
+.md-code-btn {
+  font-size: var(--text-sm);
+  padding: 2px var(--md);
+  border: 1px solid var(--muted-foreground);
+  border-radius: var(--sm);
+  background: var(--vscode-button-secondaryBackground, var(--secondary));
+  color: var(--vscode-button-secondaryForeground, var(--text));
+  cursor: pointer;
+}
+
+.md-code-btn:hover {
+  background: var(--vscode-button-secondaryHoverBackground, var(--secondary-hover));
+}
+
+.md-code-block .md-tk-com {
+  color: var(--md-tok-comment, #6a9955);
+}
+
+.md-code-block .md-tk-str {
+  color: var(--md-tok-string, #ce9178);
+}
+
+.md-code-block .md-tk-kw {
+  color: var(--md-tok-keyword, #569cd6);
+}
+
+.md-code-block .md-tk-num {
+  color: var(--md-tok-number, #b5cea8);
+}
+
+.md-code-block .md-tk-fn {
+  color: var(--md-tok-function, #dcdcaa);
 }
 
 .md-link,
