@@ -78,6 +78,40 @@ function renderBackend(backend: BackendEntry): string {
 }
 
 /**
+ * Builds the unit file body for the reconcile oneshot.
+ */
+function renderReconcile(): string {
+  return [
+    "[Unit]",
+    "Description=Sun preview reconcile",
+    "",
+    "[Service]",
+    "Type=oneshot",
+    `ExecStart=${BUN} ${path.join(SUN_ROOT, "vm/sun/sun-reconcile.ts")}`,
+    "",
+  ].join("\n");
+}
+
+/**
+ * Builds the timer that drives the reconcile oneshot.
+ */
+function renderReconcileTimer(): string {
+  return [
+    "[Unit]",
+    "Description=Sun preview reconcile timer",
+    "",
+    "[Timer]",
+    "OnBootSec=30s",
+    "OnUnitActiveSec=60s",
+    "Unit=sun-reconcile.service",
+    "",
+    "[Install]",
+    "WantedBy=timers.target",
+    "",
+  ].join("\n");
+}
+
+/**
  * Writes a unit file and returns its name.
  */
 function writeUnit(name: string, contents: string): string {
@@ -97,6 +131,8 @@ function main(): void {
       units.push(writeUnit(app.unit, renderApp(app)));
     }
   }
+  writeUnit("sun-reconcile.service", renderReconcile());
+  units.push(writeUnit("sun-reconcile.timer", renderReconcileTimer()));
   process.stdout.write(`${units.join("\n")}\n`);
 }
 

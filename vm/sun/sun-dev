@@ -20,6 +20,11 @@ console.log(app.port, app.host);
 ")
 
 unit="sun-app@$key.service"
+state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/sun"
+mkdir -p "$state_dir"
+marker="$state_dir/dev-$key"
+printf '%s' "$$" > "$marker"
+
 was_active=false
 if systemctl --user is-active --quiet "$unit" 2>/dev/null; then
   was_active=true
@@ -27,6 +32,7 @@ if systemctl --user is-active --quiet "$unit" 2>/dev/null; then
 fi
 
 cleanup() {
+  rm -f "$marker"
   if [ "$was_active" = true ]; then
     systemctl --user start "$unit" >/dev/null 2>&1 || true
   fi
