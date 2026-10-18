@@ -2,6 +2,9 @@ package com.sun.icarus.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
+import com.sun.base.error.MutationException;
+import com.sun.base.util.PageRequests;
+import com.sun.gaia.service.AccountService;
 import com.sun.icarus.codegen.types.ArchiveThreadResponse;
 import com.sun.icarus.codegen.types.AttachForumObjectResponse;
 import com.sun.icarus.codegen.types.CreatePostInput;
@@ -17,16 +20,36 @@ import com.sun.icarus.codegen.types.ForumVoteInput;
 import com.sun.icarus.codegen.types.IcarusMutations;
 import com.sun.icarus.codegen.types.IcarusQueries;
 import com.sun.icarus.codegen.types.LockThreadResponse;
+import com.sun.icarus.codegen.types.PageInfo;
 import com.sun.icarus.codegen.types.PagedForumPosts;
 import com.sun.icarus.codegen.types.PagedForumThreads;
 import com.sun.icarus.codegen.types.PaginationInput;
+import com.sun.icarus.codegen.types.RemoteUser;
+import com.sun.icarus.codegen.types.RemoteUserType;
 import com.sun.icarus.codegen.types.RemoveVoteResponse;
 import com.sun.icarus.codegen.types.VoteForumResponse;
-import com.sun.icarus.graphql.services.IcarusGraphQLService;
+import com.sun.icarus.graphql.mappers.ForumPostMapper;
+import com.sun.icarus.graphql.mappers.ForumThreadMapper;
+import com.sun.icarus.model.ForumPostEntity;
+import com.sun.icarus.model.ForumThreadEntity;
+import com.sun.icarus.model.enums.PostStatus;
+import com.sun.icarus.model.enums.ThreadStatus;
 import com.sun.icarus.model.enums.VoteValue;
+import com.sun.icarus.service.ForumPostService;
+import com.sun.icarus.service.ForumThreadService;
+import com.sun.icarus.service.ForumVoteService;
+import java.util.HashMap;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Data fetchers for the forum queries and mutations.
@@ -34,8 +57,25 @@ import org.springframework.security.access.prepost.PreAuthorize;
 @DgsComponent
 public class IcarusDataFetcher {
 
-  @Autowired
-  private IcarusGraphQLService icarusGraphQLService;
+  private static final Logger logger = LoggerFactory.getLogger(IcarusDataFetcher.class);
+
+  private final ForumThreadService threadService;
+  private final ForumPostService postService;
+  private final ForumVoteService voteService;
+  private final ForumThreadMapper threadMapper;
+  private final ForumPostMapper postMapper;
+  private final AccountService accountService;
+
+  public IcarusDataFetcher(ForumThreadService threadService, ForumPostService postService,
+      ForumVoteService voteService, ForumThreadMapper threadMapper, ForumPostMapper postMapper,
+      AccountService accountService) {
+    this.threadService = threadService;
+    this.postService = postService;
+    this.voteService = voteService;
+    this.threadMapper = threadMapper;
+    this.postMapper = postMapper;
+    this.accountService = accountService;
+  }
 
   /**
    * Provides the forum queries object.
@@ -55,8 +95,9 @@ public class IcarusDataFetcher {
    */
   @DgsData(parentType = "IcarusQueries", field = "thread")
   @PreAuthorize("@permissions.has('graphql.icarus.thread')")
+  @Transactional(readOnly = true)
   public ForumThread thread(String id) {
-    return icarusGraphQLService.thread(id);
+    return threadService.findById(UUID.fromString(id)).map(threadMapper::map).orElse(null);
   }
 
   /**
@@ -67,8 +108,21 @@ public class IcarusDataFetcher {
    */
   @DgsData(parentType = "IcarusQueries", field = "threadsFor")
   @PreAuthorize("@permissions.has('graphql.icarus.threadsFor')")
+  @Transactional(readOnly = true)
   public PagedForumThreads threadsFor(String remoteObject) {
-    return icarusGraphQLService.threadsFor(remoteObject);
+    List<ForumThread> items =
+        threadService.listForRemoteObject(remoteObject).stream().map(threadMapper::map).toList();
+    return PagedForumThreads.newBuilder()
+        .items(items)
+        .pageInfo(PageInfo.newBuilder()
+            .page(0)
+            .size(items.size())
+            .totalPages(1)
+            .totalCount(items.size())
+            .hasNextPage(false)
+            .hasPreviousPage(false)
+            .build())
+        .build();
   }
 
   /**
@@ -81,8 +135,29 @@ public class IcarusDataFetcher {
    */
   @DgsData(parentType = "IcarusQueries", field = "posts")
   @PreAuthorize("@permissions.has('graphql.icarus.posts')")
+  @Transactional(readOnly = true)
   public PagedForumPosts posts(String threadId, Boolean includeHidden, PaginationInput pagination) {
-    return icarusGraphQLService.posts(threadId, includeHidden, pagination);
+    Pageable pageable = toPageable(pagination, "createdAt", Sort.Direction.ASC);
+    Page<ForumPostEntity> result = postService.listForThread(UUID.fromString(threadId), pageable);
+    List<ForumPostEntity> visible = result.getContent().stream()
+        .filter(p -> Boolean.TRUE.equals(includeHidden) || p.getStatus() == PostStatus.ACTIVE)
+        .toList();
+    Map<UUID, RemoteUser> authors = new HashMap<>();
+    visible.stream()
+        .map(ForumPostEntity::getCreatedBy)
+        .filter(Objects::nonNull)
+        .distinct()
+        .forEach(gaiaAccountId -> accountService.findById(gaiaAccountId).ifPresent(acc -> {
+          if ("discord".equals(acc.getProvider()) && acc.getProviderId() != null) {
+            authors.put(gaiaAccountId, remoteUser(acc.getProviderId()));
+          }
+        }));
+    Map<UUID, VoteValue> myVotes = voteService.myVotes(
+        visible.stream().map(ForumPostEntity::getId).toList());
+    List<ForumPost> items = visible.stream()
+        .map(p -> postMapper.map(p, authors.get(p.getCreatedBy()), myVotes.get(p.getId())))
+        .toList();
+    return PagedForumPosts.newBuilder().items(items).pageInfo(pageInfo(result)).build();
   }
 
   /**
@@ -93,8 +168,9 @@ public class IcarusDataFetcher {
    */
   @DgsData(parentType = "IcarusQueries", field = "myVote")
   @PreAuthorize("@permissions.has('graphql.icarus.myVote')")
+  @Transactional(readOnly = true)
   public VoteValue myVote(String postId) {
-    return icarusGraphQLService.myVote(postId);
+    return voteService.myVote(UUID.fromString(postId)).orElse(null);
   }
 
   /**
@@ -105,8 +181,15 @@ public class IcarusDataFetcher {
    */
   @DgsData(parentType = "IcarusQueries", field = "locateRemoteObjects")
   @PreAuthorize("@permissions.has('graphql.icarus.locateRemoteObjects')")
+  @Transactional(readOnly = true)
   public List<ForumObjectReference> locateRemoteObjects(List<String> ids) {
-    return icarusGraphQLService.locateRemoteObjects(ids);
+    return threadService.locateRemoteObjects(ids).stream()
+        .map(r -> ForumObjectReference.newBuilder()
+            .id(r.id().toString())
+            .ownerType(r.ownerType())
+            .ownerId(r.ownerId().toString())
+            .build())
+        .toList();
   }
 
   /**
@@ -127,8 +210,21 @@ public class IcarusDataFetcher {
    */
   @DgsData(parentType = "IcarusMutations", field = "createThread")
   @PreAuthorize("@permissions.has('graphql.icarus.createThread')")
+  @Transactional
   public CreateThreadResponse createThread(CreateThreadInput input) {
-    return icarusGraphQLService.createThread(input);
+    try {
+      UUID id = threadService.create(input.getTitle(), input.getRemoteObject());
+      ForumThreadEntity thread = threadService.findById(id)
+          .orElseThrow(() -> new IllegalArgumentException("Thread not found: " + id));
+      logger.info("createThread succeeded for id {}", id);
+      return CreateThreadResponse.newBuilder()
+          .message("createThread succeeded")
+          .thread(threadMapper.map(thread))
+          .build();
+    } catch (Exception e) {
+      logger.error("createThread failed", e);
+      throw new MutationException("createThread failed: " + e.getMessage(), e);
+    }
   }
 
   /**
@@ -139,8 +235,21 @@ public class IcarusDataFetcher {
    */
   @DgsData(parentType = "IcarusMutations", field = "lockThread")
   @PreAuthorize("@permissions.has('graphql.icarus.lockThread')")
+  @Transactional
   public LockThreadResponse lockThread(String id) {
-    return icarusGraphQLService.lockThread(id);
+    try {
+      UUID threadId = threadService.setStatus(UUID.fromString(id), ThreadStatus.LOCKED);
+      ForumThreadEntity thread = threadService.findById(threadId)
+          .orElseThrow(() -> new IllegalArgumentException("Thread not found: " + threadId));
+      logger.info("lockThread succeeded for id {}", threadId);
+      return LockThreadResponse.newBuilder()
+          .message("lockThread succeeded")
+          .thread(threadMapper.map(thread))
+          .build();
+    } catch (Exception e) {
+      logger.error("lockThread failed", e);
+      throw new MutationException("lockThread failed: " + e.getMessage(), e);
+    }
   }
 
   /**
@@ -151,8 +260,21 @@ public class IcarusDataFetcher {
    */
   @DgsData(parentType = "IcarusMutations", field = "archiveThread")
   @PreAuthorize("@permissions.has('graphql.icarus.archiveThread')")
+  @Transactional
   public ArchiveThreadResponse archiveThread(String id) {
-    return icarusGraphQLService.archiveThread(id);
+    try {
+      UUID threadId = threadService.setStatus(UUID.fromString(id), ThreadStatus.ARCHIVED);
+      ForumThreadEntity thread = threadService.findById(threadId)
+          .orElseThrow(() -> new IllegalArgumentException("Thread not found: " + threadId));
+      logger.info("archiveThread succeeded for id {}", threadId);
+      return ArchiveThreadResponse.newBuilder()
+          .message("archiveThread succeeded")
+          .thread(threadMapper.map(thread))
+          .build();
+    } catch (Exception e) {
+      logger.error("archiveThread failed", e);
+      throw new MutationException("archiveThread failed: " + e.getMessage(), e);
+    }
   }
 
   /**
@@ -163,8 +285,23 @@ public class IcarusDataFetcher {
    */
   @DgsData(parentType = "IcarusMutations", field = "createPost")
   @PreAuthorize("@permissions.has('graphql.icarus.createPost')")
+  @Transactional
   public CreatePostResponse createPost(CreatePostInput input) {
-    return icarusGraphQLService.createPost(input);
+    try {
+      UUID id = postService.addPost(
+          UUID.fromString(input.getThreadId()),
+          input.getParentId() == null ? null : UUID.fromString(input.getParentId()),
+          input.getBody());
+      ForumPost post = mapPost(id);
+      logger.info("createPost succeeded for id {}", id);
+      return CreatePostResponse.newBuilder()
+          .message("createPost succeeded")
+          .post(post)
+          .build();
+    } catch (Exception e) {
+      logger.error("createPost failed", e);
+      throw new MutationException("createPost failed: " + e.getMessage(), e);
+    }
   }
 
   /**
@@ -176,8 +313,20 @@ public class IcarusDataFetcher {
    */
   @DgsData(parentType = "IcarusMutations", field = "editPost")
   @PreAuthorize("@permissions.has('graphql.icarus.editPost')")
+  @Transactional
   public EditPostResponse editPost(String id, String body) {
-    return icarusGraphQLService.editPost(id, body);
+    try {
+      UUID postId = postService.editPost(UUID.fromString(id), body);
+      ForumPost post = mapPost(postId);
+      logger.info("editPost succeeded for id {}", postId);
+      return EditPostResponse.newBuilder()
+          .message("editPost succeeded")
+          .post(post)
+          .build();
+    } catch (Exception e) {
+      logger.error("editPost failed", e);
+      throw new MutationException("editPost failed: " + e.getMessage(), e);
+    }
   }
 
   /**
@@ -188,8 +337,19 @@ public class IcarusDataFetcher {
    */
   @DgsData(parentType = "IcarusMutations", field = "deletePost")
   @PreAuthorize("@permissions.has('graphql.icarus.deletePost')")
+  @Transactional
   public DeletePostResponse deletePost(String id) {
-    return icarusGraphQLService.deletePost(id);
+    try {
+      UUID postId = postService.deletePost(UUID.fromString(id));
+      logger.info("deletePost succeeded for id {}", postId);
+      return DeletePostResponse.newBuilder()
+          .message("deletePost succeeded")
+          .id(postId.toString())
+          .build();
+    } catch (Exception e) {
+      logger.error("deletePost failed", e);
+      throw new MutationException("deletePost failed: " + e.getMessage(), e);
+    }
   }
 
   /**
@@ -200,8 +360,20 @@ public class IcarusDataFetcher {
    */
   @DgsData(parentType = "IcarusMutations", field = "vote")
   @PreAuthorize("@permissions.has('graphql.icarus.vote')")
+  @Transactional
   public VoteForumResponse vote(ForumVoteInput input) {
-    return icarusGraphQLService.vote(input);
+    try {
+      UUID postId = voteService.vote(UUID.fromString(input.getPostId()), input.getValue());
+      ForumPost post = mapPost(postId);
+      logger.info("vote succeeded for id {}", postId);
+      return VoteForumResponse.newBuilder()
+          .message("vote succeeded")
+          .post(post)
+          .build();
+    } catch (Exception e) {
+      logger.error("vote failed", e);
+      throw new MutationException("vote failed: " + e.getMessage(), e);
+    }
   }
 
   /**
@@ -212,8 +384,20 @@ public class IcarusDataFetcher {
    */
   @DgsData(parentType = "IcarusMutations", field = "removeVote")
   @PreAuthorize("@permissions.has('graphql.icarus.removeVote')")
+  @Transactional
   public RemoveVoteResponse removeVote(String postId) {
-    return icarusGraphQLService.removeVote(postId);
+    try {
+      UUID id = voteService.removeVote(UUID.fromString(postId));
+      ForumPost post = mapPost(id);
+      logger.info("removeVote succeeded for id {}", id);
+      return RemoveVoteResponse.newBuilder()
+          .message("removeVote succeeded")
+          .post(post)
+          .build();
+    } catch (Exception e) {
+      logger.error("removeVote failed", e);
+      throw new MutationException("removeVote failed: " + e.getMessage(), e);
+    }
   }
 
   /**
@@ -225,7 +409,78 @@ public class IcarusDataFetcher {
    */
   @DgsData(parentType = "IcarusMutations", field = "attachObject")
   @PreAuthorize("@permissions.has('graphql.icarus.attachObject')")
+  @Transactional
   public AttachForumObjectResponse attachObject(String source, String target) {
-    return icarusGraphQLService.attachObject(source, target);
+    try {
+      UUID id = threadService.attach(UUID.fromString(source), target);
+      logger.info("attachObject succeeded for id {}", id);
+      return AttachForumObjectResponse.newBuilder()
+          .message("attachObject succeeded")
+          .id(id.toString())
+          .build();
+    } catch (Exception e) {
+      logger.error("attachObject failed", e);
+      throw new MutationException("attachObject failed: " + e.getMessage(), e);
+    }
+  }
+
+  /**
+   * Builds a DISCORD RemoteUser reference from a Discord id.
+   *
+   * @param discordId the Discord user id
+   * @return the RemoteUser reference
+   */
+  private RemoteUser remoteUser(String discordId) {
+    return RemoteUser.newBuilder()
+        .type(RemoteUserType.DISCORD)
+        .id(discordId)
+        .build();
+  }
+
+  /**
+   * Loads a post entity and maps it to GraphQL.
+   *
+   * @param id the post id
+   * @return the GraphQL ForumPost
+   */
+  private ForumPost mapPost(UUID id) {
+    ForumPostEntity entity = postService.findById(id)
+        .orElseThrow(() -> new IllegalArgumentException("Post not found: " + id));
+    VoteValue myVote = voteService.myVote(id).orElse(null);
+    return postMapper.map(entity, null, myVote);
+  }
+
+  /**
+   * Converts the pagination input into a pageable, applying the given defaults.
+   *
+   * @param pagination the pagination and sort input
+   * @param defaultSortBy the property to sort by when none is given
+   * @param defaultDir the direction when none is given
+   * @return the pageable
+   */
+  private Pageable toPageable(PaginationInput pagination, String defaultSortBy, Sort.Direction defaultDir) {
+    if (pagination == null) {
+      return PageRequests.of(null, null, null, null, defaultSortBy, defaultDir);
+    }
+    return PageRequests.of(pagination.getPage(), pagination.getSize(), pagination.getSortBy(),
+        pagination.getSortDir() == null ? null : pagination.getSortDir().name(),
+        defaultSortBy, defaultDir);
+  }
+
+  /**
+   * Builds page metadata from a Spring data page.
+   *
+   * @param result the data page
+   * @return the GraphQL PageInfo
+   */
+  private PageInfo pageInfo(Page<?> result) {
+    return PageInfo.newBuilder()
+        .page(result.getNumber())
+        .size(result.getSize())
+        .totalPages(result.getTotalPages())
+        .totalCount((int) result.getTotalElements())
+        .hasNextPage(result.hasNext())
+        .hasPreviousPage(result.hasPrevious())
+        .build();
   }
 }
