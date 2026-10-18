@@ -23,6 +23,7 @@ import {
   buildCorpHeader,
 } from "@sun/security";
 import { enterCspNonce, getCspNonce } from "./csp-nonce";
+import { globalSingleton } from "./global-state";
 
 export { handleQuery } from "./query";
 export type { QueryFetchResult } from "./query";
@@ -41,13 +42,22 @@ export { autoDiscoverRegistrations } from "./auto-discover";
 /**
  * Per-request page-data cache.
  */
-const requestCacheAls = new AsyncLocalStorage<Map<string, CacheRecord>>();
+const requestCacheAls = globalSingleton(
+  "ssr.requestCacheAls",
+  () => new AsyncLocalStorage<Map<string, CacheRecord>>(),
+);
 setRequestCacheProvider(() => requestCacheAls.getStore() ?? null);
 
-const requestCookieAls = new AsyncLocalStorage<string | undefined>();
+const requestCookieAls = globalSingleton(
+  "ssr.requestCookieAls",
+  () => new AsyncLocalStorage<string | undefined>(),
+);
 setRequestCookieProvider(() => requestCookieAls.getStore() ?? undefined);
 
-const requestIpAls = new AsyncLocalStorage<string | undefined>();
+const requestIpAls = globalSingleton(
+  "ssr.requestIpAls",
+  () => new AsyncLocalStorage<string | undefined>(),
+);
 setRequestIpProvider(() => requestIpAls.getStore() ?? undefined);
 
 type ServerConfig = {
