@@ -102,12 +102,28 @@ export function forbidModules(names: string[]): Plugin {
     transform(_code, id) {
       for (const name of names) {
         if (id.includes(`/node_modules/${name}/`)) {
-          this.error(
-            `forbidden module "${name}" was bundled from ${id}`,
-          );
+          this.error(`forbidden module "${name}" was bundled from ${id}`);
         }
       }
       return null;
+    },
+  };
+}
+
+/**
+ * Strips a legacy `@jsx` pragma from a dependency's shipped JSX.
+ *
+ * @param include Substring an incoming module id must contain.
+ * @returns The Vite plugin.
+ */
+export function stripJsxPragma(include: string): Plugin {
+  return {
+    name: "@sun/build:strip-jsx-pragma",
+    enforce: "pre",
+    transform(code, id) {
+      if (!id.includes(include)) return null;
+      if (!code.includes("/** @jsx h */")) return null;
+      return code.replace("/** @jsx h */", "");
     },
   };
 }

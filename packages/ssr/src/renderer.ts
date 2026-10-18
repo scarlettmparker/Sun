@@ -93,6 +93,24 @@ export type RenderOptions = {
 };
 
 /**
+ * Above-the-fold image the document should preload.
+ */
+export type ImagePreload = {
+  /**
+   * Image URL.
+   */
+  href: string;
+  /**
+   * Responsive source set, when the image has multiple densities.
+   */
+  srcset?: string;
+  /**
+   * Layout sizes attribute.
+   */
+  sizes?: string;
+};
+
+/**
  * App-specific renderer configuration supplied once to createRenderer.
  */
 export type AppRenderConfig = {
@@ -131,6 +149,10 @@ export type AppRenderConfig = {
    * Extra window globals merged into the prelude script.
    */
   windowGlobals?: (opts: RenderOptions) => Record<string, unknown>;
+  /**
+   * Above-the-fold image preload for a given request, when any.
+   */
+  imagePreload?: (opts: { url: string }) => ImagePreload | null;
 };
 
 /**
@@ -382,10 +404,14 @@ async function renderApp(
           )
           .join("\n              ");
 
-        const imagePreload =
-          options.url === "/"
-            ? `<link rel="preload" as="image" href="/art-64.webp" imagesrcset="/art-64.webp 1x, /art-128.webp 2x" imagesizes="64px" />`
-            : "";
+        const image = config.imagePreload?.({ url: options.url });
+        const imagePreload = image
+          ? `<link rel="preload" as="image" href="${escapeAttr(image.href)}"${
+              image.srcset
+                ? ` imagesrcset="${escapeAttr(image.srcset)}"`
+                : ""
+            }${image.sizes ? ` imagesizes="${escapeAttr(image.sizes)}"` : ""} />`
+          : "";
         const prelude = `<!DOCTYPE html>
           <html lang="${escapeAttr(locale)}">
             <head>

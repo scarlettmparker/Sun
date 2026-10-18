@@ -47,6 +47,14 @@ const renderer = createRenderer({
   title: "Scarlet Sun",
   siteUrl: "https://sun.scarlettparker.co.uk",
   defaultOgImage: "/og-default.png",
+  imagePreload: ({ url }) =>
+    url === "/"
+      ? {
+          href: "/art-64.webp",
+          srcset: "/art-64.webp 1x, /art-128.webp 2x",
+          sizes: "64px",
+        }
+      : null,
   initI18n(locale, translations) {
     const instance = createI18nInstance();
     setI18n(instance);
