@@ -362,7 +362,7 @@ async function renderApp(
         });
         const headers: Record<string, string> = {
           "Content-Type": "text/html; charset=utf-8",
-          "Cache-Control": "public, max-age=0, must-revalidate",
+          "Cache-Control": "private, max-age=0, must-revalidate",
           Vary: "Accept-Encoding",
           ...securityHeaders,
         };
