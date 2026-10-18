@@ -4,11 +4,8 @@ import { matchRoutes } from "react-router-dom";
 import { Router, routes, routeMeta } from "./router";
 import Layout from "./components/layout";
 import NotFound from "./routes/not-found";
-import {
-  createRenderer,
-  autoDiscoverRegistrations,
-  type RouteMeta,
-} from "@sun/ssr/server";
+import { createRenderer, type RouteMeta } from "@sun/ssr/renderer";
+import { autoDiscoverRegistrations } from "@sun/ssr/server";
 import { createI18nInstance } from "./utils/i18n";
 import { fetchPropertySet } from "./utils/api";
 import { sharedCall, SHARED_TTL } from "@sun/ssr";

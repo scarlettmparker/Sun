@@ -7,6 +7,7 @@ const rootDir = path.dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
   test: {
     environment: "node",
+    environmentOptions: { jsdom: { pretendToBeVisual: true } },
     globals: true,
     include: ["__tests__/**/*.test.ts"],
     css: false,
@@ -21,6 +22,10 @@ export default defineConfig({
     alias: {
       "~": path.resolve(rootDir, "src"),
       testing: path.resolve(rootDir, "testing"),
+      "react-dom/test-utils": "preact/test-utils",
+      "react-dom": "preact/compat",
+      "react/jsx-runtime": "preact/jsx-runtime",
+      react: "preact/compat",
     },
   },
 });

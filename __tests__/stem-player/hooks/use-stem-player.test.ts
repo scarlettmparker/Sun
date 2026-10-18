@@ -5,8 +5,10 @@
  * Tests the hook's state management, playback controls, seeking, volume control, and audio context handling.
  */
 
-import { renderHook, act } from "@testing-library/react";
+import { renderHook, act, waitFor } from "@testing-library/preact";
 import type { Mock } from "vitest";
+
+globalThis.cancelAnimationFrame ??= () => {};
 import { useStemPlayer } from "~/_components/stem-player/hooks/use-stem-player";
 import {
   mockAudioContext,
@@ -216,12 +218,12 @@ describe("useStemPlayer", () => {
         })
         .mockRejectedValueOnce(new Error("Network error"));
 
-      await act(async () => {
-        renderHook(() => useStemPlayer(mockSong));
-      });
+      renderHook(() => useStemPlayer(mockSong));
 
-      expect(global.fetch).toHaveBeenCalledTimes(2);
-      expect(mockAudioContext.decodeAudioData).toHaveBeenCalledTimes(1);
+      await waitFor(() => expect(global.fetch).toHaveBeenCalledTimes(2));
+      await waitFor(() =>
+        expect(mockAudioContext.decodeAudioData).toHaveBeenCalledTimes(1),
+      );
     });
 
     it("handles decodeAudioData failure", async () => {
@@ -229,11 +231,11 @@ describe("useStemPlayer", () => {
         .mockResolvedValueOnce(mockAudioBuffer)
         .mockRejectedValueOnce(new Error("Decode error"));
 
-      await act(async () => {
-        renderHook(() => useStemPlayer(mockSong));
-      });
+      renderHook(() => useStemPlayer(mockSong));
 
-      expect(mockAudioContext.decodeAudioData).toHaveBeenCalledTimes(2);
+      await waitFor(() =>
+        expect(mockAudioContext.decodeAudioData).toHaveBeenCalledTimes(2),
+      );
     });
 
     it("updates loading progress incrementally", async () => {
