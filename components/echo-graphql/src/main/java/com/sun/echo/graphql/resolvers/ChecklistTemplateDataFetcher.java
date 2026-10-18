@@ -2,19 +2,37 @@ package com.sun.echo.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
+import com.sun.base.error.MutationException;
 import com.sun.echo.codegen.types.AddTemplateItemResponse;
 import com.sun.echo.codegen.types.ArchiveTemplateResponse;
 import com.sun.echo.codegen.types.ChecklistDetail;
 import com.sun.echo.codegen.types.ChecklistTemplate;
 import com.sun.echo.codegen.types.ChecklistTemplateInput;
+import com.sun.echo.codegen.types.ChecklistTemplateItem;
 import com.sun.echo.codegen.types.CreateTemplateResponse;
 import com.sun.echo.codegen.types.PagedChecklistTemplateItems;
 import com.sun.echo.codegen.types.PaginationInput;
 import com.sun.echo.codegen.types.RemoveTemplateItemResponse;
 import com.sun.echo.codegen.types.SaveTemplateResponse;
-import com.sun.echo.graphql.services.ChecklistTemplateGraphQLService;
+import com.sun.echo.graphql.mappers.ChecklistDetailMapper;
+import com.sun.echo.graphql.mappers.ChecklistTemplateItemMapper;
+import com.sun.echo.graphql.mappers.ChecklistTemplateMapper;
+import com.sun.echo.graphql.services.EchoGraphQLSupport;
+import com.sun.echo.model.ChecklistTemplateEntity;
+import com.sun.echo.model.ChecklistTemplateItemEntity;
+import com.sun.echo.service.ChecklistDetailService;
+import com.sun.echo.service.ChecklistTemplateItemService;
+import com.sun.echo.service.ChecklistTemplateService;
 import java.util.List;
+import java.util.UUID;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Data fetchers for checklist template queries and mutations.
@@ -22,10 +40,26 @@ import org.springframework.security.access.prepost.PreAuthorize;
 @DgsComponent
 public class ChecklistTemplateDataFetcher {
 
-  private final ChecklistTemplateGraphQLService checklistTemplateGraphQLService;
+  private static final Logger logger = LoggerFactory.getLogger(ChecklistTemplateDataFetcher.class);
 
-  public ChecklistTemplateDataFetcher(ChecklistTemplateGraphQLService checklistTemplateGraphQLService) {
-    this.checklistTemplateGraphQLService = checklistTemplateGraphQLService;
+  private final ChecklistTemplateService templateService;
+  private final ChecklistTemplateItemService templateItemService;
+  private final ChecklistDetailService detailService;
+
+  private final ChecklistTemplateMapper templateMapper;
+  private final ChecklistTemplateItemMapper templateItemMapper;
+  private final ChecklistDetailMapper detailMapper;
+
+  public ChecklistTemplateDataFetcher(ChecklistTemplateService templateService,
+      ChecklistTemplateItemService templateItemService, ChecklistDetailService detailService,
+      ChecklistTemplateMapper templateMapper, ChecklistTemplateItemMapper templateItemMapper,
+      ChecklistDetailMapper detailMapper) {
+    this.templateService = templateService;
+    this.templateItemService = templateItemService;
+    this.detailService = detailService;
+    this.templateMapper = templateMapper;
+    this.templateItemMapper = templateItemMapper;
+    this.detailMapper = detailMapper;
   }
 
   /**
@@ -36,8 +70,9 @@ public class ChecklistTemplateDataFetcher {
    */
   @DgsData(parentType = "ChecklistQueries", field = "template")
   @PreAuthorize("@permissions.has('graphql.echo.template')")
+  @Transactional(readOnly = true)
   public ChecklistTemplate template(String id) {
-    return checklistTemplateGraphQLService.template(id);
+    return templateService.locate(UUID.fromString(id)).map(templateMapper::map).orElse(null);
   }
 
   /**
@@ -48,8 +83,9 @@ public class ChecklistTemplateDataFetcher {
    */
   @DgsData(parentType = "ChecklistQueries", field = "templateDetails")
   @PreAuthorize("@permissions.has('graphql.echo.templateDetails')")
+  @Transactional(readOnly = true)
   public ChecklistDetail templateDetails(String id) {
-    return checklistTemplateGraphQLService.templateDetails(id);
+    return detailService.findTemplateDetail(UUID.fromString(id)).map(detailMapper::map).orElse(null);
   }
 
   /**
@@ -59,8 +95,9 @@ public class ChecklistTemplateDataFetcher {
    */
   @DgsData(parentType = "ChecklistQueries", field = "listTemplates")
   @PreAuthorize("@permissions.has('graphql.echo.listTemplates')")
+  @Transactional(readOnly = true)
   public List<ChecklistTemplate> listTemplates() {
-    return checklistTemplateGraphQLService.listTemplates();
+    return templateService.findAll().stream().map(templateMapper::map).collect(Collectors.toList());
   }
 
   /**
@@ -72,8 +109,16 @@ public class ChecklistTemplateDataFetcher {
    */
   @DgsData(parentType = "ChecklistQueries", field = "templateItems")
   @PreAuthorize("@permissions.has('graphql.echo.templateItems')")
+  @Transactional(readOnly = true)
   public PagedChecklistTemplateItems templateItems(String templateId, PaginationInput pagination) {
-    return checklistTemplateGraphQLService.templateItems(templateId, pagination);
+    Page<ChecklistTemplateItemEntity> result = templateItemService
+        .listForTemplatePaged(UUID.fromString(templateId),
+            EchoGraphQLSupport.toPageable(pagination, "position", Sort.Direction.ASC));
+    List<ChecklistTemplateItem> items = templateItemMapper.map(result.getContent());
+    return PagedChecklistTemplateItems.newBuilder()
+        .items(items)
+        .pageInfo(EchoGraphQLSupport.pageInfo(result))
+        .build();
   }
 
   /**
@@ -86,8 +131,22 @@ public class ChecklistTemplateDataFetcher {
    */
   @DgsData(parentType = "ChecklistMutations", field = "createTemplate")
   @PreAuthorize("@permissions.has('graphql.echo.createTemplate')")
+  @Transactional
   public CreateTemplateResponse createTemplate(String name, String description, List<String> itemIds) {
-    return checklistTemplateGraphQLService.createTemplate(name, description, itemIds);
+    return mutate("createTemplate", () -> {
+      ChecklistTemplateEntity entity = new ChecklistTemplateEntity();
+      entity.setName(name);
+      entity.setDescription(description);
+      ChecklistTemplateEntity saved = templateService.save(entity);
+      if (itemIds != null && !itemIds.isEmpty()) {
+        templateService.addItems(saved.getId(),
+            itemIds.stream().map(UUID::fromString).collect(Collectors.toList()));
+      }
+      return CreateTemplateResponse.newBuilder()
+          .message("Checklist template created successfully")
+          .template(templateMapper.map(saved))
+          .build();
+    });
   }
 
   /**
@@ -98,8 +157,17 @@ public class ChecklistTemplateDataFetcher {
    */
   @DgsData(parentType = "ChecklistMutations", field = "saveTemplate")
   @PreAuthorize("@permissions.has('graphql.echo.saveTemplate')")
+  @Transactional
   public SaveTemplateResponse saveTemplate(ChecklistTemplateInput input) {
-    return checklistTemplateGraphQLService.saveTemplate(input);
+    return mutate("saveTemplate", () -> {
+      ChecklistTemplateEntity entity = resolveTemplate(input.getId());
+      templateMapper.map(input, entity);
+      ChecklistTemplateEntity saved = templateService.save(entity);
+      return SaveTemplateResponse.newBuilder()
+          .message("Checklist template saved successfully")
+          .template(templateMapper.map(saved))
+          .build();
+    });
   }
 
   /**
@@ -110,8 +178,15 @@ public class ChecklistTemplateDataFetcher {
    */
   @DgsData(parentType = "ChecklistMutations", field = "archiveTemplate")
   @PreAuthorize("@permissions.has('graphql.echo.archiveTemplate')")
+  @Transactional
   public ArchiveTemplateResponse archiveTemplate(String id) {
-    return checklistTemplateGraphQLService.archiveTemplate(id);
+    return mutate("archiveTemplate", () -> {
+      ChecklistTemplateEntity archived = templateService.archive(UUID.fromString(id));
+      return ArchiveTemplateResponse.newBuilder()
+          .message("Checklist template archived successfully")
+          .template(templateMapper.map(archived))
+          .build();
+    });
   }
 
   /**
@@ -124,8 +199,16 @@ public class ChecklistTemplateDataFetcher {
    */
   @DgsData(parentType = "ChecklistMutations", field = "addTemplateItem")
   @PreAuthorize("@permissions.has('graphql.echo.addTemplateItem')")
+  @Transactional
   public AddTemplateItemResponse addTemplateItem(String templateId, String itemId, Integer position) {
-    return checklistTemplateGraphQLService.addTemplateItem(templateId, itemId, position);
+    return mutate("addTemplateItem", () -> {
+      UUID templateUuid = UUID.fromString(templateId);
+      templateItemService.addTemplateItem(templateUuid, UUID.fromString(itemId), position);
+      return AddTemplateItemResponse.newBuilder()
+          .message("Template item added successfully")
+          .template(templateMapper.map(requireTemplate(templateUuid)))
+          .build();
+    });
   }
 
   /**
@@ -137,7 +220,57 @@ public class ChecklistTemplateDataFetcher {
    */
   @DgsData(parentType = "ChecklistMutations", field = "removeTemplateItem")
   @PreAuthorize("@permissions.has('graphql.echo.removeTemplateItem')")
+  @Transactional
   public RemoveTemplateItemResponse removeTemplateItem(String templateId, String itemId) {
-    return checklistTemplateGraphQLService.removeTemplateItem(templateId, itemId);
+    UUID templateUuid = UUID.fromString(templateId);
+    return mutate("removeTemplateItem", () -> {
+      templateItemService.removeTemplateItem(templateUuid, UUID.fromString(itemId));
+      return RemoveTemplateItemResponse.newBuilder()
+          .message("Template item removed successfully")
+          .template(templateMapper.map(requireTemplate(templateUuid)))
+          .build();
+    });
+  }
+
+  /**
+   * Resolves an existing template (update) or returns a fresh one (create).
+   *
+   * @param id an optional existing template id
+   * @return the template entity
+   */
+  private ChecklistTemplateEntity resolveTemplate(String id) {
+    if (id == null) {
+      return new ChecklistTemplateEntity();
+    }
+    return requireTemplate(UUID.fromString(id));
+  }
+
+  /**
+   * Loads a template that must exist.
+   *
+   * @param id the template id
+   * @return the template entity
+   */
+  private ChecklistTemplateEntity requireTemplate(UUID id) {
+    return templateService.locate(id)
+        .orElseThrow(() -> new IllegalArgumentException("Checklist template not found: " + id));
+  }
+
+  /**
+   * Runs a mutation, logging the operation and raising a MutationException on failure.
+   *
+   * @param op the operation name, for logging and messages
+   * @param action the mutation, returning its response
+   * @return the mutation response
+   */
+  private <T> T mutate(String op, Supplier<T> action) {
+    try {
+      T response = action.get();
+      logger.info("{} succeeded", op);
+      return response;
+    } catch (Exception e) {
+      logger.error("{} failed", op, e);
+      throw new MutationException(op + " failed: " + e.getMessage(), e);
+    }
   }
 }

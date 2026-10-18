@@ -10,7 +10,7 @@ import org.springframework.data.domain.Sort;
 /**
  * Shared pagination helpers for GraphQL services.
  */
-final class EchoGraphQLSupport {
+public final class EchoGraphQLSupport {
 
   private EchoGraphQLSupport() {
   }
@@ -23,7 +23,7 @@ final class EchoGraphQLSupport {
    * @param defaultDir the direction when none is given
    * @return the pageable
    */
-  static Pageable toPageable(PaginationInput pagination, String defaultSortBy, Sort.Direction defaultDir) {
+  public static Pageable toPageable(PaginationInput pagination, String defaultSortBy, Sort.Direction defaultDir) {
     if (pagination == null) {
       return PageRequests.of(null, null, null, null, defaultSortBy, defaultDir);
     }
@@ -38,7 +38,7 @@ final class EchoGraphQLSupport {
    * @param result the data page
    * @return the GraphQL PageInfo
    */
-  static PageInfo pageInfo(Page<?> result) {
+  public static PageInfo pageInfo(Page<?> result) {
     return PageInfo.newBuilder()
         .page(result.getNumber())
         .size(result.getSize())

@@ -1,219 +1,280 @@
 package com.sun.echo.graphql.resolvers;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.sun.base.error.MutationException;
 import com.sun.echo.codegen.types.AddItemResponse;
 import com.sun.echo.codegen.types.ArchiveChecklistResponse;
 import com.sun.echo.codegen.types.ChecklistDetail;
 import com.sun.echo.codegen.types.ChecklistEntry;
 import com.sun.echo.codegen.types.ChecklistEntryInput;
+import com.sun.echo.codegen.types.ChecklistEntryItem;
 import com.sun.echo.codegen.types.CompleteChecklistResponse;
 import com.sun.echo.codegen.types.CreateChecklistFromTemplateResponse;
 import com.sun.echo.codegen.types.CreateChecklistFromTemplatesResponse;
 import com.sun.echo.codegen.types.CreateChecklistResponse;
 import com.sun.echo.codegen.types.DeleteChecklistResponse;
 import com.sun.echo.codegen.types.PagedChecklistEntryItems;
-import com.sun.echo.codegen.types.PaginationInput;
 import com.sun.echo.codegen.types.RemoveItemResponse;
 import com.sun.echo.codegen.types.SaveChecklistResponse;
 import com.sun.echo.codegen.types.SetItemStatusResponse;
-import com.sun.echo.graphql.services.ChecklistEntryGraphQLService;
+import com.sun.echo.graphql.mappers.ChecklistDetailMapper;
+import com.sun.echo.graphql.mappers.ChecklistEntryItemMapper;
+import com.sun.echo.graphql.mappers.ChecklistEntryMapper;
+import com.sun.echo.model.ChecklistEntryDetailEntity;
+import com.sun.echo.model.ChecklistEntryEntity;
+import com.sun.echo.model.ChecklistEntryItemEntity;
 import com.sun.echo.model.enums.ItemStatus;
+import com.sun.echo.service.ChecklistDetailService;
+import com.sun.echo.service.ChecklistEntryItemService;
+import com.sun.echo.service.ChecklistEntryService;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 @ExtendWith(MockitoExtension.class)
 class ChecklistEntryDataFetcherTest {
 
-  @Mock private ChecklistEntryGraphQLService checklistEntryGraphQLService;
+  @Mock private ChecklistEntryService entryService;
+  @Mock private ChecklistEntryItemService entryItemService;
+  @Mock private ChecklistDetailService detailService;
+  @Mock private ChecklistEntryMapper entryMapper;
+  @Mock private ChecklistEntryItemMapper entryItemMapper;
+  @Mock private ChecklistDetailMapper detailMapper;
+
   @InjectMocks private ChecklistEntryDataFetcher fetcher;
 
   @Test
-  void entry_delegatesToService() {
-    String id = UUID.randomUUID().toString();
-    ChecklistEntry expected = ChecklistEntry.newBuilder().id(id).name("e").build();
-    when(checklistEntryGraphQLService.entry(id)).thenReturn(expected);
+  void entry_delegatesToLocateAndMap() {
+    UUID id = UUID.randomUUID();
+    ChecklistEntryEntity entity = new ChecklistEntryEntity();
+    entity.setId(id);
+    when(entryService.locate(id)).thenReturn(Optional.of(entity));
+    ChecklistEntry mapped = ChecklistEntry.newBuilder().id(id.toString()).name("e").build();
+    when(entryMapper.map(entity)).thenReturn(mapped);
 
-    ChecklistEntry result = fetcher.entry(id);
+    ChecklistEntry result = fetcher.entry(id.toString());
 
-    assertThat(result).isEqualTo(expected);
-    verify(checklistEntryGraphQLService).entry(id);
+    assertThat(result).isEqualTo(mapped);
+    verify(entryService).locate(id);
   }
 
   @Test
-  void entryDetails_delegatesToService() {
-    String id = UUID.randomUUID().toString();
-    ChecklistDetail expected = ChecklistDetail.newBuilder().ownerId(id).description("d").build();
-    when(checklistEntryGraphQLService.entryDetails(id)).thenReturn(expected);
+  void entryDetails_delegatesToFindAndMap() {
+    UUID id = UUID.randomUUID();
+    ChecklistEntryDetailEntity detail = new ChecklistEntryDetailEntity();
+    when(detailService.findEntryDetail(id)).thenReturn(Optional.of(detail));
+    ChecklistDetail mapped = ChecklistDetail.newBuilder().ownerId(id.toString()).description("d").build();
+    when(detailMapper.map(detail)).thenReturn(mapped);
 
-    ChecklistDetail result = fetcher.entryDetails(id);
+    ChecklistDetail result = fetcher.entryDetails(id.toString());
 
-    assertThat(result).isEqualTo(expected);
-    verify(checklistEntryGraphQLService).entryDetails(id);
+    assertThat(result).isEqualTo(mapped);
+    verify(detailService).findEntryDetail(id);
   }
 
   @Test
-  void entryItems_delegatesToService() {
-    String entryId = UUID.randomUUID().toString();
-    PaginationInput pagination = PaginationInput.newBuilder().page(0).size(10).build();
-    PagedChecklistEntryItems expected = PagedChecklistEntryItems.newBuilder().items(List.of()).build();
-    when(checklistEntryGraphQLService.entryItems(entryId, pagination)).thenReturn(expected);
+  void entryItems_delegatesToPagedQueryAndMapper() {
+    UUID entryId = UUID.randomUUID();
+    ChecklistEntryItemEntity entity = new ChecklistEntryItemEntity();
+    entity.setId(UUID.randomUUID());
+    Page<ChecklistEntryItemEntity> page = new PageImpl<>(List.of(entity));
+    when(entryItemService.listForEntryPaged(eq(entryId), any(Pageable.class))).thenReturn(page);
+    ChecklistEntryItem mapped = ChecklistEntryItem.newBuilder().id(entity.getId().toString()).build();
+    when(entryItemMapper.map(anyList())).thenReturn(List.of(mapped));
 
-    PagedChecklistEntryItems result = fetcher.entryItems(entryId, pagination);
+    PagedChecklistEntryItems result = fetcher.entryItems(entryId.toString(), null);
 
-    assertThat(result).isEqualTo(expected);
-    verify(checklistEntryGraphQLService).entryItems(entryId, pagination);
+    assertThat(result.getItems()).containsExactly(mapped);
+    assertThat(result.getPageInfo().getTotalCount()).isEqualTo(1);
+    verify(entryItemService).listForEntryPaged(eq(entryId), any(Pageable.class));
   }
 
   @Test
   void listEntries_delegatesToService() {
-    List<ChecklistEntry> expected = List.of(ChecklistEntry.newBuilder().id(UUID.randomUUID().toString()).name("e").build());
-    when(checklistEntryGraphQLService.listEntries()).thenReturn(expected);
+    ChecklistEntryEntity entity = new ChecklistEntryEntity();
+    entity.setId(UUID.randomUUID());
+    when(entryService.findAll()).thenReturn(List.of(entity));
+    ChecklistEntry mapped = ChecklistEntry.newBuilder().id(entity.getId().toString()).name("e").build();
+    when(entryMapper.map(entity)).thenReturn(mapped);
 
     List<ChecklistEntry> result = fetcher.listEntries();
 
-    assertThat(result).isEqualTo(expected);
-    verify(checklistEntryGraphQLService).listEntries();
+    assertThat(result).containsExactly(mapped);
+    verify(entryService).findAll();
   }
 
   @Test
-  void createChecklist_delegatesToService() {
-    CreateChecklistResponse expected = CreateChecklistResponse.newBuilder().message("Checklist created successfully")
-        .entry(ChecklistEntry.newBuilder().id(UUID.randomUUID().toString()).name("name").build()).build();
-    when(checklistEntryGraphQLService.createChecklist("name")).thenReturn(expected);
+  void createChecklist_savesAndReturnsEntry() {
+    ChecklistEntryEntity saved = new ChecklistEntryEntity();
+    saved.setId(UUID.randomUUID());
+    when(entryService.save(any(ChecklistEntryEntity.class))).thenReturn(saved);
+    ChecklistEntry mapped = ChecklistEntry.newBuilder().id(saved.getId().toString()).name("My checklist").build();
+    when(entryMapper.map(saved)).thenReturn(mapped);
 
-    var result = fetcher.createChecklist("name");
+    CreateChecklistResponse result = fetcher.createChecklist("My checklist");
 
-    assertThat(result).isEqualTo(expected);
-    verify(checklistEntryGraphQLService).createChecklist("name");
+    assertThat(result.getEntry()).isEqualTo(mapped);
+    assertThat(result.getMessage()).contains("created");
+    verify(entryService).save(any(ChecklistEntryEntity.class));
+  }
+
+  @Test
+  void createChecklist_throwsMutationExceptionWhenSaveFails() {
+    when(entryService.save(any(ChecklistEntryEntity.class))).thenThrow(new RuntimeException("Database error"));
+
+    assertThatThrownBy(() -> fetcher.createChecklist("My checklist"))
+        .isInstanceOf(MutationException.class)
+        .hasMessageContaining("createChecklist failed: Database error");
   }
 
   @Test
   void createChecklistFromTemplate_delegatesToService() {
-    String templateId = UUID.randomUUID().toString();
-    CreateChecklistFromTemplateResponse expected = CreateChecklistFromTemplateResponse.newBuilder()
-        .message("Checklist created from template successfully")
-        .entry(ChecklistEntry.newBuilder().id(UUID.randomUUID().toString()).name("n").build()).build();
-    when(checklistEntryGraphQLService.createChecklistFromTemplate(templateId, "n")).thenReturn(expected);
+    UUID templateId = UUID.randomUUID();
+    ChecklistEntryEntity created = new ChecklistEntryEntity();
+    created.setId(UUID.randomUUID());
+    when(entryService.createFromTemplate(templateId, "n")).thenReturn(created);
+    ChecklistEntry mapped = ChecklistEntry.newBuilder().id(created.getId().toString()).name("n").build();
+    when(entryMapper.map(created)).thenReturn(mapped);
 
-    var result = fetcher.createChecklistFromTemplate(templateId, "n");
+    CreateChecklistFromTemplateResponse result = fetcher.createChecklistFromTemplate(templateId.toString(), "n");
 
-    assertThat(result).isEqualTo(expected);
-    verify(checklistEntryGraphQLService).createChecklistFromTemplate(templateId, "n");
+    assertThat(result.getEntry()).isEqualTo(mapped);
+    verify(entryService).createFromTemplate(templateId, "n");
   }
 
   @Test
   void createChecklistFromTemplates_delegatesToService() {
     List<String> ids = List.of(UUID.randomUUID().toString());
-    CreateChecklistFromTemplatesResponse expected = CreateChecklistFromTemplatesResponse.newBuilder()
-        .message("Checklist created from templates successfully")
-        .entry(ChecklistEntry.newBuilder().id(UUID.randomUUID().toString()).name("n").build()).build();
-    when(checklistEntryGraphQLService.createChecklistFromTemplates(ids, "n")).thenReturn(expected);
+    ChecklistEntryEntity created = new ChecklistEntryEntity();
+    created.setId(UUID.randomUUID());
+    when(entryService.createFromTemplates(anyList(), eq("n"))).thenReturn(created);
+    ChecklistEntry mapped = ChecklistEntry.newBuilder().id(created.getId().toString()).name("n").build();
+    when(entryMapper.map(created)).thenReturn(mapped);
 
-    var result = fetcher.createChecklistFromTemplates(ids, "n");
+    CreateChecklistFromTemplatesResponse result = fetcher.createChecklistFromTemplates(ids, "n");
 
-    assertThat(result).isEqualTo(expected);
-    verify(checklistEntryGraphQLService).createChecklistFromTemplates(ids, "n");
+    assertThat(result.getEntry()).isEqualTo(mapped);
+    verify(entryService).createFromTemplates(anyList(), eq("n"));
   }
 
   @Test
-  void saveChecklist_delegatesToService() {
+  void saveChecklist_appliesInputAndSaves() {
     ChecklistEntryInput input = ChecklistEntryInput.newBuilder().name("e").build();
-    SaveChecklistResponse expected = SaveChecklistResponse.newBuilder().message("Checklist saved successfully")
-        .entry(ChecklistEntry.newBuilder().id(UUID.randomUUID().toString()).name("e").build()).build();
-    when(checklistEntryGraphQLService.saveChecklist(input)).thenReturn(expected);
+    ChecklistEntryEntity saved = new ChecklistEntryEntity();
+    saved.setId(UUID.randomUUID());
+    when(entryService.save(any(ChecklistEntryEntity.class))).thenReturn(saved);
+    ChecklistEntry mapped = ChecklistEntry.newBuilder().id(saved.getId().toString()).name("e").build();
+    when(entryMapper.map(saved)).thenReturn(mapped);
+    doNothing().when(entryMapper).map(eq(input), any(ChecklistEntryEntity.class));
 
-    var result = fetcher.saveChecklist(input);
+    SaveChecklistResponse result = fetcher.saveChecklist(input);
 
-    assertThat(result).isEqualTo(expected);
-    verify(checklistEntryGraphQLService).saveChecklist(input);
+    assertThat(result.getEntry()).isEqualTo(mapped);
+    verify(entryMapper).map(eq(input), any(ChecklistEntryEntity.class));
+    verify(entryService).save(any(ChecklistEntryEntity.class));
   }
 
   @Test
   void completeChecklist_delegatesToService() {
-    String id = UUID.randomUUID().toString();
-    CompleteChecklistResponse expected = CompleteChecklistResponse.newBuilder().message("Checklist completed successfully")
-        .entry(ChecklistEntry.newBuilder().id(id).name("e").build()).build();
-    when(checklistEntryGraphQLService.completeChecklist(id)).thenReturn(expected);
+    UUID id = UUID.randomUUID();
+    ChecklistEntryEntity completed = new ChecklistEntryEntity();
+    completed.setId(id);
+    when(entryService.completeChecklist(id)).thenReturn(completed);
+    ChecklistEntry mapped = ChecklistEntry.newBuilder().id(id.toString()).name("e").build();
+    when(entryMapper.map(completed)).thenReturn(mapped);
 
-    var result = fetcher.completeChecklist(id);
+    CompleteChecklistResponse result = fetcher.completeChecklist(id.toString());
 
-    assertThat(result).isEqualTo(expected);
-    verify(checklistEntryGraphQLService).completeChecklist(id);
+    assertThat(result.getEntry()).isEqualTo(mapped);
+    verify(entryService).completeChecklist(id);
   }
 
   @Test
   void archiveChecklist_delegatesToService() {
-    String id = UUID.randomUUID().toString();
-    ArchiveChecklistResponse expected = ArchiveChecklistResponse.newBuilder().message("Checklist archived successfully")
-        .entry(ChecklistEntry.newBuilder().id(id).name("e").build()).build();
-    when(checklistEntryGraphQLService.archiveChecklist(id)).thenReturn(expected);
+    UUID id = UUID.randomUUID();
+    ChecklistEntryEntity archived = new ChecklistEntryEntity();
+    archived.setId(id);
+    when(entryService.archive(id)).thenReturn(archived);
+    ChecklistEntry mapped = ChecklistEntry.newBuilder().id(id.toString()).name("e").build();
+    when(entryMapper.map(archived)).thenReturn(mapped);
 
-    var result = fetcher.archiveChecklist(id);
+    ArchiveChecklistResponse result = fetcher.archiveChecklist(id.toString());
 
-    assertThat(result).isEqualTo(expected);
-    verify(checklistEntryGraphQLService).archiveChecklist(id);
+    assertThat(result.getEntry()).isEqualTo(mapped);
+    verify(entryService).archive(id);
   }
 
   @Test
   void deleteChecklist_delegatesToService() {
-    String id = UUID.randomUUID().toString();
-    DeleteChecklistResponse expected = DeleteChecklistResponse.newBuilder().message("Checklist deleted successfully").id(id).build();
-    when(checklistEntryGraphQLService.deleteChecklist(id)).thenReturn(expected);
+    UUID id = UUID.randomUUID();
 
-    var result = fetcher.deleteChecklist(id);
+    DeleteChecklistResponse result = fetcher.deleteChecklist(id.toString());
 
-    assertThat(result).isEqualTo(expected);
-    verify(checklistEntryGraphQLService).deleteChecklist(id);
+    assertThat(result.getId()).isEqualTo(id.toString());
+    verify(entryService).delete(id);
   }
 
   @Test
   void addItem_delegatesToService() {
-    String entryId = UUID.randomUUID().toString();
-    String itemId = UUID.randomUUID().toString();
-    AddItemResponse expected = AddItemResponse.newBuilder().message("Checklist item added successfully")
-        .entry(ChecklistEntry.newBuilder().id(entryId).name("e").build()).build();
-    when(checklistEntryGraphQLService.addItem(entryId, itemId, 0)).thenReturn(expected);
+    UUID entryId = UUID.randomUUID();
+    UUID itemId = UUID.randomUUID();
+    ChecklistEntryEntity entry = new ChecklistEntryEntity();
+    entry.setId(entryId);
+    when(entryService.locate(entryId)).thenReturn(Optional.of(entry));
+    ChecklistEntry mapped = ChecklistEntry.newBuilder().id(entryId.toString()).name("e").build();
+    when(entryMapper.map(entry)).thenReturn(mapped);
 
-    var result = fetcher.addItem(entryId, itemId, 0);
+    AddItemResponse result = fetcher.addItem(entryId.toString(), itemId.toString(), 0);
 
-    assertThat(result).isEqualTo(expected);
-    verify(checklistEntryGraphQLService).addItem(entryId, itemId, 0);
+    assertThat(result.getEntry()).isEqualTo(mapped);
+    verify(entryItemService).addItem(entryId, itemId, 0);
   }
 
   @Test
   void removeItem_delegatesToService() {
-    String entryId = UUID.randomUUID().toString();
-    String itemId = UUID.randomUUID().toString();
-    RemoveItemResponse expected = RemoveItemResponse.newBuilder().message("Checklist item removed successfully")
-        .entry(ChecklistEntry.newBuilder().id(entryId).name("e").build()).build();
-    when(checklistEntryGraphQLService.removeItem(entryId, itemId)).thenReturn(expected);
+    UUID entryId = UUID.randomUUID();
+    UUID itemId = UUID.randomUUID();
+    ChecklistEntryEntity entry = new ChecklistEntryEntity();
+    entry.setId(entryId);
+    when(entryService.locate(entryId)).thenReturn(Optional.of(entry));
+    ChecklistEntry mapped = ChecklistEntry.newBuilder().id(entryId.toString()).name("e").build();
+    when(entryMapper.map(entry)).thenReturn(mapped);
 
-    var result = fetcher.removeItem(entryId, itemId);
+    RemoveItemResponse result = fetcher.removeItem(entryId.toString(), itemId.toString());
 
-    assertThat(result).isEqualTo(expected);
-    verify(checklistEntryGraphQLService).removeItem(entryId, itemId);
+    assertThat(result.getEntry()).isEqualTo(mapped);
+    verify(entryItemService).removeItem(entryId, itemId);
   }
 
   @Test
   void setItemStatus_delegatesToService() {
-    String entryId = UUID.randomUUID().toString();
-    String itemId = UUID.randomUUID().toString();
-    SetItemStatusResponse expected = SetItemStatusResponse.newBuilder()
-        .message("Checklist item status updated successfully")
-        .entry(ChecklistEntry.newBuilder().id(entryId).name("e").build()).build();
-    when(checklistEntryGraphQLService.setItemStatus(entryId, itemId, ItemStatus.COMPLETE)).thenReturn(expected);
+    UUID entryId = UUID.randomUUID();
+    UUID itemId = UUID.randomUUID();
+    ChecklistEntryEntity entry = new ChecklistEntryEntity();
+    entry.setId(entryId);
+    when(entryService.locate(entryId)).thenReturn(Optional.of(entry));
+    ChecklistEntry mapped = ChecklistEntry.newBuilder().id(entryId.toString()).name("e").build();
+    when(entryMapper.map(entry)).thenReturn(mapped);
 
-    var result = fetcher.setItemStatus(entryId, itemId, ItemStatus.COMPLETE);
+    SetItemStatusResponse result = fetcher.setItemStatus(entryId.toString(), itemId.toString(), ItemStatus.COMPLETE);
 
-    assertThat(result).isEqualTo(expected);
-    verify(checklistEntryGraphQLService).setItemStatus(entryId, itemId, ItemStatus.COMPLETE);
+    assertThat(result.getEntry()).isEqualTo(mapped);
+    verify(entryItemService).setStatus(entryId, itemId, ItemStatus.COMPLETE);
   }
 }

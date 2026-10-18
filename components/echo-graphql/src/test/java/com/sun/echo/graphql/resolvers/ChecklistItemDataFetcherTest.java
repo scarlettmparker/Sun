@@ -1,9 +1,14 @@
 package com.sun.echo.graphql.resolvers;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.sun.base.error.MutationException;
 import com.sun.echo.codegen.types.ChecklistCategory;
 import com.sun.echo.codegen.types.ChecklistCategoryInput;
 import com.sun.echo.codegen.types.ChecklistDetail;
@@ -16,128 +21,184 @@ import com.sun.echo.codegen.types.PaginationInput;
 import com.sun.echo.codegen.types.RetireItemResponse;
 import com.sun.echo.codegen.types.SaveCategoryResponse;
 import com.sun.echo.codegen.types.SaveItemResponse;
-import com.sun.echo.graphql.services.ChecklistItemGraphQLService;
+import com.sun.echo.graphql.mappers.ChecklistCategoryMapper;
+import com.sun.echo.graphql.mappers.ChecklistDetailMapper;
+import com.sun.echo.graphql.mappers.ChecklistItemMapper;
+import com.sun.echo.model.ChecklistCategoryEntity;
+import com.sun.echo.model.ChecklistItemDetailEntity;
+import com.sun.echo.model.ChecklistItemEntity;
+import com.sun.echo.service.ChecklistCategoryService;
+import com.sun.echo.service.ChecklistDetailService;
+import com.sun.echo.service.ChecklistItemService;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 @ExtendWith(MockitoExtension.class)
 class ChecklistItemDataFetcherTest {
 
-  @Mock private ChecklistItemGraphQLService checklistItemGraphQLService;
+  @Mock private ChecklistItemService itemService;
+  @Mock private ChecklistCategoryService categoryService;
+  @Mock private ChecklistDetailService detailService;
+  @Mock private ChecklistItemMapper itemMapper;
+  @Mock private ChecklistCategoryMapper categoryMapper;
+  @Mock private ChecklistDetailMapper detailMapper;
+
   @InjectMocks private ChecklistItemDataFetcher fetcher;
 
   @Test
-  void items_delegatesToService() {
+  void items_delegatesToServiceAndMapper() {
     PaginationInput pagination = PaginationInput.newBuilder().page(0).size(10).build();
-    PagedChecklistItems expected = PagedChecklistItems.newBuilder().items(List.of()).build();
-    when(checklistItemGraphQLService.items(pagination)).thenReturn(expected);
+    ChecklistItemEntity entity = new ChecklistItemEntity();
+    entity.setId(UUID.randomUUID());
+    Page<ChecklistItemEntity> page = new PageImpl<>(List.of(entity));
+    when(itemService.findAllPaged(any(Pageable.class))).thenReturn(page);
+    ChecklistItem mapped = ChecklistItem.newBuilder().id(entity.getId().toString()).name("x").build();
+    when(itemMapper.map(entity)).thenReturn(mapped);
 
     PagedChecklistItems result = fetcher.items(pagination);
 
-    assertThat(result).isEqualTo(expected);
-    verify(checklistItemGraphQLService).items(pagination);
+    assertThat(result.getItems()).containsExactly(mapped);
+    verify(itemService).findAllPaged(any(Pageable.class));
+    verify(itemMapper).map(entity);
   }
 
   @Test
-  void item_delegatesToService() {
-    String id = UUID.randomUUID().toString();
-    ChecklistItem expected = ChecklistItem.newBuilder().id(id).name("x").build();
-    when(checklistItemGraphQLService.item(id)).thenReturn(expected);
+  void item_delegatesToLocateAndMap() {
+    UUID id = UUID.randomUUID();
+    ChecklistItemEntity entity = new ChecklistItemEntity();
+    entity.setId(id);
+    when(itemService.locate(id)).thenReturn(Optional.of(entity));
+    ChecklistItem mapped = ChecklistItem.newBuilder().id(id.toString()).name("x").build();
+    when(itemMapper.map(entity)).thenReturn(mapped);
 
-    ChecklistItem result = fetcher.item(id);
+    ChecklistItem result = fetcher.item(id.toString());
 
-    assertThat(result).isEqualTo(expected);
-    verify(checklistItemGraphQLService).item(id);
+    assertThat(result).isEqualTo(mapped);
+    verify(itemService).locate(id);
   }
 
   @Test
-  void itemDetails_delegatesToService() {
-    String id = UUID.randomUUID().toString();
-    ChecklistDetail expected = ChecklistDetail.newBuilder().ownerId(id).description("d").build();
-    when(checklistItemGraphQLService.itemDetails(id)).thenReturn(expected);
+  void itemDetails_delegatesToFindAndMap() {
+    UUID id = UUID.randomUUID();
+    ChecklistItemDetailEntity detail = new ChecklistItemDetailEntity();
+    when(detailService.findItemDetail(id)).thenReturn(Optional.of(detail));
+    ChecklistDetail mapped = ChecklistDetail.newBuilder().ownerId(id.toString()).description("d").build();
+    when(detailMapper.map(detail)).thenReturn(mapped);
 
-    ChecklistDetail result = fetcher.itemDetails(id);
+    ChecklistDetail result = fetcher.itemDetails(id.toString());
 
-    assertThat(result).isEqualTo(expected);
-    verify(checklistItemGraphQLService).itemDetails(id);
+    assertThat(result).isEqualTo(mapped);
+    verify(detailService).findItemDetail(id);
   }
 
   @Test
   void listCategories_delegatesToService() {
-    List<ChecklistCategory> expected = List.of(ChecklistCategory.newBuilder().id(UUID.randomUUID().toString()).name("c").build());
-    when(checklistItemGraphQLService.listCategories()).thenReturn(expected);
+    ChecklistCategoryEntity entity = new ChecklistCategoryEntity();
+    entity.setId(UUID.randomUUID());
+    when(categoryService.findAll()).thenReturn(List.of(entity));
+    ChecklistCategory mapped = ChecklistCategory.newBuilder().id(entity.getId().toString()).name("cat").build();
+    when(categoryMapper.map(entity)).thenReturn(mapped);
 
     List<ChecklistCategory> result = fetcher.listCategories();
 
-    assertThat(result).isEqualTo(expected);
-    verify(checklistItemGraphQLService).listCategories();
+    assertThat(result).containsExactly(mapped);
+    verify(categoryService).findAll();
   }
 
   @Test
-  void createItem_delegatesToService() {
-    CreateItemResponse expected = CreateItemResponse.newBuilder().message("Checklist item created successfully")
-        .item(ChecklistItem.newBuilder().id(UUID.randomUUID().toString()).name("n").build()).build();
-    when(checklistItemGraphQLService.createItem("n", "d", null, "icon")).thenReturn(expected);
+  void createItem_savesAndReturnsItem() {
+    ChecklistItemEntity saved = new ChecklistItemEntity();
+    saved.setId(UUID.randomUUID());
+    when(itemService.save(any(ChecklistItemEntity.class))).thenReturn(saved);
+    ChecklistItem mapped = ChecklistItem.newBuilder().id(saved.getId().toString()).name("Buy milk").build();
+    when(itemMapper.map(saved)).thenReturn(mapped);
 
-    var result = fetcher.createItem("n", "d", null, "icon");
+    CreateItemResponse result = fetcher.createItem("Buy milk", "desc", null, "icon");
 
-    assertThat(result).isEqualTo(expected);
-    verify(checklistItemGraphQLService).createItem("n", "d", null, "icon");
+    assertThat(result.getItem()).isEqualTo(mapped);
+    assertThat(result.getMessage()).contains("created");
+    verify(itemService).save(any(ChecklistItemEntity.class));
   }
 
   @Test
-  void saveItem_delegatesToService() {
+  void createItem_throwsMutationExceptionWhenSaveFails() {
+    when(itemService.save(any(ChecklistItemEntity.class))).thenThrow(new RuntimeException("Database error"));
+
+    assertThatThrownBy(() -> fetcher.createItem("Buy milk", "desc", null, "icon"))
+        .isInstanceOf(MutationException.class)
+        .hasMessageContaining("createItem failed: Database error");
+  }
+
+  @Test
+  void saveItem_appliesInputAndSaves() {
     ChecklistItemInput input = ChecklistItemInput.newBuilder().name("x").build();
-    SaveItemResponse expected = SaveItemResponse.newBuilder().message("Checklist item saved successfully")
-        .item(ChecklistItem.newBuilder().id(UUID.randomUUID().toString()).name("x").build()).build();
-    when(checklistItemGraphQLService.saveItem(input)).thenReturn(expected);
+    ChecklistItemEntity saved = new ChecklistItemEntity();
+    saved.setId(UUID.randomUUID());
+    when(itemService.save(any(ChecklistItemEntity.class))).thenReturn(saved);
+    ChecklistItem mapped = ChecklistItem.newBuilder().id(saved.getId().toString()).name("x").build();
+    when(itemMapper.map(saved)).thenReturn(mapped);
+    doNothing().when(itemMapper).map(eq(input), any(ChecklistItemEntity.class));
 
-    var result = fetcher.saveItem(input);
+    SaveItemResponse result = fetcher.saveItem(input);
 
-    assertThat(result).isEqualTo(expected);
-    verify(checklistItemGraphQLService).saveItem(input);
+    assertThat(result.getItem()).isEqualTo(mapped);
+    verify(itemMapper).map(eq(input), any(ChecklistItemEntity.class));
+    verify(itemService).save(any(ChecklistItemEntity.class));
   }
 
   @Test
   void retireItem_delegatesToService() {
-    String id = UUID.randomUUID().toString();
-    RetireItemResponse expected = RetireItemResponse.newBuilder().message("Checklist item retired successfully")
-        .item(ChecklistItem.newBuilder().id(id).name("x").build()).build();
-    when(checklistItemGraphQLService.retireItem(id)).thenReturn(expected);
+    UUID id = UUID.randomUUID();
+    ChecklistItemEntity retired = new ChecklistItemEntity();
+    retired.setId(id);
+    when(itemService.retire(id)).thenReturn(retired);
+    ChecklistItem mapped = ChecklistItem.newBuilder().id(id.toString()).name("x").build();
+    when(itemMapper.map(retired)).thenReturn(mapped);
 
-    var result = fetcher.retireItem(id);
+    RetireItemResponse result = fetcher.retireItem(id.toString());
 
-    assertThat(result).isEqualTo(expected);
-    verify(checklistItemGraphQLService).retireItem(id);
+    assertThat(result.getItem()).isEqualTo(mapped);
+    verify(itemService).retire(id);
   }
 
   @Test
-  void createCategory_delegatesToService() {
-    CreateCategoryResponse expected = CreateCategoryResponse.newBuilder().message("Checklist category created successfully")
-        .category(ChecklistCategory.newBuilder().id(UUID.randomUUID().toString()).name("cat").build()).build();
-    when(checklistItemGraphQLService.createCategory("cat", "desc")).thenReturn(expected);
+  void createCategory_savesAndReturnsCategory() {
+    ChecklistCategoryEntity saved = new ChecklistCategoryEntity();
+    saved.setId(UUID.randomUUID());
+    when(categoryService.save(any(ChecklistCategoryEntity.class))).thenReturn(saved);
+    ChecklistCategory mapped = ChecklistCategory.newBuilder().id(saved.getId().toString()).name("cat").build();
+    when(categoryMapper.map(saved)).thenReturn(mapped);
 
-    var result = fetcher.createCategory("cat", "desc");
+    CreateCategoryResponse result = fetcher.createCategory("cat", "desc");
 
-    assertThat(result).isEqualTo(expected);
-    verify(checklistItemGraphQLService).createCategory("cat", "desc");
+    assertThat(result.getCategory()).isEqualTo(mapped);
+    assertThat(result.getMessage()).contains("created");
+    verify(categoryService).save(any(ChecklistCategoryEntity.class));
   }
 
   @Test
-  void saveCategory_delegatesToService() {
+  void saveCategory_appliesInputAndSaves() {
     ChecklistCategoryInput input = ChecklistCategoryInput.newBuilder().name("cat").build();
-    SaveCategoryResponse expected = SaveCategoryResponse.newBuilder().message("Checklist category saved successfully")
-        .category(ChecklistCategory.newBuilder().id(UUID.randomUUID().toString()).name("cat").build()).build();
-    when(checklistItemGraphQLService.saveCategory(input)).thenReturn(expected);
+    ChecklistCategoryEntity saved = new ChecklistCategoryEntity();
+    saved.setId(UUID.randomUUID());
+    when(categoryService.save(any(ChecklistCategoryEntity.class))).thenReturn(saved);
+    ChecklistCategory mapped = ChecklistCategory.newBuilder().id(saved.getId().toString()).name("cat").build();
+    when(categoryMapper.map(saved)).thenReturn(mapped);
+    doNothing().when(categoryMapper).map(eq(input), any(ChecklistCategoryEntity.class));
 
-    var result = fetcher.saveCategory(input);
+    SaveCategoryResponse result = fetcher.saveCategory(input);
 
-    assertThat(result).isEqualTo(expected);
-    verify(checklistItemGraphQLService).saveCategory(input);
+    assertThat(result.getCategory()).isEqualTo(mapped);
+    verify(categoryMapper).map(eq(input), any(ChecklistCategoryEntity.class));
+    verify(categoryService).save(any(ChecklistCategoryEntity.class));
   }
 }
