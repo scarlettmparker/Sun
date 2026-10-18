@@ -1,7 +1,7 @@
 package com.sun.dionysus.torrent.search;
 
 /**
- * A single search result from Jackett.
+ * A single search result from Prowlarr.
  */
 public class TorrentSearchResult {
 

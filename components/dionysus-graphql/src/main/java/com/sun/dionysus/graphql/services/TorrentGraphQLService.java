@@ -143,7 +143,7 @@ public class TorrentGraphQLService {
   }
 
   /**
-   * Follows HTTP redirects on a Jackett download URL.
+   * Follows HTTP redirects on a Prowlarr download URL.
    */
   private TorrentSource resolveTorrentLink(String urlString) {
     int attempts = 0;

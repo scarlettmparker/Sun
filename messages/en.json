@@ -165,7 +165,7 @@
       },
       "filestore": {
         "description": "Front end for a self-hosted Garage instance.",
-        "detail": "Front end for a self-hosted `Garage` instance. Buckets and keys are browsed by prefix. Uploads go direct to storage via presigned `PUT`s, downloads via presigned `GET`s.\n\n- Create, rename, delete and move keys and folders\n- Viewers for images, video and PDF\n- Torrent ingestion, paste a magnet or `.torrent` or search through `Jackett`"
+        "detail": "Front end for a self-hosted `Garage` instance. Buckets and keys are browsed by prefix. Uploads go direct to storage via presigned `PUT`s, downloads via presigned `GET`s.\n\n- Create, rename, delete and move keys and folders\n- Viewers for images, video and PDF\n- Torrent ingestion, paste a magnet or `.torrent` or search through `Prowlarr`"
       },
       "checklist": {
         "description": "Highly over-engineered checklist.",
