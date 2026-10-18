@@ -1,12 +1,21 @@
 package com.sun.fates.graphql.resolvers;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import com.sun.fates.codegen.types.CreatePersonResponse;
+import com.sun.fates.codegen.types.DeletePersonResponse;
 import com.sun.fates.codegen.types.Person;
-import com.sun.fates.graphql.services.FatesGraphQLService;
+import com.sun.fates.codegen.types.PersonInput;
+import com.sun.fates.graphql.mappers.PersonMapper;
+import com.sun.fates.graphql.mappers.PlaceMapper;
+import com.sun.fates.model.PersonEntity;
+import com.sun.fates.service.PersonService;
+import com.sun.fates.service.PlaceService;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,40 +26,64 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class FatesDataFetcherTest {
 
-  @Mock private FatesGraphQLService service;
+  @Mock private PersonService personService;
+  @Mock private PlaceService placeService;
+  @Mock private PersonMapper personMapper;
+  @Mock private PlaceMapper placeMapper;
 
   @InjectMocks private FatesDataFetcher fetcher;
 
   @Test
-  void person_delegatesToService() {
+  void person_returnsMappedPersonWhenFound() {
     UUID id = UUID.randomUUID();
-    Person person = Person.newBuilder().id(id.toString()).build();
-    when(service.person(id.toString())).thenReturn(person);
+    PersonEntity entity = new PersonEntity();
+    entity.setId(id);
+    when(personService.locate(id)).thenReturn(Optional.of(entity));
+    when(personMapper.map(entity)).thenReturn(Person.newBuilder().id(id.toString()).build());
 
-    assertThat(fetcher.person(id.toString())).isEqualTo(person);
+    assertThat(fetcher.person(id.toString())).isNotNull();
   }
 
   @Test
-  void listPeople_delegatesToService() {
-    when(service.listPeople()).thenReturn(List.of());
+  void person_returnsNullWhenNotFound() {
+    UUID id = UUID.randomUUID();
+    when(personService.locate(id)).thenReturn(Optional.empty());
 
-    assertThat(fetcher.listPeople()).isEmpty();
+    assertThat(fetcher.person(id.toString())).isNull();
   }
 
   @Test
-  void createPerson_delegatesToService() {
-    CreatePersonResponse response = CreatePersonResponse.newBuilder()
-        .message("createPerson succeeded")
-        .person(Person.newBuilder().id("1").build())
-        .build();
-    when(service.createPerson(any())).thenReturn(response);
+  void listPeople_returnsMappedList() {
+    PersonEntity entity = new PersonEntity();
+    entity.setId(UUID.randomUUID());
+    when(personService.findAll()).thenReturn(List.of(entity));
+    when(personMapper.map(entity)).thenReturn(Person.newBuilder().id(entity.getId().toString()).build());
 
-    CreatePersonResponse result = fetcher.createPerson(null);
-
-    assertThat(result).isSameAs(response);
+    assertThat(fetcher.listPeople()).hasSize(1);
   }
 
-  private static <T> T any() {
-    return org.mockito.ArgumentMatchers.any();
+  @Test
+  void createPerson_returnsPerson() {
+    PersonEntity saved = new PersonEntity();
+    saved.setId(UUID.randomUUID());
+    Person mapped = Person.newBuilder().id(saved.getId().toString()).build();
+    when(personService.save(any(PersonEntity.class))).thenReturn(saved);
+    lenient().when(personMapper.map(saved)).thenReturn(mapped);
+
+    CreatePersonResponse result = fetcher.createPerson(
+        PersonInput.newBuilder().firstName("A").lastName("B").build());
+
+    assertThat(result.getPerson()).isEqualTo(mapped);
+    assertThat(result.getMessage()).isEqualTo("createPerson succeeded");
+  }
+
+  @Test
+  void deletePerson_returnsId() {
+    UUID id = UUID.randomUUID();
+
+    DeletePersonResponse result = fetcher.deletePerson(id.toString());
+
+    assertThat(result.getId()).isEqualTo(id.toString());
+    assertThat(result.getMessage()).isEqualTo("deletePerson succeeded");
   }
 }
