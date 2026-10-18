@@ -1,9 +1,13 @@
 package com.sun.gaia.graphql.resolvers;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.sun.base.error.MutationException;
 import com.sun.gaia.codegen.types.DeletePropertyEntryResponse;
 import com.sun.gaia.codegen.types.PropertySetEntry;
 import com.sun.gaia.codegen.types.PropertySetSchema;
@@ -14,9 +18,13 @@ import com.sun.gaia.codegen.types.SetPropertyInput;
 import com.sun.gaia.codegen.types.SetPropertyResponse;
 import com.sun.gaia.codegen.types.UpsertPropertyEntryInput;
 import com.sun.gaia.codegen.types.UpsertPropertyEntryResponse;
-import com.sun.gaia.graphql.services.PropertySetGraphQLService;
+import com.sun.gaia.graphql.mappers.PropertySetMapper;
+import com.sun.gaia.model.PropertySetEntryEntity;
+import com.sun.gaia.model.PropertySetSchemaEntity;
+import com.sun.gaia.service.PropertySetService;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -26,131 +34,215 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class PropertySetDataFetcherTest {
 
-  @Mock private PropertySetGraphQLService service;
+  @Mock private PropertySetService propertySetService;
+  @Mock private PropertySetMapper propertySetMapper;
 
   @InjectMocks private PropertySetDataFetcher fetcher;
 
   @Test
-  void propertySet_shouldDelegate() {
-    Map<String, Object> values = Map.of("key", "val");
-    when(service.propertySet("owner", "set", "entry")).thenReturn(values);
-
-    Object result = fetcher.propertySet("owner", "set", "entry");
-
-    assertThat(result).isEqualTo(values);
-    verify(service).propertySet("owner", "set", "entry");
-  }
-
-  @Test
-  void propertySets_shouldDelegate() {
-    PropertySetEntry entry = PropertySetEntry.newBuilder().id("id1").build();
-    when(service.propertySets("owner", "set")).thenReturn(List.of(entry));
-
-    List<PropertySetEntry> result = fetcher.propertySets("owner", "set");
-
-    assertThat(result).containsExactly(entry);
-    verify(service).propertySets("owner", "set");
-  }
-
-  @Test
-  void propertySetSchema_shouldDelegate() {
-    PropertySetSchema schema = PropertySetSchema.newBuilder().id("id1").name("set").build();
-    when(service.propertySetSchema("owner", "set")).thenReturn(schema);
-
-    PropertySetSchema result = fetcher.propertySetSchema("owner", "set");
-
-    assertThat(result).isEqualTo(schema);
-    verify(service).propertySetSchema("owner", "set");
-  }
-
-  @Test
-  void accessibleCommandIntents_shouldDelegate() {
-    PropertySetEntry entry = PropertySetEntry.newBuilder().id("id1").build();
-    when(service.accessibleCommandIntents(RemoteUserType.DISCORD, "123", "owner", "set"))
+  void accessibleCommandIntents_returnsAccessibleEntries() {
+    PropertySetEntryEntity entry = new PropertySetEntryEntity();
+    entry.setEntryName("texts");
+    entry.setValues(Map.of("command", "texts", "description", "List reader texts"));
+    when(propertySetService.listAccessibleEntries("12345", "NieceScarlett", "command-intents"))
         .thenReturn(List.of(entry));
 
-    List<PropertySetEntry> result =
-        fetcher.accessibleCommandIntents(RemoteUserType.DISCORD, "123", "owner", "set");
+    PropertySetEntry mapped = PropertySetEntry.newBuilder()
+        .entryName("texts")
+        .values(Map.of("command", "texts", "description", "List reader texts"))
+        .build();
+    when(propertySetMapper.map(entry)).thenReturn(mapped);
 
-    assertThat(result).containsExactly(entry);
-    verify(service).accessibleCommandIntents(RemoteUserType.DISCORD, "123", "owner", "set");
+    List<PropertySetEntry> result = fetcher.accessibleCommandIntents(
+        RemoteUserType.DISCORD, "12345", "NieceScarlett", "command-intents");
+
+    assertThat(result).hasSize(1);
+    assertThat(result.get(0).getEntryName()).isEqualTo("texts");
   }
 
   @Test
-  void upsertPropertyEntry_shouldDelegate() {
-    PropertySetEntry entry = PropertySetEntry.newBuilder().id("id1").build();
-    Object values = Map.of("k", "v");
-    UpsertPropertyEntryInput input =
-        UpsertPropertyEntryInput.newBuilder().values(values).build();
-    UpsertPropertyEntryResponse mock = UpsertPropertyEntryResponse.newBuilder()
-        .message("Property entry upserted").entry(entry).build();
-    when(service.upsertPropertyEntry("owner", "set", "entry", values)).thenReturn(mock);
+  void accessibleCommandIntents_returnsEmptyForUnknownUser() {
+    List<PropertySetEntry> result = fetcher.accessibleCommandIntents(
+        RemoteUserType.DISCORD, "unknown", "NieceScarlett", "command-intents");
 
-    UpsertPropertyEntryResponse result = fetcher.upsertPropertyEntry("owner", "set", "entry", input);
-
-    assertThat(result).isEqualTo(mock);
-    verify(service).upsertPropertyEntry("owner", "set", "entry", values);
+    assertThat(result).isEmpty();
   }
 
   @Test
-  void setProperty_shouldDelegate() {
-    PropertySetEntry entry = PropertySetEntry.newBuilder().id("id1").build();
-    SetPropertyInput input = SetPropertyInput.newBuilder().property("prop").value("val").build();
-    SetPropertyResponse mock = SetPropertyResponse.newBuilder()
-        .message("Property updated").entry(entry).build();
-    when(service.setProperty("owner", "set", "entry", "prop", "val")).thenReturn(mock);
+  void accessibleCommandIntents_returnsEmptyForBlankUserId() {
+    List<PropertySetEntry> result = fetcher.accessibleCommandIntents(
+        RemoteUserType.DISCORD, "  ", "NieceScarlett", "command-intents");
 
-    SetPropertyResponse result = fetcher.setProperty("owner", "set", "entry", input);
-
-    assertThat(result).isEqualTo(mock);
-    verify(service).setProperty("owner", "set", "entry", "prop", "val");
+    assertThat(result).isEmpty();
   }
 
   @Test
-  void registerPropertySetSchema_shouldDelegate() {
-    PropertySetSchemaInput input = PropertySetSchemaInput.newBuilder().ownerKey("owner").name("set").build();
-    PropertySetSchema schema = PropertySetSchema.newBuilder().id("id1").name("set").build();
-    RegisterPropertySetSchemaResponse mock = RegisterPropertySetSchemaResponse.newBuilder()
-        .message("Property set schema registered").schema(schema).build();
-    when(service.registerPropertySetSchema(input)).thenReturn(mock);
+  void accessibleCommandIntents_returnsEmptyForNonDiscordType() {
+    List<PropertySetEntry> result = fetcher.accessibleCommandIntents(
+        RemoteUserType.DISCORD, null, "NieceScarlett", "command-intents");
+
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void propertySets_returnsMappedEntries() {
+    PropertySetEntryEntity entity = new PropertySetEntryEntity();
+    entity.setEntryName("greek");
+    when(propertySetService.listActiveEntries("ReactApp", "themes")).thenReturn(List.of(entity));
+    PropertySetEntry mapped = PropertySetEntry.newBuilder().entryName("greek").build();
+    when(propertySetMapper.map(entity)).thenReturn(mapped);
+
+    List<PropertySetEntry> result = fetcher.propertySets("ReactApp", "themes");
+
+    assertThat(result).containsExactly(mapped);
+    verify(propertySetService).listActiveEntries("ReactApp", "themes");
+  }
+
+  @Test
+  void propertySet_returnsAllEntriesWhenEntryNull() {
+    PropertySetEntryEntity e1 = new PropertySetEntryEntity();
+    e1.setEntryName("greek");
+    e1.setValues(Map.of("primary", "#1d4ed8"));
+    PropertySetEntryEntity e2 = new PropertySetEntryEntity();
+    e2.setEntryName("dark");
+    e2.setValues(Map.of("primary", "#000000"));
+    when(propertySetService.listActiveEntries("ReactApp", "themes")).thenReturn(List.of(e1, e2));
+
+    Object result = fetcher.propertySet("ReactApp", "themes", null);
+
+    assertThat(result).isInstanceOf(Map.class);
+    Map<?, ?> map = (Map<?, ?>) result;
+    assertThat(map.containsKey("greek")).isTrue();
+    assertThat(map.containsKey("dark")).isTrue();
+  }
+
+  @Test
+  void propertySet_returnsValuesWhenEntryFound() {
+    PropertySetEntryEntity entity = new PropertySetEntryEntity();
+    entity.setValues(Map.of("primary", "#fff"));
+    when(propertySetService.getEntry("ReactApp", "themes", "greek")).thenReturn(Optional.of(entity));
+
+    Object result = fetcher.propertySet("ReactApp", "themes", "greek");
+
+    assertThat(result).isEqualTo(Map.of("primary", "#fff"));
+  }
+
+  @Test
+  void propertySet_returnsNullWhenEntryMissing() {
+    when(propertySetService.getEntry("ReactApp", "themes", "missing")).thenReturn(Optional.empty());
+
+    Object result = fetcher.propertySet("ReactApp", "themes", "missing");
+
+    assertThat(result).isNull();
+  }
+
+  @Test
+  void propertySetSchema_returnsNullWhenAbsent() {
+    when(propertySetService.getSchemaEntity("ReactApp", "themes")).thenReturn(Optional.empty());
+
+    assertThat(fetcher.propertySetSchema("ReactApp", "themes")).isNull();
+  }
+
+  @Test
+  void propertySetSchema_returnsMappedWhenPresent() {
+    PropertySetSchemaEntity entity = new PropertySetSchemaEntity();
+    PropertySetSchema mapped = PropertySetSchema.newBuilder().name("themes").build();
+    when(propertySetService.getSchemaEntity("ReactApp", "themes")).thenReturn(Optional.of(entity));
+    when(propertySetMapper.map(entity)).thenReturn(mapped);
+
+    assertThat(fetcher.propertySetSchema("ReactApp", "themes")).isEqualTo(mapped);
+  }
+
+  @Test
+  void upsertPropertyEntry_delegatesToService() {
+    PropertySetEntryEntity entity = new PropertySetEntryEntity();
+    PropertySetEntry mapped = PropertySetEntry.newBuilder().entryName("greek").build();
+    when(propertySetService.upsertEntry(eq("ReactApp"), eq("themes"), eq("greek"), any(), eq(false)))
+        .thenReturn(entity);
+    when(propertySetMapper.map(entity)).thenReturn(mapped);
+
+    UpsertPropertyEntryInput input = UpsertPropertyEntryInput.newBuilder()
+        .values(Map.of("a", "b")).build();
+    UpsertPropertyEntryResponse result =
+        fetcher.upsertPropertyEntry("ReactApp", "themes", "greek", input);
+
+    assertThat(result.getEntry()).isEqualTo(mapped);
+  }
+
+  @Test
+  void setProperty_delegatesToService() {
+    PropertySetEntryEntity entity = new PropertySetEntryEntity();
+    PropertySetEntry mapped = PropertySetEntry.newBuilder().entryName("greek").build();
+    when(propertySetService.setProperty("ReactApp", "themes", "greek", "primary", "#fff"))
+        .thenReturn(entity);
+    when(propertySetMapper.map(entity)).thenReturn(mapped);
+
+    SetPropertyInput input = SetPropertyInput.newBuilder().property("primary").value("#fff").build();
+    SetPropertyResponse result =
+        fetcher.setProperty("ReactApp", "themes", "greek", input);
+
+    assertThat(result.getEntry()).isEqualTo(mapped);
+  }
+
+  @Test
+  void registerPropertySetSchema_delegatesToService() {
+    PropertySetSchemaEntity entity = new PropertySetSchemaEntity();
+    PropertySetSchema mapped = PropertySetSchema.newBuilder().name("themes").build();
+    PropertySetSchemaInput input = PropertySetSchemaInput.newBuilder()
+        .ownerKey("ReactApp").name("themes").configurable(true)
+        .properties(Map.of("primary", Map.of("type", "color"))).build();
+    when(propertySetService.upsertSchema(eq("ReactApp"), eq("themes"), eq(true), any()))
+        .thenReturn(entity);
+    when(propertySetMapper.map(entity)).thenReturn(mapped);
 
     RegisterPropertySetSchemaResponse result = fetcher.registerPropertySetSchema(input);
 
-    assertThat(result).isEqualTo(mock);
-    verify(service).registerPropertySetSchema(input);
+    assertThat(result.getSchema()).isEqualTo(mapped);
   }
 
   @Test
-  void propertySetSchemas_shouldDelegate() {
-    PropertySetSchema schema = PropertySetSchema.newBuilder().id("id1").name("set").build();
-    when(service.propertySetSchemas("owner")).thenReturn(List.of(schema));
+  void propertySetSchemas_returnsMapped() {
+    PropertySetSchemaEntity entity = new PropertySetSchemaEntity();
+    PropertySetSchema mapped = PropertySetSchema.newBuilder().name("review-attributes").build();
+    when(propertySetService.listSchemas("Blog")).thenReturn(List.of(entity));
+    when(propertySetMapper.map(entity)).thenReturn(mapped);
 
-    List<PropertySetSchema> result = fetcher.propertySetSchemas("owner");
+    List<PropertySetSchema> result = fetcher.propertySetSchemas("Blog");
 
-    assertThat(result).containsExactly(schema);
-    verify(service).propertySetSchemas("owner");
+    assertThat(result).containsExactly(mapped);
+    verify(propertySetService).listSchemas("Blog");
   }
 
   @Test
-  void propertySetSchemas_shouldDelegateWithNullOwner() {
-    PropertySetSchema schema = PropertySetSchema.newBuilder().id("id1").name("set").build();
-    when(service.propertySetSchemas(null)).thenReturn(List.of(schema));
+  void propertySetSchemas_returnsAllWhenOwnerNull() {
+    PropertySetSchemaEntity entity = new PropertySetSchemaEntity();
+    PropertySetSchema mapped = PropertySetSchema.newBuilder().name("themes").build();
+    when(propertySetService.listSchemas(null)).thenReturn(List.of(entity));
+    when(propertySetMapper.map(entity)).thenReturn(mapped);
 
     List<PropertySetSchema> result = fetcher.propertySetSchemas(null);
 
-    assertThat(result).containsExactly(schema);
-    verify(service).propertySetSchemas(null);
+    assertThat(result).containsExactly(mapped);
   }
 
   @Test
-  void deletePropertyEntry_shouldDelegate() {
-    DeletePropertyEntryResponse mock = DeletePropertyEntryResponse.newBuilder()
-        .message("Entry deleted").id("entry").build();
-    when(service.deletePropertyEntry("owner", "set", "entry")).thenReturn(mock);
+  void deletePropertyEntry_returnsSuccessWhenDeleted() {
+    when(propertySetService.deleteEntry("Blog", "review-attributes", "entry1"))
+        .thenReturn(true);
 
-    DeletePropertyEntryResponse result = fetcher.deletePropertyEntry("owner", "set", "entry");
+    DeletePropertyEntryResponse result =
+        fetcher.deletePropertyEntry("Blog", "review-attributes", "entry1");
 
-    assertThat(result).isEqualTo(mock);
-    verify(service).deletePropertyEntry("owner", "set", "entry");
+    assertThat(result.getId()).isEqualTo("entry1");
+  }
+
+  @Test
+  void deletePropertyEntry_throwsWhenNotFound() {
+    when(propertySetService.deleteEntry("Blog", "review-attributes", "missing"))
+        .thenReturn(false);
+
+    assertThatThrownBy(() -> fetcher.deletePropertyEntry("Blog", "review-attributes", "missing"))
+        .isInstanceOf(MutationException.class)
+        .hasMessage("Entry not found");
   }
 }

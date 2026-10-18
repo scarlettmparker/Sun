@@ -7,8 +7,15 @@ import static org.mockito.Mockito.when;
 import com.sun.gaia.codegen.types.RemoteUserType;
 import com.sun.gaia.codegen.types.SetAccountPermissionsResponse;
 import com.sun.gaia.codegen.types.SetRolePermissionsResponse;
-import com.sun.gaia.graphql.services.PermissionGraphQLService;
+import com.sun.gaia.model.AccountEntity;
+import com.sun.gaia.model.enums.AccountStatus;
+import com.sun.gaia.repository.AccountRepository;
+import com.sun.gaia.service.RoleAdminService;
+import com.sun.gaia.service.UserContextHolder;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -18,78 +25,144 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class PermissionDataFetcherTest {
 
-  @Mock private PermissionGraphQLService service;
+  @Mock private AccountRepository accountRepository;
+  @Mock private RoleAdminService roleAdminService;
 
   @InjectMocks private PermissionDataFetcher fetcher;
 
-  @Test
-  void myRoles_shouldDelegate() {
-    when(service.myRoles()).thenReturn(List.of("admin"));
-
-    List<String> result = fetcher.myRoles();
-
-    assertThat(result).containsExactly("admin");
-    verify(service).myRoles();
+  @AfterEach
+  void clearContext() {
+    UserContextHolder.clear();
   }
 
   @Test
-  void effectivePermissions_shouldDelegate() {
-    when(service.effectivePermissions(RemoteUserType.DISCORD, "123")).thenReturn(List.of("perm.read"));
+  void myRoles_returnsRoleKeysWhenAuthenticated() {
+    UUID userId = UUID.randomUUID();
+    UserContextHolder.setUserId(userId);
+    try {
+      when(accountRepository.findEffectiveRoleNames(userId)).thenReturn(List.of("admin"));
 
-    List<String> result = fetcher.effectivePermissions(RemoteUserType.DISCORD, "123");
+      List<String> roles = fetcher.myRoles();
 
-    assertThat(result).containsExactly("perm.read");
-    verify(service).effectivePermissions(RemoteUserType.DISCORD, "123");
+      assertThat(roles).containsExactly("admin");
+    } finally {
+      UserContextHolder.clear();
+    }
   }
 
   @Test
-  void accountPermissions_shouldDelegate() {
-    when(service.accountPermissions("acc1")).thenReturn(List.of("perm.write"));
-
-    List<String> result = fetcher.accountPermissions("acc1");
-
-    assertThat(result).containsExactly("perm.write");
-    verify(service).accountPermissions("acc1");
+  void myRoles_returnsEmptyListWhenNotAuthenticated() {
+    assertThat(fetcher.myRoles()).isEmpty();
   }
 
   @Test
-  void rolePermissions_shouldDelegate() {
-    when(service.rolePermissions("role1")).thenReturn(List.of("perm.exec"));
+  void effectivePermissions_returnsPatternsForActiveDiscordAccount() {
+    UUID accountId = UUID.randomUUID();
+    AccountEntity account = new AccountEntity();
+    account.setId(accountId);
+    when(accountRepository.findByProviderStatus(
+        "discord", "12345", AccountStatus.ACTIVE))
+        .thenReturn(Optional.of(account));
+    when(accountRepository.findEffectivePermissions(accountId))
+        .thenReturn(List.of("bot.commands.*"));
 
-    List<String> result = fetcher.rolePermissions("role1");
+    List<String> result = fetcher.effectivePermissions(RemoteUserType.DISCORD, "12345");
 
-    assertThat(result).containsExactly("perm.exec");
-    verify(service).rolePermissions("role1");
+    assertThat(result).containsExactly("bot.commands.*");
   }
 
   @Test
-  void setAccountPermissions_shouldDelegate() {
-    SetAccountPermissionsResponse mock = SetAccountPermissionsResponse.newBuilder()
-        .message("Account permissions updated")
-        .accountId("acc1")
-        .permissions(List.of("perm.read"))
-        .build();
-    when(service.setAccountPermissions("acc1", List.of("perm.read"))).thenReturn(mock);
+  void effectivePermissions_returnsEmptyForUnknownUser() {
+    when(accountRepository.findByProviderStatus(
+        "discord", "unknown", AccountStatus.ACTIVE))
+        .thenReturn(Optional.empty());
 
-    SetAccountPermissionsResponse result =
-        fetcher.setAccountPermissions("acc1", List.of("perm.read"));
+    List<String> result = fetcher.effectivePermissions(RemoteUserType.DISCORD, "unknown");
 
-    assertThat(result).isEqualTo(mock);
-    verify(service).setAccountPermissions("acc1", List.of("perm.read"));
+    assertThat(result).isEmpty();
   }
 
   @Test
-  void setRolePermissions_shouldDelegate() {
-    SetRolePermissionsResponse mock = SetRolePermissionsResponse.newBuilder()
-        .message("Role permissions updated")
-        .roleId("role1")
-        .permissions(List.of("perm.read"))
-        .build();
-    when(service.setRolePermissions("role1", List.of("perm.read"))).thenReturn(mock);
+  void effectivePermissions_returnsEmptyForBlankUserId() {
+    List<String> result = fetcher.effectivePermissions(RemoteUserType.DISCORD, "  ");
 
-    SetRolePermissionsResponse result = fetcher.setRolePermissions("role1", List.of("perm.read"));
+    assertThat(result).isEmpty();
+  }
 
-    assertThat(result).isEqualTo(mock);
-    verify(service).setRolePermissions("role1", List.of("perm.read"));
+  @Test
+  void effectivePermissions_returnsEmptyWhenUserIdNull() {
+    List<String> result = fetcher.effectivePermissions(RemoteUserType.DISCORD, null);
+
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void accountPermissions_delegatesToAdminService() {
+    UUID accountId = UUID.randomUUID();
+    when(roleAdminService.accountPermissions(accountId)).thenReturn(List.of("graphql.gaia.me"));
+
+    List<String> result = fetcher.accountPermissions(accountId.toString());
+
+    assertThat(result).containsExactly("graphql.gaia.me");
+    verify(roleAdminService).accountPermissions(accountId);
+  }
+
+  @Test
+  void rolePermissions_delegatesToAdminService() {
+    UUID roleId = UUID.randomUUID();
+    when(roleAdminService.rolePermissions(roleId)).thenReturn(List.of("graphql.gaia.roles"));
+
+    List<String> result = fetcher.rolePermissions(roleId.toString());
+
+    assertThat(result).containsExactly("graphql.gaia.roles");
+    verify(roleAdminService).rolePermissions(roleId);
+  }
+
+  @Test
+  void setAccountPermissions_delegatesAndReturnsSuccess() {
+    UUID accountId = UUID.randomUUID();
+    List<String> perms = List.of("graphql.gaia.me");
+
+    SetAccountPermissionsResponse result = fetcher.setAccountPermissions(accountId.toString(), perms);
+
+    assertThat(result.getMessage()).isEqualTo("Account permissions updated");
+    assertThat(result.getAccountId()).isEqualTo(accountId.toString());
+    assertThat(result.getPermissions()).containsExactly("graphql.gaia.me");
+    verify(roleAdminService).setAccountPermissions(accountId, perms);
+  }
+
+  @Test
+  void setRolePermissions_delegatesAndReturnsSuccess() {
+    UUID roleId = UUID.randomUUID();
+    List<String> perms = List.of("graphql.gaia.roles");
+
+    SetRolePermissionsResponse result = fetcher.setRolePermissions(roleId.toString(), perms);
+
+    assertThat(result.getMessage()).isEqualTo("Role permissions updated");
+    assertThat(result.getRoleId()).isEqualTo(roleId.toString());
+    assertThat(result.getPermissions()).containsExactly("graphql.gaia.roles");
+    verify(roleAdminService).setRolePermissions(roleId, perms);
+  }
+
+  @Test
+  void setAccountPermissions_handlesEmptyList() {
+    UUID accountId = UUID.randomUUID();
+    List<String> perms = List.of();
+
+    SetAccountPermissionsResponse result = fetcher.setAccountPermissions(accountId.toString(), perms);
+
+    assertThat(result.getPermissions()).isEmpty();
+    verify(roleAdminService).setAccountPermissions(accountId, perms);
+  }
+
+  @Test
+  void setRolePermissions_handlesEmptyList() {
+    UUID roleId = UUID.randomUUID();
+    List<String> perms = List.of();
+
+    SetRolePermissionsResponse result = fetcher.setRolePermissions(roleId.toString(), perms);
+
+    assertThat(result.getPermissions()).isEmpty();
+    verify(roleAdminService).setRolePermissions(roleId, perms);
   }
 }

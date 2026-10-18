@@ -1,6 +1,8 @@
 package com.sun.gaia.graphql.resolvers;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -10,8 +12,14 @@ import com.sun.gaia.codegen.types.ConfigurationInput;
 import com.sun.gaia.codegen.types.CreateConfigurationResponse;
 import com.sun.gaia.codegen.types.DeleteConfigurationResponse;
 import com.sun.gaia.codegen.types.UpdateConfigurationResponse;
-import com.sun.gaia.graphql.services.ConfigurationGraphQLService;
+import com.sun.gaia.graphql.mappers.ConfigurationMapper;
+import com.sun.gaia.model.ConfigurationEntity;
+import com.sun.gaia.service.ConfigurationReconciler;
+import com.sun.gaia.service.ConfigurationService;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -21,82 +29,113 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class ConfigurationDataFetcherTest {
 
-  @Mock private ConfigurationGraphQLService service;
+  @Mock private ConfigurationService configurationService;
+  @Mock private ConfigurationReconciler configurationReconciler;
+  @Mock private ConfigurationMapper configurationMapper;
 
   @InjectMocks private ConfigurationDataFetcher fetcher;
 
   @Test
-  void configurations_shouldDelegate() {
-    Configuration c = Configuration.newBuilder().id("id1").name("cfg").build();
-    when(service.configurations()).thenReturn(List.of(c));
+  void configurations_returnsMappedList() {
+    ConfigurationEntity entity = new ConfigurationEntity();
+    Configuration mapped = Configuration.newBuilder().name("react-app-themes").build();
+    when(configurationService.list()).thenReturn(List.of(entity));
+    when(configurationMapper.map(entity)).thenReturn(mapped);
 
     List<Configuration> result = fetcher.configurations();
 
-    assertThat(result).containsExactly(c);
-    verify(service).configurations();
+    assertThat(result).containsExactly(mapped);
+    verify(configurationService).list();
   }
 
   @Test
-  void configuration_shouldDelegate() {
-    Configuration c = Configuration.newBuilder().id("id1").name("cfg").build();
-    when(service.configuration("id1")).thenReturn(c);
+  void configuration_returnsNullWhenAbsent() {
+    UUID id = UUID.randomUUID();
+    when(configurationService.locate(id)).thenReturn(Optional.empty());
 
-    Configuration result = fetcher.configuration("id1");
-
-    assertThat(result).isEqualTo(c);
-    verify(service).configuration("id1");
+    assertThat(fetcher.configuration(id.toString())).isNull();
   }
 
   @Test
-  void createConfiguration_shouldDelegate() {
-    ConfigurationInput input = ConfigurationInput.newBuilder().name("cfg").build();
-    Configuration c = Configuration.newBuilder().id("id1").name("cfg").build();
-    CreateConfigurationResponse mock = CreateConfigurationResponse.newBuilder()
-        .message("Configuration created").configuration(c).build();
-    when(service.createConfiguration(input)).thenReturn(mock);
+  void configuration_returnsMappedWhenPresent() {
+    UUID id = UUID.randomUUID();
+    ConfigurationEntity entity = new ConfigurationEntity();
+    Configuration mapped = Configuration.newBuilder().id(id.toString()).build();
+    when(configurationService.locate(id)).thenReturn(Optional.of(entity));
+    when(configurationMapper.map(entity)).thenReturn(mapped);
+
+    assertThat(fetcher.configuration(id.toString())).isEqualTo(mapped);
+  }
+
+  @Test
+  void createConfiguration_delegatesToService() {
+    ConfigurationInput input = ConfigurationInput.newBuilder()
+        .name("my-config").description("desc").enabled(true)
+        .content(Map.of("key", "value")).build();
+    ConfigurationEntity entity = new ConfigurationEntity();
+    Configuration mapped = Configuration.newBuilder().name("my-config").build();
+    when(configurationService.create(eq("my-config"), eq("desc"), eq(true), any())).thenReturn(entity);
+    when(configurationMapper.map(entity)).thenReturn(mapped);
 
     CreateConfigurationResponse result = fetcher.createConfiguration(input);
 
-    assertThat(result).isEqualTo(mock);
-    verify(service).createConfiguration(input);
+    assertThat(result.getConfiguration()).isEqualTo(mapped);
   }
 
   @Test
-  void updateConfiguration_shouldDelegate() {
-    ConfigurationInput input = ConfigurationInput.newBuilder().name("cfg2").build();
-    Configuration c = Configuration.newBuilder().id("id1").name("cfg2").build();
-    UpdateConfigurationResponse mock = UpdateConfigurationResponse.newBuilder()
-        .message("Configuration updated").configuration(c).build();
-    when(service.updateConfiguration("id1", input)).thenReturn(mock);
+  void createConfiguration_defaultsEnabledWhenNull() {
+    ConfigurationInput input = ConfigurationInput.newBuilder()
+        .name("my-config").content(Map.of("k", "v")).build();
+    ConfigurationEntity entity = new ConfigurationEntity();
+    Configuration mapped = Configuration.newBuilder().name("my-config").build();
+    when(configurationService.create(eq("my-config"), any(), eq(true), any())).thenReturn(entity);
+    when(configurationMapper.map(entity)).thenReturn(mapped);
 
-    UpdateConfigurationResponse result = fetcher.updateConfiguration("id1", input);
+    CreateConfigurationResponse result = fetcher.createConfiguration(input);
 
-    assertThat(result).isEqualTo(mock);
-    verify(service).updateConfiguration("id1", input);
+    assertThat(result.getConfiguration()).isEqualTo(mapped);
+    verify(configurationService).create(eq("my-config"), any(), eq(true), any());
   }
 
   @Test
-  void deleteConfiguration_shouldDelegate() {
-    DeleteConfigurationResponse mock = DeleteConfigurationResponse.newBuilder()
-        .message("Configuration deleted").id("id1").build();
-    when(service.deleteConfiguration("id1")).thenReturn(mock);
+  void updateConfiguration_delegatesToService() {
+    UUID id = UUID.randomUUID();
+    ConfigurationInput input = ConfigurationInput.newBuilder()
+        .name("updated").description("desc").enabled(false)
+        .content(Map.of("k", "v")).build();
+    ConfigurationEntity entity = new ConfigurationEntity();
+    Configuration mapped = Configuration.newBuilder().name("updated").build();
+    when(configurationService.update(eq(id), eq("updated"), eq("desc"), eq(false), any()))
+        .thenReturn(entity);
+    when(configurationMapper.map(entity)).thenReturn(mapped);
 
-    DeleteConfigurationResponse result = fetcher.deleteConfiguration("id1");
+    UpdateConfigurationResponse result = fetcher.updateConfiguration(id.toString(), input);
 
-    assertThat(result).isEqualTo(mock);
-    verify(service).deleteConfiguration("id1");
+    assertThat(result.getConfiguration()).isEqualTo(mapped);
   }
 
   @Test
-  void applyConfiguration_shouldDelegate() {
-    Configuration c = Configuration.newBuilder().id("id1").name("cfg").build();
-    ApplyConfigurationResponse mock = ApplyConfigurationResponse.newBuilder()
-        .message("Configuration applied").configuration(c).build();
-    when(service.applyConfiguration("id1")).thenReturn(mock);
+  void deleteConfiguration_returnsSuccess() {
+    UUID id = UUID.randomUUID();
 
-    ApplyConfigurationResponse result = fetcher.applyConfiguration("id1");
+    DeleteConfigurationResponse result = fetcher.deleteConfiguration(id.toString());
 
-    assertThat(result).isEqualTo(mock);
-    verify(service).applyConfiguration("id1");
+    assertThat(result.getMessage()).isEqualTo("Configuration deleted");
+    assertThat(result.getId()).isEqualTo(id.toString());
+    verify(configurationService).deleteById(id);
+  }
+
+  @Test
+  void applyConfiguration_delegatesToReconciler() {
+    UUID id = UUID.randomUUID();
+    ConfigurationEntity entity = new ConfigurationEntity();
+    Configuration mapped = Configuration.newBuilder().id(id.toString()).build();
+    when(configurationReconciler.reconcileById(id)).thenReturn(entity);
+    when(configurationMapper.map(entity)).thenReturn(mapped);
+
+    ApplyConfigurationResponse result = fetcher.applyConfiguration(id.toString());
+
+    assertThat(result.getConfiguration()).isEqualTo(mapped);
+    verify(configurationReconciler).reconcileById(id);
   }
 }

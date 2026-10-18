@@ -2,6 +2,7 @@ package com.sun.gaia.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
+import com.sun.base.error.MutationException;
 import com.sun.gaia.codegen.types.DeletePropertyEntryResponse;
 import com.sun.gaia.codegen.types.PropertySetEntry;
 import com.sun.gaia.codegen.types.PropertySetSchema;
@@ -12,9 +13,18 @@ import com.sun.gaia.codegen.types.SetPropertyInput;
 import com.sun.gaia.codegen.types.SetPropertyResponse;
 import com.sun.gaia.codegen.types.UpsertPropertyEntryInput;
 import com.sun.gaia.codegen.types.UpsertPropertyEntryResponse;
-import com.sun.gaia.graphql.services.PropertySetGraphQLService;
+import com.sun.gaia.graphql.mappers.PropertySetMapper;
+import com.sun.gaia.graphql.services.support.GaiaGraphQLSupport;
+import com.sun.gaia.model.PropertySetEntryEntity;
+import com.sun.gaia.service.PropertySetService;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Data fetchers for property-set operations.
@@ -22,10 +32,16 @@ import org.springframework.security.access.prepost.PreAuthorize;
 @DgsComponent
 public class PropertySetDataFetcher {
 
-  private final PropertySetGraphQLService propertySetGraphQLService;
+  private static final Logger logger = LoggerFactory.getLogger(PropertySetDataFetcher.class);
 
-  public PropertySetDataFetcher(PropertySetGraphQLService propertySetGraphQLService) {
-    this.propertySetGraphQLService = propertySetGraphQLService;
+  private final PropertySetService propertySetService;
+  private final PropertySetMapper propertySetMapper;
+
+  public PropertySetDataFetcher(
+      PropertySetService propertySetService,
+      PropertySetMapper propertySetMapper) {
+    this.propertySetService = propertySetService;
+    this.propertySetMapper = propertySetMapper;
   }
 
   /**
@@ -38,8 +54,18 @@ public class PropertySetDataFetcher {
    */
   @DgsData(parentType = "GaiaQueries", field = "propertySet")
   @PreAuthorize("permitAll()")
+  @Transactional(readOnly = true)
   public Object propertySet(String ownerKey, String name, String entry) {
-    return propertySetGraphQLService.propertySet(ownerKey, name, entry);
+    if (entry == null) {
+      Map<String, Object> all = new LinkedHashMap<>();
+      for (PropertySetEntryEntity entity : propertySetService.listActiveEntries(ownerKey, name)) {
+        all.put(entity.getEntryName(), entity.getValues());
+      }
+      return all;
+    }
+    return propertySetService.getEntry(ownerKey, name, entry)
+        .map(PropertySetEntryEntity::getValues)
+        .orElse(null);
   }
 
   /**
@@ -51,8 +77,11 @@ public class PropertySetDataFetcher {
    */
   @DgsData(parentType = "GaiaQueries", field = "propertySets")
   @PreAuthorize("permitAll()")
+  @Transactional(readOnly = true)
   public List<PropertySetEntry> propertySets(String ownerKey, String name) {
-    return propertySetGraphQLService.propertySets(ownerKey, name);
+    return propertySetService.listActiveEntries(ownerKey, name).stream()
+        .map(propertySetMapper::map)
+        .collect(Collectors.toList());
   }
 
   /**
@@ -64,8 +93,11 @@ public class PropertySetDataFetcher {
    */
   @DgsData(parentType = "GaiaQueries", field = "propertySetSchema")
   @PreAuthorize("permitAll()")
+  @Transactional(readOnly = true)
   public PropertySetSchema propertySetSchema(String ownerKey, String name) {
-    return propertySetGraphQLService.propertySetSchema(ownerKey, name);
+    return propertySetService.getSchemaEntity(ownerKey, name)
+        .map(propertySetMapper::map)
+        .orElse(null);
   }
 
   /**
@@ -76,8 +108,11 @@ public class PropertySetDataFetcher {
    */
   @DgsData(parentType = "GaiaQueries", field = "propertySetSchemas")
   @PreAuthorize("permitAll()")
+  @Transactional(readOnly = true)
   public List<PropertySetSchema> propertySetSchemas(String ownerKey) {
-    return propertySetGraphQLService.propertySetSchemas(ownerKey);
+    return propertySetService.listSchemas(ownerKey).stream()
+        .map(propertySetMapper::map)
+        .collect(Collectors.toList());
   }
 
    /**
@@ -85,11 +120,18 @@ public class PropertySetDataFetcher {
     */
   @DgsData(parentType = "GaiaQueries", field = "accessibleCommandIntents")
   @PreAuthorize("@permissions.has('graphql.gaia.accessibleCommandIntents')")
+  @Transactional(readOnly = true)
   public List<PropertySetEntry> accessibleCommandIntents(
       RemoteUserType remoteUserType, String remoteUserId,
       String ownerKey, String propertySet) {
-    return propertySetGraphQLService.accessibleCommandIntents(
-        remoteUserType, remoteUserId, ownerKey, propertySet);
+    if (remoteUserType != RemoteUserType.DISCORD || remoteUserId == null || remoteUserId.isBlank()) {
+      return List.of();
+    }
+    return propertySetService
+        .listAccessibleEntries(remoteUserId, ownerKey, propertySet)
+        .stream()
+        .map(propertySetMapper::map)
+        .collect(Collectors.toList());
   }
 
   /**
@@ -103,9 +145,15 @@ public class PropertySetDataFetcher {
    */
   @DgsData(parentType = "GaiaMutations", field = "upsertPropertyEntry")
   @PreAuthorize("@permissions.has('graphql.gaia.upsertPropertyEntry')")
+  @Transactional
   public UpsertPropertyEntryResponse upsertPropertyEntry(String ownerKey, String name, String entry,
       UpsertPropertyEntryInput input) {
-    return propertySetGraphQLService.upsertPropertyEntry(ownerKey, name, entry, input.getValues());
+    PropertySetEntry saved = propertySetMapper.map(
+        propertySetService.upsertEntry(ownerKey, name, entry, GaiaGraphQLSupport.asMap(input.getValues()), false));
+    return UpsertPropertyEntryResponse.newBuilder()
+        .message("Property entry upserted")
+        .entry(saved)
+        .build();
   }
 
   /**
@@ -119,10 +167,15 @@ public class PropertySetDataFetcher {
    */
   @DgsData(parentType = "GaiaMutations", field = "setProperty")
   @PreAuthorize("@permissions.has('graphql.gaia.setProperty')")
+  @Transactional
   public SetPropertyResponse setProperty(String ownerKey, String name, String entry,
       SetPropertyInput input) {
-    return propertySetGraphQLService.setProperty(ownerKey, name, entry, input.getProperty(),
-        input.getValue());
+    PropertySetEntry saved = propertySetMapper.map(
+        propertySetService.setProperty(ownerKey, name, entry, input.getProperty(), input.getValue()));
+    return SetPropertyResponse.newBuilder()
+        .message("Property updated")
+        .entry(saved)
+        .build();
   }
 
   /**
@@ -133,8 +186,16 @@ public class PropertySetDataFetcher {
    */
   @DgsData(parentType = "GaiaMutations", field = "registerPropertySetSchema")
   @PreAuthorize("@permissions.has('graphql.gaia.registerPropertySetSchema')")
+  @Transactional
   public RegisterPropertySetSchemaResponse registerPropertySetSchema(PropertySetSchemaInput input) {
-    return propertySetGraphQLService.registerPropertySetSchema(input);
+    PropertySetSchema schema = propertySetMapper.map(propertySetService.upsertSchema(
+        input.getOwnerKey(), input.getName(),
+        input.getConfigurable() != null && input.getConfigurable(),
+        GaiaGraphQLSupport.asMap(input.getProperties())));
+    return RegisterPropertySetSchemaResponse.newBuilder()
+        .message("Property set schema registered")
+        .schema(schema)
+        .build();
   }
 
   /**
@@ -147,7 +208,15 @@ public class PropertySetDataFetcher {
    */
   @DgsData(parentType = "GaiaMutations", field = "deletePropertyEntry")
   @PreAuthorize("@permissions.has('graphql.gaia.deletePropertyEntry')")
+  @Transactional
   public DeletePropertyEntryResponse deletePropertyEntry(String ownerKey, String name, String entry) {
-    return propertySetGraphQLService.deletePropertyEntry(ownerKey, name, entry);
+    boolean deleted = propertySetService.deleteEntry(ownerKey, name, entry);
+    if (deleted) {
+      return DeletePropertyEntryResponse.newBuilder()
+          .message("Entry deleted")
+          .id(entry)
+          .build();
+    }
+    throw new MutationException("Entry not found");
   }
 }

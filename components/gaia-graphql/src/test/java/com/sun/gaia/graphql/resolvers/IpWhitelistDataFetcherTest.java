@@ -9,8 +9,11 @@ import com.sun.gaia.codegen.types.DeleteIpWhitelistEntryResponse;
 import com.sun.gaia.codegen.types.IpWhitelistEntry;
 import com.sun.gaia.codegen.types.IpWhitelistEntryInput;
 import com.sun.gaia.codegen.types.UpdateIpWhitelistEntryResponse;
-import com.sun.gaia.graphql.services.IpWhitelistGraphQLService;
+import com.sun.gaia.graphql.mappers.IpWhitelistMapper;
+import com.sun.gaia.model.IpWhitelistEntryEntity;
+import com.sun.gaia.service.IpWhitelistService;
 import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -20,62 +23,94 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class IpWhitelistDataFetcherTest {
 
-  @Mock private IpWhitelistGraphQLService service;
+  @Mock private IpWhitelistService ipWhitelistService;
+  @Mock private IpWhitelistMapper ipWhitelistMapper;
 
   @InjectMocks private IpWhitelistDataFetcher fetcher;
 
   @Test
-  void ipWhitelistEntries_shouldDelegate() {
-    IpWhitelistEntry entry = IpWhitelistEntry.newBuilder().id("id1").pattern("10.0.0.1").build();
-    when(service.ipWhitelistEntries()).thenReturn(List.of(entry));
+  void ipWhitelistEntries_returnsMappedList() {
+    IpWhitelistEntryEntity entity = new IpWhitelistEntryEntity();
+    entity.setPattern("192.168.0.0/24");
+    IpWhitelistEntry mapped = IpWhitelistEntry.newBuilder().pattern("192.168.0.0/24").build();
+    when(ipWhitelistService.listAll()).thenReturn(List.of(entity));
+    when(ipWhitelistMapper.map(List.of(entity))).thenReturn(List.of(mapped));
 
     List<IpWhitelistEntry> result = fetcher.ipWhitelistEntries();
 
-    assertThat(result).containsExactly(entry);
-    verify(service).ipWhitelistEntries();
+    assertThat(result).containsExactly(mapped);
+    verify(ipWhitelistService).listAll();
   }
 
   @Test
-  void createIpWhitelistEntry_shouldDelegate() {
-    IpWhitelistEntryInput input = IpWhitelistEntryInput.newBuilder().pattern("10.0.0.1").build();
-    CreateIpWhitelistEntryResponse mock = CreateIpWhitelistEntryResponse.newBuilder()
-        .message("IP whitelist entry created")
-        .entry(IpWhitelistEntry.newBuilder().id("id1").pattern("10.0.0.1").build())
-        .build();
-    when(service.createIpWhitelistEntry(input)).thenReturn(mock);
+  void ipWhitelistEntries_returnsEmptyWhenNone() {
+    when(ipWhitelistService.listAll()).thenReturn(List.of());
+    when(ipWhitelistMapper.map(List.of())).thenReturn(List.of());
+
+    assertThat(fetcher.ipWhitelistEntries()).isEmpty();
+  }
+
+  @Test
+  void createIpWhitelistEntry_returnsSuccessWithId() {
+    IpWhitelistEntryInput input = IpWhitelistEntryInput.newBuilder()
+        .pattern("10.0.0.1").description("test").immutable(false).build();
+    IpWhitelistEntryEntity entity = new IpWhitelistEntryEntity();
+    UUID id = UUID.randomUUID();
+    entity.setId(id);
+    IpWhitelistEntry mapped = IpWhitelistEntry.newBuilder().id(id.toString()).pattern("10.0.0.1").build();
+    when(ipWhitelistService.addEntry("10.0.0.1", "test", false)).thenReturn(entity);
+    when(ipWhitelistMapper.map(entity)).thenReturn(mapped);
 
     CreateIpWhitelistEntryResponse result = fetcher.createIpWhitelistEntry(input);
 
-    assertThat(result).isEqualTo(mock);
-    verify(service).createIpWhitelistEntry(input);
+    assertThat(result.getMessage()).isEqualTo("IP whitelist entry created");
+    assertThat(result.getEntry()).isEqualTo(mapped);
+    verify(ipWhitelistService).addEntry("10.0.0.1", "test", false);
   }
 
   @Test
-  void updateIpWhitelistEntry_shouldDelegate() {
-    IpWhitelistEntryInput input = IpWhitelistEntryInput.newBuilder().pattern("10.0.0.2").build();
-    UpdateIpWhitelistEntryResponse mock = UpdateIpWhitelistEntryResponse.newBuilder()
-        .message("IP whitelist entry updated")
-        .entry(IpWhitelistEntry.newBuilder().id("id1").pattern("10.0.0.2").build())
-        .build();
-    when(service.updateIpWhitelistEntry("id1", input)).thenReturn(mock);
+  void createIpWhitelistEntry_handlesImmutableTrue() {
+    IpWhitelistEntryInput input = IpWhitelistEntryInput.newBuilder()
+        .pattern("10.0.0.1").immutable(true).build();
+    IpWhitelistEntryEntity entity = new IpWhitelistEntryEntity();
+    UUID id = UUID.randomUUID();
+    entity.setId(id);
+    IpWhitelistEntry mapped = IpWhitelistEntry.newBuilder().id(id.toString()).pattern("10.0.0.1").build();
+    when(ipWhitelistService.addEntry("10.0.0.1", null, true)).thenReturn(entity);
+    when(ipWhitelistMapper.map(entity)).thenReturn(mapped);
 
-    UpdateIpWhitelistEntryResponse result = fetcher.updateIpWhitelistEntry("id1", input);
+    CreateIpWhitelistEntryResponse result = fetcher.createIpWhitelistEntry(input);
 
-    assertThat(result).isEqualTo(mock);
-    verify(service).updateIpWhitelistEntry("id1", input);
+    assertThat(result.getEntry()).isEqualTo(mapped);
+    verify(ipWhitelistService).addEntry("10.0.0.1", null, true);
   }
 
   @Test
-  void deleteIpWhitelistEntry_shouldDelegate() {
-    DeleteIpWhitelistEntryResponse mock = DeleteIpWhitelistEntryResponse.newBuilder()
-        .message("IP whitelist entry deleted")
-        .id("id1")
-        .build();
-    when(service.deleteIpWhitelistEntry("id1")).thenReturn(mock);
+  void updateIpWhitelistEntry_returnsResponse() {
+    UUID id = UUID.randomUUID();
+    IpWhitelistEntryInput input = IpWhitelistEntryInput.newBuilder()
+        .pattern("10.0.0.2").description("updated").enabled(true).build();
+    IpWhitelistEntryEntity entity = new IpWhitelistEntryEntity();
+    entity.setId(id);
+    IpWhitelistEntry mapped = IpWhitelistEntry.newBuilder().id(id.toString()).pattern("10.0.0.2").build();
+    when(ipWhitelistService.updateEntry(id, "10.0.0.2", "updated", true)).thenReturn(entity);
+    when(ipWhitelistMapper.map(entity)).thenReturn(mapped);
 
-    DeleteIpWhitelistEntryResponse result = fetcher.deleteIpWhitelistEntry("id1");
+    UpdateIpWhitelistEntryResponse result = fetcher.updateIpWhitelistEntry(id.toString(), input);
 
-    assertThat(result).isEqualTo(mock);
-    verify(service).deleteIpWhitelistEntry("id1");
+    assertThat(result.getMessage()).isEqualTo("IP whitelist entry updated");
+    assertThat(result.getEntry()).isEqualTo(mapped);
+    verify(ipWhitelistService).updateEntry(id, "10.0.0.2", "updated", true);
+  }
+
+  @Test
+  void deleteIpWhitelistEntry_returnsResponse() {
+    UUID id = UUID.randomUUID();
+
+    DeleteIpWhitelistEntryResponse result = fetcher.deleteIpWhitelistEntry(id.toString());
+
+    assertThat(result.getMessage()).isEqualTo("IP whitelist entry deleted");
+    assertThat(result.getId()).isEqualTo(id.toString());
+    verify(ipWhitelistService).deleteEntry(id);
   }
 }

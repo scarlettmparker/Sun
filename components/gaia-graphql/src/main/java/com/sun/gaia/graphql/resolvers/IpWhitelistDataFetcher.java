@@ -7,9 +7,15 @@ import com.sun.gaia.codegen.types.DeleteIpWhitelistEntryResponse;
 import com.sun.gaia.codegen.types.IpWhitelistEntry;
 import com.sun.gaia.codegen.types.IpWhitelistEntryInput;
 import com.sun.gaia.codegen.types.UpdateIpWhitelistEntryResponse;
-import com.sun.gaia.graphql.services.IpWhitelistGraphQLService;
+import com.sun.gaia.graphql.mappers.IpWhitelistMapper;
+import com.sun.gaia.model.IpWhitelistEntryEntity;
+import com.sun.gaia.service.IpWhitelistService;
 import java.util.List;
+import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Data fetchers for IP whitelist operations.
@@ -17,10 +23,16 @@ import org.springframework.security.access.prepost.PreAuthorize;
 @DgsComponent
 public class IpWhitelistDataFetcher {
 
-  private final IpWhitelistGraphQLService ipWhitelistGraphQLService;
+  private static final Logger logger = LoggerFactory.getLogger(IpWhitelistDataFetcher.class);
 
-  public IpWhitelistDataFetcher(IpWhitelistGraphQLService ipWhitelistGraphQLService) {
-    this.ipWhitelistGraphQLService = ipWhitelistGraphQLService;
+  private final IpWhitelistService ipWhitelistService;
+  private final IpWhitelistMapper ipWhitelistMapper;
+
+  public IpWhitelistDataFetcher(
+      IpWhitelistService ipWhitelistService,
+      IpWhitelistMapper ipWhitelistMapper) {
+    this.ipWhitelistService = ipWhitelistService;
+    this.ipWhitelistMapper = ipWhitelistMapper;
   }
 
   /**
@@ -30,8 +42,9 @@ public class IpWhitelistDataFetcher {
    */
   @DgsData(parentType = "GaiaQueries", field = "ipWhitelistEntries")
   @PreAuthorize("@permissions.has('graphql.gaia.ipWhitelistEntries')")
+  @Transactional(readOnly = true)
   public List<IpWhitelistEntry> ipWhitelistEntries() {
-    return ipWhitelistGraphQLService.ipWhitelistEntries();
+    return ipWhitelistMapper.map(ipWhitelistService.listAll());
   }
 
   /**
@@ -43,8 +56,15 @@ public class IpWhitelistDataFetcher {
    */
   @DgsData(parentType = "GaiaMutations", field = "createIpWhitelistEntry")
   @PreAuthorize("@permissions.has('graphql.gaia.createIpWhitelistEntry')")
+  @Transactional
   public CreateIpWhitelistEntryResponse createIpWhitelistEntry(IpWhitelistEntryInput input) {
-    return ipWhitelistGraphQLService.createIpWhitelistEntry(input);
+    IpWhitelistEntryEntity entity = ipWhitelistService.addEntry(
+        input.getPattern(), input.getDescription(),
+        input.getImmutable() != null && input.getImmutable());
+    return CreateIpWhitelistEntryResponse.newBuilder()
+        .message("IP whitelist entry created")
+        .entry(ipWhitelistMapper.map(entity))
+        .build();
   }
 
   /**
@@ -56,8 +76,14 @@ public class IpWhitelistDataFetcher {
    */
   @DgsData(parentType = "GaiaMutations", field = "updateIpWhitelistEntry")
   @PreAuthorize("@permissions.has('graphql.gaia.updateIpWhitelistEntry')")
+  @Transactional
   public UpdateIpWhitelistEntryResponse updateIpWhitelistEntry(String id, IpWhitelistEntryInput input) {
-    return ipWhitelistGraphQLService.updateIpWhitelistEntry(id, input);
+    IpWhitelistEntryEntity entity = ipWhitelistService.updateEntry(UUID.fromString(id),
+        input.getPattern(), input.getDescription(), input.getEnabled());
+    return UpdateIpWhitelistEntryResponse.newBuilder()
+        .message("IP whitelist entry updated")
+        .entry(ipWhitelistMapper.map(entity))
+        .build();
   }
 
   /**
@@ -68,7 +94,12 @@ public class IpWhitelistDataFetcher {
    */
   @DgsData(parentType = "GaiaMutations", field = "deleteIpWhitelistEntry")
   @PreAuthorize("@permissions.has('graphql.gaia.deleteIpWhitelistEntry')")
+  @Transactional
   public DeleteIpWhitelistEntryResponse deleteIpWhitelistEntry(String id) {
-    return ipWhitelistGraphQLService.deleteIpWhitelistEntry(id);
+    ipWhitelistService.deleteEntry(UUID.fromString(id));
+    return DeleteIpWhitelistEntryResponse.newBuilder()
+        .message("IP whitelist entry deleted")
+        .id(id)
+        .build();
   }
 }

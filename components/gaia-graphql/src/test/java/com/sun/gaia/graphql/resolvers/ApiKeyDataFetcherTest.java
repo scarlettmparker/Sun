@@ -1,14 +1,22 @@
 package com.sun.gaia.graphql.resolvers;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.sun.gaia.codegen.types.ApiKey;
 import com.sun.gaia.codegen.types.IssueApiKeyResponse;
-import com.sun.gaia.codegen.types.IssuedApiKey;
 import com.sun.gaia.codegen.types.RevokeApiKeyResponse;
 import com.sun.gaia.codegen.types.RotateApiKeyResponse;
-import com.sun.gaia.graphql.services.ApiKeyGraphQLService;
+import com.sun.gaia.graphql.mappers.ApiKeyMapper;
+import com.sun.gaia.model.AccountEntity;
+import com.sun.gaia.model.ApiKeyEntity;
+import com.sun.gaia.service.AccountService;
+import com.sun.gaia.service.ApiKeyService;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -18,49 +26,83 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class ApiKeyDataFetcherTest {
 
-  @Mock private ApiKeyGraphQLService service;
+  @Mock private AccountService accountService;
+  @Mock private ApiKeyService apiKeyService;
+  @Mock private ApiKeyMapper apiKeyMapper;
 
   @InjectMocks private ApiKeyDataFetcher fetcher;
 
   @Test
-  void issueApiKey_shouldDelegate() {
-    IssueApiKeyResponse mock = IssueApiKeyResponse.newBuilder()
-        .message("API key issued")
-        .apiKey(IssuedApiKey.newBuilder().plaintextKey("ns_plain").build())
-        .build();
-    when(service.issueApiKey("alice", "bot")).thenReturn(mock);
+  void issueApiKey_returnsIssuedKeyWithPlaintext() {
+    UUID accountId = UUID.randomUUID();
+    AccountEntity account = new AccountEntity();
+    account.setId(accountId);
+    when(accountService.findByUsername("niece-scarlett")).thenReturn(Optional.of(account));
+    ApiKeyEntity key = new ApiKeyEntity();
+    key.setId(UUID.randomUUID());
+    when(apiKeyService.issueKey(accountId, "bot")).thenReturn(
+        new ApiKeyService.ApiKeyIssue(key, "ns_plaintext"));
+    ApiKey mapped = ApiKey.newBuilder().id(key.getId().toString()).name("bot").build();
+    when(apiKeyMapper.map(key)).thenReturn(mapped);
 
-    IssueApiKeyResponse result = fetcher.issueApiKey("alice", "bot");
+    IssueApiKeyResponse result = fetcher.issueApiKey("niece-scarlett", "bot");
 
-    assertThat(result).isEqualTo(mock);
-    verify(service).issueApiKey("alice", "bot");
+    assertThat(result.getApiKey().getPlaintextKey()).isEqualTo("ns_plaintext");
+    assertThat(result.getApiKey().getApiKey()).isEqualTo(mapped);
+    verify(apiKeyService).issueKey(accountId, "bot");
   }
 
   @Test
-  void revokeApiKey_shouldDelegate() {
-    RevokeApiKeyResponse mock = RevokeApiKeyResponse.newBuilder()
-        .message("API key revoked")
-        .id("id1")
-        .build();
-    when(service.revokeApiKey("id1")).thenReturn(mock);
+  void issueApiKey_throwsWhenAccountNotFound() {
+    when(accountService.findByUsername("missing")).thenReturn(Optional.empty());
 
-    RevokeApiKeyResponse result = fetcher.revokeApiKey("id1");
-
-    assertThat(result).isEqualTo(mock);
-    verify(service).revokeApiKey("id1");
+    assertThatThrownBy(() -> fetcher.issueApiKey("missing", "bot"))
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
-  void rotateApiKey_shouldDelegate() {
-    RotateApiKeyResponse mock = RotateApiKeyResponse.newBuilder()
-        .message("API key rotated")
-        .apiKey(IssuedApiKey.newBuilder().plaintextKey("ns_rotated").build())
-        .build();
-    when(service.rotateApiKey("id1")).thenReturn(mock);
+  void revokeApiKey_returnsResponse() {
+    UUID id = UUID.randomUUID();
 
-    RotateApiKeyResponse result = fetcher.rotateApiKey("id1");
+    RevokeApiKeyResponse result = fetcher.revokeApiKey(id.toString());
 
-    assertThat(result).isEqualTo(mock);
-    verify(service).rotateApiKey("id1");
+    assertThat(result.getMessage()).isEqualTo("API key revoked");
+    assertThat(result.getId()).isEqualTo(id.toString());
+    verify(apiKeyService).revoke(id);
+  }
+
+  @Test
+  void revokeApiKey_throwsWhenKeyNotFound() {
+    UUID id = UUID.randomUUID();
+    doThrow(new IllegalArgumentException("API key not found: " + id)).when(apiKeyService).revoke(id);
+
+    assertThatThrownBy(() -> fetcher.revokeApiKey(id.toString()))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void rotateApiKey_returnsRotatedPlaintext() {
+    UUID id = UUID.randomUUID();
+    ApiKeyEntity key = new ApiKeyEntity();
+    key.setId(id);
+    when(apiKeyService.rotate(id)).thenReturn(
+        new ApiKeyService.ApiKeyIssue(key, "ns_rotated"));
+    ApiKey mapped = ApiKey.newBuilder().id(key.getId().toString()).name("bot").build();
+    when(apiKeyMapper.map(key)).thenReturn(mapped);
+
+    RotateApiKeyResponse result = fetcher.rotateApiKey(id.toString());
+
+    assertThat(result.getApiKey().getPlaintextKey()).isEqualTo("ns_rotated");
+    assertThat(result.getApiKey().getApiKey()).isEqualTo(mapped);
+    verify(apiKeyService).rotate(id);
+  }
+
+  @Test
+  void rotateApiKey_throwsWhenKeyNotFound() {
+    UUID id = UUID.randomUUID();
+    when(apiKeyService.rotate(id)).thenThrow(new IllegalArgumentException("API key not found: " + id));
+
+    assertThatThrownBy(() -> fetcher.rotateApiKey(id.toString()))
+        .isInstanceOf(IllegalArgumentException.class);
   }
 }

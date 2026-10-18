@@ -1,26 +1,43 @@
 package com.sun.gaia.graphql.resolvers;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.sun.base.error.MutationException;
+import com.sun.fates.model.PersonEntity;
+import com.sun.fates.service.PersonService;
 import com.sun.gaia.codegen.types.Account;
 import com.sun.gaia.codegen.types.AuthResult;
 import com.sun.gaia.codegen.types.ChangePasswordResponse;
 import com.sun.gaia.codegen.types.ConfirmAccountReactivationResponse;
 import com.sun.gaia.codegen.types.DeactivateAccountResponse;
 import com.sun.gaia.codegen.types.LoginInput;
-import com.sun.gaia.codegen.types.LogoutResponse;
-import com.sun.gaia.codegen.types.PagedAccounts;
-import com.sun.gaia.codegen.types.PaginationInput;
 import com.sun.gaia.codegen.types.RegisterInput;
 import com.sun.gaia.codegen.types.RequestAccountReactivationResponse;
-import com.sun.gaia.codegen.types.RequestPasswordResetResponse;
-import com.sun.gaia.codegen.types.ResetPasswordResponse;
 import com.sun.gaia.codegen.types.SuspendAccountResponse;
 import com.sun.gaia.codegen.types.UnsuspendAccountResponse;
-import com.sun.gaia.graphql.services.AccountGraphQLService;
+import com.sun.gaia.graphql.mappers.AccountMapper;
+import com.sun.gaia.model.AccountEntity;
+import com.sun.gaia.model.ReactivationTokenEntity;
+import com.sun.gaia.model.enums.AccountStatus;
+import com.sun.gaia.repository.AccountRepository;
+import com.sun.gaia.service.AccountService;
+import com.sun.gaia.service.EmailService;
+import com.sun.gaia.service.JwtService;
+import com.sun.gaia.service.PasswordResetService;
+import com.sun.gaia.service.ReactivationService;
+import com.sun.gaia.service.UserContextHolder;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -30,195 +47,346 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class AccountDataFetcherTest {
 
-  @Mock private AccountGraphQLService service;
+  @Mock private AccountService accountService;
+  @Mock private AccountRepository accountRepository;
+  @Mock private PersonService personService;
+  @Mock private JwtService jwtService;
+  @Mock private EmailService emailService;
+  @Mock private PasswordResetService passwordResetService;
+  @Mock private ReactivationService reactivationService;
+  @Mock private AccountMapper accountMapper;
 
   @InjectMocks private AccountDataFetcher fetcher;
 
+  @AfterEach
+  void clearContext() {
+    UserContextHolder.clear();
+  }
+
   @Test
-  void me_shouldDelegateToService() {
-    Account mapped = Account.newBuilder().id("id").username("test").build();
-    when(service.me()).thenReturn(mapped);
+  void login_returnsAuthResultWhenCredentialsValid() {
+    UUID accountId = UUID.randomUUID();
+    UUID personId = UUID.randomUUID();
+    AccountEntity account = new AccountEntity();
+    account.setId(accountId);
+    account.setPersonId(personId);
+
+    when(accountService.findByUsername("testuser")).thenReturn(Optional.of(account));
+    when(accountService.verifyPassword(account, "pass123")).thenReturn(true);
+    when(jwtService.generateToken(accountId, personId)).thenReturn("jwt-token");
+
+    AuthResult result = fetcher.login(LoginInput.newBuilder()
+        .username("testuser").password("pass123").build());
+
+    assertThat(result.getToken()).isEqualTo("jwt-token");
+    assertThat(result.getAccountId()).isEqualTo(accountId.toString());
+    assertThat(result.getPersonId()).isEqualTo(personId.toString());
+  }
+
+  @Test
+  void login_throwsWhenUserNotFound() {
+    when(accountService.findByUsername("unknown")).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> fetcher.login(LoginInput.newBuilder()
+        .username("unknown").password("pass").build()))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void login_throwsWhenPasswordIncorrect() {
+    AccountEntity account = new AccountEntity();
+    account.setId(UUID.randomUUID());
+    when(accountService.findByUsername("testuser")).thenReturn(Optional.of(account));
+    when(accountService.verifyPassword(account, "wrong")).thenReturn(false);
+
+    assertThatThrownBy(() -> fetcher.login(LoginInput.newBuilder()
+        .username("testuser").password("wrong").build()))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void register_createsPersonAndAccount() {
+    UUID personId = UUID.randomUUID();
+    UUID accountId = UUID.randomUUID();
+    PersonEntity person = new PersonEntity();
+    person.setId(personId);
+    when(personService.save(any(PersonEntity.class))).thenReturn(person);
+    when(accountService.findByUsername("newuser")).thenReturn(Optional.empty());
+
+    AccountEntity account = new AccountEntity();
+    account.setId(accountId);
+    account.setPersonId(personId);
+    when(accountService.createAccount("newuser", "pass123", personId)).thenReturn(account);
+    when(jwtService.generateToken(accountId, personId)).thenReturn("jwt-token");
+
+    AuthResult result = fetcher.register(RegisterInput.newBuilder()
+        .username("newuser").password("pass123")
+        .firstName("Jane").lastName("Doe").email("jane@test.com").build());
+
+    assertThat(result.getAccountId()).isEqualTo(accountId.toString());
+    assertThat(result.getPersonId()).isEqualTo(personId.toString());
+    assertThat(result.getToken()).isEqualTo("jwt-token");
+  }
+
+  @Test
+  void register_throwsWhenUsernameTaken() {
+    when(accountService.findByUsername("taken")).thenReturn(Optional.of(new AccountEntity()));
+
+    assertThatThrownBy(() -> fetcher.register(RegisterInput.newBuilder()
+        .username("taken").password("pass")
+        .firstName("A").lastName("B").email("a@b.com").build()))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("Username already taken");
+  }
+
+  @Test
+  void changePassword_throwsWhenNotAuthenticated() {
+    assertThatThrownBy(() -> fetcher.changePassword("old", "new"))
+        .isInstanceOf(MutationException.class)
+        .hasMessage("Not authenticated");
+  }
+
+  @Test
+  void changePassword_throwsWhenCurrentPasswordWrong() {
+    UUID userId = UUID.randomUUID();
+    AccountEntity account = new AccountEntity();
+    account.setId(userId);
+    UserContextHolder.setUserId(userId);
+    try {
+      when(accountService.findById(userId)).thenReturn(Optional.of(account));
+      when(accountService.verifyPassword(account, "wrong")).thenReturn(false);
+
+      assertThatThrownBy(() -> fetcher.changePassword("wrong", "new"))
+          .isInstanceOf(MutationException.class)
+          .hasMessage("Current password incorrect");
+    } finally {
+      UserContextHolder.clear();
+    }
+  }
+
+  @Test
+  void changePassword_succeedsWhenCurrentPasswordCorrect() {
+    UUID userId = UUID.randomUUID();
+    AccountEntity account = new AccountEntity();
+    account.setId(userId);
+    UserContextHolder.setUserId(userId);
+    when(accountService.findById(userId)).thenReturn(Optional.of(account));
+    when(accountService.verifyPassword(account, "old")).thenReturn(true);
+
+    ChangePasswordResponse result = fetcher.changePassword("old", "new");
+
+    assertThat(result.getMessage()).isEqualTo("Password changed");
+    verify(accountService).changePassword(userId, "new");
+  }
+
+  @Test
+  void suspendAccount_marksAccountSuspended() {
+    UUID id = UUID.randomUUID();
+    AccountEntity account = new AccountEntity();
+    account.setId(id);
+    account.setStatus(AccountStatus.ACTIVE);
+    Account mapped = Account.newBuilder().id(id.toString()).status(AccountStatus.SUSPENDED).build();
+    when(accountService.findById(id)).thenReturn(Optional.of(account));
+    when(accountMapper.map(account)).thenReturn(mapped);
+
+    SuspendAccountResponse result = fetcher.suspendAccount(id.toString());
+
+    assertThat(result.getMessage()).isEqualTo("Account suspended");
+    assertThat(result.getAccount()).isEqualTo(mapped);
+    assertThat(account.getStatus()).isEqualTo(AccountStatus.SUSPENDED);
+    verify(accountService).save(account);
+  }
+
+  @Test
+  void suspendAccount_throwsWhenAccountNotFound() {
+    UUID id = UUID.randomUUID();
+    when(accountService.findById(id)).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> fetcher.suspendAccount(id.toString()))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void unsuspendAccount_reactivatesAccount() {
+    UUID id = UUID.randomUUID();
+    AccountEntity account = new AccountEntity();
+    account.setId(id);
+    account.setStatus(AccountStatus.SUSPENDED);
+    Account mapped = Account.newBuilder().id(id.toString()).status(AccountStatus.ACTIVE).build();
+    when(accountService.findById(id)).thenReturn(Optional.of(account));
+    when(accountMapper.map(account)).thenReturn(mapped);
+
+    UnsuspendAccountResponse result = fetcher.unsuspendAccount(id.toString());
+
+    assertThat(result.getAccount()).isEqualTo(mapped);
+    assertThat(account.getStatus()).isEqualTo(AccountStatus.ACTIVE);
+    verify(accountService).save(account);
+  }
+
+  @Test
+  void deactivateAccount_marksAccountDeactivated() {
+    UUID userId = UUID.randomUUID();
+    UserContextHolder.setUserId(userId);
+    try {
+      AccountEntity account = new AccountEntity();
+      account.setId(userId);
+      when(accountService.deactivateAccount(userId)).thenReturn(account);
+
+      DeactivateAccountResponse result = fetcher.deactivateAccount();
+
+      assertThat(result.getMessage()).isEqualTo("Account deactivated");
+      verify(accountService).deactivateAccount(userId);
+    } finally {
+      UserContextHolder.clear();
+    }
+  }
+
+  @Test
+  void deactivateAccount_throwsWhenNotAuthenticated() {
+    assertThatThrownBy(() -> fetcher.deactivateAccount())
+        .isInstanceOf(MutationException.class)
+        .hasMessage("Not authenticated");
+  }
+
+  @Test
+  void requestAccountReactivation_sendsEmailForDeactivatedAccount() {
+    UUID accountId = UUID.randomUUID();
+    AccountEntity account = new AccountEntity();
+    account.setId(accountId);
+    account.setProvider("discord");
+    account.setStatus(AccountStatus.DEACTIVATED);
+    when(accountService.findByPersonEmail("user@test.com")).thenReturn(List.of(account));
+    ReactivationTokenEntity token = new ReactivationTokenEntity();
+    token.setToken("reactivation-token");
+    when(reactivationService.createToken(accountId)).thenReturn(token);
+
+    RequestAccountReactivationResponse result =
+        fetcher.requestAccountReactivation("user@test.com", "discord");
+
+    assertThat(result.getMessage()).isEqualTo("Reactivation email sent");
+    verify(emailService).sendReactivationEmail(eq("user@test.com"), contains("reactivation-token"));
+  }
+
+  @Test
+  void requestAccountReactivation_doesNotEmailActiveAccount() {
+    AccountEntity account = new AccountEntity();
+    account.setProvider("discord");
+    account.setStatus(AccountStatus.ACTIVE);
+    when(accountService.findByPersonEmail("active@test.com")).thenReturn(List.of(account));
+
+    RequestAccountReactivationResponse result =
+        fetcher.requestAccountReactivation("active@test.com", "discord");
+
+    assertThat(result.getMessage()).isEqualTo("Reactivation email sent");
+    verify(emailService, never()).sendReactivationEmail(anyString(), anyString());
+    verify(reactivationService, never()).createToken(any());
+  }
+
+  @Test
+  void requestAccountReactivation_picksDeactivatedDiscordAccount() {
+    AccountEntity local = new AccountEntity();
+    local.setId(UUID.randomUUID());
+    local.setProvider("local");
+    local.setStatus(AccountStatus.DEACTIVATED);
+    UUID discordId = UUID.randomUUID();
+    AccountEntity discord = new AccountEntity();
+    discord.setId(discordId);
+    discord.setProvider("discord");
+    discord.setStatus(AccountStatus.DEACTIVATED);
+    when(accountService.findByPersonEmail("shared@test.com"))
+        .thenReturn(List.of(local, discord));
+    ReactivationTokenEntity token = new ReactivationTokenEntity();
+    token.setToken("reactivation-token");
+    when(reactivationService.createToken(discordId)).thenReturn(token);
+
+    RequestAccountReactivationResponse result =
+        fetcher.requestAccountReactivation("shared@test.com", "discord");
+
+    assertThat(result.getMessage()).isEqualTo("Reactivation email sent");
+    verify(reactivationService).createToken(discordId);
+    verify(emailService).sendReactivationEmail(eq("shared@test.com"), contains("reactivation-token"));
+  }
+
+  @Test
+  void requestAccountReactivation_ignoresNonMatchingProvider() {
+    AccountEntity local = new AccountEntity();
+    local.setId(UUID.randomUUID());
+    local.setProvider("local");
+    local.setStatus(AccountStatus.DEACTIVATED);
+    when(accountService.findByPersonEmail("local@test.com")).thenReturn(List.of(local));
+
+    RequestAccountReactivationResponse result =
+        fetcher.requestAccountReactivation("local@test.com", "discord");
+
+    assertThat(result.getMessage()).isEqualTo("Reactivation email sent");
+    verify(emailService, never()).sendReactivationEmail(anyString(), anyString());
+    verify(reactivationService, never()).createToken(any());
+  }
+
+  @Test
+  void confirmAccountReactivation_reactivatesAccount() {
+    UUID accountId = UUID.randomUUID();
+    when(reactivationService.useToken("reactivation-token")).thenReturn(accountId);
+    AccountEntity account = new AccountEntity();
+    account.setId(accountId);
+    account.setStatus(AccountStatus.DEACTIVATED);
+    when(accountService.findById(accountId)).thenReturn(Optional.of(account));
+
+    ConfirmAccountReactivationResponse result =
+        fetcher.confirmAccountReactivation("reactivation-token");
+
+    assertThat(result.getMessage()).isEqualTo("Account reactivated");
+    assertThat(account.getStatus()).isEqualTo(AccountStatus.ACTIVE);
+    verify(accountService).save(account);
+  }
+
+  @Test
+  void confirmAccountReactivation_throwsWhenTokenInvalid() {
+    when(reactivationService.useToken("bad-token"))
+        .thenThrow(new IllegalArgumentException("Invalid reactivation token"));
+
+    assertThatThrownBy(() -> fetcher.confirmAccountReactivation("bad-token"))
+        .isInstanceOf(MutationException.class)
+        .hasMessageContaining("Invalid reactivation token");
+  }
+
+  @Test
+  void me_returnsNullWhenNotAuthenticated() {
+    assertThat(fetcher.me()).isNull();
+  }
+
+  @Test
+  void me_returnsMappedAccountWhenAuthenticated() {
+    UUID userId = UUID.randomUUID();
+    UserContextHolder.setUserId(userId);
+    AccountEntity entity = new AccountEntity();
+    entity.setId(userId);
+    Account mapped = Account.newBuilder().id(userId.toString()).username("test").build();
+    when(accountService.findById(userId)).thenReturn(Optional.of(entity));
+    when(accountMapper.map(entity)).thenReturn(mapped);
 
     Account result = fetcher.me();
 
     assertThat(result).isEqualTo(mapped);
-    verify(service).me();
   }
 
   @Test
-  void account_shouldDelegateToService() {
-    Account mapped = Account.newBuilder().id("id").username("test").build();
-    when(service.account("id")).thenReturn(mapped);
+  void account_returnsNullWhenNotFound() {
+    UUID id = UUID.randomUUID();
+    when(accountService.findById(id)).thenReturn(Optional.empty());
 
-    Account result = fetcher.account("id");
-
-    assertThat(result).isEqualTo(mapped);
-    verify(service).account("id");
+    assertThat(fetcher.account(id.toString())).isNull();
   }
 
   @Test
-  void listAccounts_shouldDelegateToService() {
-    Account a = Account.newBuilder().id("id").username("test").build();
-    when(service.listAccounts()).thenReturn(List.of(a));
+  void account_returnsMappedWhenFound() {
+    UUID id = UUID.randomUUID();
+    AccountEntity entity = new AccountEntity();
+    entity.setId(id);
+    Account mapped = Account.newBuilder().id(id.toString()).username("found").build();
+    when(accountService.findById(id)).thenReturn(Optional.of(entity));
+    when(accountMapper.map(entity)).thenReturn(mapped);
 
-    List<Account> result = fetcher.listAccounts();
-
-    assertThat(result).containsExactly(a);
-    verify(service).listAccounts();
-  }
-
-  @Test
-  void accounts_shouldDelegateToService() {
-    PagedAccounts page = PagedAccounts.newBuilder().items(List.of()).build();
-    PaginationInput pagination = PaginationInput.newBuilder().page(0).size(10).build();
-    when(service.accounts(pagination)).thenReturn(page);
-
-    PagedAccounts result = fetcher.accounts(pagination);
-
-    assertThat(result).isEqualTo(page);
-    verify(service).accounts(pagination);
-  }
-
-  @Test
-  void suspendAccount_shouldDelegateToService() {
-    SuspendAccountResponse mockResult = SuspendAccountResponse.newBuilder()
-        .message("Account suspended")
-        .account(Account.newBuilder().id("id").build())
-        .build();
-    when(service.suspendAccount("id")).thenReturn(mockResult);
-
-    SuspendAccountResponse result = fetcher.suspendAccount("id");
-
-    assertThat(result).isEqualTo(mockResult);
-    verify(service).suspendAccount("id");
-  }
-
-  @Test
-  void unsuspendAccount_shouldDelegateToService() {
-    UnsuspendAccountResponse mockResult = UnsuspendAccountResponse.newBuilder()
-        .message("Account unsuspended")
-        .account(Account.newBuilder().id("id").build())
-        .build();
-    when(service.unsuspendAccount("id")).thenReturn(mockResult);
-
-    UnsuspendAccountResponse result = fetcher.unsuspendAccount("id");
-
-    assertThat(result).isEqualTo(mockResult);
-    verify(service).unsuspendAccount("id");
-  }
-
-  @Test
-  void deactivateAccount_shouldDelegateToService() {
-    DeactivateAccountResponse mockResult = DeactivateAccountResponse.newBuilder()
-        .message("Account deactivated")
-        .build();
-    when(service.deactivateAccount()).thenReturn(mockResult);
-
-    DeactivateAccountResponse result = fetcher.deactivateAccount();
-
-    assertThat(result).isEqualTo(mockResult);
-    verify(service).deactivateAccount();
-  }
-
-  @Test
-  void register_shouldDelegateToService() {
-    RegisterInput input = RegisterInput.newBuilder().username("newuser").password("pass")
-        .firstName("A").lastName("B").email("a@b.com").build();
-    AuthResult mockResult = AuthResult.newBuilder().accountId("id").personId("pid").token("jwt").build();
-    when(service.register(input)).thenReturn(mockResult);
-
-    AuthResult result = fetcher.register(input);
-
-    assertThat(result).isEqualTo(mockResult);
-    verify(service).register(input);
-  }
-
-  @Test
-  void login_shouldDelegateToService() {
-    LoginInput input = LoginInput.newBuilder().username("user").password("pass").build();
-    AuthResult mockResult = AuthResult.newBuilder().accountId("id").personId("pid").token("jwt").build();
-    when(service.login(input)).thenReturn(mockResult);
-
-    AuthResult result = fetcher.login(input);
-
-    assertThat(result).isEqualTo(mockResult);
-    verify(service).login(input);
-  }
-
-  @Test
-  void logout_shouldDelegateToService() {
-    LogoutResponse mockResult = LogoutResponse.newBuilder().message("Logout succeeded").build();
-    when(service.logout()).thenReturn(mockResult);
-
-    LogoutResponse result = fetcher.logout();
-
-    assertThat(result).isEqualTo(mockResult);
-    verify(service).logout();
-  }
-
-  @Test
-  void requestPasswordReset_shouldDelegateToService() {
-    RequestPasswordResetResponse mockResult = RequestPasswordResetResponse.newBuilder()
-        .message("Password reset email sent")
-        .build();
-    when(service.requestPasswordReset("a@b.com")).thenReturn(mockResult);
-
-    RequestPasswordResetResponse result = fetcher.requestPasswordReset("a@b.com");
-
-    assertThat(result).isEqualTo(mockResult);
-    verify(service).requestPasswordReset("a@b.com");
-  }
-
-  @Test
-  void resetPassword_shouldDelegateToService() {
-    ResetPasswordResponse mockResult = ResetPasswordResponse.newBuilder()
-        .message("Password reset succeeded")
-        .build();
-    when(service.resetPassword("token", "newPass")).thenReturn(mockResult);
-
-    ResetPasswordResponse result = fetcher.resetPassword("token", "newPass");
-
-    assertThat(result).isEqualTo(mockResult);
-    verify(service).resetPassword("token", "newPass");
-  }
-
-  @Test
-  void changePassword_shouldDelegateToService() {
-    ChangePasswordResponse mockResult = ChangePasswordResponse.newBuilder()
-        .message("Password changed")
-        .build();
-    when(service.changePassword("old", "new")).thenReturn(mockResult);
-
-    ChangePasswordResponse result = fetcher.changePassword("old", "new");
-
-    assertThat(result).isEqualTo(mockResult);
-    verify(service).changePassword("old", "new");
-  }
-
-  @Test
-  void requestAccountReactivation_shouldDelegateToService() {
-    RequestAccountReactivationResponse mockResult = RequestAccountReactivationResponse.newBuilder()
-        .message("Reactivation email sent")
-        .build();
-    when(service.requestAccountReactivation("a@b.com", "discord")).thenReturn(mockResult);
-
-    RequestAccountReactivationResponse result =
-        fetcher.requestAccountReactivation("a@b.com", "discord");
-
-    assertThat(result).isEqualTo(mockResult);
-    verify(service).requestAccountReactivation("a@b.com", "discord");
-  }
-
-  @Test
-  void confirmAccountReactivation_shouldDelegateToService() {
-    ConfirmAccountReactivationResponse mockResult = ConfirmAccountReactivationResponse.newBuilder()
-        .message("Account reactivated")
-        .build();
-    when(service.confirmAccountReactivation("token")).thenReturn(mockResult);
-
-    ConfirmAccountReactivationResponse result = fetcher.confirmAccountReactivation("token");
-
-    assertThat(result).isEqualTo(mockResult);
-    verify(service).confirmAccountReactivation("token");
+    assertThat(fetcher.account(id.toString())).isEqualTo(mapped);
   }
 }

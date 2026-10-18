@@ -6,8 +6,11 @@ import static org.mockito.Mockito.when;
 
 import com.sun.gaia.codegen.types.ExpireTailscaleDeviceResponse;
 import com.sun.gaia.codegen.types.TailscaleDevice;
-import com.sun.gaia.graphql.services.TailscaleGraphQLService;
+import com.sun.gaia.graphql.mappers.TailscaleDeviceMapper;
+import com.sun.gaia.model.TailscaleDeviceEntity;
+import com.sun.gaia.service.TailscaleDeviceService;
 import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -17,43 +20,66 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class TailscaleDataFetcherTest {
 
-  @Mock private TailscaleGraphQLService service;
+  @Mock private TailscaleDeviceService tailscaleDeviceService;
+  @Mock private TailscaleDeviceMapper tailscaleDeviceMapper;
 
   @InjectMocks private TailscaleDataFetcher fetcher;
 
   @Test
-  void tailscaleDevices_shouldDelegate() {
-    TailscaleDevice d = TailscaleDevice.newBuilder().id("id1").name("node1").build();
-    when(service.tailscaleDevices()).thenReturn(List.of(d));
+  void tailscaleDevices_returnsMappedList() {
+    TailscaleDeviceEntity entity = new TailscaleDeviceEntity();
+    TailscaleDevice mapped = TailscaleDevice.newBuilder().name("device-1").build();
+    when(tailscaleDeviceService.listAll()).thenReturn(List.of(entity));
+    when(tailscaleDeviceMapper.map(List.of(entity))).thenReturn(List.of(mapped));
 
     List<TailscaleDevice> result = fetcher.tailscaleDevices();
 
-    assertThat(result).containsExactly(d);
-    verify(service).tailscaleDevices();
+    assertThat(result).containsExactly(mapped);
+    verify(tailscaleDeviceService).listAll();
   }
 
   @Test
-  void tailscaleDevice_shouldDelegate() {
-    TailscaleDevice d = TailscaleDevice.newBuilder().id("id1").name("node1").build();
-    when(service.tailscaleDevice("id1")).thenReturn(d);
+  void tailscaleDevices_returnsEmptyWhenNone() {
+    when(tailscaleDeviceService.listAll()).thenReturn(List.of());
+    when(tailscaleDeviceMapper.map(List.of())).thenReturn(List.of());
 
-    TailscaleDevice result = fetcher.tailscaleDevice("id1");
-
-    assertThat(result).isEqualTo(d);
-    verify(service).tailscaleDevice("id1");
+    assertThat(fetcher.tailscaleDevices()).isEmpty();
   }
 
   @Test
-  void expireTailscaleDevice_shouldDelegate() {
-    ExpireTailscaleDeviceResponse mock = ExpireTailscaleDeviceResponse.newBuilder()
-        .message("Tailscale device expired")
-        .device(TailscaleDevice.newBuilder().id("id1").name("node1").build())
-        .build();
-    when(service.expireTailscaleDevice("id1")).thenReturn(mock);
+  void tailscaleDevice_returnsMappedWhenFound() {
+    UUID id = UUID.randomUUID();
+    TailscaleDeviceEntity entity = new TailscaleDeviceEntity();
+    TailscaleDevice mapped = TailscaleDevice.newBuilder().id(id.toString()).build();
+    when(tailscaleDeviceService.findById(id)).thenReturn(entity);
+    when(tailscaleDeviceMapper.map(entity)).thenReturn(mapped);
 
-    ExpireTailscaleDeviceResponse result = fetcher.expireTailscaleDevice("id1");
+    TailscaleDevice result = fetcher.tailscaleDevice(id.toString());
 
-    assertThat(result).isEqualTo(mock);
-    verify(service).expireTailscaleDevice("id1");
+    assertThat(result).isEqualTo(mapped);
+  }
+
+  @Test
+  void tailscaleDevice_returnsNullWhenNotFound() {
+    UUID id = UUID.randomUUID();
+    when(tailscaleDeviceService.findById(id)).thenThrow(new IllegalArgumentException("not found"));
+
+    assertThat(fetcher.tailscaleDevice(id.toString())).isNull();
+  }
+
+  @Test
+  void expireTailscaleDevice_returnsResponse() {
+    UUID id = UUID.randomUUID();
+    TailscaleDeviceEntity entity = new TailscaleDeviceEntity();
+    entity.setId(id);
+    TailscaleDevice mapped = TailscaleDevice.newBuilder().id(id.toString()).name("device-1").build();
+    when(tailscaleDeviceService.markExpired(id)).thenReturn(entity);
+    when(tailscaleDeviceMapper.map(entity)).thenReturn(mapped);
+
+    ExpireTailscaleDeviceResponse result = fetcher.expireTailscaleDevice(id.toString());
+
+    assertThat(result.getMessage()).isEqualTo("Tailscale device expired");
+    assertThat(result.getDevice()).isEqualTo(mapped);
+    verify(tailscaleDeviceService).markExpired(id);
   }
 }
