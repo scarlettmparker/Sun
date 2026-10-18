@@ -1,0 +1,42 @@
+{
+  "name": "@sun/analytics",
+  "version": "0.1.0",
+  "description": "Server-side PostHog capture for Sun ecosystem apps",
+  "main": "./dist/client.js",
+  "module": "./dist/client.mjs",
+  "types": "./dist/client.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/client.d.ts",
+      "import": "./dist/client.mjs",
+      "require": "./dist/client.js"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "import": "./dist/client.mjs",
+      "require": "./dist/client.js"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.mjs",
+      "require": "./dist/server.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "publish": "bun publish --registry https://registry.int.scarlettparker.co.uk"
+  },
+  "dependencies": {
+    "posthog-node": "^5.21.2"
+  },
+  "devDependencies": {
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2"
+  },
+  "publishConfig": {
+    "registry": "https://registry.int.scarlettparker.co.uk"
+  }
+}
