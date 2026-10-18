@@ -5,7 +5,7 @@ import { hydratePageData } from "./page-data";
  */
 export interface BootstrapI18n {
   /**
-   * Registers a plugin (e.g. react-i18next).
+   * Registers an i18next plugin.
    */
   use(plugin: unknown): unknown;
   /**
@@ -41,7 +41,7 @@ declare global {
  */
 export async function initClientBootstrap(opts: {
   /**
-   * The app's i18next instance, before or after .use(initReactI18next).
+   * The app's i18next instance.
    */
   i18n: BootstrapI18n;
   /**
