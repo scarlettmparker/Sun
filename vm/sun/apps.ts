@@ -176,6 +176,7 @@ export const MANIFESTS: Record<string, EnvironmentManifest> = {
         dir: ".",
         port: 5178,
         unit: "guided-reader@5178.service",
+        unitPattern: "guided-reader@*.service",
         enabled: true,
       },
     ],
