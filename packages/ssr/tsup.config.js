@@ -12,6 +12,7 @@ export default defineConfig({
     "preact/compat",
     "preact/hooks",
     "preact-render-to-string",
+    "preact-render-to-string/stream-node",
     "@sun/analytics",
     "@sun/utils",
     "posthog-node",

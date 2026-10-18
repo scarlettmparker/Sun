@@ -1,7 +1,9 @@
+import { Writable } from "node:stream";
 import path from "node:path";
 import fs from "node:fs/promises";
 import type { ViteDevServer } from "vite";
 import type { ServerResponse } from "node:http";
+import { getCspNonce } from "./csp-nonce";
 
 /** Default production manifest path, relative to the app's working directory. */
 const DEFAULT_MANIFEST_PATH = "./dist/client/.vite/manifest.json";
@@ -60,16 +62,19 @@ type EntryRender = (options: {
   clientJs: string;
   clientCss: string[];
   isProduction: boolean;
+  nonce?: string;
   frontendMode?: string;
 }) => Promise<{
   statusCode: number;
   headers: Record<string, string>;
-  html: string;
+  prelude: string;
+  postlude: string | (() => string);
+  stream: NodeJS.ReadableStream;
 }>;
 
 /**
  * Loads the app's entry-server render fn, resolves clientJs/clientCss, renders,
- * and writes the HTML to the response.
+ * and pipes the HTML to the response.
  */
 export async function renderApp(
   opts: RenderAppOptions,
@@ -121,13 +126,34 @@ export async function renderApp(
       clientCss,
       isProduction,
       frontendMode: opts.frontendMode,
+      nonce: getCspNonce(),
     });
 
     res.statusCode = rendered.statusCode;
     for (const [key, value] of Object.entries(rendered.headers)) {
       res.setHeader(key, value);
     }
-    res.end(rendered.html);
+    res.write(rendered.prelude);
+
+    // Pipe React's stream into the response; the postlude (closing tags +
+    // cache hydration + client script) is written once the stream ends.
+    const writable = new Writable({
+      write(chunk, _encoding, callback) {
+        res.write(chunk);
+        callback();
+      },
+      final(callback) {
+        const postludeContent =
+          typeof rendered.postlude === "function"
+            ? rendered.postlude()
+            : rendered.postlude;
+        res.write(postludeContent);
+        res.end();
+        callback();
+      },
+    });
+
+    rendered.stream.pipe(writable);
   } catch (e) {
     if (!isProduction && vite) {
       vite.ssrFixStacktrace(e as Error);

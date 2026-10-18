@@ -79,6 +79,7 @@ export async function render(options: {
   clientJs: string;
   clientCss: string[];
   isProduction: boolean;
+  nonce?: string;
   frontendMode?: string;
 }) {
   const matches = matchRoutes(routes, options.url);
@@ -105,6 +106,7 @@ export async function render(options: {
     clientJs: options.clientJs,
     clientCss: options.clientCss,
     isProduction: options.isProduction,
+    nonce: options.nonce,
     frontendMode: options.frontendMode,
   });
 }
