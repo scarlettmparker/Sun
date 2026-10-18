@@ -14,9 +14,9 @@ import {
   clearAuthCookie,
 } from "../src/utils/auth.ts";
 import { seedPageData } from "../src/utils/seed-page-data.ts";
-import { registerHubRoutes } from "../src/server/hub/routes.ts";
+import { registerStatusRoutes } from "../src/server/status/routes.ts";
 
-const PUBLIC_PAGES = new Set(["/login", "/"]);
+const PUBLIC_PAGES = new Set(["/login", "/", "/status"]);
 
 /**
  * Sets up routes for the Fastify application.
@@ -25,7 +25,7 @@ const PUBLIC_PAGES = new Set(["/login", "/"]);
  * @param {object} vite - The Vite dev server instance (optional, only in development).
  */
 export function setupRoutes(app, vite) {
-  registerHubRoutes(app);
+  registerStatusRoutes(app);
 
   app.post("/__login", async (request, reply) => {
     const { username, password } = request.body ?? {};

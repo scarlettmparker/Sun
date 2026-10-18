@@ -4,7 +4,6 @@ import type { RouteMeta } from "@sun/ssr/server";
 import BlogSkeleton from "./_components/blog/skeleton/blog-skeleton";
 import { BlogDetailSkeleton } from "./components/blog/blog-detail/skeletons";
 import { BlogListSkeleton } from "./components/blog/skeletons";
-import HubSkeleton from "./_components/hub/skeleton/hub-skeleton";
 import ProfileSkeleton from "./routes/profile/skeletons";
 import HomeSkeleton from "./components/home/skeletons/home-skeleton";
 import LoginSkeleton from "./routes/login/skeletons/login-skeleton";
@@ -18,7 +17,7 @@ const BlogLayout = lazy(() => import("~/routes/blog"));
 const BlogListPage = lazy(() => import("~/routes/blog/list"));
 const BlogPostPage = lazy(() => import("~/routes/blog/[id]"));
 const CreateBlogPostPage = lazy(() => import("~/routes/blog/create"));
-const HubPage = lazy(() => import("~/routes/hub"));
+const StatusPage = lazy(() => import("~/routes/status"));
 const Login = lazy(() => import("~/routes/login"));
 const Profile = lazy(() => import("~/routes/profile"));
 
@@ -52,9 +51,9 @@ export const routeMeta: Record<string, RouteMeta> = {
     description: "Play and isolate stems.",
     ogImage: "/og-default.png",
   },
-  admin: {
-    title: "Admin | Scarlet Sun",
-    description: "Manage the ecosystem hub.",
+  status: {
+    title: "Status | Scarlet Sun",
+    description: "Live state of the ecosystem.",
     ogImage: "/og-default.png",
   },
   login: {
@@ -146,18 +145,10 @@ export const routes: RouteObject[] = [
     ),
   },
   {
-    path: "hub",
+    path: "status",
     element: (
-      <Suspense fallback={<HubSkeleton />}>
-        <HubPage />
-      </Suspense>
-    ),
-  },
-  {
-    path: "admin",
-    element: (
-      <Suspense fallback={<HubSkeleton />}>
-        <HubPage />
+      <Suspense fallback={null}>
+        <StatusPage />
       </Suspense>
     ),
   },

@@ -5,7 +5,6 @@ declare const base: string;
 declare const backendHost: string;
 declare const backendPort: number;
 declare const manifestPath: string;
-declare const hubAdminToken: string;
 declare const clientId: string;
 declare const clientSecret: string;
 declare const appBaseUrl: string;
@@ -17,7 +16,6 @@ export {
   backendHost,
   backendPort,
   manifestPath,
-  hubAdminToken,
   clientId,
   clientSecret,
   appBaseUrl,

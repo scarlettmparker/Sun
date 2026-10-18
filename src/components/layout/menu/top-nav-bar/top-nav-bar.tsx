@@ -4,7 +4,6 @@ import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@sun/components";
 import { RoleCheck } from "@sun/ssr/react";
-import { Cog6ToothIcon } from "@heroicons/react/24/outline";
 import { cn } from "~/utils/cn";
 import { useNavPortal } from "./nav-portal-context";
 import styles from "./top-nav-bar.module.css";
@@ -13,7 +12,6 @@ const NAV_ITEMS = [
   { labelKey: "home", href: "/", role: null },
   // TODO: sort out permissions
   { labelKey: "blog", href: "/blog", role: "Super Admin" },
-  { labelKey: "hub", href: "/hub", role: "Super Admin" },
   { labelKey: "gallery", href: "/gallery", role: "Super Admin" },
   { labelKey: "stem-player", href: "/stem-player", role: "Super Admin" },
 ] as const;
@@ -65,19 +63,6 @@ const TopNavBar = () => {
           </Suspense>
         );
       })}
-      <Suspense fallback={null}>
-        <RoleCheck roles={["Admin", "Super Admin"]} match="any">
-          <Link to="/admin">
-            <Button
-              variant="secondary"
-              title={t("admin")}
-              aria-label={t("admin")}
-            >
-              <Cog6ToothIcon width={20} height={20} />
-            </Button>
-          </Link>
-        </RoleCheck>
-      </Suspense>
     </nav>
   );
 

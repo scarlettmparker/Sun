@@ -15,7 +15,6 @@ import {
   HadesTextsDocument,
   type HadesTextsQuery,
   type HadesTextsQueryVariables,
-  HubRegistryDocument,
   IngestBlogFromSourceDocument,
   type IngestBlogFromSourceMutation,
   type IngestBlogFromSourceMutationVariables,
@@ -29,16 +28,12 @@ import {
   RemoveRemoteObjectDocument,
   type RemoveRemoteObjectMutation,
   type RemoveRemoteObjectMutationVariables,
-  SaveRegistryDocument,
   WikipediaSummaryDocument,
   type WikipediaSummaryQuery,
   type WikipediaSummaryQueryVariables,
   WiktionaryEntryDocument,
   type WiktionaryEntryQuery,
   type WiktionaryEntryQueryVariables,
-  type HubRegistryInput,
-  type HubRegistryQuery,
-  type SaveRegistryMutation,
 } from "../generated/graphql";
 import { executeDocument } from "@sun/api";
 
@@ -137,20 +132,6 @@ export async function fetchHadesTexts(
       pagination,
     },
   );
-}
-
-/**
- * Fetches the hub registry.
- */
-export async function fetchHubRegistry() {
-  return executeDocument<HubRegistryQuery>(HubRegistryDocument);
-}
-
-/**
- * Persists the hub registry.
- */
-export async function saveHubRegistry(input: HubRegistryInput) {
-  return executeDocument<SaveRegistryMutation>(SaveRegistryDocument, { input });
 }
 
 /**

@@ -55,12 +55,6 @@ export const backendPort = parseInt(process.env.BACKEND_PORT || "443", 10);
 export const manifestPath = "./dist/client/.vite/manifest.json";
 
 /**
- * Token required for hub control mutations. Empty disables the check.
- * @type {string}
- */
-export const hubAdminToken = process.env.HUB_ADMIN_TOKEN || "";
-
-/**
  * Per-app credentials forwarded to the backend as X-Client-Id / X-Client-Secret.
  */
 export const clientId = process.env.CLIENT_ID || "sun";
