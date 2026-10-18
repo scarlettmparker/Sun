@@ -2,8 +2,8 @@ import { Writable } from "node:stream";
 import path from "node:path";
 import fs from "node:fs/promises";
 import type { ViteDevServer } from "vite";
-import type { ServerResponse } from "node:http";
 import { getCspNonce } from "./csp-nonce";
+import type { NodeResponseLike } from "./server-types";
 
 /** Default production manifest path, relative to the app's working directory. */
 const DEFAULT_MANIFEST_PATH = "./dist/client/.vite/manifest.json";
@@ -78,7 +78,7 @@ type EntryRender = (options: {
  */
 export async function renderApp(
   opts: RenderAppOptions,
-  res: ServerResponse,
+  res: NodeResponseLike,
 ): Promise<void> {
   const { vite, isProduction } = opts;
   try {

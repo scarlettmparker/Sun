@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
-import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import { CSRF_COOKIE, CSRF_FIELD, CSRF_HEADER } from "./csrf";
+import type { SunApp, SunReply, SunRequest } from "./server-types";
 
 /**
  * Methods that cannot mutate state, so they skip both gates.
@@ -38,11 +38,11 @@ export interface SecurityConfig {
 /**
  * Checks the request's Origin (or Referer fallback) host against the suffixes.
  *
- * @param request The incoming Fastify request.
+ * @param request The incoming request.
  * @param suffixes Permitted hostname suffixes.
  * @returns True when the host matches an allowed suffix.
  */
-function isOriginAllowed(request: FastifyRequest, suffixes: string[]): boolean {
+function isOriginAllowed(request: SunRequest, suffixes: string[]): boolean {
   const raw = request.headers.origin ?? request.headers.referer;
   if (!raw || typeof raw !== "string") return false;
   let hostname: string;
@@ -103,12 +103,12 @@ function verifyToken(token: string | undefined, secret: string): boolean {
  * Sets a fresh signed CSRF token cookie on the reply. Writes both to the Fastify
  * reply (for handlers that use reply.send) and to the raw response.
  *
- * @param reply The Fastify reply to attach the cookie to.
+ * @param reply The reply to attach the cookie to.
  * @param secret The HMAC key.
  * @param isProduction Adds the Secure attribute when true.
  */
 function issueCsrfCookie(
-  reply: FastifyReply,
+  reply: SunReply,
   secret: string,
   isProduction: boolean,
 ): void {
@@ -129,10 +129,10 @@ function issueCsrfCookie(
 /**
  * Checks whether the request already carries a CSRF cookie.
  *
- * @param request The incoming Fastify request.
+ * @param request The incoming request.
  * @returns True when a CSRF cookie is present.
  */
-function hasCsrfCookie(request: FastifyRequest): boolean {
+function hasCsrfCookie(request: SunRequest): boolean {
   const cookie = request.headers.cookie;
   if (!cookie) return false;
   return cookie
@@ -143,10 +143,10 @@ function hasCsrfCookie(request: FastifyRequest): boolean {
 /**
  * Reads the submitted token from the header, falling back to the form field.
  *
- * @param request The incoming Fastify request.
+ * @param request The incoming request.
  * @returns The token string, or undefined when neither is present.
  */
-function submittedToken(request: FastifyRequest): string | undefined {
+function submittedToken(request: SunRequest): string | undefined {
   const header = request.headers[CSRF_HEADER];
   if (typeof header === "string") return header;
   const field = (request.body as Record<string, unknown> | undefined)?.[
@@ -160,13 +160,10 @@ function submittedToken(request: FastifyRequest): string | undefined {
  * always applies; CSRF issuance and verification run only when a clientSecret is
  * configured.
  *
- * @param app The Fastify instance to secure.
+ * @param app The server to secure.
  * @param config Secret, origin allowlist, and environment flags.
  */
-export function registerSecurity(
-  app: FastifyInstance,
-  config: SecurityConfig,
-): void {
+export function registerSecurity(app: SunApp, config: SecurityConfig): void {
   const suffixes = config.allowedOrigins?.length
     ? config.allowedOrigins
     : DEFAULT_ALLOWED_ORIGINS;

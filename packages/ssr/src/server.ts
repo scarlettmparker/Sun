@@ -1,20 +1,13 @@
 import path from "path";
-import { AsyncLocalStorage } from "node:async_hooks";
 import type { IncomingMessage, ServerResponse } from "node:http";
-import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import type { ViteDevServer } from "vite";
+import type { FastifyInstance } from "fastify";
 import { pageDataRpcHandler } from "./rpc-handler";
 import { mutationRegistry } from "./mutations";
 import { MutationError } from "./mutation-error";
 import { registerSecurity } from "./security";
 import { shutdownAnalytics, trackPageView } from "@sun/analytics/server";
 import { registerIpWhitelist, type IpWhitelistConfig } from "./ip-whitelist";
-import {
-  setRequestCacheProvider,
-  setRequestCookieProvider,
-  setRequestIpProvider,
-} from "./page-data";
-import type { CacheRecord } from "./page-data";
 import {
   buildSecurityHeaders,
   buildHstsHeader,
@@ -23,7 +16,11 @@ import {
   buildCorpHeader,
 } from "@sun/security";
 import { enterCspNonce, getCspNonce } from "./csp-nonce";
-import { globalSingleton } from "./global-state";
+import { enterRequestContext } from "./request-context";
+import { fastifyApp } from "./fastify-adapter";
+import { startBunServer } from "./bun-server";
+import type { SunApp, SunReply, SunRequest } from "./server-types";
+export type { SunApp, SunReply, SunRequest } from "./server-types";
 
 export { handleQuery } from "./query";
 export type { QueryFetchResult } from "./query";
@@ -39,27 +36,6 @@ export type {
 } from "./renderer";
 export { autoDiscoverRegistrations } from "./auto-discover";
 
-/**
- * Per-request page-data cache.
- */
-const requestCacheAls = globalSingleton(
-  "ssr.requestCacheAls",
-  () => new AsyncLocalStorage<Map<string, CacheRecord>>(),
-);
-setRequestCacheProvider(() => requestCacheAls.getStore() ?? null);
-
-const requestCookieAls = globalSingleton(
-  "ssr.requestCookieAls",
-  () => new AsyncLocalStorage<string | undefined>(),
-);
-setRequestCookieProvider(() => requestCookieAls.getStore() ?? undefined);
-
-const requestIpAls = globalSingleton(
-  "ssr.requestIpAls",
-  () => new AsyncLocalStorage<string | undefined>(),
-);
-setRequestIpProvider(() => requestIpAls.getStore() ?? undefined);
-
 type ServerConfig = {
   port: number;
   host: string;
@@ -68,7 +44,7 @@ type ServerConfig = {
   backendHost: string;
   backendPort: number;
   /**
-   * HMAC key for CSRF tokens; when unset CSRF protection is disabled.
+   * HMAC key for CSRF tokens. CSRF protection is disabled when unset.
    */
   clientSecret?: string;
   /**
@@ -80,9 +56,7 @@ type ServerConfig = {
    */
   clientId?: string;
   /**
-   * When set, enables the Fastify-level IP whitelist gate. The whitelist is
-   * fetched from the backend's REST endpoint during boot and refreshed
-   * periodically. Blocked requests receive a 404.
+   * Enables the IP whitelist gate, refreshed from the backend.
    */
   ipWhitelist?: IpWhitelistConfig;
 };
@@ -90,26 +64,25 @@ type ServerConfig = {
 /**
  * Registers the app's SSR catch-all and any app-specific GET routes.
  *
- * @param app  The Fastify instance, already wired with dev/prod middleware.
+ * @param app  The server surface, already wired with dev/prod middleware.
  * @param vite The Vite dev server in development, or undefined in production.
  * @returns    void, or a Promise that resolves once routes are registered.
  */
 type SetupRoutes = (
-  app: FastifyInstance,
+  app: SunApp,
   vite: ViteDevServer | undefined,
 ) => void | Promise<void>;
 
 /**
- * Optional hook for app-specific global middleware or custom routes. Called after
- * the dev/prod middleware but before /__page-data, setupRoutes and the POST /*
- * mutation route, so global hooks apply to every route.
+ * Optional hook for app-specific middleware or custom routes. Runs before the
+ * page-data route, the app routes, and the mutation catch-all.
  *
- * @param app  The Fastify instance.
+ * @param app  The server surface.
  * @param vite The Vite dev server in development, or undefined in production.
  * @returns    void, or a Promise that resolves once configuration is done.
  */
 type ConfigureServer = (
-  app: FastifyInstance,
+  app: SunApp,
   vite: ViteDevServer | undefined,
 ) => void | Promise<void>;
 
@@ -119,11 +92,11 @@ interface CreateServerOptions {
    */
   config: ServerConfig;
   /**
-   * Registers the SSR catch-all (+ any app-specific GET routes).
+   * Registers the SSR catch-all and any app-specific GET routes.
    */
   setupRoutes: SetupRoutes;
   /**
-   * Optional pre-route middleware/custom-route hook (COOP/COEP, download proxy).
+   * Optional pre-route middleware or custom-route hook.
    */
   configure?: ConfigureServer;
   /**
@@ -139,7 +112,7 @@ interface CreateServerOptions {
      */
     authCookie?: string;
     /**
-     * Consent cookie that must read `accepted` before capturing.
+     * Consent cookie that must read accepted before capturing.
      */
     consentCookie?: string;
   };
@@ -148,111 +121,46 @@ interface CreateServerOptions {
 type MiddieHandler = (req: IncomingMessage, res: ServerResponse) => void;
 
 /**
- * Builds and starts the Fastify server with the standard Sun dev/prod middleware,
- * the /__page-data RPC, the app's routes, and the POST /* mutation route.r.
+ * Registers security headers, CSRF, the page-data RPC, analytics, the app
+ * routes, and the mutation catch-all on a server surface.
  *
- * @param options Server config, the app's route setup, and an optional configure hook.
- * @returns       The address string returned by app.listen.
+ * @param app     The server surface.
+ * @param options Server config and app callbacks.
+ * @param vite    The Vite dev server in development.
+ * @returns       A promise that resolves once registration is complete.
  */
-export async function createServer(
+async function registerApp(
+  app: SunApp,
   options: CreateServerOptions,
-): Promise<string> {
+  vite: ViteDevServer | undefined,
+): Promise<void> {
   const { config, setupRoutes, configure } = options;
-  const { default: Fastify } = await import("fastify");
-  const { default: fastifyStatic } = await import("@fastify/static");
 
-  const app: FastifyInstance = Fastify({ logger: false, trustProxy: true });
-  let vite: ViteDevServer | undefined;
+  app.addHook(
+    "onSend",
+    async (request: SunRequest, reply: SunReply, payload) => {
+      const contentType = String(reply.getHeader("content-type") ?? "");
+      const isHtml =
+        contentType.includes("text/html") ||
+        (typeof payload === "string" && payload.includes("<!DOCTYPE html>")) ||
+        request.url === "/" ||
+        request.url.startsWith("/?");
 
-  if (!config.isProduction) {
-    await app.register(fastifyStatic, {
-      root: path.resolve("./public"),
-      prefix: "/",
-      decorateReply: false,
-    });
-    const { default: fastifyMiddie } = await import("@fastify/middie");
-    await app.register(fastifyMiddie);
-    const { createServer: createViteServer } = await import("vite");
-    vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "custom",
-      base: config.base,
-    });
-    app.use(vite.middlewares as unknown as MiddieHandler);
-  } else {
-    // Hashed assets (JS/CSS with content hash) are immutable for 1 year
-    await app.register(fastifyStatic, {
-      root: path.resolve("dist/client/assets"),
-      prefix: "/assets/",
-      decorateReply: false,
-      maxAge: "1y",
-      immutable: true,
-    });
-    // Fonts are also immutable (hashed or stable woff2)
-    await app.register(fastifyStatic, {
-      root: path.resolve("dist/client/fonts"),
-      prefix: "/fonts/",
-      decorateReply: false,
-      maxAge: "1y",
-      immutable: true,
-    });
-    // Everything else in dist/client (favicon, og images, etc.) lasts 1 day
-    await app.register(fastifyStatic, {
-      root: path.resolve("dist/client"),
-      prefix: "/",
-      decorateReply: false,
-      maxAge: "1d",
-      immutable: false,
-      setHeaders(res, filePath) {
-        if (filePath.endsWith(".html")) {
-          res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
+      const nonce = getCspNonce();
+      if (nonce && isHtml) {
+        const headers = buildSecurityHeaders({
+          isProduction: config.isProduction,
+          nonce,
+        });
+        for (const [key, value] of Object.entries(headers)) {
+          if (key === "Content-Security-Policy" && reply.getHeader(key)) {
+            continue;
+          }
+          reply.header(key, value);
         }
-      },
-    });
-    await app.register(fastifyStatic, {
-      root: path.resolve("./messages"),
-      prefix: "/messages/",
-      decorateReply: false,
-      maxAge: "1h",
-    });
-  }
-
-  // Per-request page-data cache. Must run before any route handler so the
-  // AsyncLocalStorage context is active for the whole request (including the
-  // SSR render and its onAllReady callback).
-  app.addHook("onRequest", async (request) => {
-    requestCacheAls.enterWith(new Map());
-    requestCookieAls.enterWith(request.headers.cookie);
-    requestIpAls.enterWith(request.ip);
-    enterCspNonce();
-  });
-
-  // Reusable security headers (HSTS, COOP, CSP via @sun/security). Applied to
-  // every response so a package upgrade fixes all apps without app code changes.
-  // CSP is only set for HTML responses to avoid polluting static assets.
-  app.addHook("onSend", async (request, reply, payload) => {
-    const isHtml = (() => {
-      const ct = String(reply.getHeader("content-type") ?? "");
-      if (ct.includes("text/html")) return true;
-      // Fallback: check payload for HTML doctype when header not yet set (stream)
-      if (typeof payload === "string" && payload.includes("<!DOCTYPE html>")) return true;
-      if (request.url === "/" || request.url.startsWith("/?")) return true;
-      return false;
-    })();
-
-    const nonce = getCspNonce();
-    if (nonce && isHtml) {
-      const headers = buildSecurityHeaders({
-        isProduction: config.isProduction,
-        nonce,
-      });
-      for (const [key, value] of Object.entries(headers)) {
-        // Don't overwrite CSP if already set by renderer (should be same nonce)
-        if (key === "Content-Security-Policy" && reply.getHeader(key)) continue;
-        reply.header(key, value);
+        return;
       }
-    } else if (nonce) {
-      // For non-HTML (JS/CSS/fonts), set only non-CSP headers
+
       if (config.isProduction) {
         reply.header("Strict-Transport-Security", buildHstsHeader());
       }
@@ -262,28 +170,17 @@ export async function createServer(
       reply.header("X-Content-Type-Options", "nosniff");
       reply.header("X-Frame-Options", "DENY");
       reply.header("Referrer-Policy", "strict-origin-when-cross-origin");
-      reply.header("Permissions-Policy", "geolocation=(), camera=(), microphone=(), payment=()");
-    } else {
-      // Fallback for requests where nonce wasn't set (shouldn't happen)
-      if (config.isProduction) {
-        reply.header("Strict-Transport-Security", buildHstsHeader());
-      }
-      reply.header("Cross-Origin-Opener-Policy", buildCoopHeader(false));
-      reply.header("Cross-Origin-Embedder-Policy", buildCoepHeader(true));
-      reply.header("Cross-Origin-Resource-Policy", buildCorpHeader("same-site"));
-      reply.header("X-Content-Type-Options", "nosniff");
-      reply.header("X-Frame-Options", "DENY");
-      reply.header("Referrer-Policy", "strict-origin-when-cross-origin");
-      reply.header("Permissions-Policy", "geolocation=(), camera=(), microphone=(), payment=()");
-    }
-  });
+      reply.header(
+        "Permissions-Policy",
+        "geolocation=(), camera=(), microphone=(), payment=()",
+      );
+    },
+  );
 
   if (configure) {
     await configure(app, vite);
   }
 
-  // Origin gate + signed-token CSRF protection. Runs after body-parser plugins
-  // (formbody) so the preHandler can read the _csrf form field on native posts.
   registerSecurity(app, {
     clientSecret: config.clientSecret,
     allowedOrigins: config.allowedOrigins,
@@ -307,21 +204,67 @@ export async function createServer(
     url: "/*",
     handler: mutationPostHandler(),
   });
+}
 
-  const address = await app.listen({ port: config.port, host: config.host });
+/**
+ * Starts the Fastify development server with Vite middleware.
+ *
+ * @param options Server config and app callbacks.
+ * @returns The bound address.
+ */
+async function startDevServer(
+  options: CreateServerOptions,
+): Promise<string> {
+  const { config } = options;
+  const { default: Fastify } = await import("fastify");
+  const { default: fastifyStatic } = await import("@fastify/static");
+
+  const fastify: FastifyInstance = Fastify({ logger: false, trustProxy: true });
+
+  await fastify.register(fastifyStatic, {
+    root: path.resolve("./public"),
+    prefix: "/",
+    decorateReply: false,
+  });
+
+  const { default: fastifyMiddie } = await import("@fastify/middie");
+  await fastify.register(fastifyMiddie);
+
+  const { createServer: createViteServer } = await import("vite");
+  const vite = await createViteServer({
+    server: { middlewareMode: true },
+    appType: "custom",
+    base: config.base,
+  });
+  fastify.use(vite.middlewares as unknown as MiddieHandler);
+
+  const app = fastifyApp(fastify);
+  app.addHook("onRequest", (request) => {
+    enterRequestContext({ cookie: request.headers.cookie, ip: request.ip });
+    enterCspNonce();
+  });
+
+  await registerApp(app, options, vite);
+
+  const address = await fastify.listen({
+    port: config.port,
+    host: config.host,
+  });
   console.log(`Server started at ${address}`);
 
-  // Graceful shutdown: drain in-flight requests before exiting so a restart
-  // (nodemon SIGUSR2, deploy SIGTERM, Ctrl-C) doesn't truncate responses mid-
-  // stream - which a reverse proxy surfaces as an empty 200 and breaks the
-  // client's page-data RPC for the rest of the session.
   let shuttingDown = false;
+
+  /**
+   * Drains in-flight requests before exiting.
+   *
+   * @param reason The signal that triggered shutdown.
+   * @param done   Optional continuation that runs instead of process exit.
+   */
   const gracefulShutdown = async (reason: string, done?: () => void) => {
     if (shuttingDown) return;
     shuttingDown = true;
-    console.log(`${reason} received, draining in-flight requests…`);
+    console.log(`${reason} received, draining in-flight requests`);
 
-    // Don't let a stuck request hold the restart hostage.
     const force = setTimeout(() => {
       console.error("Force-exiting after shutdown timeout");
       process.exit(1);
@@ -329,7 +272,7 @@ export async function createServer(
     force.unref();
 
     try {
-      await app.close();
+      await fastify.close();
       await shutdownAnalytics();
     } catch (err) {
       console.error("Error during graceful shutdown:", err);
@@ -342,8 +285,6 @@ export async function createServer(
     }
   };
 
-  // nodemon's default restart signal. Drain, then re-raise so nodemon completes
-  // the restart (`.once` keeps the re-raised signal from being caught again).
   process.once("SIGUSR2", () => {
     void gracefulShutdown("SIGUSR2", () =>
       process.kill(process.pid, "SIGUSR2"),
@@ -356,11 +297,60 @@ export async function createServer(
 }
 
 /**
+ * Builds and starts the server. Production runs on Bun.serve, development on
+ * Fastify with Vite middleware.
+ *
+ * @param options Server config, the app's route setup, and an optional configure hook.
+ * @returns       The bound address.
+ */
+export async function createServer(
+  options: CreateServerOptions,
+): Promise<string> {
+  const { config } = options;
+
+  if (!config.isProduction) {
+    return startDevServer(options);
+  }
+
+  const { address, stop } = await startBunServer({
+    port: config.port,
+    host: config.host,
+    register: (app) => registerApp(app, options, undefined),
+  });
+  console.log(`Server started at ${address}`);
+
+  let shuttingDown = false;
+
+  /**
+   * Drains in-flight requests before exiting.
+   */
+  const gracefulShutdown = async () => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+
+    const force = setTimeout(() => process.exit(1), 10_000);
+    force.unref();
+
+    try {
+      await stop();
+      await shutdownAnalytics();
+    } finally {
+      process.exit(0);
+    }
+  };
+
+  process.on("SIGTERM", () => void gracefulShutdown());
+  process.on("SIGINT", () => void gracefulShutdown());
+
+  return address;
+}
+
+/**
  * Builds the POST /__analytics handler. Attributes the beacon's url to the
  * request and forwards it to PostHog.
  *
  * @param config Analytics app name and cookie names.
- * @returns A Fastify POST route handler.
+ * @returns A POST route handler.
  */
 function analyticsBeaconHandler(config: {
   /**
@@ -372,10 +362,13 @@ function analyticsBeaconHandler(config: {
    */
   authCookie?: string;
   /**
-   * Consent cookie that must read `accepted`.
+   * Consent cookie that must read accepted.
    */
   consentCookie?: string;
-}): (request: FastifyRequest, reply: FastifyReply) => Promise<void> {
+}): (request: SunRequest, reply: SunReply) => Promise<void> {
+  /**
+   * Forwards the beacon to PostHog and acknowledges it.
+   */
   return async (request, reply): Promise<void> => {
     const { url } = (request.body as { url?: string } | undefined) ?? {};
     if (url) {
@@ -395,15 +388,18 @@ function analyticsBeaconHandler(config: {
 }
 
 /**
- * Builds the POST /* mutation handler: dispatches to mutationRegistry and sends
- * the handler's typed response, mapping MutationError to its HTTP status.
+ * Builds the POST /* mutation handler. Dispatches to mutationRegistry and maps
+ * MutationError to its HTTP status.
  *
- * @returns A Fastify POST route handler.
+ * @returns A POST route handler.
  */
 export function mutationPostHandler(): (
-  request: FastifyRequest,
-  reply: FastifyReply,
+  request: SunRequest,
+  reply: SunReply,
 ) => Promise<void> {
+  /**
+   * Dispatches the mutation and maps errors to their status.
+   */
   return async (request, reply): Promise<void> => {
     const mutationPath = (request.url || "").split("?")[0].slice(1);
 

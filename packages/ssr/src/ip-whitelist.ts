@@ -5,7 +5,7 @@
  */
 
 import { ipMatchesCidr } from "@sun/utils/cidr";
-import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
+import type { SunApp, SunReply, SunRequest } from "./server-types";
 
 export type IpWhitelistConfig = {
   /**
@@ -25,10 +25,10 @@ export type IpWhitelistConfig = {
 };
 
 /**
- * Registers a Fastify onRequest hook that blocks non-whitelisted IPs.
+ * Registers an onRequest hook that blocks non-whitelisted IPs.
  */
 export function registerIpWhitelist(
-  app: FastifyInstance,
+  app: SunApp,
   config: IpWhitelistConfig,
   clientId?: string,
 ): void {
@@ -59,20 +59,17 @@ export function registerIpWhitelist(
   refreshWhitelist();
   setInterval(refreshWhitelist, config.refreshIntervalMs ?? 60000);
 
-  app.addHook(
-    "onRequest",
-    async (request: FastifyRequest, reply: FastifyReply) => {
-      if (bypass) return;
-      if (!patterns.length) return;
+  app.addHook("onRequest", async (request: SunRequest, reply: SunReply) => {
+    if (bypass) return;
+    if (!patterns.length) return;
 
-      const path = request.url.split("?")[0];
-      if (config.exemptPaths?.some((p) => path.startsWith(p))) return;
+    const path = request.url.split("?")[0];
+    if (config.exemptPaths?.some((p) => path.startsWith(p))) return;
 
-      const ip = request.ip;
-      const allowed = patterns.some((p) => ipMatchesCidr(ip, p));
-      if (!allowed) {
-        reply.code(404).send();
-      }
-    },
-  );
+    const ip = request.ip;
+    const allowed = patterns.some((p) => ipMatchesCidr(ip, p));
+    if (!allowed) {
+      reply.code(404).send();
+    }
+  });
 }
