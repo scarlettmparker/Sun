@@ -2,7 +2,7 @@ import { Suspense, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@sun/components";
-import { ArrowDownTrayIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { ArrowDownTrayOutline, PlusOutline } from "preact-heroicons";
 import BlogList from "~/components/blog/blog-list";
 import BlogTypeContainer from "~/components/blog/blog-type-container";
 import { BlogListSkeleton } from "~/components/blog/skeletons";
@@ -42,7 +42,7 @@ const BlogListPage = () => {
           aria-label={t("ingest.open-label")}
           onClick={() => setIngestOpen(true)}
         >
-          <ArrowDownTrayIcon
+          <ArrowDownTrayOutline
             className={styles.action_icon}
             width={16}
             height={16}
@@ -54,7 +54,7 @@ const BlogListPage = () => {
           aria-label={t("form.create.title")}
           onClick={() => navigate(createHref)}
         >
-          <PlusIcon className={styles.action_icon} width={16} height={16} />
+          <PlusOutline className={styles.action_icon} width={16} height={16} />
           <span>{t("form.create.label")}</span>
         </Button>
       </div>

@@ -1,15 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { usePageData } from "@sun/ssr/react";
 import { Button } from "@sun/components";
-import {
-  BookOpenIcon,
-  DocumentTextIcon,
-  InformationCircleIcon,
-  LightBulbIcon,
-  QuestionMarkCircleIcon,
-  Squares2X2Icon,
-  StarIcon,
-} from "@heroicons/react/24/outline";
+import { BookOpenOutline, DocumentTextOutline, InformationCircleOutline, LightBulbOutline, QuestionMarkCircleOutline, Squares2x2Outline, StarOutline } from "preact-heroicons";
 import type { BlogPostTypesQuery } from "~/generated/graphql";
 import styles from "./blog-type-list.module.css";
 
@@ -51,7 +43,7 @@ const BlogTypeList = (props: BlogTypeListProps) => {
         title={t("filter.all")}
         aria-label={t("filter.all")}
       >
-        <Squares2X2Icon className={styles.type_icon} width={16} height={16} />
+        <Squares2x2Outline className={styles.type_icon} width={16} height={16} />
         <span className={styles.type_name}>{t("filter.all")}</span>
       </Button>
       {(types ?? []).map((postType) => {
@@ -90,17 +82,17 @@ const BlogTypeList = (props: BlogTypeListProps) => {
 function getIconForType(name: string) {
   switch (name) {
     case "KNOWLEDGE":
-      return LightBulbIcon;
+      return LightBulbOutline;
     case "REVIEW":
-      return StarIcon;
+      return StarOutline;
     case "DOCS":
-      return DocumentTextIcon;
+      return DocumentTextOutline;
     case "BOT_FAQ":
-      return QuestionMarkCircleIcon;
+      return QuestionMarkCircleOutline;
     case "BOT_HELP":
-      return InformationCircleIcon;
+      return InformationCircleOutline;
     default:
-      return BookOpenIcon;
+      return BookOpenOutline;
   }
 }
 

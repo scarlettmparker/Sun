@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { usePageData } from "@sun/ssr/react";
 import { makeCacheKey, revalidatePageData } from "@sun/ssr";
 import { Badge, Button } from "@sun/components";
-import { PlusIcon } from "@heroicons/react/24/outline";
+import { PlusOutline } from "preact-heroicons";
 import { attachRemoteObject } from "~/server/actions/blog-post";
 import { CEFR_TO_KEY } from "~/utils/cefr";
 import type { HadesTextsQuery } from "~/generated/graphql";
@@ -98,7 +98,7 @@ const AttachTextPickerItems = (props: AttachTextPickerItemsProps) => {
               disabled={isPending}
               onClick={() => handleAttach(item.id)}
             >
-              <PlusIcon width={16} height={16} />
+              <PlusOutline width={16} height={16} />
             </Button>
           </div>
         );

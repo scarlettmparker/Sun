@@ -1,6 +1,6 @@
 import { memo, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { FileText } from "lucide-react";
+import { FileText } from "lucide-preact";
 import {
   Card,
   CardBody,

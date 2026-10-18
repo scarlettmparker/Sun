@@ -15,12 +15,7 @@ import {
   MarkdownViewer,
   ScrollArea,
 } from "@sun/components";
-import {
-  ArrowDownTrayIcon,
-  EllipsisVerticalIcon,
-  PlusIcon,
-  TrashIcon,
-} from "@heroicons/react/24/outline";
+import { ArrowDownTrayOutline, EllipsisVerticalOutline, PlusOutline, TrashOutline } from "preact-heroicons";
 import type { BlogPost, LocateBlogPostQuery } from "~/generated/graphql";
 import BlogBreadcrumb from "~/components/blog/blog-breadcrumb";
 import KnowledgeGraph from "~/components/knowledge/knowledge-graph";
@@ -89,12 +84,12 @@ const BlogDetail = () => {
                     title={t("detail.delete-title")}
                     aria-label={t("detail.delete-title")}
                   >
-                    <EllipsisVerticalIcon width={16} height={16} />
+                    <EllipsisVerticalOutline width={16} height={16} />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                   <DropdownMenuItem onClick={() => setIngestOpen(true)}>
-                    <ArrowDownTrayIcon
+                    <ArrowDownTrayOutline
                       className={styles.menu_icon}
                       width={16}
                       height={16}
@@ -105,7 +100,7 @@ const BlogDetail = () => {
                     variant="destructive"
                     onClick={() => setDeleteOpen(true)}
                   >
-                    <TrashIcon
+                    <TrashOutline
                       className={styles.menu_icon}
                       width={16}
                       height={16}
@@ -135,7 +130,7 @@ const BlogDetail = () => {
           aria-label={t("detail.create-child.title")}
           onClick={handleCreateChild}
         >
-          <PlusIcon className={styles.action_icon} width={16} height={16} />
+          <PlusOutline className={styles.action_icon} width={16} height={16} />
           <span>{t("form.create.label")}</span>
         </Button>
       </div>

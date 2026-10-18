@@ -4,7 +4,7 @@ import { Outlet } from "react-router-dom";
 import { Sidebar } from "@sun/components";
 import { Button } from "@sun/components";
 import styles from "./stem-player.module.css";
-import { Music } from "lucide-react";
+import { Music } from "lucide-preact";
 
 /**
  * Stem Player Page component.
