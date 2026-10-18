@@ -11,7 +11,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -30,8 +30,8 @@ public class AuditEvent {
   private UUID id;
 
   @CreatedDate
-  @Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "timestamp")
-  private LocalDateTime createdAt;
+  @Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "timestamptz")
+  private Instant createdAt;
 
   @Column(name = "correlation_id", nullable = false, updatable = false)
   private UUID correlationId;
@@ -43,6 +43,18 @@ public class AuditEvent {
   /** Sub-service the operation came from, e.g. HADES. */
   @Column(name = "namespace", updatable = false, columnDefinition = "text")
   private String namespace;
+
+  /**
+   * The caller's name at the time of the action.
+   */
+  @Column(name = "user_name", updatable = false, columnDefinition = "text")
+  private String userName;
+
+  /**
+   * The caller's role names at the time, stored as JSON text.
+   */
+  @Column(name = "user_roles", updatable = false, columnDefinition = "text")
+  private String userRoles;
 
   @Column(name = "event_type", nullable = false, updatable = false, columnDefinition = "text")
   private String eventType;
@@ -86,6 +98,24 @@ public class AuditEvent {
   @Column(name = "payload_redacted", updatable = false, columnDefinition = "text")
   private String payloadRedacted;
 
+  /**
+   * Encrypted envelope for retained sensitive fields.
+   */
+  @Column(name = "payload_encrypted", updatable = false, columnDefinition = "text")
+  private String payloadEncrypted;
+
+  /**
+   * Masked prior entity state for edits, or null.
+   */
+  @Column(name = "payload_before", updatable = false, columnDefinition = "text")
+  private String payloadBefore;
+
+  /**
+   * Encrypted envelope for retained sensitive prior fields.
+   */
+  @Column(name = "payload_before_encrypted", updatable = false, columnDefinition = "text")
+  private String payloadBeforeEncrypted;
+
   @Column(name = "prev_hash", updatable = false, columnDefinition = "text")
   private String prevHash;
 
@@ -100,11 +130,11 @@ public class AuditEvent {
     this.id = id;
   }
 
-  public LocalDateTime getCreatedAt() {
+  public Instant getCreatedAt() {
     return createdAt;
   }
 
-  public void setCreatedAt(LocalDateTime createdAt) {
+  public void setCreatedAt(Instant createdAt) {
     this.createdAt = createdAt;
   }
 
@@ -130,6 +160,22 @@ public class AuditEvent {
 
   public void setNamespace(String namespace) {
     this.namespace = namespace;
+  }
+
+  public String getUserName() {
+    return userName;
+  }
+
+  public void setUserName(String userName) {
+    this.userName = userName;
+  }
+
+  public String getUserRoles() {
+    return userRoles;
+  }
+
+  public void setUserRoles(String userRoles) {
+    this.userRoles = userRoles;
   }
 
   public String getEventType() {
@@ -234,6 +280,30 @@ public class AuditEvent {
 
   public void setPayloadRedacted(String payloadRedacted) {
     this.payloadRedacted = payloadRedacted;
+  }
+
+  public String getPayloadEncrypted() {
+    return payloadEncrypted;
+  }
+
+  public void setPayloadEncrypted(String payloadEncrypted) {
+    this.payloadEncrypted = payloadEncrypted;
+  }
+
+  public String getPayloadBefore() {
+    return payloadBefore;
+  }
+
+  public void setPayloadBefore(String payloadBefore) {
+    this.payloadBefore = payloadBefore;
+  }
+
+  public String getPayloadBeforeEncrypted() {
+    return payloadBeforeEncrypted;
+  }
+
+  public void setPayloadBeforeEncrypted(String payloadBeforeEncrypted) {
+    this.payloadBeforeEncrypted = payloadBeforeEncrypted;
   }
 
   public String getPrevHash() {

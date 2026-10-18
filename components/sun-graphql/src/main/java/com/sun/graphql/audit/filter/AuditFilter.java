@@ -61,8 +61,11 @@ public class AuditFilter extends OncePerRequestFilter {
 
   @Override
   protected boolean shouldNotFilter(HttpServletRequest request) {
-    // Skip CORS preflight; everything else (including failures) is audited.
-    return "OPTIONS".equalsIgnoreCase(request.getMethod());
+    String method = request.getMethod();
+    String path = request.getRequestURI();
+    boolean audited = GRAPHQL_PATH.equalsIgnoreCase(path)
+        || registry.isAuditedEndpoint(method, path);
+    return "OPTIONS".equalsIgnoreCase(method) || !audited;
   }
 
   @Override
@@ -92,20 +95,24 @@ public class AuditFilter extends OncePerRequestFilter {
     } finally {
       try {
         auditContext.setHttpStatus(wrappedResponse.getStatus());
-        ensureOperationRecorded(wrappedRequest);
-        long durationMs = auditContext.getStartedAt() == null
-            ? 0L
-            : Duration.between(auditContext.getStartedAt(), Instant.now()).toMillis();
-        // Copy thread-local state into a snapshot for the async writer (separate thread).
-        AuditRequestSnapshot snapshot = new AuditRequestSnapshot(
-            List.copyOf(auditContext.operations()),
-            auditContext.getCorrelationId(),
-            auditContext.getUserId(),
-            auditContext.getEndpoint(),
-            auditContext.getIpAddress(),
-            auditContext.getUserAgent(),
-            auditContext.getHttpStatus());
-        auditEventService.persist(snapshot, durationMs);
+        if (wrappedResponse.getStatus() != 429) {
+          ensureOperationRecorded(wrappedRequest);
+          long durationMs = auditContext.getStartedAt() == null
+              ? 0L
+              : Duration.between(auditContext.getStartedAt(), Instant.now()).toMillis();
+          // Copy thread-local state into a snapshot for the async writer (separate thread).
+          AuditRequestSnapshot snapshot = new AuditRequestSnapshot(
+              List.copyOf(auditContext.operations()),
+              auditContext.getCorrelationId(),
+              auditContext.getUserId(),
+              auditContext.getUserName(),
+              auditContext.getUserRoles() == null ? List.of() : List.copyOf(auditContext.getUserRoles()),
+              auditContext.getEndpoint(),
+              auditContext.getIpAddress(),
+              auditContext.getUserAgent(),
+              auditContext.getHttpStatus());
+          auditEventService.persist(snapshot, durationMs);
+        }
       } catch (Exception e) {
         // Auditing must not break the response.
         logger.warn("Failed to persist audit event (correlationId={})",
@@ -135,18 +142,18 @@ public class AuditFilter extends OncePerRequestFilter {
       Object variables = parseBody(request.getContentAsByteArray());
       AuditOutcome outcome = outcomeFromStatus(auditContext.getHttpStatus());
       auditContext.addOperation(new AuditContext.AuditOperation(
-          request.getRequestURI(), meta, variables, null, outcome, null));
+          request.getRequestURI(), meta, variables, null, null, outcome, null));
       return;
     }
 
-    if (auditContext.operations().isEmpty()) {
+    if (auditContext.operations().isEmpty() && !auditContext.isPendingExcluded()) {
       // GraphQL request that never reached/passed the instrumentation
       // (parse error, unauthorised). Record a fallback so the attempt is
       // still captured.
       AuditOutcome outcome = outcomeFromStatus(auditContext.getHttpStatus());
       OperationMetadata meta = OperationMetadata.unknown(OperationType.MUTATION, null);
       auditContext.addOperation(new AuditContext.AuditOperation(
-          "unknown", meta, parseBody(request.getContentAsByteArray()), null, outcome, null));
+          "unknown", meta, parseBody(request.getContentAsByteArray()), null, null, outcome, null));
     }
   }
 
@@ -154,14 +161,11 @@ public class AuditFilter extends OncePerRequestFilter {
    * Maps an HTTP status to an audit outcome.
    *
    * @param status the response status code
-   * @return SUCCESS for 2xx, UNAUTHORIZED for 401/403, otherwise FAILURE
+   * @return SUCCESS for 2xx, otherwise FAILURE
    */
   private AuditOutcome outcomeFromStatus(int status) {
     if (status >= 200 && status < 300) {
       return AuditOutcome.SUCCESS;
-    }
-    if (status == 401 || status == 403) {
-      return AuditOutcome.UNAUTHORIZED;
     }
     return AuditOutcome.FAILURE;
   }

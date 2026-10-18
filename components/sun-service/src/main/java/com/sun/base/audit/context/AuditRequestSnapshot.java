@@ -21,6 +21,14 @@ public record AuditRequestSnapshot(
      */
     UUID userId,
     /**
+     * The calling user's name at the time, or null.
+     */
+    String userName,
+    /**
+     * The calling user's role names at the time.
+     */
+    List<String> userRoles,
+    /**
      * The request URI.
      */
     String endpoint,

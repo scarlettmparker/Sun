@@ -4,38 +4,42 @@ import com.sun.base.audit.enums.OperationType;
 import java.util.Set;
 
 /**
- * Audit metadata for a single GraphQL operation or REST endpoint.
+ * Audit metadata for one operation.
  */
 public record OperationMetadata(
     /**
-     * Stable event-type label, e.g. HADES_CREATEANNOTATION.
+     * Event label, e.g. HADES_CREATEANNOTATION.
      */
     String eventType,
     /**
-     * QUERY, MUTATION, or REST.
+     * QUERY, MUTATION or REST.
      */
     OperationType operationType,
     /**
-     * The sub-service the operation came from, e.g. HADES.
+     * Sub-service the operation came from, e.g. HADES.
      */
     String namespace,
     /**
-     * The domain entity acted on, or null when unknown.
+     * Domain entity acted on, or null when unknown.
      */
     String targetEntity,
     /**
-     * Field names to mask in the stored payload.
+     * Field names masked in the stored payload.
      */
-    Set<String> sensitiveFields) {
+    Set<String> sensitiveFields,
+    /**
+     * Field names stripped from the payload and stored encrypted.
+     */
+    Set<String> encryptFields) {
 
   /**
-   * Builds a fallback metadata for unmapped operations or endpoints.
+   * Builds metadata for an operation with no declared entry.
    *
    * @param operationType the operation type
-   * @param targetEntity the target entity, or null
-   * @return unknown-event metadata
+   * @param targetEntity the entity acted on, or null
+   * @return metadata carrying an unknown event label
    */
   public static OperationMetadata unknown(OperationType operationType, String targetEntity) {
-    return new OperationMetadata("UNKNOWN", operationType, null, targetEntity, Set.of());
+    return new OperationMetadata("UNKNOWN", operationType, null, targetEntity, Set.of(), Set.of());
   }
 }

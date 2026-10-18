@@ -3,8 +3,8 @@ package com.sun.graphql.audit.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Audit config: enable toggle and hash-chain key. A blank chain key means an
- * unkeyed chain digest (tamper-detection only, not forgery-resistance).
+ * Audit config. A blank chain key means an unkeyed digest, and a blank
+ * encryption key means redaction-only payloads.
  */
 @ConfigurationProperties(prefix = "audit")
 public record AuditProperties(
@@ -15,10 +15,19 @@ public record AuditProperties(
     /**
      * Hash-chain configuration.
      */
-    Chain chain) {
+    Chain chain,
+    /**
+     * Payload encryption configuration.
+     */
+    Encryption encryption) {
 
   /**
    * Base64-encoded HMAC key used to hash-chain audit rows.
    */
   public record Chain(String key) {}
+
+  /**
+   * Base64-encoded 256-bit AES key used to wrap per-row data keys.
+   */
+  public record Encryption(String kek) {}
 }

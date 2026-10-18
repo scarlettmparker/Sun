@@ -1,0 +1,95 @@
+enum AuditOutcome {
+  SUCCESS
+  FAILURE
+}
+
+enum AuditOperationType {
+  QUERY
+  MUTATION
+  REST
+}
+
+type AuditEvent {
+  id: ID!
+  createdAt: DateTime
+  correlationId: ID
+  userId: ID
+  userName: String
+  userRoles: String
+  namespace: String
+  eventType: String
+  operationName: String
+  operationType: AuditOperationType
+  targetEntity: String
+  targetEntityId: ID
+  outcome: AuditOutcome
+  errorMessage: String
+  endpoint: String
+  ipAddress: String
+  userAgent: String
+  httpStatus: Int
+  durationMs: Long
+  payloadRedacted: String
+  hasEncryptedPayload: Boolean!
+  payloadBefore: String
+  hasEncryptedBeforePayload: Boolean!
+  prevHash: String
+  rowHash: String
+}
+
+type PagedAuditEvents {
+  items: [AuditEvent!]!
+  pageInfo: PageInfo!
+}
+
+type AuditFacetValue {
+  value: String!
+  label: String!
+  count: Long!
+}
+
+type AuditFacets {
+  eventTypes: [AuditFacetValue!]!
+  outcomes: [AuditFacetValue!]!
+  actors: [AuditFacetValue!]!
+  totalCount: Long!
+}
+
+type AuditPage {
+  events: PagedAuditEvents!
+  facets: AuditFacets!
+}
+
+type AuditChainVerification {
+  intact: Boolean!
+  checked: Int!
+  brokenId: ID
+  brokenAt: DateTime
+  keyed: Boolean!
+}
+
+input AuditEventFilterInput {
+  eventType: String
+  eventTypes: [String!]
+  outcome: AuditOutcome
+  outcomes: [AuditOutcome!]
+  userId: ID
+  userIds: [ID!]
+  targetEntity: String
+  targetEntityId: ID
+  namespace: String
+  search: String
+  from: DateTime
+  to: DateTime
+}
+
+extend type Query {
+  auditQueries: AuditQueries!
+}
+
+type AuditQueries {
+  auditPage(pagination: PaginationInput, filter: AuditEventFilterInput): AuditPage!
+  auditEvent(id: ID!): AuditEvent
+  auditEventsByCorrelationId(correlationId: ID!): [AuditEvent!]!
+  verifyAuditChain(namespace: String): AuditChainVerification!
+}

@@ -34,41 +34,46 @@ public class PayloadRedactor {
 
   /**
    * Produces a deep-copied, masked view of the payload. Secrets and sensitive
-   * fields are replaced with a mask. The input is not mutated.
+   * fields are replaced with a mask and remove-fields are stripped. The input
+   * is not mutated.
    *
-   * @param payload the request variables/body to mask
+   * @param payload the request variables or body to mask
    * @param sensitiveFields field names to mask in addition to the deny-list
+   * @param removeFields field names to strip, stored encrypted elsewhere
    * @return a new masked JSON tree
    */
-  public JsonNode redact(Object payload, Set<String> sensitiveFields) {
+  public JsonNode redact(Object payload, Set<String> sensitiveFields, Set<String> removeFields) {
     JsonNode root = mapper.valueToTree(payload);
-    redactInPlace(root, sensitiveFields);
+    redactInPlace(root, sensitiveFields, removeFields);
     return root;
   }
 
-  private void redactInPlace(JsonNode node, Set<String> sensitiveFields) {
+  private void redactInPlace(JsonNode node, Set<String> sensitiveFields, Set<String> removeFields) {
     if (node == null || !node.isObject()) {
       return;
     }
     ObjectNode obj = (ObjectNode) node;
+    for (String field : removeFields) {
+      obj.remove(field);
+    }
     obj.fieldNames().forEachRemaining(name -> {
       if (isSecret(name) || contains(sensitiveFields, name)) {
         obj.set(name, TextNode.valueOf(MASK));
       } else {
         JsonNode child = obj.get(name);
         if (child != null && child.isObject()) {
-          redactInPlace(child, sensitiveFields);
+          redactInPlace(child, sensitiveFields, removeFields);
         } else if (child != null && child.isArray()) {
-          redactArray((ArrayNode) child, sensitiveFields);
+          redactArray((ArrayNode) child, sensitiveFields, removeFields);
         }
       }
     });
   }
 
-  private void redactArray(ArrayNode array, Set<String> sensitiveFields) {
+  private void redactArray(ArrayNode array, Set<String> sensitiveFields, Set<String> removeFields) {
     for (JsonNode element : array) {
       if (element.isObject()) {
-        redactInPlace(element, sensitiveFields);
+        redactInPlace(element, sensitiveFields, removeFields);
       }
     }
   }

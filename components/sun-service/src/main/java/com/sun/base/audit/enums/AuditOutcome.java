@@ -1,19 +1,15 @@
 package com.sun.base.audit.enums;
 
 /**
- * Result of an audited operation.
+ * Outcome of an audited operation.
  */
 public enum AuditOutcome {
   /**
-   * The operation completed successfully.
+   * The operation completed.
    */
   SUCCESS,
   /**
-   * The operation failed or threw.
+   * The operation failed, including requests rejected before business logic.
    */
-  FAILURE,
-  /**
-   * The caller was not permitted to run the operation.
-   */
-  UNAUTHORIZED
+  FAILURE
 }

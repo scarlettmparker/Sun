@@ -21,8 +21,8 @@ import org.springframework.stereotype.Component;
 
 /**
  * GraphQL hook that records one namespaced operation per request. Sun's schema
- * nests operations under a per-service type, so the real operation sits at path
- * level 2 (e.g. {@code mutation { hadesMutations { createAnnotation } }}).
+ * nests operations under a per-service type, so the operation sits at path
+ * level 2, e.g. {@code mutation { hadesMutations { createAnnotation } }}.
  */
 @Component
 public class AuditInstrumentation extends SimpleInstrumentation {
@@ -52,7 +52,7 @@ public class AuditInstrumentation extends SimpleInstrumentation {
       InstrumentationFieldFetchParameters parameters, InstrumentationState state) {
     var env = parameters.getEnvironment();
     var stepInfo = env.getExecutionStepInfo();
-    // Root selection is level 1; the namespaced operation is its child at level 2.
+    // The root selection is level 1 and the namespaced operation is its child.
     if (stepInfo.getPath().getLevel() != 2) {
       return NOOP;
     }
@@ -61,7 +61,8 @@ public class AuditInstrumentation extends SimpleInstrumentation {
     GraphQLObjectType parentObject = (GraphQLObjectType) GraphQLTypeUtil.unwrapAll(parentType);
     String parentTypeName = parentObject.getName();
     String fieldName = stepInfo.getPath().getSegmentName();
-    OperationMetadata metadata = registry.forParentType(parentTypeName, fieldName);
+    OperationMetadata metadata = registry.forOperation(parentTypeName, fieldName);
+    boolean excluded = registry.isExcluded(parentTypeName, fieldName);
     Object variables = sanitizeForJson(env.getArguments());
 
     return new InstrumentationContext<>() {
@@ -72,6 +73,11 @@ public class AuditInstrumentation extends SimpleInstrumentation {
 
       @Override
       public void onCompleted(Object result, Throwable t) {
+        auditContext.setPendingExcluded(excluded);
+        if (excluded) {
+          auditContext.setPendingBeforePayload(null);
+          return;
+        }
         AuditOutcome outcome;
         String errorMessage = null;
         if (t != null) {
@@ -82,7 +88,9 @@ public class AuditInstrumentation extends SimpleInstrumentation {
         }
         UUID targetEntityId = extractId(result);
         auditContext.addOperation(new AuditContext.AuditOperation(
-            fieldName, metadata, variables, targetEntityId, outcome, errorMessage));
+            fieldName, metadata, variables, auditContext.getPendingBeforePayload(),
+            targetEntityId, outcome, errorMessage));
+        auditContext.setPendingBeforePayload(null);
       }
     };
   }

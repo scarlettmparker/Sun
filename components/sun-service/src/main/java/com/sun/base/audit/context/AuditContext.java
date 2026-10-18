@@ -8,8 +8,8 @@ import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 /**
- * Holds the audit data for one request. Shared by the filters and the GraphQL
- * hook via a ThreadLocal; the audit filter clears it once the data is copied off.
+ * Holds the audit data for one request on a ThreadLocal shared by the filters
+ * and the GraphQL hook.
  */
 @Component
 public class AuditContext {
@@ -27,15 +27,19 @@ public class AuditContext {
        */
       OperationMetadata metadata,
       /**
-       * The raw request variables or body.
+       * The request variables or body.
        */
       Object variables,
+      /**
+       * The prior entity state for an edit, or null.
+       */
+      Object beforePayload,
       /**
        * The affected entity id, if known.
        */
       UUID targetEntityId,
       /**
-       * Success, failure, or unauthorized.
+       * Success or failure.
        */
       AuditOutcome outcome,
       /**
@@ -53,6 +57,12 @@ public class AuditContext {
     String userAgent;
     int httpStatus;
     UUID userId;
+    String userName;
+    List<String> userRoles;
+    Object pendingArguments;
+    String pendingField;
+    Object pendingBeforePayload;
+    boolean pendingExcluded;
   }
 
   private final ThreadLocal<AuditState> holder = new ThreadLocal<>();
@@ -71,10 +81,16 @@ public class AuditContext {
     holder.remove();
   }
 
+  /**
+   * Reports whether the current request thread is collecting state.
+   */
+  public boolean isActive() {
+    return holder.get() != null;
+  }
+
   private AuditState state() {
     AuditState s = holder.get();
     if (s == null) {
-      // Defensive: ensure a state exists even if begin() was skipped.
       s = new AuditState();
       holder.set(s);
     }
@@ -82,16 +98,14 @@ public class AuditContext {
   }
 
   /**
-   * Records one GraphQL operation (or synthetic REST operation) for the request.
-   *
-   * @param operation the captured operation
+   * Records one operation for the request.
    */
   public void addOperation(AuditOperation operation) {
     state().operations.add(operation);
   }
 
   /**
-   * @return the operations captured for the current request so far
+   * Returns the operations captured for the request so far.
    */
   public List<AuditOperation> operations() {
     return state().operations;
@@ -159,5 +173,53 @@ public class AuditContext {
 
   public void setUserId(UUID userId) {
     state().userId = userId;
+  }
+
+  public String getUserName() {
+    return state().userName;
+  }
+
+  public void setUserName(String userName) {
+    state().userName = userName;
+  }
+
+  public List<String> getUserRoles() {
+    return state().userRoles;
+  }
+
+  public void setUserRoles(List<String> userRoles) {
+    state().userRoles = userRoles;
+  }
+
+  public Object getPendingArguments() {
+    return state().pendingArguments;
+  }
+
+  public void setPendingArguments(Object arguments) {
+    state().pendingArguments = arguments;
+  }
+
+  public String getPendingField() {
+    return state().pendingField;
+  }
+
+  public void setPendingField(String field) {
+    state().pendingField = field;
+  }
+
+  public Object getPendingBeforePayload() {
+    return state().pendingBeforePayload;
+  }
+
+  public void setPendingBeforePayload(Object beforePayload) {
+    state().pendingBeforePayload = beforePayload;
+  }
+
+  public boolean isPendingExcluded() {
+    return state().pendingExcluded;
+  }
+
+  public void setPendingExcluded(boolean excluded) {
+    state().pendingExcluded = excluded;
   }
 }

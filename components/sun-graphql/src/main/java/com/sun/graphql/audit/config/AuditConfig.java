@@ -1,10 +1,10 @@
 package com.sun.graphql.audit.config;
 
 import java.util.concurrent.ThreadPoolExecutor;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
@@ -13,12 +13,14 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  */
 @Configuration
 @EnableAsync
+@EnableAspectJAutoProxy
 @EnableConfigurationProperties(AuditProperties.class)
-@ConditionalOnProperty(prefix = "audit", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class AuditConfig {
 
   /**
    * Async executor for audit writes.
+   *
+   * @return the audit thread-pool task executor
    */
   @Bean(name = "auditExecutor")
   public ThreadPoolTaskExecutor auditExecutor() {
