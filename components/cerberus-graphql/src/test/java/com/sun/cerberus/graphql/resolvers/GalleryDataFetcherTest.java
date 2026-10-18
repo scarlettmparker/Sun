@@ -9,11 +9,19 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.ArgumentMatchers.any;
+import java.util.Optional;
 
-import com.sun.cerberus.graphql.services.GalleryGraphQLService;
+import com.sun.base.error.MutationException;
+import com.sun.cerberus.graphql.mappers.GalleryItemMapper;
+import com.sun.cerberus.service.CerberusService;
+import com.sun.cerberus.model.GalleryItemEntity;
 import com.sun.cerberus.codegen.types.CreateGalleryItemResponse;
 import com.sun.cerberus.codegen.types.GalleryItem;
 import com.sun.cerberus.codegen.types.GalleryItemInput;
@@ -22,74 +30,90 @@ import com.sun.cerberus.codegen.types.GalleryItemInput;
 class GalleryDataFetcherTest {
 
   @Mock
-  private GalleryGraphQLService galleryGraphQLService;
+  private CerberusService cerberusService;
+
+  @Mock
+  private GalleryItemMapper galleryItemMapper;
 
   @InjectMocks
   private GalleryDataFetcher galleryDataFetcher;
 
-  private List<GalleryItem> mockGalleryItems;
+  private GalleryItemEntity galleryItemEntity1;
+  private GalleryItemEntity galleryItemEntity2;
+  private GalleryItem galleryItem1;
+  private GalleryItem galleryItem2;
 
   @BeforeEach
   void setUp() {
-    GalleryItem galleryItem1 = GalleryItem.newBuilder()
-        .id("1")
-        .title("Test Gallery 1")
+    galleryItemEntity1 = new GalleryItemEntity();
+    galleryItemEntity1.setId(UUID.randomUUID());
+    galleryItemEntity1.setTitle("Test Gallery Item 1");
+    galleryItemEntity1.setDescription("Description 1");
+    galleryItemEntity1.setContent("Content 1");
+    galleryItemEntity1.setImagePath("/path1.jpg");
+    galleryItemEntity1.setRemoteObject(Arrays.asList("id1", "id2"));
+
+    galleryItemEntity2 = new GalleryItemEntity();
+    galleryItemEntity2.setId(UUID.randomUUID());
+    galleryItemEntity2.setTitle("Test Gallery Item 2");
+    galleryItemEntity2.setDescription("Description 2");
+    galleryItemEntity2.setContent("Content 2");
+    galleryItemEntity2.setImagePath("/path2.jpg");
+    galleryItemEntity2.setRemoteObject(Arrays.asList());
+
+    galleryItem1 = GalleryItem.newBuilder()
+        .id(galleryItemEntity1.getId().toString())
+        .title("Test Gallery Item 1")
         .description("Description 1")
         .content("Content 1")
         .imagePath("/path1.jpg")
         .remoteObject(Arrays.asList("id1", "id2"))
         .build();
 
-    GalleryItem galleryItem2 = GalleryItem.newBuilder()
-        .id("2")
-        .title("Test Gallery 2")
+    galleryItem2 = GalleryItem.newBuilder()
+        .id(galleryItemEntity2.getId().toString())
+        .title("Test Gallery Item 2")
         .description("Description 2")
         .content("Content 2")
         .imagePath("/path2.jpg")
-        .remoteObject(Arrays.asList("id3", "id4"))
+        .remoteObject(Arrays.asList())
         .build();
-
-    mockGalleryItems = Arrays.asList(galleryItem1, galleryItem2);
   }
 
   @Test
   void list() {
-    when(galleryGraphQLService.list()).thenReturn(mockGalleryItems);
+    List<GalleryItemEntity> galleryItemEntities = Arrays.asList(galleryItemEntity1, galleryItemEntity2);
+    when(cerberusService.list()).thenReturn(galleryItemEntities);
+    when(galleryItemMapper.map(galleryItemEntity1)).thenReturn(galleryItem1);
+    when(galleryItemMapper.map(galleryItemEntity2)).thenReturn(galleryItem2);
     List<GalleryItem> result = galleryDataFetcher.list();
-    assertThat(result).isEqualTo(mockGalleryItems);
     assertThat(result).hasSize(2);
-
-    // First gallery item
-    assertThat(result.get(0).getTitle()).isEqualTo("Test Gallery 1");
+    assertThat(result.get(0).getTitle()).isEqualTo("Test Gallery Item 1");
     assertThat(result.get(0).getDescription()).isEqualTo("Description 1");
     assertThat(result.get(0).getContent()).isEqualTo("Content 1");
     assertThat(result.get(0).getImagePath()).isEqualTo("/path1.jpg");
     assertThat(result.get(0).getRemoteObject()).containsExactly("id1", "id2");
-
-    // Second gallery item
-    assertThat(result.get(1).getTitle()).isEqualTo("Test Gallery 2");
+    assertThat(result.get(1).getTitle()).isEqualTo("Test Gallery Item 2");
     assertThat(result.get(1).getDescription()).isEqualTo("Description 2");
     assertThat(result.get(1).getContent()).isEqualTo("Content 2");
     assertThat(result.get(1).getImagePath()).isEqualTo("/path2.jpg");
-    assertThat(result.get(1).getRemoteObject()).containsExactly("id3", "id4");
+    assertThat(result.get(1).getRemoteObject()).isEmpty();
+  }
+
+  @Test
+  void list_shouldReturnEmptyListWhenNoItems() {
+    when(cerberusService.list()).thenReturn(Arrays.asList());
+    List<GalleryItem> result = galleryDataFetcher.list();
+    assertThat(result).isEmpty();
   }
 
   @Test
   void locate() {
-    GalleryItem mockGallery = GalleryItem.newBuilder()
-        .id("1")
-        .title("Test Gallery 1")
-        .description("Description 1")
-        .content("Content 1")
-        .imagePath("/path1.jpg")
-        .remoteObject(Arrays.asList("id1", "id2"))
-        .build();
-
-    when(galleryGraphQLService.locate("1")).thenReturn(mockGallery);
-    GalleryItem result = galleryDataFetcher.locate("1");
-    assertThat(result).isEqualTo(mockGallery);
-
-    assertThat(result.getTitle()).isEqualTo("Test Gallery 1");
+    when(cerberusService.locate(galleryItemEntity1.getId()))
+        .thenReturn(Optional.of(galleryItemEntity1));
+    when(galleryItemMapper.map(galleryItemEntity1)).thenReturn(galleryItem1);
+    GalleryItem result = galleryDataFetcher.locate(galleryItemEntity1.getId().toString());
+    assertThat(result.getTitle()).isEqualTo("Test Gallery Item 1");
     assertThat(result.getDescription()).isEqualTo("Description 1");
     assertThat(result.getContent()).isEqualTo("Content 1");
     assertThat(result.getImagePath()).isEqualTo("/path1.jpg");
@@ -97,38 +121,97 @@ class GalleryDataFetcherTest {
   }
 
   @Test
-  void listByRemoteObjects() {
-    List<String> ids = Arrays.asList("id1", "id3");
-    List<GalleryItem> expectedItems = Arrays.asList(mockGalleryItems.get(0)); // Only first item has id1
-
-    when(galleryGraphQLService.listByRemoteObjects(ids)).thenReturn(expectedItems);
-
-    List<GalleryItem> result = galleryDataFetcher.listByRemoteObjects(ids);
-
-    assertThat(result).isEqualTo(expectedItems);
-    assertThat(result).hasSize(1);
-    assertThat(result.get(0).getTitle()).isEqualTo("Test Gallery 1");
-    assertThat(result.get(0).getRemoteObject()).contains("id1");
+  void locate_shouldThrowExceptionWhenItemNotFound() {
+    when(cerberusService.locate(galleryItemEntity1.getId())).thenReturn(Optional.empty());
+    assertThatThrownBy(() -> galleryDataFetcher.locate(galleryItemEntity1.getId().toString()))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessage("Gallery item not found with id: " + galleryItemEntity1.getId().toString());
   }
 
   @Test
-  void create_shouldReturnResponseFromService() {
+  void create() {
     GalleryItemInput input = GalleryItemInput.newBuilder()
-        .title("New Title")
+        .title("New Gallery Item")
         .description("New Description")
-        .content("New content")
+        .content("New Content")
         .imagePath("/newpath.jpg")
         .remoteObject(Arrays.asList("new", "ids"))
         .build();
 
-    CreateGalleryItemResponse mockResult = CreateGalleryItemResponse.newBuilder()
-        .message("ok")
-        .build();
+    GalleryItemEntity galleryItemEntity = new GalleryItemEntity();
+    galleryItemEntity.setTitle("New Gallery Item");
+    galleryItemEntity.setDescription("New Description");
+    galleryItemEntity.setContent("New Content");
+    galleryItemEntity.setImagePath("/newpath.jpg");
+    galleryItemEntity.setRemoteObject(Arrays.asList("new", "ids"));
 
-    when(galleryGraphQLService.create(input)).thenReturn(mockResult);
+    GalleryItemEntity savedEntity = new GalleryItemEntity();
+    savedEntity.setId(UUID.randomUUID());
+    savedEntity.setTitle("New Gallery Item");
+    savedEntity.setDescription("New Description");
+    savedEntity.setContent("New Content");
+    savedEntity.setImagePath("/newpath.jpg");
+    savedEntity.setRemoteObject(Arrays.asList("new", "ids"));
+
+    when(galleryItemMapper.mapInput(input)).thenReturn(galleryItemEntity);
+    when(cerberusService.save(galleryItemEntity)).thenReturn(savedEntity);
+    when(galleryItemMapper.map(savedEntity)).thenReturn(galleryItem1);
 
     CreateGalleryItemResponse result = galleryDataFetcher.create(input);
 
-    assertThat(result).isEqualTo(mockResult);
+    assertThat(result.getMessage()).isEqualTo("Gallery item created successfully");
+    assertThat(result.getItem()).isEqualTo(galleryItem1);
+  }
+
+  @Test
+  void listByRemoteObjects() {
+    List<String> ids = Arrays.asList("id1", "id3");
+    List<GalleryItemEntity> galleryItemEntities = Arrays.asList(galleryItemEntity1); // Only first has id1
+    when(cerberusService.listByRemoteObjects(ids)).thenReturn(galleryItemEntities);
+    when(galleryItemMapper.map(galleryItemEntity1)).thenReturn(galleryItem1);
+
+    List<GalleryItem> result = galleryDataFetcher.listByRemoteObjects(ids);
+
+    assertThat(result).hasSize(1);
+    assertThat(result.get(0).getTitle()).isEqualTo("Test Gallery Item 1");
+    assertThat(result.get(0).getDescription()).isEqualTo("Description 1");
+    assertThat(result.get(0).getContent()).isEqualTo("Content 1");
+    assertThat(result.get(0).getImagePath()).isEqualTo("/path1.jpg");
+    assertThat(result.get(0).getRemoteObject()).containsExactly("id1", "id2");
+  }
+
+  @Test
+  void listByRemoteObjects_shouldReturnEmptyListWhenNoMatches() {
+    List<String> ids = Arrays.asList("nonexistent");
+    when(cerberusService.listByRemoteObjects(ids)).thenReturn(Arrays.asList());
+
+    List<GalleryItem> result = galleryDataFetcher.listByRemoteObjects(ids);
+
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void create_shouldThrowMutationExceptionWhenExceptionOccurs() {
+    GalleryItemInput input = GalleryItemInput.newBuilder()
+        .title("New Gallery Item")
+        .description("New Description")
+        .content("New Content")
+        .imagePath("/newpath.jpg")
+        .remoteObject(Arrays.asList("new", "ids"))
+        .build();
+
+    GalleryItemEntity galleryItemEntity = new GalleryItemEntity();
+    galleryItemEntity.setTitle("New Gallery Item");
+    galleryItemEntity.setDescription("New Description");
+    galleryItemEntity.setContent("New Content");
+    galleryItemEntity.setImagePath("/newpath.jpg");
+    galleryItemEntity.setRemoteObject(Arrays.asList("new", "ids"));
+
+    when(galleryItemMapper.mapInput(input)).thenReturn(galleryItemEntity);
+    doThrow(new RuntimeException("Database error")).when(cerberusService).save(galleryItemEntity);
+
+    assertThatThrownBy(() -> galleryDataFetcher.create(input))
+        .isInstanceOf(MutationException.class)
+        .hasMessageContaining("Failed to create gallery item: Database error");
   }
 }
