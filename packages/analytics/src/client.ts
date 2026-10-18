@@ -1,6 +1,19 @@
+/**
+ * Readable cookie holding the signed CSRF token.
+ */
 const CSRF_COOKIE = "csrf_token";
+
+/**
+ * Header the browser echoes the token back on for the beacon.
+ */
 const CSRF_HEADER = "x-csrf-token";
 
+/**
+ * Reads a named cookie in the browser.
+ *
+ * @param name Cookie name.
+ * @returns The decoded value, or undefined.
+ */
 function readCookie(name: string): string | undefined {
   if (typeof document === "undefined" || !document.cookie) return undefined;
   for (const part of document.cookie.split(/;\s*/)) {

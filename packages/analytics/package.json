@@ -1,6 +1,6 @@
 {
   "name": "@sun/analytics",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Server-side PostHog capture for Sun ecosystem apps",
   "main": "./dist/client.js",
   "module": "./dist/client.mjs",

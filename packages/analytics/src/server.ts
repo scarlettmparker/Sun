@@ -3,9 +3,100 @@ import { PostHog } from "posthog-node";
 
 type EventProperties = Record<string, unknown>;
 
+export type PageViewInput = {
+  /**
+   * App name reported on the event.
+   */
+  app: string;
+  /**
+   * Absolute URL of the rendered page.
+   */
+  url: string;
+  /**
+   * Pathname, when it differs from the url.
+   */
+  path?: string;
+  /**
+   * Account id, when already resolved by the caller.
+   */
+  userId?: string | null;
+  /**
+   * Cookie holding the auth JWT.
+   */
+  authCookie?: string;
+  /**
+   * Raw Cookie header from the request.
+   */
+  cookie?: string;
+  /**
+   * Client ip.
+   */
+  ip?: string;
+  /**
+   * Client user-agent.
+   */
+  userAgent?: string;
+  /**
+   * Referring page.
+   */
+  referrer?: string;
+  /**
+   * Consent cookie that must read `accepted` before capturing.
+   */
+  consentCookie?: string;
+};
+
+export type SignInInput = {
+  /**
+   * App name reported on the event.
+   */
+  app: string;
+  /**
+   * Auth JWT from the login response.
+   */
+  token?: string;
+  /**
+   * Account id, when already decoded.
+   */
+  accountId?: string;
+  /**
+   * Client ip.
+   */
+  ip?: string;
+  /**
+   * Client user-agent.
+   */
+  userAgent?: string;
+};
+
+export type SignOutInput = {
+  /**
+   * App name reported on the event.
+   */
+  app: string;
+  /**
+   * Auth JWT being revoked.
+   */
+  token?: string;
+  /**
+   * Client ip.
+   */
+  ip?: string;
+  /**
+   * Client user-agent.
+   */
+  userAgent?: string;
+};
+
 let client: PostHog | null = null;
 let unavailable = false;
 
+/**
+ * Creates the PostHog client from the environment on first use. Returns null
+ * when no api key is configured.
+ *
+ * @returns The shared client, or null.
+ */
 function getClient(): PostHog | null {
   if (client) return client;
   if (unavailable) return null;
@@ -22,6 +113,13 @@ function getClient(): PostHog | null {
   return client;
 }
 
+/**
+ * Reads a named cookie from a raw Cookie header.
+ *
+ * @param header Raw Cookie header, or undefined.
+ * @param name Cookie name.
+ * @returns The decoded value, or undefined.
+ */
 function readCookie(header: string | undefined, name: string): string | undefined {
   if (!header) return undefined;
   for (const part of header.split(/;\s*/)) {
@@ -55,6 +153,13 @@ export function accountIdFromToken(token: string | undefined): string | null {
   }
 }
 
+/**
+ * Derives a stable anonymous id from the client ip and user-agent.
+ *
+ * @param ip Client ip.
+ * @param userAgent Client user-agent.
+ * @returns A 32-character hex id.
+ */
 function anonymousId(ip: string | undefined, userAgent: string | undefined): string {
   return createHash("sha256")
     .update(`${ip ?? ""}|${userAgent ?? ""}`)
@@ -62,6 +167,14 @@ function anonymousId(ip: string | undefined, userAgent: string | undefined): str
     .slice(0, 32);
 }
 
+/**
+ * Builds the PostHog distinct id, preferring the account id from a JWT.
+ *
+ * @param token Auth JWT, or undefined.
+ * @param ip Client ip.
+ * @param userAgent Client user-agent.
+ * @returns `user:<accountId>` when the token decodes, else `anon:<hash>`.
+ */
 export function distinctIdFor(
   token: string | undefined,
   ip: string | undefined,
@@ -98,19 +211,6 @@ export function identifyUser(
 ): void {
   getClient()?.identify({ distinctId, properties });
 }
-
-export type PageViewInput = {
-  app: string;
-  url: string;
-  path?: string;
-  userId?: string | null;
-  authCookie?: string;
-  cookie?: string;
-  ip?: string;
-  userAgent?: string;
-  referrer?: string;
-  consentCookie?: string;
-};
 
 /**
  * Captures a `$pageview`. Skips when analytics is unconfigured, when the url is
@@ -153,13 +253,7 @@ export function trackPageView(input: PageViewInput): void {
  *
  * @param input App name, auth token, and request details.
  */
-export function trackSignIn(input: {
-  app: string;
-  token?: string;
-  accountId?: string;
-  ip?: string;
-  userAgent?: string;
-}): void {
+export function trackSignIn(input: SignInInput): void {
   const analytics = getClient();
   if (!analytics) return;
   const accountId = input.accountId ?? accountIdFromToken(input.token);
@@ -170,7 +264,11 @@ export function trackSignIn(input: {
     distinctId: `anon:${anonymousId(input.ip, input.userAgent)}`,
     alias: distinctId,
   });
-  analytics.capture({ distinctId, event: "sign_in", properties: { app: input.app } });
+  analytics.capture({
+    distinctId,
+    event: "sign_in",
+    properties: { app: input.app },
+  });
 }
 
 /**
@@ -178,12 +276,7 @@ export function trackSignIn(input: {
  *
  * @param input App name, auth token, and request details.
  */
-export function trackSignOut(input: {
-  app: string;
-  token?: string;
-  ip?: string;
-  userAgent?: string;
-}): void {
+export function trackSignOut(input: SignOutInput): void {
   const analytics = getClient();
   if (!analytics) return;
   analytics.capture({
