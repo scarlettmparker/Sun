@@ -9,6 +9,9 @@ mkdir -p "$BIN_DIR" "$HOME/.config/systemd/user"
 
 install -m 0755 "$SUN_ROOT/vm/sun/sun-notify" "$BIN_DIR/sun-notify"
 
+chmod +x "$SUN_ROOT/vm/sun/sun-dev"
+ln -sfn "$SUN_ROOT/vm/sun/sun-dev" "$BIN_DIR/sun-dev"
+
 units="$("$BUN" "$SUN_ROOT/vm/sun/render-units.ts")"
 systemctl --user daemon-reload
 

@@ -4,7 +4,7 @@
   "description": "",
   "type": "module",
   "scripts": {
-    "dev": "bun --hot --preload ./css-plugin.ts server.js",
+    "dev": "sun-dev sun bun --hot --preload ./css-plugin.ts server.js",
     "build": "bun run build:client && bun run build:server",
     "postbuild": "command -v sun-notify >/dev/null 2>&1 && sun-notify sun || true",
     "build:client": "bunx vite build --ssrManifest --outDir dist/client",

@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+key="${1:-}"
+if [ -z "$key" ] || [ "$#" -lt 2 ]; then
+  echo "usage: sun-dev <key> <command...>" >&2
+  exit 1
+fi
+shift
+
+self="$(readlink -f "${BASH_SOURCE[0]}")"
+sun_root="$(cd "$(dirname "$self")/../.." && pwd)"
+bun_bin="${BUN:-$HOME/.bun/bin/bun}"
+
+read -r port host < <("$bun_bin" -e "
+import { getManifest } from '$sun_root/vm/sun/apps.ts';
+const app = getManifest().apps.find((candidate) => candidate.key === '$key');
+if (!app) { console.error('unknown app: $key'); process.exit(1); }
+console.log(app.port, app.host);
+")
+
+unit="sun-app@$key.service"
+was_active=false
+if systemctl --user is-active --quiet "$unit" 2>/dev/null; then
+  was_active=true
+  systemctl --user stop "$unit" 2>/dev/null || true
+fi
+
+cleanup() {
+  if [ "$was_active" = true ]; then
+    systemctl --user start "$unit" >/dev/null 2>&1 || true
+  fi
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+export SERVER_PORT="$port"
+export VITE_SERVER_BASE="https://$host"
+export ALLOWED_HOSTS=".int.scarlettparker.co.uk,host.docker.internal,localhost"
+unset NODE_ENV
+
+"$@"

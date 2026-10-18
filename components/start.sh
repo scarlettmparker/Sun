@@ -1,2 +1,2 @@
 #! /usr/bin/bash
-gradle :sun-graphql:bootrun --args='--app.bypass-permissions=true'
+./sun-graphql/gradlew -p . :sun-graphql:bootRun --args='--app.bypass-permissions=true'
