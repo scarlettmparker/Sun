@@ -1,5 +1,5 @@
 package com.sun.dionysus.rest;
-
+import com.sun.base.audit.annotation.Audited;
 import com.sun.dionysus.headscale.HeadscaleService;
 import com.sun.dionysus.headscale.HeadscaleService.HeadscaleNode;
 import java.io.ByteArrayOutputStream;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
+import com.sun.base.audit.annotation.NotAudited;
 /**
  * REST endpoints for managing Headscale nodes and generating pre-auth key QR codes.
  */
@@ -35,6 +35,7 @@ public class HeadscaleController {
   /**
    * Lists all Tailscale nodes on the tailnet.
    */
+  @NotAudited(reason = "read endpoint")
   @GetMapping("/nodes")
   public ResponseEntity<List<HeadscaleNode>> listNodes() {
     return ResponseEntity.ok(headscaleService.listNodes());
@@ -43,6 +44,7 @@ public class HeadscaleController {
   /**
    * Returns a single Tailscale node by id.
    */
+  @NotAudited(reason = "read endpoint")
   @GetMapping("/nodes/{id}")
   public ResponseEntity<HeadscaleNode> getNode(@PathVariable long id) {
     return headscaleService.listNodes().stream()
@@ -55,6 +57,7 @@ public class HeadscaleController {
   /**
    * Expires a node, removing it from the tailnet.
    */
+  @Audited(event = "REST_POST")
   @PostMapping("/nodes/{id}/expire")
   public ResponseEntity<Void> expireNode(@PathVariable long id) {
     headscaleService.expireNode(id);
@@ -66,6 +69,7 @@ public class HeadscaleController {
    *
    * @param expiry duration string like "30m", "1h", "6h", "24h".
    */
+  @NotAudited(reason = "read endpoint")
   @GetMapping(value = "/preauth-key", produces = MediaType.IMAGE_PNG_VALUE)
   public ResponseEntity<byte[]> preauthKey(@RequestParam(defaultValue = "1h") String expiry) {
     Duration d = parseExpiry(expiry);

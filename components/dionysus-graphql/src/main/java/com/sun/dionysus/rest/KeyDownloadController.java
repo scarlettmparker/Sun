@@ -1,5 +1,5 @@
 package com.sun.dionysus.rest;
-
+import com.sun.base.audit.annotation.Audited;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +21,7 @@ import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.S3Exception;
-
+import com.sun.base.audit.annotation.NotAudited;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -49,6 +49,7 @@ public class KeyDownloadController {
    * @param key    the object key to download, must not end with '/'
    * @return a streaming response containing the object data or an error status
    */
+  @NotAudited(reason = "read endpoint")
   @GetMapping(path = "/buckets/{bucket}/download", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
   public ResponseEntity<InputStreamResource> downloadKey(
       @PathVariable String bucket,

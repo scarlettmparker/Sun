@@ -1,5 +1,5 @@
 package com.sun.dionysus.rest;
-
+import com.sun.base.audit.annotation.Audited;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -31,7 +31,7 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
-
+import com.sun.base.audit.annotation.NotAudited;
 /**
  * Streams S3 objects inline (for browser viewing / video playback) with
  * full Range header support for seeking. Also handles on-demand MKV
@@ -53,6 +53,7 @@ public class FileViewController {
   /**
    * Streams the object for inline viewing. Supports HTTP Range for seeking.
    */
+  @NotAudited(reason = "read endpoint")
   @GetMapping("/view/{bucket}")
   public ResponseEntity<StreamingResponseBody> viewFile(
       @PathVariable String bucket,
@@ -143,6 +144,7 @@ public class FileViewController {
    *
    * @return 200 on success, 404 if the key is not found, 400 for non-video.
    */
+  @Audited(event = "REST_POST")
   @PostMapping("/transcode/{bucket}")
   public ResponseEntity<String> transcodeFile(
       @PathVariable String bucket,

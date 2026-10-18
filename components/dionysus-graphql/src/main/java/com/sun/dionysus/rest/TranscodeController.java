@@ -1,5 +1,5 @@
 package com.sun.dionysus.rest;
-
+import com.sun.base.audit.annotation.Audited;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
@@ -40,6 +40,7 @@ public class TranscodeController {
    * Transcodes an MKV/AVI file to MP4. Downloads the original from S3,
    * runs ffmpeg, and uploads the MP4 alongside it (key + ".mp4").
    */
+  @Audited(event = "REST_POST")
   @PostMapping("/transcode")
   public ResponseEntity<String> transcode(@RequestBody TranscodeRequest req) {
     String key = req.key();
