@@ -54,7 +54,13 @@ function renderBackend(backend: BackendEntry): string {
   const jar = path.isAbsolute(backend.jar)
     ? backend.jar
     : path.resolve(SUN_ROOT, backend.jar);
-  const exec = [JAVA, "-jar", jar, ...backend.args].join(" ");
+  const exec = [
+    JAVA,
+    ...(backend.jvmArgs ?? []),
+    "-jar",
+    jar,
+    ...backend.args,
+  ].join(" ");
   return [
     "[Unit]",
     "Description=Sun GraphQL Backend",

@@ -57,6 +57,10 @@ export type BackendEntry = {
    */
   jar: string;
   /**
+   * JVM flags, emitted before -jar.
+   */
+  jvmArgs?: string[];
+  /**
    * Extra arguments passed to the jar.
    */
   args: string[];
@@ -92,6 +96,11 @@ export const MANIFESTS: Record<string, EnvironmentManifest> = {
       unit: "sun-backend.service",
       health: "http://localhost:8083/graphql",
       jar: JAR,
+      jvmArgs: [
+        "-Xmx512m",
+        "-XX:MaxMetaspaceSize=256m",
+        "-XX:+ExitOnOutOfMemoryError",
+      ],
       args: ["--app.bypass-permissions=true"],
     },
     apps: [
