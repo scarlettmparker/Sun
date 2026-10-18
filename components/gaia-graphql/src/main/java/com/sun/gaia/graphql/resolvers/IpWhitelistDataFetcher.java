@@ -2,6 +2,7 @@ package com.sun.gaia.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
+import com.sun.base.audit.annotation.Audited;
 import com.sun.gaia.codegen.types.CreateIpWhitelistEntryResponse;
 import com.sun.gaia.codegen.types.DeleteIpWhitelistEntryResponse;
 import com.sun.gaia.codegen.types.IpWhitelistEntry;
@@ -40,6 +41,7 @@ public class IpWhitelistDataFetcher {
    *
    * @return the entries
    */
+  @Audited(event = "IPWHITELISTENTRY_LIST", entity = "IpWhitelistEntry")
   @DgsData(parentType = "GaiaQueries", field = "ipWhitelistEntries")
   @PreAuthorize("@permissions.has('graphql.gaia.ipWhitelistEntries')")
   @Transactional(readOnly = true)
@@ -54,6 +56,7 @@ public class IpWhitelistDataFetcher {
    * @param description optional description
    * @return a success result
    */
+  @Audited(event = "IPWHITELISTENTRY_CREATE", entity = "IpWhitelistEntry")
   @DgsData(parentType = "GaiaMutations", field = "createIpWhitelistEntry")
   @PreAuthorize("@permissions.has('graphql.gaia.createIpWhitelistEntry')")
   @Transactional
@@ -74,6 +77,7 @@ public class IpWhitelistDataFetcher {
    * @param input the updated fields
    * @return a success result
    */
+  @Audited(event = "IPWHITELISTENTRY_UPDATE", entity = "IpWhitelistEntry")
   @DgsData(parentType = "GaiaMutations", field = "updateIpWhitelistEntry")
   @PreAuthorize("@permissions.has('graphql.gaia.updateIpWhitelistEntry')")
   @Transactional
@@ -92,6 +96,7 @@ public class IpWhitelistDataFetcher {
    * @param id the entry id
    * @return a success result
    */
+  @Audited(event = "IPWHITELISTENTRY_DELETE", entity = "IpWhitelistEntry")
   @DgsData(parentType = "GaiaMutations", field = "deleteIpWhitelistEntry")
   @PreAuthorize("@permissions.has('graphql.gaia.deleteIpWhitelistEntry')")
   @Transactional

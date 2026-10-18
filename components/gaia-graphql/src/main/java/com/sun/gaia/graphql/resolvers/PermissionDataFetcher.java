@@ -2,6 +2,7 @@ package com.sun.gaia.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
+import com.sun.base.audit.annotation.Audited;
 import com.sun.gaia.codegen.types.RemoteUserType;
 import com.sun.gaia.codegen.types.SetAccountPermissionsResponse;
 import com.sun.gaia.codegen.types.SetRolePermissionsResponse;
@@ -37,6 +38,7 @@ public class PermissionDataFetcher {
   /**
    * Returns the caller's role key strings, or empty when unauthenticated.
    */
+  @Audited(event = "ROLE_LIST", entity = "Role")
   @DgsData(parentType = "GaiaQueries", field = "myRoles")
   @PreAuthorize("permitAll()")
   @Transactional(readOnly = true)
@@ -49,6 +51,7 @@ public class PermissionDataFetcher {
    /**
     * Returns a remote account's effective permission patterns.
     */
+  @Audited(event = "ACCOUNT_PERMISSIONS", entity = "Account")
   @DgsData(parentType = "GaiaQueries", field = "effectivePermissions")
   @PreAuthorize("@permissions.has('graphql.gaia.effectivePermissions')")
   @Transactional(readOnly = true)
@@ -66,6 +69,7 @@ public class PermissionDataFetcher {
    /**
     * Returns direct permission strings for the account.
     */
+  @Audited(event = "ACCOUNT_PERMISSIONS", entity = "Account")
   @DgsData(parentType = "GaiaQueries", field = "accountPermissions")
   @PreAuthorize("@permissions.has('graphql.gaia.accountPermissions')")
   @Transactional(readOnly = true)
@@ -76,6 +80,7 @@ public class PermissionDataFetcher {
    /**
     * Returns permission strings for the role.
     */
+  @Audited(event = "ROLE_PERMISSIONS", entity = "Role")
   @DgsData(parentType = "GaiaQueries", field = "rolePermissions")
   @PreAuthorize("@permissions.has('graphql.gaia.rolePermissions')")
   @Transactional(readOnly = true)
@@ -86,6 +91,7 @@ public class PermissionDataFetcher {
   /**
    * Lists all distinct permissions.
    */
+  @Audited(event = "PERMISSION_LIST")
   @DgsData(parentType = "GaiaQueries", field = "allPermissions")
   @PreAuthorize("@permissions.has('graphql.gaia.allPermissions')")
   @Transactional(readOnly = true)
@@ -96,6 +102,7 @@ public class PermissionDataFetcher {
    /**
     * Replaces the account's direct permissions with the given set.
     */
+  @Audited(event = "ACCOUNT_SETPERMISSIONS", entity = "Account")
   @DgsData(parentType = "GaiaMutations", field = "setAccountPermissions")
   @PreAuthorize("@permissions.has('graphql.gaia.setAccountPermissions')")
   @Transactional
@@ -112,6 +119,7 @@ public class PermissionDataFetcher {
    /**
     * Replaces a role's permissions with the given set.
     */
+  @Audited(event = "ROLE_SETPERMISSIONS", entity = "Role")
   @DgsData(parentType = "GaiaMutations", field = "setRolePermissions")
   @PreAuthorize("@permissions.has('graphql.gaia.setRolePermissions')")
   @Transactional

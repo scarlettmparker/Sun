@@ -1,5 +1,5 @@
 package com.sun.echo.graphql.resolvers;
-
+import com.sun.base.audit.annotation.Audited;
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
 import com.sun.echo.codegen.types.AttachChecklistObjectResponse;
@@ -36,6 +36,7 @@ public class ChecklistDetailDataFetcher {
    * @param ids the object ids to resolve
    * @return a list of RemoteObjectReference objects
    */
+  @Audited(event = "LOCATEREMOTEOBJECTS", entity = "RemoteObject")
   @DgsData(parentType = "ChecklistQueries", field = "locateRemoteObjects")
   @PreAuthorize("@permissions.has('graphql.echo.locateRemoteObjects')")
   @Transactional(readOnly = true)
@@ -58,6 +59,7 @@ public class ChecklistDetailDataFetcher {
    * @param ownerType an optional owner type hint (ENTRY, TEMPLATE, or ITEM)
    * @return the updated detail id
    */
+  @Audited(event = "ATTACHOBJECT", entity = "Object")
   @DgsData(parentType = "ChecklistMutations", field = "attachObject")
   @PreAuthorize("@permissions.has('graphql.echo.attachObject')")
   @Transactional
@@ -80,6 +82,7 @@ public class ChecklistDetailDataFetcher {
    * @param ownerType an optional owner type hint (ENTRY, TEMPLATE, or ITEM)
    * @return the updated detail id
    */
+  @Audited(event = "DETACHOBJECT", entity = "Object")
   @DgsData(parentType = "ChecklistMutations", field = "detachObject")
   @PreAuthorize("@permissions.has('graphql.echo.detachObject')")
   @Transactional

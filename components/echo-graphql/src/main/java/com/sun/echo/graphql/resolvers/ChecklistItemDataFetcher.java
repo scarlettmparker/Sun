@@ -1,5 +1,5 @@
 package com.sun.echo.graphql.resolvers;
-
+import com.sun.base.audit.annotation.Audited;
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
 import com.sun.echo.codegen.types.ChecklistCategory;
@@ -35,7 +35,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.sun.base.audit.annotation.NotAudited;
 /**
  * Data fetchers for checklist item and category queries and mutations.
  */
@@ -69,6 +69,7 @@ public class ChecklistItemDataFetcher {
    *
    * @return a new ChecklistQueries instance
    */
+  @NotAudited(reason = "namespace root")
   @DgsData(parentType = "Query", field = "checklistQueries")
   public ChecklistQueries getChecklistQueries() {
     return ChecklistQueries.newBuilder().build();
@@ -79,6 +80,7 @@ public class ChecklistItemDataFetcher {
    *
    * @return a new ChecklistMutations instance
    */
+  @NotAudited(reason = "namespace root")
   @DgsData(parentType = "Mutation", field = "checklistMutations")
   public ChecklistMutations getChecklistMutations() {
     return ChecklistMutations.newBuilder().build();
@@ -90,6 +92,7 @@ public class ChecklistItemDataFetcher {
    * @param pagination the pagination and sort input
    * @return a page of ChecklistItem objects
    */
+  @Audited(event = "ITEMS")
   @DgsData(parentType = "ChecklistQueries", field = "items")
   @PreAuthorize("@permissions.has('graphql.echo.items')")
   @Transactional(readOnly = true)
@@ -109,6 +112,7 @@ public class ChecklistItemDataFetcher {
    * @param id the item id
    * @return the ChecklistItem object
    */
+  @Audited(event = "ITEM")
   @DgsData(parentType = "ChecklistQueries", field = "item")
   @PreAuthorize("@permissions.has('graphql.echo.item')")
   @Transactional(readOnly = true)
@@ -122,6 +126,7 @@ public class ChecklistItemDataFetcher {
    * @param id the item id
    * @return the ChecklistDetail object
    */
+  @Audited(event = "ITEMDETAILS")
   @DgsData(parentType = "ChecklistQueries", field = "itemDetails")
   @PreAuthorize("@permissions.has('graphql.echo.itemDetails')")
   @Transactional(readOnly = true)
@@ -134,6 +139,7 @@ public class ChecklistItemDataFetcher {
    *
    * @return a list of ChecklistCategory objects
    */
+  @Audited(event = "LISTCATEGORIES", entity = "Categorie")
   @DgsData(parentType = "ChecklistQueries", field = "listCategories")
   @PreAuthorize("@permissions.has('graphql.echo.listCategories')")
   @Transactional(readOnly = true)
@@ -150,6 +156,7 @@ public class ChecklistItemDataFetcher {
    * @param icon an optional icon name
    * @return the created checklist item
    */
+  @Audited(event = "CREATEITEM", entity = "Item")
   @DgsData(parentType = "ChecklistMutations", field = "createItem")
   @PreAuthorize("@permissions.has('graphql.echo.createItem')")
   @Transactional
@@ -176,6 +183,7 @@ public class ChecklistItemDataFetcher {
    * @param input the item input
    * @return the saved checklist item
    */
+  @Audited(event = "SAVEITEM", entity = "Item")
   @DgsData(parentType = "ChecklistMutations", field = "saveItem")
   @PreAuthorize("@permissions.has('graphql.echo.saveItem')")
   @Transactional
@@ -197,6 +205,7 @@ public class ChecklistItemDataFetcher {
    * @param id the item id
    * @return the retired checklist item
    */
+  @Audited(event = "RETIREITEM", entity = "Item")
   @DgsData(parentType = "ChecklistMutations", field = "retireItem")
   @PreAuthorize("@permissions.has('graphql.echo.retireItem')")
   @Transactional
@@ -217,6 +226,7 @@ public class ChecklistItemDataFetcher {
    * @param description an optional description
    * @return the created checklist category
    */
+  @Audited(event = "CREATECATEGORY", entity = "Category")
   @DgsData(parentType = "ChecklistMutations", field = "createCategory")
   @PreAuthorize("@permissions.has('graphql.echo.createCategory')")
   @Transactional
@@ -239,6 +249,7 @@ public class ChecklistItemDataFetcher {
    * @param input the category input
    * @return the saved checklist category
    */
+  @Audited(event = "SAVECATEGORY", entity = "Category")
   @DgsData(parentType = "ChecklistMutations", field = "saveCategory")
   @PreAuthorize("@permissions.has('graphql.echo.saveCategory')")
   @Transactional

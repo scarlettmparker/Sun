@@ -1,5 +1,5 @@
 package com.sun.narcissus.graphql.resolvers;
-
+import com.sun.base.audit.annotation.Audited;
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
 import com.sun.narcissus.codegen.types.ViewerQueries;
@@ -8,7 +8,7 @@ import com.sun.narcissus.service.VncCredentialsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
-
+import com.sun.base.audit.annotation.NotAudited;
 @DgsComponent
 public class ViewerDataFetcher {
 
@@ -20,11 +20,13 @@ public class ViewerDataFetcher {
     this.credentialsService = credentialsService;
   }
 
+  @NotAudited(reason = "namespace root")
   @DgsData(parentType = "Query", field = "viewerQueries")
   public ViewerQueries getViewerQueries() {
     return ViewerQueries.newBuilder().build();
   }
 
+  @Audited(event = "VNCCREDENTIALS")
   @DgsData(parentType = "ViewerQueries", field = "vncCredentials")
   @PreAuthorize("@permissions.has('graphql.narcissus.vncCredentials')")
   public VncCredentials vncCredentials() {

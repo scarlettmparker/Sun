@@ -3,6 +3,8 @@ package com.sun.hades.graphql.resolvers;
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
 import com.netflix.graphql.dgs.DgsDataFetchingEnvironment;
+import com.sun.base.audit.annotation.Audited;
+import com.sun.base.audit.annotation.NotAudited;
 import com.sun.base.util.FilterSpec;
 import com.sun.base.util.GraphQLSupport;
 import com.sun.gaia.service.UserContextHolder;
@@ -88,6 +90,7 @@ public class ReaderTextDataFetcher {
    *
    * @return a new HadesQueries instance
    */
+  @NotAudited(reason = "namespace root")
   @DgsData(parentType = "Query", field = "hadesQueries")
   public HadesQueries getHadesQueries() {
     return HadesQueries.newBuilder().build();
@@ -98,6 +101,7 @@ public class ReaderTextDataFetcher {
    *
    * @return a new HadesMutations instance
    */
+  @NotAudited(reason = "namespace root")
   @DgsData(parentType = "Mutation", field = "hadesMutations")
   public HadesMutations getHadesMutations() {
     return HadesMutations.newBuilder().build();
@@ -112,6 +116,7 @@ public class ReaderTextDataFetcher {
    * @param pagination the pagination input
    * @return a page of texts
    */
+  @Audited(event = "READERTEXT_LIST", entity = "ReaderText")
   @DgsData(parentType = "HadesQueries", field = "texts")
   @PreAuthorize("@permissions.has('graphql.hades.texts')")
   @Cacheable("texts")
@@ -132,6 +137,7 @@ public class ReaderTextDataFetcher {
    * @param id the text id
    * @return the text
    */
+  @Audited(event = "READERTEXT_VIEW", entity = "ReaderText")
   @DgsData(parentType = "HadesQueries", field = "text")
   @PreAuthorize("@permissions.has('graphql.hades.text')")
   @Transactional(readOnly = true)
@@ -154,6 +160,7 @@ public class ReaderTextDataFetcher {
    * @param env the data-fetching environment, providing the parent ReaderText
    * @return the text content, or null when the parent has no id
    */
+  @NotAudited(reason = "field resolver")
   @DgsData(parentType = "ReaderText", field = "content")
   @PreAuthorize("@permissions.has('graphql.hades.textContent')")
   @Transactional(readOnly = true)
@@ -173,6 +180,7 @@ public class ReaderTextDataFetcher {
    * @param text the text to classify
    * @return the assessment
    */
+  @Audited(event = "READERTEXT_CLASSIFY", entity = "ReaderText")
   @DgsData(parentType = "HadesQueries", field = "classifyTextLevel")
   @PreAuthorize("@permissions.has('graphql.hades.classifyTextLevel')")
   @Transactional(readOnly = true)
@@ -188,6 +196,7 @@ public class ReaderTextDataFetcher {
    * @param dictionary the dictionary to query, defaulting to Greek-English
    * @return the word, or null when the entry does not exist
    */
+  @Audited(event = "WORD_DEFINE")
   @DgsData(parentType = "HadesQueries", field = "defineWord")
   @PreAuthorize("@permissions.has('graphql.hades.defineWord')")
   public Word defineWord(String word, List<WordScope> scope, WordDictionary dictionary) {
@@ -200,6 +209,7 @@ public class ReaderTextDataFetcher {
    * @param id the source id
    * @return the source
    */
+  @Audited(event = "READERSOURCE_VIEW", entity = "ReaderSource")
   @DgsData(parentType = "HadesQueries", field = "source")
   @PreAuthorize("@permissions.has('graphql.hades.source')")
   @Transactional(readOnly = true)
@@ -212,6 +222,7 @@ public class ReaderTextDataFetcher {
    *
    * @return the sources
    */
+  @Audited(event = "READERSOURCE_LIST", entity = "ReaderSource")
   @DgsData(parentType = "HadesQueries", field = "sources")
   @PreAuthorize("@permissions.has('graphql.hades.sources')")
   @Transactional(readOnly = true)
@@ -226,6 +237,7 @@ public class ReaderTextDataFetcher {
    * @param url the source url
    * @return the create-source response
    */
+  @Audited(event = "READERSOURCE_CREATE", entity = "ReaderSource")
   @DgsData(parentType = "HadesMutations", field = "createSource")
   @PreAuthorize("@permissions.has('graphql.hades.createSource')")
   @Transactional
@@ -248,6 +260,7 @@ public class ReaderTextDataFetcher {
    * @param input the text input
    * @return the create-text response
    */
+  @Audited(event = "READERTEXT_CREATE", entity = "ReaderText", sensitiveFields = {"content"})
   @DgsData(parentType = "HadesMutations", field = "createText")
   @PreAuthorize("@permissions.has('graphql.hades.createText')")
   @Transactional
@@ -268,6 +281,7 @@ public class ReaderTextDataFetcher {
    * @param id the text id
    * @return the archive-text response
    */
+  @Audited(event = "READERTEXT_ARCHIVE", entity = "ReaderText")
   @DgsData(parentType = "HadesMutations", field = "archiveText")
   @PreAuthorize("@permissions.has('graphql.hades.archiveText')")
   @Transactional
@@ -290,6 +304,7 @@ public class ReaderTextDataFetcher {
    * @param textId the text id
    * @return the mark-viewed response
    */
+  @Audited(event = "TEXTVIEW_MARK", entity = "TextView")
   @DgsData(parentType = "HadesMutations", field = "markViewed")
   @PreAuthorize("@permissions.has('graphql.hades.markViewed')")
   @Transactional
@@ -308,6 +323,7 @@ public class ReaderTextDataFetcher {
    * @param pagination the pagination
    * @return a page of views
    */
+  @Audited(event = "TEXTVIEW_LIST", entity = "TextView")
   @DgsData(parentType = "HadesQueries", field = "viewedTexts")
   @PreAuthorize("@permissions.has('graphql.hades.viewedTexts')")
   @Transactional(readOnly = true)
@@ -331,6 +347,7 @@ public class ReaderTextDataFetcher {
    * @param pagination the pagination
    * @return a page of texts
    */
+  @Audited(event = "READERTEXT_LISTVIEWED", entity = "ReaderText")
   @DgsData(parentType = "HadesQueries", field = "viewedReaderTexts")
   @PreAuthorize("@permissions.has('graphql.hades.viewedReaderTexts')")
   @Transactional(readOnly = true)
@@ -366,6 +383,7 @@ public class ReaderTextDataFetcher {
    * @param ids the text ids
    * @return the texts
    */
+  @Audited(event = "READERTEXT_LOCATE", entity = "ReaderText")
   @DgsData(parentType = "HadesQueries", field = "locateReaderTexts")
   @PreAuthorize("@permissions.has('graphql.hades.locateReaderTexts')")
   @Transactional(readOnly = true)

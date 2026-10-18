@@ -1,5 +1,5 @@
 package com.sun.echo.graphql.resolvers;
-
+import com.sun.base.audit.annotation.Audited;
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
 import com.sun.echo.codegen.types.AddTemplateItemResponse;
@@ -67,6 +67,7 @@ public class ChecklistTemplateDataFetcher {
    * @param id the template id
    * @return the ChecklistTemplate object
    */
+  @Audited(event = "TEMPLATE")
   @DgsData(parentType = "ChecklistQueries", field = "template")
   @PreAuthorize("@permissions.has('graphql.echo.template')")
   @Transactional(readOnly = true)
@@ -80,6 +81,7 @@ public class ChecklistTemplateDataFetcher {
    * @param id the template id
    * @return the ChecklistDetail object
    */
+  @Audited(event = "TEMPLATEDETAILS")
   @DgsData(parentType = "ChecklistQueries", field = "templateDetails")
   @PreAuthorize("@permissions.has('graphql.echo.templateDetails')")
   @Transactional(readOnly = true)
@@ -92,6 +94,7 @@ public class ChecklistTemplateDataFetcher {
    *
    * @return a list of ChecklistTemplate objects
    */
+  @Audited(event = "LISTTEMPLATES", entity = "Template")
   @DgsData(parentType = "ChecklistQueries", field = "listTemplates")
   @PreAuthorize("@permissions.has('graphql.echo.listTemplates')")
   @Transactional(readOnly = true)
@@ -106,6 +109,7 @@ public class ChecklistTemplateDataFetcher {
    * @param pagination the pagination and sort input
    * @return a page of ChecklistTemplateItem objects
    */
+  @Audited(event = "TEMPLATEITEMS")
   @DgsData(parentType = "ChecklistQueries", field = "templateItems")
   @PreAuthorize("@permissions.has('graphql.echo.templateItems')")
   @Transactional(readOnly = true)
@@ -128,6 +132,7 @@ public class ChecklistTemplateDataFetcher {
    * @param itemIds optional item ids to seed
    * @return the created checklist template
    */
+  @Audited(event = "CREATETEMPLATE", entity = "Template")
   @DgsData(parentType = "ChecklistMutations", field = "createTemplate")
   @PreAuthorize("@permissions.has('graphql.echo.createTemplate')")
   @Transactional
@@ -154,6 +159,7 @@ public class ChecklistTemplateDataFetcher {
    * @param input the template input
    * @return the saved checklist template
    */
+  @Audited(event = "SAVETEMPLATE", entity = "Template")
   @DgsData(parentType = "ChecklistMutations", field = "saveTemplate")
   @PreAuthorize("@permissions.has('graphql.echo.saveTemplate')")
   @Transactional
@@ -175,6 +181,7 @@ public class ChecklistTemplateDataFetcher {
    * @param id the template id
    * @return the archived checklist template
    */
+  @Audited(event = "ARCHIVETEMPLATE", entity = "Template")
   @DgsData(parentType = "ChecklistMutations", field = "archiveTemplate")
   @PreAuthorize("@permissions.has('graphql.echo.archiveTemplate')")
   @Transactional
@@ -196,6 +203,7 @@ public class ChecklistTemplateDataFetcher {
    * @param position an optional explicit position
    * @return the updated checklist template
    */
+  @Audited(event = "ADDTEMPLATEITEM", entity = "TemplateItem")
   @DgsData(parentType = "ChecklistMutations", field = "addTemplateItem")
   @PreAuthorize("@permissions.has('graphql.echo.addTemplateItem')")
   @Transactional
@@ -217,6 +225,7 @@ public class ChecklistTemplateDataFetcher {
    * @param itemId the item id
    * @return the updated checklist template
    */
+  @Audited(event = "REMOVETEMPLATEITEM", entity = "TemplateItem")
   @DgsData(parentType = "ChecklistMutations", field = "removeTemplateItem")
   @PreAuthorize("@permissions.has('graphql.echo.removeTemplateItem')")
   @Transactional

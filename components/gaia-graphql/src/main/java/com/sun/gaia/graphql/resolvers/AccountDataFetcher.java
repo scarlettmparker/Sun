@@ -3,6 +3,7 @@ package com.sun.gaia.graphql.resolvers;
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
 import com.netflix.graphql.dgs.DgsEnableDataFetcherInstrumentation;
+import com.sun.base.audit.annotation.Audited;
 import com.sun.base.error.MutationException;
 import com.sun.base.util.FilterBuilder;
 import com.sun.base.util.FilterSpec;
@@ -95,6 +96,7 @@ public class AccountDataFetcher {
    *
    * @return the Account object, or null if not authenticated
    */
+  @Audited(event = "ACCOUNT_VIEW", entity = "Account")
   @DgsData(parentType = "GaiaQueries", field = "me")
   @PreAuthorize("@permissions.isAuthenticated()")
   @Transactional(readOnly = true)
@@ -114,6 +116,7 @@ public class AccountDataFetcher {
    * @param id the account id
    * @return the Account object
    */
+  @Audited(event = "ACCOUNT_VIEW", entity = "Account")
   @DgsData(parentType = "GaiaQueries", field = "account")
   @PreAuthorize("@permissions.has('graphql.gaia.account')")
   @Transactional(readOnly = true)
@@ -128,6 +131,7 @@ public class AccountDataFetcher {
    *
    * @return a list of Account objects
    */
+  @Audited(event = "ACCOUNT_LIST", entity = "Account")
   @DgsData(parentType = "GaiaQueries", field = "listAccounts")
   @PreAuthorize("@permissions.has('graphql.gaia.listAccounts')")
   @Transactional(readOnly = true)
@@ -140,6 +144,7 @@ public class AccountDataFetcher {
   /**
    * Looks up every account across the system, paginated.
    */
+  @Audited(event = "ACCOUNT_LIST", entity = "Account")
   @DgsData(parentType = "GaiaQueries", field = "accounts")
   @PreAuthorize("@permissions.has('graphql.gaia.accounts')")
   @Cacheable("accounts")
@@ -165,6 +170,7 @@ public class AccountDataFetcher {
   /**
    * Suspends an account, revoking all active sessions.
    */
+  @Audited(event = "ACCOUNT_SUSPEND", entity = "Account")
   @DgsData(parentType = "GaiaMutations", field = "suspendAccount")
   @PreAuthorize("@permissions.has('graphql.gaia.suspendAccount')")
   @Transactional
@@ -188,6 +194,7 @@ public class AccountDataFetcher {
   /**
    * Re-activates a suspended account.
    */
+  @Audited(event = "ACCOUNT_UNSUSPEND", entity = "Account")
   @DgsData(parentType = "GaiaMutations", field = "unsuspendAccount")
   @PreAuthorize("@permissions.has('graphql.gaia.unsuspendAccount')")
   @Transactional
@@ -206,6 +213,7 @@ public class AccountDataFetcher {
   /**
    * Deactivates the calling account.
    */
+  @Audited(event = "ACCOUNT_DEACTIVATE", entity = "Account")
   @DgsData(parentType = "GaiaMutations", field = "deactivateAccount")
   @PreAuthorize("@permissions.isAuthenticated()")
   @Transactional
@@ -240,6 +248,8 @@ public class AccountDataFetcher {
    * @param input the registration input
    * @return the auth result with JWT token
    */
+  @Audited(event = "ACCOUNT_REGISTER", entity = "Account",
+      sensitiveFields = {"email", "firstName", "lastName"})
   @DgsData(parentType = "GaiaMutations", field = "register")
   @PreAuthorize("permitAll()")
   @DgsEnableDataFetcherInstrumentation(false)
@@ -275,6 +285,7 @@ public class AccountDataFetcher {
    * @param input the login input
    * @return the auth result with JWT token
    */
+  @Audited(event = "ACCOUNT_LOGIN", entity = "Account")
   @DgsData(parentType = "GaiaMutations", field = "login")
   @PreAuthorize("permitAll()")
   @DgsEnableDataFetcherInstrumentation(false)
@@ -301,6 +312,7 @@ public class AccountDataFetcher {
    *
    * @return the result of the logout operation
    */
+  @Audited(event = "ACCOUNT_LOGOUT", entity = "Account")
   @DgsData(parentType = "GaiaMutations", field = "logout")
   @PreAuthorize("@permissions.isAuthenticated()")
   public LogoutResponse logout() {
@@ -328,6 +340,7 @@ public class AccountDataFetcher {
    * @param email the email to send the reset link to
    * @return the result of the request
    */
+  @Audited(event = "ACCOUNT_REQUESTPASSWORDRESET", entity = "Account")
   @DgsData(parentType = "GaiaMutations", field = "requestPasswordReset")
   @PreAuthorize("permitAll()")
   @DgsEnableDataFetcherInstrumentation(false)
@@ -359,6 +372,7 @@ public class AccountDataFetcher {
    * @param newPassword the new password
    * @return the result of the reset operation
    */
+  @Audited(event = "ACCOUNT_RESETPASSWORD", entity = "Account")
   @DgsData(parentType = "GaiaMutations", field = "resetPassword")
   @PreAuthorize("permitAll()")
   @DgsEnableDataFetcherInstrumentation(false)
@@ -378,6 +392,7 @@ public class AccountDataFetcher {
    * @param newPassword the new password
    * @return the result of the change operation
    */
+  @Audited(event = "ACCOUNT_CHANGEPASSWORD", entity = "Account")
   @DgsData(parentType = "GaiaMutations", field = "changePassword")
   @PreAuthorize("@permissions.isAuthenticated()")
   @Transactional
@@ -403,6 +418,7 @@ public class AccountDataFetcher {
   /**
    * Emails a reactivation link to a deactivated account of the given provider.
    */
+  @Audited(event = "ACCOUNT_REQUESTREACTIVATION", entity = "Account")
   @DgsData(parentType = "GaiaMutations", field = "requestAccountReactivation")
   @PreAuthorize("permitAll()")
   @DgsEnableDataFetcherInstrumentation(false)
@@ -432,6 +448,7 @@ public class AccountDataFetcher {
   /**
    * Reactivates an account using a confirmation token.
    */
+  @Audited(event = "ACCOUNT_CONFIRMREACTIVATION", entity = "Account")
   @DgsData(parentType = "GaiaMutations", field = "confirmAccountReactivation")
   @PreAuthorize("permitAll()")
   @DgsEnableDataFetcherInstrumentation(false)

@@ -2,6 +2,7 @@ package com.sun.hades.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
+import com.sun.base.audit.annotation.Audited;
 import com.sun.hades.codegen.types.CreatePrivateNoteResponse;
 import com.sun.hades.codegen.types.DeletePrivateNoteResponse;
 import com.sun.hades.codegen.types.PagedPrivateNotes;
@@ -58,6 +59,7 @@ public class PrivateNoteDataFetcher {
    * @param pagination the page request
    * @return the paged private notes
    */
+  @Audited(event = "PRIVATENOTE_LIST", entity = "PrivateNote")
   @DgsData(parentType = "HadesQueries", field = "privateNotes")
   @PreAuthorize("@permissions.has('graphql.hades.privateNotes')")
   @Transactional(readOnly = true)
@@ -85,6 +87,7 @@ public class PrivateNoteDataFetcher {
    * @param input the private note input
    * @return the create-private-note response
    */
+  @Audited(event = "PRIVATENOTE_CREATE", entity = "PrivateNote", sensitiveFields = {"body"})
   @DgsData(parentType = "HadesMutations", field = "createPrivateNote")
   @PreAuthorize("@permissions.has('graphql.hades.createPrivateNote')")
   @Transactional
@@ -109,6 +112,7 @@ public class PrivateNoteDataFetcher {
    * @param id the note id
    * @return the delete-private-note response
    */
+  @Audited(event = "PRIVATENOTE_DELETE", entity = "PrivateNote")
   @DgsData(parentType = "HadesMutations", field = "deletePrivateNote")
   @PreAuthorize("@permissions.has('graphql.hades.deletePrivateNote')")
   @Transactional
@@ -127,6 +131,7 @@ public class PrivateNoteDataFetcher {
    * @param input the share input
    * @return the share-notes response
    */
+  @Audited(event = "PRIVATENOTE_SHARE", entity = "PrivateNote")
   @DgsData(parentType = "HadesMutations", field = "shareNotes")
   @PreAuthorize("@permissions.has('graphql.hades.shareNotes')")
   @Transactional

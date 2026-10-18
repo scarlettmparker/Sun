@@ -2,6 +2,7 @@ package com.sun.hades.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
+import com.sun.base.audit.annotation.Audited;
 import com.sun.gaia.model.AccountEntity;
 import com.sun.gaia.model.enums.AccountStatus;
 import com.sun.gaia.model.enums.AccountType;
@@ -74,6 +75,7 @@ public class ReaderAccountDataFetcher {
    *
    * @return the reader account
    */
+  @Audited(event = "READERACCOUNT_VIEW", entity = "ReaderAccount")
   @DgsData(parentType = "HadesQueries", field = "readerAccount")
   @PreAuthorize("permitAll()")
   @Transactional(readOnly = true)
@@ -91,6 +93,7 @@ public class ReaderAccountDataFetcher {
    * @param remoteUsers the remote-user references
    * @return the matching reader accounts
    */
+  @Audited(event = "READERACCOUNT_LIST", entity = "ReaderAccount")
   @DgsData(parentType = "HadesQueries", field = "readerAccounts")
   @PreAuthorize("@permissions.has('graphql.hades.readerAccounts')")
   @Transactional(readOnly = true)
@@ -114,6 +117,7 @@ public class ReaderAccountDataFetcher {
    * @param pagination the page request
    * @return the matching reader accounts
    */
+  @Audited(event = "READERACCOUNT_SEARCH", entity = "ReaderAccount")
   @DgsData(parentType = "HadesQueries", field = "searchReaderAccounts")
   @PreAuthorize("@permissions.has('graphql.hades.searchReaderAccounts')")
   @Transactional(readOnly = true)
@@ -149,6 +153,7 @@ public class ReaderAccountDataFetcher {
    * @param ids the remote object ids
    * @return the references
    */
+  @Audited(event = "READEROBJECT_LOCATE", entity = "ReaderObject")
   @DgsData(parentType = "HadesQueries", field = "locateRemoteObjects")
   @PreAuthorize("@permissions.has('graphql.hades.locateRemoteObjects')")
   @Transactional(readOnly = true)
@@ -166,6 +171,7 @@ public class ReaderAccountDataFetcher {
    * @param state the OAuth state token
    * @return the login result
    */
+  @Audited(event = "READERACCOUNT_LOGIN", entity = "ReaderAccount")
   @DgsData(parentType = "HadesMutations", field = "discordLogin")
   @PreAuthorize("permitAll()")
   @Transactional

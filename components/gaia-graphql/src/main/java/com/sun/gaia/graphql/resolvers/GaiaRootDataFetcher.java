@@ -2,6 +2,7 @@ package com.sun.gaia.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
+import com.sun.base.audit.annotation.NotAudited;
 import com.sun.gaia.codegen.types.GaiaMutations;
 import com.sun.gaia.codegen.types.GaiaQueries;
 
@@ -22,6 +23,7 @@ public class GaiaRootDataFetcher {
    *
    * @return the GaiaQueries builder
    */
+  @NotAudited(reason = "namespace root")
   @DgsData(parentType = "Query", field = "gaiaQueries")
   public GaiaQueries getGaiaQueries() {
     authHelper.resolveUserFromRequest();
@@ -33,6 +35,7 @@ public class GaiaRootDataFetcher {
    *
    * @return the GaiaMutations builder
    */
+  @NotAudited(reason = "namespace root")
   @DgsData(parentType = "Mutation", field = "gaiaMutations")
   public GaiaMutations getGaiaMutations() {
     authHelper.resolveUserFromRequest();

@@ -2,6 +2,7 @@ package com.sun.gaia.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
+import com.sun.base.audit.annotation.Audited;
 import com.sun.gaia.codegen.types.HubApp;
 import com.sun.gaia.codegen.types.HubAppInput;
 import com.sun.gaia.codegen.types.HubMode;
@@ -45,6 +46,7 @@ public class HubRegistryDataFetcher {
    *
    * @return the hub registry
    */
+  @Audited(event = "HUBREGISTRY_VIEW", entity = "HubRegistry")
   @DgsData(parentType = "GaiaQueries", field = "hubRegistry")
   @PreAuthorize("permitAll()")
   @Transactional(readOnly = true)
@@ -61,6 +63,7 @@ public class HubRegistryDataFetcher {
    * @param input the hub registry input
    * @return the saved hub registry
    */
+  @Audited(event = "HUBREGISTRY_SAVE", entity = "HubRegistry")
   @DgsData(parentType = "GaiaMutations", field = "saveRegistry")
   @PreAuthorize("@permissions.has('graphql.gaia.hubRegistry')")
   @Transactional

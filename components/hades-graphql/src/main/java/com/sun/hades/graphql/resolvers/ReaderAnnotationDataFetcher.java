@@ -2,6 +2,7 @@ package com.sun.hades.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
+import com.sun.base.audit.annotation.Audited;
 import com.sun.base.ratelimit.RateLimit;
 import com.sun.hades.codegen.types.AnnotationInput;
 import com.sun.hades.codegen.types.AttachReaderObjectResponse;
@@ -79,6 +80,7 @@ public class ReaderAnnotationDataFetcher {
    * @param pagination the page request
    * @return the paged annotations
    */
+  @Audited(event = "READERANNOTATION_LIST", entity = "ReaderAnnotation")
   @DgsData(parentType = "HadesQueries", field = "annotations")
   @PreAuthorize("@permissions.has('graphql.hades.annotations')")
   @Transactional(readOnly = true)
@@ -123,6 +125,7 @@ public class ReaderAnnotationDataFetcher {
    * @param id the annotation id
    * @return the annotation
    */
+  @Audited(event = "READERANNOTATION_VIEW", entity = "ReaderAnnotation")
   @DgsData(parentType = "HadesQueries", field = "annotation")
   @PreAuthorize("@permissions.has('graphql.hades.annotation')")
   @Transactional(readOnly = true)
@@ -145,6 +148,7 @@ public class ReaderAnnotationDataFetcher {
    * @param input the annotation input
    * @return the create-annotation response
    */
+  @Audited(event = "READERANNOTATION_CREATE", entity = "ReaderAnnotation", sensitiveFields = {"content"})
   @DgsData(parentType = "HadesMutations", field = "createAnnotation")
   @PreAuthorize("@permissions.has('graphql.hades.createAnnotation')")
   @RateLimit(capacity = 1, refillPerSecond = 0.0667)
@@ -168,6 +172,7 @@ public class ReaderAnnotationDataFetcher {
    * @param body the new body
    * @return the edit-annotation response
    */
+  @Audited(event = "READERANNOTATION_UPDATE", entity = "ReaderAnnotation", sensitiveFields = {"body"})
   @DgsData(parentType = "HadesMutations", field = "editAnnotation")
   @PreAuthorize("@permissions.has('graphql.hades.editAnnotation')")
   @Transactional
@@ -188,6 +193,7 @@ public class ReaderAnnotationDataFetcher {
    * @param id the annotation id
    * @return the delete-annotation response
    */
+  @Audited(event = "READERANNOTATION_DELETE", entity = "ReaderAnnotation")
   @DgsData(parentType = "HadesMutations", field = "deleteAnnotation")
   @PreAuthorize("@permissions.has('graphql.hades.deleteAnnotation')")
   @Transactional
@@ -207,6 +213,7 @@ public class ReaderAnnotationDataFetcher {
    * @param target the remote object id
    * @return the attach-object response
    */
+  @Audited(event = "READERANNOTATION_ATTACH", entity = "ReaderAnnotation")
   @DgsData(parentType = "HadesMutations", field = "attachObject")
   @PreAuthorize("@permissions.has('graphql.hades.attachObject')")
   @Transactional

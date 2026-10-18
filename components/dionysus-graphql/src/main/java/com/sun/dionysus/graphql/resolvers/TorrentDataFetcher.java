@@ -1,5 +1,5 @@
 package com.sun.dionysus.graphql.resolvers;
-
+import com.sun.base.audit.annotation.Audited;
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
 import com.sun.base.error.MutationException;
@@ -43,6 +43,7 @@ public class TorrentDataFetcher {
   /**
    * Looks up a single torrent job by id, with its magnet metadata.
    */
+  @Audited(event = "TORRENTJOB")
   @DgsData(parentType = "FilestoreQueries", field = "torrentJob")
   @PreAuthorize("@permissions.has('graphql.dionysus.torrentJob')")
   public TorrentJob torrentJob(String jobId) {
@@ -55,6 +56,7 @@ public class TorrentDataFetcher {
   /**
    * Lists torrent jobs, optionally narrowed by bucket and status.
    */
+  @Audited(event = "TORRENTJOBS")
   @DgsData(parentType = "FilestoreQueries", field = "torrentJobs")
   @PreAuthorize("@permissions.has('graphql.dionysus.torrentJobs')")
   public List<TorrentJob> torrentJobs(String bucket, String status) {
@@ -66,6 +68,7 @@ public class TorrentDataFetcher {
         .toList();
   }
 
+  @Audited(event = "SEARCHTORRENTS", entity = "Torrent")
   @DgsData(parentType = "FilestoreQueries", field = "searchTorrents")
   @PreAuthorize("@permissions.has('graphql.dionysus.searchTorrents')")
   public List<TorrentSearchResult> searchTorrents(String query) {
@@ -75,6 +78,7 @@ public class TorrentDataFetcher {
   /**
    * Starts a torrent from a magnet link or base64-encoded .torrent file.
    */
+  @Audited(event = "ADDTORRENT", entity = "Torrent")
   @DgsData(parentType = "FilestoreMutations", field = "addTorrent")
   @PreAuthorize("@permissions.has('graphql.dionysus.torrent.add')")
   public AddTorrentResponse addTorrent(AddTorrentInput input) {
@@ -110,6 +114,7 @@ public class TorrentDataFetcher {
   /**
    * Pauses a running download.
    */
+  @Audited(event = "PAUSETORRENT", entity = "Torrent")
   @DgsData(parentType = "FilestoreMutations", field = "pauseTorrent")
   @PreAuthorize("@permissions.has('graphql.dionysus.torrent.pause')")
   public PauseTorrentResponse pauseTorrent(String jobId) {
@@ -127,6 +132,7 @@ public class TorrentDataFetcher {
   /**
    * Resumes a paused download.
    */
+  @Audited(event = "RESUMETORRENT", entity = "Torrent")
   @DgsData(parentType = "FilestoreMutations", field = "resumeTorrent")
   @PreAuthorize("@permissions.has('graphql.dionysus.torrent.resume')")
   public ResumeTorrentResponse resumeTorrent(String jobId) {
@@ -144,6 +150,7 @@ public class TorrentDataFetcher {
   /**
    * Cancels a download and clears its scratch files.
    */
+  @Audited(event = "CANCELTORRENT", entity = "Torrent")
   @DgsData(parentType = "FilestoreMutations", field = "cancelTorrent")
   @PreAuthorize("@permissions.has('graphql.dionysus.torrent.cancel')")
   public CancelTorrentResponse cancelTorrent(String jobId) {

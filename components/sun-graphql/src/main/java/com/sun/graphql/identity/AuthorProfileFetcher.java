@@ -1,5 +1,5 @@
 package com.sun.graphql.identity;
-
+import com.sun.base.audit.annotation.NotAudited;
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
 import com.netflix.graphql.dgs.DgsDataFetchingEnvironment;
@@ -18,6 +18,7 @@ import com.sun.icarus.codegen.types.ForumPost;
 @DgsComponent
 public class AuthorProfileFetcher {
 
+  @NotAudited(reason = "field resolver")
   @DgsData(parentType = "ReaderAnnotation", field = "authorProfile")
   public CompletableFuture<ReaderAccount> annotationProfile(
       DgsDataFetchingEnvironment env) {
@@ -25,18 +26,21 @@ public class AuthorProfileFetcher {
     return loadById(env, source.getAuthor() == null ? null : source.getAuthor().getId());
   }
 
+  @NotAudited(reason = "field resolver")
   @DgsData(parentType = "ReaderComment", field = "authorProfile")
   public CompletableFuture<ReaderAccount> commentProfile(DgsDataFetchingEnvironment env) {
     ReaderComment source = env.getSource();
     return loadById(env, source.getAuthor() == null ? null : source.getAuthor().getId());
   }
 
+  @NotAudited(reason = "field resolver")
   @DgsData(parentType = "ForumPost", field = "authorProfile")
   public CompletableFuture<ReaderAccount> postProfile(DgsDataFetchingEnvironment env) {
     ForumPost source = env.getSource();
     return loadById(env, source.getAuthor() == null ? null : source.getAuthor().getId());
   }
 
+  @NotAudited(reason = "field resolver")
   @DgsData(parentType = "PrivateNote", field = "authorProfile")
   public CompletableFuture<ReaderAccount> privateNoteProfile(
       DgsDataFetchingEnvironment env) {

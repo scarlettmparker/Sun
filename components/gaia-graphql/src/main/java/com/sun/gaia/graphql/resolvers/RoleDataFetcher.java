@@ -2,6 +2,7 @@ package com.sun.gaia.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
+import com.sun.base.audit.annotation.Audited;
 import com.sun.gaia.codegen.types.CreateRoleResponse;
 import com.sun.gaia.codegen.types.DeleteRoleResponse;
 import com.sun.gaia.codegen.types.Role;
@@ -36,6 +37,7 @@ public class RoleDataFetcher {
   /**
    * Lists all roles.
    */
+  @Audited(event = "ROLE_LIST", entity = "Role")
   @DgsData(parentType = "GaiaQueries", field = "roles")
   @PreAuthorize("@permissions.has('graphql.gaia.roles')")
   @Transactional(readOnly = true)
@@ -48,6 +50,7 @@ public class RoleDataFetcher {
    /**
     * Locates a role by id.
     */
+  @Audited(event = "ROLE_VIEW", entity = "Role")
   @DgsData(parentType = "GaiaQueries", field = "role")
   @PreAuthorize("@permissions.has('graphql.gaia.role')")
   @Transactional(readOnly = true)
@@ -60,6 +63,7 @@ public class RoleDataFetcher {
    /**
     * Returns direct role names for the account.
     */
+  @Audited(event = "ROLE_LIST", entity = "Role")
   @DgsData(parentType = "GaiaQueries", field = "accountRoles")
   @PreAuthorize("@permissions.has('graphql.gaia.accountRoles')")
   @Transactional(readOnly = true)
@@ -70,6 +74,7 @@ public class RoleDataFetcher {
    /**
     * Creates a new role.
     */
+  @Audited(event = "ROLE_CREATE", entity = "Role")
   @DgsData(parentType = "GaiaMutations", field = "createRole")
   @PreAuthorize("@permissions.has('graphql.gaia.createRole')")
   @Transactional
@@ -85,6 +90,7 @@ public class RoleDataFetcher {
    /**
     * Deletes a role.
     */
+  @Audited(event = "ROLE_DELETE", entity = "Role")
   @DgsData(parentType = "GaiaMutations", field = "deleteRole")
   @PreAuthorize("@permissions.has('graphql.gaia.deleteRole')")
   @Transactional
@@ -100,6 +106,7 @@ public class RoleDataFetcher {
    /**
     * Replaces the account's roles with the given set.
     */
+  @Audited(event = "ACCOUNT_SETROLES", entity = "Account")
   @DgsData(parentType = "GaiaMutations", field = "setAccountRoles")
   @PreAuthorize("@permissions.has('graphql.gaia.setAccountRoles')")
   @Transactional

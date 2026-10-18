@@ -1,5 +1,5 @@
 package com.sun.apollo.graphql.resolvers;
-
+import com.sun.base.audit.annotation.Audited;
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
 import com.sun.apollo.codegen.types.Song;
@@ -14,7 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.sun.base.audit.annotation.NotAudited;
 /**
  * GraphQL data fetcher for Stem Player queries.
  * Handles the resolution of stem player-related GraphQL queries.
@@ -37,6 +37,7 @@ public class StemPlayerDataFetcher {
    *
    * @return a new StemPlayerQueries instance
    */
+  @NotAudited(reason = "namespace root")
   @DgsData(parentType = "Query", field = "stemPlayerQueries")
   public StemPlayerQueries getStemPlayerQueries() {
     return StemPlayerQueries.newBuilder().build();
@@ -47,6 +48,7 @@ public class StemPlayerDataFetcher {
    *
    * @return a list of Song objects
    */
+  @Audited(event = "LIST")
   @DgsData(parentType = "StemPlayerQueries", field = "list")
   @PreAuthorize("@permissions.has('graphql.apollo.list')")
   @Transactional
@@ -68,6 +70,7 @@ public class StemPlayerDataFetcher {
    * @param id the song ID
    * @return the Song object
    */
+  @Audited(event = "LOCATE")
   @DgsData(parentType = "StemPlayerQueries", field = "locate")
   @PreAuthorize("@permissions.has('graphql.apollo.locate')")
   @Transactional

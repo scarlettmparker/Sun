@@ -1,5 +1,5 @@
 package com.sun.briareus.graphql.resolvers;
-
+import com.sun.base.audit.annotation.Audited;
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
 import com.sun.base.permify.PermifyClient;
@@ -98,6 +98,7 @@ public class BlogDetailDataFetcher {
    * @param id the post id
    * @return the detail
    */
+  @Audited(event = "BLOGDETAIL")
   @DgsData(parentType = "BlogQueries", field = "blogDetail")
   @PreAuthorize("@permissions.has('graphql.briareus.blogDetail')")
   @Transactional(readOnly = true)
@@ -122,6 +123,7 @@ public class BlogDetailDataFetcher {
    * @param input the input
    * @return the created blog post
    */
+  @Audited(event = "CREATEBLOGWITHPROPERTIES", entity = "BlogWithPropertie")
   @DgsData(parentType = "BlogMutations", field = "createBlogWithProperties")
   @PreAuthorize("@permissions.has('graphql.briareus.createBlogWithProperties')")
   @Transactional
@@ -168,6 +170,7 @@ public class BlogDetailDataFetcher {
    * @param input the input
    * @return the updated blog post
    */
+  @Audited(event = "UPDATEBLOGWITHPROPERTIES", entity = "BlogWithPropertie")
   @DgsData(parentType = "BlogMutations", field = "updateBlogWithProperties")
   @PreAuthorize("@permissions.has('graphql.briareus.updateBlogWithProperties')")
   @Transactional

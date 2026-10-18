@@ -1,5 +1,5 @@
 package com.sun.briareus.graphql.resolvers;
-
+import com.sun.base.audit.annotation.Audited;
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
 import com.netflix.graphql.dgs.DgsDataFetchingEnvironment;
@@ -56,7 +56,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.sun.base.audit.annotation.NotAudited;
 @DgsComponent
 public class BlogDataFetcher {
 
@@ -96,6 +96,7 @@ public class BlogDataFetcher {
    *
    * @return a new BlogQueries instance
    */
+  @NotAudited(reason = "namespace root")
   @DgsData(parentType = "Query", field = "blogQueries")
   public BlogQueries getBlogQueries() {
     return BlogQueries.newBuilder().build();
@@ -107,6 +108,7 @@ public class BlogDataFetcher {
    * @param pagination the pagination and filter input
    * @return the matching page of BlogPost objects
    */
+  @Audited(event = "LISTBLOGPOSTS", entity = "BlogPost")
   @DgsData(parentType = "BlogQueries", field = "listBlogPosts")
   @PreAuthorize("@permissions.has('graphql.briareus.listBlogPosts')")
   @Transactional(readOnly = true)
@@ -133,6 +135,7 @@ public class BlogDataFetcher {
    * @param id the blog post ID
    * @return the BlogPost object
    */
+  @Audited(event = "LOCATEBLOGPOST", entity = "BlogPost")
   @DgsData(parentType = "BlogQueries", field = "locateBlogPost")
   @PreAuthorize("@permissions.has('graphql.briareus.locateBlogPost')")
   @Transactional(readOnly = true)
@@ -157,6 +160,7 @@ public class BlogDataFetcher {
    * @param ids the remote-object ids to match
    * @return a list of BlogPost objects
    */
+  @Audited(event = "LISTBYREMOTEOBJECTS", entity = "ByRemoteObject")
   @DgsData(parentType = "BlogQueries", field = "listByRemoteObjects")
   @PreAuthorize("@permissions.has('graphql.briareus.listByRemoteObjects')")
   @Transactional(readOnly = true)
@@ -178,6 +182,7 @@ public class BlogDataFetcher {
    *
    * @return the post types
    */
+  @Audited(event = "BLOGPOSTTYPES")
   @DgsData(parentType = "BlogQueries", field = "blogPostTypes")
   @PreAuthorize("@permissions.has('graphql.briareus.blogPostTypes')")
   @Transactional(readOnly = true)
@@ -191,6 +196,7 @@ public class BlogDataFetcher {
    *
    * @return a new BlogMutations instance
    */
+  @NotAudited(reason = "namespace root")
   @DgsData(parentType = "Mutation", field = "blogMutations")
   public BlogMutations getBlogMutations() {
     return BlogMutations.newBuilder().build();
@@ -203,6 +209,7 @@ public class BlogDataFetcher {
    * @param input the input data for the blog post
    * @return the created blog post
    */
+  @Audited(event = "CREATEBLOGPOST", entity = "BlogPost")
   @DgsData(parentType = "BlogMutations", field = "createBlogPost")
   @PreAuthorize("@permissions.has('graphql.briareus.createBlogPost')")
   @Transactional
@@ -231,6 +238,7 @@ public class BlogDataFetcher {
    * @param input the update input
    * @return the updated blog post
    */
+  @Audited(event = "UPDATEBLOGPOST", entity = "BlogPost")
   @DgsData(parentType = "BlogMutations", field = "updateBlogPost")
   @PreAuthorize("@permissions.has('graphql.briareus.updateBlogPost')")
   @Transactional
@@ -260,6 +268,7 @@ public class BlogDataFetcher {
    * @param description an optional description
    * @return the created blog post type
    */
+  @Audited(event = "CREATEBLOGPOSTTYPE", entity = "BlogPostType")
   @DgsData(parentType = "BlogMutations", field = "createBlogPostType")
   @PreAuthorize("@permissions.has('graphql.briareus.createBlogPostType')")
   @Transactional
@@ -292,6 +301,7 @@ public class BlogDataFetcher {
    * @param pagination the pagination input
    * @return the matching page
    */
+  @Audited(event = "CHILDREN")
   @DgsData(parentType = "BlogQueries", field = "children")
   @PreAuthorize("@permissions.has('graphql.briareus.children')")
   @Transactional(readOnly = true)
@@ -319,6 +329,7 @@ public class BlogDataFetcher {
    * @param env the data-fetching environment
    * @return the parent post or null
    */
+  @NotAudited(reason = "field resolver")
   @DgsData(parentType = "BlogPost", field = "parent")
   public BlogPost parent(DgsDataFetchingEnvironment env) {
     BlogPost source = env.getSource();
@@ -338,6 +349,7 @@ public class BlogDataFetcher {
    * @param env the data-fetching environment
    * @return the attached texts
    */
+  @NotAudited(reason = "field resolver")
   @DgsData(parentType = "BlogPost", field = "attachedTexts")
   @PreAuthorize("@permissions.has('graphql.briareus.attachedTexts')")
   @Transactional(readOnly = true)
@@ -391,6 +403,7 @@ public class BlogDataFetcher {
    * @param target the remote-object string
    * @return the updated blog post
    */
+  @Audited(event = "ADDREMOTEOBJECT", entity = "RemoteObject")
   @DgsData(parentType = "BlogMutations", field = "addRemoteObject")
   @PreAuthorize("@permissions.has('graphql.briareus.addRemoteObject')")
   @Transactional
@@ -430,6 +443,7 @@ public class BlogDataFetcher {
    * @param target the remote-object string
    * @return the updated blog post
    */
+  @Audited(event = "REMOVEREMOTEOBJECT", entity = "RemoteObject")
   @DgsData(parentType = "BlogMutations", field = "removeRemoteObject")
   @PreAuthorize("@permissions.has('graphql.briareus.removeRemoteObject')")
   @Transactional
@@ -467,6 +481,7 @@ public class BlogDataFetcher {
    * @param input the ingest input
    * @return the ingested blog post
    */
+  @Audited(event = "INGESTBLOGFROMSOURCE", entity = "BlogFromSource")
   @DgsData(parentType = "BlogMutations", field = "ingestBlogFromSource")
   @PreAuthorize("@permissions.has('graphql.briareus.ingestBlogFromSource')")
   @Transactional
@@ -553,6 +568,7 @@ public class BlogDataFetcher {
    * @param id the post id
    * @return the deleted post id
    */
+  @Audited(event = "DELETEBLOGPOST", entity = "BlogPost")
   @DgsData(parentType = "BlogMutations", field = "deleteBlogPost")
   @PreAuthorize("@permissions.has('graphql.briareus.deleteBlogPost')")
   @Transactional

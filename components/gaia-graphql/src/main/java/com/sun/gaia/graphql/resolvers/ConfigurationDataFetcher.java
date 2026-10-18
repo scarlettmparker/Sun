@@ -2,6 +2,7 @@ package com.sun.gaia.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
+import com.sun.base.audit.annotation.Audited;
 import com.sun.gaia.codegen.types.ApplyConfigurationResponse;
 import com.sun.gaia.codegen.types.Configuration;
 import com.sun.gaia.codegen.types.ConfigurationInput;
@@ -46,6 +47,7 @@ public class ConfigurationDataFetcher {
    *
    * @return the configurations
    */
+  @Audited(event = "CONFIGURATION_LIST", entity = "Configuration")
   @DgsData(parentType = "GaiaQueries", field = "configurations")
   @PreAuthorize("@permissions.has('graphql.gaia.configurations')")
   @Transactional(readOnly = true)
@@ -61,6 +63,7 @@ public class ConfigurationDataFetcher {
    * @param id the configuration id
    * @return the configuration, or null when absent
    */
+  @Audited(event = "CONFIGURATION_VIEW", entity = "Configuration")
   @DgsData(parentType = "GaiaQueries", field = "configuration")
   @PreAuthorize("@permissions.has('graphql.gaia.configuration')")
   @Transactional(readOnly = true)
@@ -76,6 +79,7 @@ public class ConfigurationDataFetcher {
    * @param input the configuration input
    * @return the saved configuration
    */
+  @Audited(event = "CONFIGURATION_CREATE", entity = "Configuration")
   @DgsData(parentType = "GaiaMutations", field = "createConfiguration")
   @PreAuthorize("@permissions.has('graphql.gaia.createConfiguration')")
   @Transactional
@@ -96,6 +100,7 @@ public class ConfigurationDataFetcher {
    * @param input the configuration input
    * @return the saved configuration
    */
+  @Audited(event = "CONFIGURATION_UPDATE", entity = "Configuration")
   @DgsData(parentType = "GaiaMutations", field = "updateConfiguration")
   @PreAuthorize("@permissions.has('graphql.gaia.updateConfiguration')")
   @Transactional
@@ -115,6 +120,7 @@ public class ConfigurationDataFetcher {
    * @param id the configuration id
    * @return a success result
    */
+  @Audited(event = "CONFIGURATION_DELETE", entity = "Configuration")
   @DgsData(parentType = "GaiaMutations", field = "deleteConfiguration")
   @PreAuthorize("@permissions.has('graphql.gaia.deleteConfiguration')")
   @Transactional
@@ -132,6 +138,7 @@ public class ConfigurationDataFetcher {
    * @param id the configuration id
    * @return the reconciled configuration
    */
+  @Audited(event = "CONFIGURATION_APPLY", entity = "Configuration")
   @DgsData(parentType = "GaiaMutations", field = "applyConfiguration")
   @PreAuthorize("@permissions.has('graphql.gaia.applyConfiguration')")
   @Transactional

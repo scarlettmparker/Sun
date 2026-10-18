@@ -1,5 +1,5 @@
 package com.sun.icarus.graphql.resolvers;
-
+import com.sun.base.audit.annotation.Audited;
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
 import com.sun.base.util.PageRequests;
@@ -49,7 +49,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.sun.base.audit.annotation.NotAudited;
 /**
  * Data fetchers for the forum queries and mutations.
  */
@@ -81,6 +81,7 @@ public class IcarusDataFetcher {
    *
    * @return a new IcarusQueries instance
    */
+  @NotAudited(reason = "namespace root")
   @DgsData(parentType = "Query", field = "icarusQueries")
   public IcarusQueries getIcarusQueries() {
     return IcarusQueries.newBuilder().build();
@@ -92,6 +93,7 @@ public class IcarusDataFetcher {
    * @param id the thread id
    * @return the thread
    */
+  @Audited(event = "THREAD")
   @DgsData(parentType = "IcarusQueries", field = "thread")
   @PreAuthorize("@permissions.has('graphql.icarus.thread')")
   @Transactional(readOnly = true)
@@ -105,6 +107,7 @@ public class IcarusDataFetcher {
    * @param remoteObject the remote object id
    * @return a page of threads
    */
+  @Audited(event = "THREADSFOR")
   @DgsData(parentType = "IcarusQueries", field = "threadsFor")
   @PreAuthorize("@permissions.has('graphql.icarus.threadsFor')")
   @Transactional(readOnly = true)
@@ -132,6 +135,7 @@ public class IcarusDataFetcher {
    * @param pagination the pagination input
    * @return a page of posts
    */
+  @Audited(event = "POSTS")
   @DgsData(parentType = "IcarusQueries", field = "posts")
   @PreAuthorize("@permissions.has('graphql.icarus.posts')")
   @Transactional(readOnly = true)
@@ -165,6 +169,7 @@ public class IcarusDataFetcher {
    * @param postId the post id
    * @return the vote value
    */
+  @Audited(event = "MYVOTE")
   @DgsData(parentType = "IcarusQueries", field = "myVote")
   @PreAuthorize("@permissions.has('graphql.icarus.myVote')")
   @Transactional(readOnly = true)
@@ -178,6 +183,7 @@ public class IcarusDataFetcher {
    * @param ids the remote object ids
    * @return the references
    */
+  @Audited(event = "LOCATEREMOTEOBJECTS", entity = "RemoteObject")
   @DgsData(parentType = "IcarusQueries", field = "locateRemoteObjects")
   @PreAuthorize("@permissions.has('graphql.icarus.locateRemoteObjects')")
   @Transactional(readOnly = true)
@@ -196,6 +202,7 @@ public class IcarusDataFetcher {
    *
    * @return a new IcarusMutations instance
    */
+  @NotAudited(reason = "namespace root")
   @DgsData(parentType = "Mutation", field = "icarusMutations")
   public IcarusMutations getIcarusMutations() {
     return IcarusMutations.newBuilder().build();
@@ -207,6 +214,7 @@ public class IcarusDataFetcher {
    * @param input the create thread input
    * @return the created thread
    */
+  @Audited(event = "CREATETHREAD", entity = "Thread")
   @DgsData(parentType = "IcarusMutations", field = "createThread")
   @PreAuthorize("@permissions.has('graphql.icarus.createThread')")
   @Transactional
@@ -227,6 +235,7 @@ public class IcarusDataFetcher {
    * @param id the thread id
    * @return the updated thread
    */
+  @Audited(event = "LOCKTHREAD", entity = "Thread")
   @DgsData(parentType = "IcarusMutations", field = "lockThread")
   @PreAuthorize("@permissions.has('graphql.icarus.lockThread')")
   @Transactional
@@ -247,6 +256,7 @@ public class IcarusDataFetcher {
    * @param id the thread id
    * @return the updated thread
    */
+  @Audited(event = "ARCHIVETHREAD", entity = "Thread")
   @DgsData(parentType = "IcarusMutations", field = "archiveThread")
   @PreAuthorize("@permissions.has('graphql.icarus.archiveThread')")
   @Transactional
@@ -267,6 +277,7 @@ public class IcarusDataFetcher {
    * @param input the create post input
    * @return the created post
    */
+  @Audited(event = "CREATEPOST", entity = "Post")
   @DgsData(parentType = "IcarusMutations", field = "createPost")
   @PreAuthorize("@permissions.has('graphql.icarus.createPost')")
   @Transactional
@@ -290,6 +301,7 @@ public class IcarusDataFetcher {
    * @param body the new body
    * @return the updated post
    */
+  @Audited(event = "EDITPOST", entity = "Post")
   @DgsData(parentType = "IcarusMutations", field = "editPost")
   @PreAuthorize("@permissions.has('graphql.icarus.editPost')")
   @Transactional
@@ -309,6 +321,7 @@ public class IcarusDataFetcher {
    * @param id the post id
    * @return the deleted post id
    */
+  @Audited(event = "DELETEPOST", entity = "Post")
   @DgsData(parentType = "IcarusMutations", field = "deletePost")
   @PreAuthorize("@permissions.has('graphql.icarus.deletePost')")
   @Transactional
@@ -327,6 +340,7 @@ public class IcarusDataFetcher {
    * @param input the vote input
    * @return the voted post
    */
+  @Audited(event = "VOTE")
   @DgsData(parentType = "IcarusMutations", field = "vote")
   @PreAuthorize("@permissions.has('graphql.icarus.vote')")
   @Transactional
@@ -346,6 +360,7 @@ public class IcarusDataFetcher {
    * @param postId the post id
    * @return the updated post
    */
+  @Audited(event = "REMOVEVOTE", entity = "Vote")
   @DgsData(parentType = "IcarusMutations", field = "removeVote")
   @PreAuthorize("@permissions.has('graphql.icarus.removeVote')")
   @Transactional
@@ -366,6 +381,7 @@ public class IcarusDataFetcher {
    * @param target the remote object id
    * @return the thread id
    */
+  @Audited(event = "ATTACHOBJECT", entity = "Object")
   @DgsData(parentType = "IcarusMutations", field = "attachObject")
   @PreAuthorize("@permissions.has('graphql.icarus.attachObject')")
   @Transactional

@@ -1,5 +1,5 @@
 package com.sun.dionysus.graphql.resolvers;
-
+import com.sun.base.audit.annotation.Audited;
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
 import com.sun.base.error.MutationException;
@@ -50,7 +50,7 @@ import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignReques
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
-
+import com.sun.base.audit.annotation.NotAudited;
 @DgsComponent
 public class FilestoreDataFetcher {
 
@@ -92,6 +92,7 @@ public class FilestoreDataFetcher {
     this.restClient = restClientBuilder.build();
   }
 
+  @NotAudited(reason = "namespace root")
   @DgsData(parentType = "Query", field = "filestoreQueries")
   public FilestoreQueries getFilestoreQueries() {
     return FilestoreQueries.newBuilder().build();
@@ -100,6 +101,7 @@ public class FilestoreDataFetcher {
   /**
    * Checks the health of the external filestore service.
    */
+  @Audited(event = "HEALTH")
   @DgsData(parentType = "FilestoreQueries", field = "health")
   public String health() {
     logger.info("Calling external health REST API");
@@ -114,6 +116,7 @@ public class FilestoreDataFetcher {
   /**
    * Lists all available buckets via the REST API.
    */
+  @Audited(event = "LISTBUCKETS", entity = "Bucket")
   @DgsData(parentType = "FilestoreQueries", field = "listBuckets")
   @PreAuthorize("@permissions.has('graphql.dionysus.listBuckets')")
   public List<Bucket> listBuckets() {
@@ -133,6 +136,7 @@ public class FilestoreDataFetcher {
    * Lists keys in the given bucket using a prefix and delimiter for
    * directory-style navigation.
    */
+  @Audited(event = "LISTKEYS", entity = "Key")
   @DgsData(parentType = "FilestoreQueries", field = "listKeys")
   @PreAuthorize("@permissions.has('graphql.dionysus.listKeys')")
   public List<KeyEntry> listKeys(String bucket, String prefix) {
@@ -170,6 +174,7 @@ public class FilestoreDataFetcher {
   /**
    * Locates a single key's detailed metadata by bucket and key path.
    */
+  @Audited(event = "LOCATE")
   @DgsData(parentType = "FilestoreQueries", field = "locate")
   @PreAuthorize("@permissions.has('graphql.dionysus.locate')")
   public KeyDetail locate(String bucket, String keyPath) {
@@ -182,6 +187,7 @@ public class FilestoreDataFetcher {
   /**
    * Lists all active image key details in a bucket.
    */
+  @Audited(event = "LISTIMAGES", entity = "Image")
   @DgsData(parentType = "FilestoreQueries", field = "listImages")
   @PreAuthorize("@permissions.has('graphql.dionysus.listImages')")
   public List<KeyDetail> listImages(String bucket) {
@@ -194,6 +200,7 @@ public class FilestoreDataFetcher {
   /**
    * Locates a single active image key detail by bucket and key path.
    */
+  @Audited(event = "LOCATEIMAGE", entity = "Image")
   @DgsData(parentType = "FilestoreQueries", field = "locateImage")
   @PreAuthorize("@permissions.has('graphql.dionysus.locateImage')")
   public KeyDetail locateImage(String bucket, String keyPath) {
@@ -201,6 +208,7 @@ public class FilestoreDataFetcher {
     return keyDetailService.locateImage(bucket, keyPath).map(keyDetailMapper::map).orElse(null);
   }
 
+  @NotAudited(reason = "namespace root")
   @DgsData(parentType = "Mutation", field = "filestoreMutations")
   public FilestoreMutations getFilestoreMutations() {
     return FilestoreMutations.newBuilder().build();
@@ -209,6 +217,7 @@ public class FilestoreDataFetcher {
   /**
    * Creates a directory key (folder) via Garage admin REST API.
    */
+  @Audited(event = "PUTKEY", entity = "Key")
   @DgsData(parentType = "FilestoreMutations", field = "putKey")
   @PreAuthorize("@permissions.has('graphql.dionysus.putKey')")
   public PutKeyResponse putKey(PutKeyInput input) {
@@ -268,6 +277,7 @@ public class FilestoreDataFetcher {
   /**
    * Deletes a file from the bucket.
    */
+  @Audited(event = "DELETEFILE", entity = "File")
   @DgsData(parentType = "FilestoreMutations", field = "deleteFile")
   @PreAuthorize("@permissions.has('graphql.dionysus.deleteFile')")
   public DeleteFileResponse deleteFile(BucketKeyInput input) {
@@ -301,6 +311,7 @@ public class FilestoreDataFetcher {
    * @param key    Target key or folder prefix to delete.
    * @return the deleted key
    */
+  @Audited(event = "DELETEKEY", entity = "Key")
   @DgsData(parentType = "FilestoreMutations", field = "deleteKey")
   @PreAuthorize("@permissions.has('graphql.dionysus.deleteKey')")
   public DeleteKeyResponse deleteKey(BucketKeyInput input) {
@@ -361,6 +372,7 @@ public class FilestoreDataFetcher {
    * Renames a key or directory prefix by copying objects to a new destination and deleting sources.
    * If merge is false, it halts and reports conflicts if any destination objects already exist.
    */
+  @Audited(event = "RENAMEKEY", entity = "Key")
   @DgsData(parentType = "FilestoreMutations", field = "renameKey")
   @PreAuthorize("@permissions.has('graphql.dionysus.renameKey')")
   public RenameKeyResponse renameKey(RenameKeyInput input) {
@@ -484,6 +496,7 @@ public class FilestoreDataFetcher {
   /**
    * Returns a presigned PUT URL for direct browser upload (avoids base64 + GraphQL overhead).
    */
+  @Audited(event = "GETPRESIGNEDUPLOADURL", entity = "PresignedUploadUrl")
   @DgsData(parentType = "FilestoreMutations", field = "getPresignedUploadUrl")
   @PreAuthorize("@permissions.has('graphql.dionysus.getPresignedUploadUrl')")
   public GetPresignedUploadUrlResponse getPresignedUploadUrl(PresignInput input) {
@@ -500,6 +513,7 @@ public class FilestoreDataFetcher {
    * @param input one presign request per file
    * @return the presigned URLs in the same order as the inputs
    */
+  @Audited(event = "GETPRESIGNEDUPLOADURLS", entity = "PresignedUploadUrl")
   @DgsData(parentType = "FilestoreMutations", field = "getPresignedUploadUrls")
   @PreAuthorize("@permissions.has('graphql.dionysus.getPresignedUploadUrls')")
   public GetPresignedUploadUrlsResponse getPresignedUploadUrls(
@@ -517,6 +531,7 @@ public class FilestoreDataFetcher {
   /**
    * Returns a presigned GET URL for direct browser download.
    */
+  @Audited(event = "GETPRESIGNEDDOWNLOADURL", entity = "PresignedDownloadUrl")
   @DgsData(parentType = "FilestoreMutations", field = "getPresignedDownloadUrl")
   @PreAuthorize("@permissions.has('graphql.dionysus.getPresignedDownloadUrl')")
   public GetPresignedDownloadUrlResponse getPresignedDownloadUrl(BucketKeyInput input) {

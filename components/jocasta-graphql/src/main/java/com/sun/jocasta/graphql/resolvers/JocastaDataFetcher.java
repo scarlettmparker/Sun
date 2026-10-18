@@ -1,5 +1,5 @@
 package com.sun.jocasta.graphql.resolvers;
-
+import com.sun.base.audit.annotation.Audited;
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
 import com.netflix.graphql.dgs.InputArgument;
@@ -34,7 +34,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.sun.base.audit.annotation.NotAudited;
 @DgsComponent
 public class JocastaDataFetcher {
 
@@ -61,6 +61,7 @@ public class JocastaDataFetcher {
    *
    * @return question queries placeholder
    */
+  @NotAudited(reason = "namespace root")
   @DgsData(parentType = "Query", field = "questionQueries")
   public QuestionQueries questionQueries() {
     return QuestionQueries.newBuilder().build();
@@ -71,6 +72,7 @@ public class JocastaDataFetcher {
    *
    * @return question mutations placeholder
    */
+  @NotAudited(reason = "namespace root")
   @DgsData(parentType = "Mutation", field = "questionMutations")
   public QuestionMutations questionMutations() {
     return QuestionMutations.newBuilder().build();
@@ -83,6 +85,7 @@ public class JocastaDataFetcher {
    * @param pagination - caller-provided pagination
    * @return paged questions
    */
+  @Audited(event = "LISTQUESTIONS", entity = "Question")
   @DgsData(parentType = "QuestionQueries", field = "listQuestions")
   @PreAuthorize("@permissions.has('graphql.jocasta.listQuestions')")
   @Transactional(readOnly = true)
@@ -104,6 +107,7 @@ public class JocastaDataFetcher {
    * @param id - question id
    * @return question
    */
+  @Audited(event = "LOCATEQUESTION", entity = "Question")
   @DgsData(parentType = "QuestionQueries", field = "locateQuestion")
   @PreAuthorize("@permissions.has('graphql.jocasta.locateQuestion')")
   @Transactional(readOnly = true)
@@ -120,6 +124,7 @@ public class JocastaDataFetcher {
    * @param pagination - caller-provided pagination
    * @return paged answers
    */
+  @Audited(event = "LISTANSWERS", entity = "Answer")
   @DgsData(parentType = "QuestionQueries", field = "listAnswers")
   @PreAuthorize("@permissions.has('graphql.jocasta.listAnswers')")
   @Transactional(readOnly = true)
@@ -136,6 +141,7 @@ public class JocastaDataFetcher {
    * @param inputs - question inputs
    * @return the created questions
    */
+  @Audited(event = "BULKCREATEQUESTIONS", entity = "CreateQuestion")
   @DgsData(parentType = "QuestionMutations", field = "bulkCreateQuestions")
   @PreAuthorize("@permissions.has('graphql.jocasta.bulkCreateQuestions')")
   @Transactional
@@ -169,6 +175,7 @@ public class JocastaDataFetcher {
    * @param input - answer input containing myAnswer, correct, correctAnswer
    * @return the submitted answer
    */
+  @Audited(event = "SUBMITANSWER", entity = "Answer")
   @DgsData(parentType = "QuestionMutations", field = "submitAnswer")
   @PreAuthorize("@permissions.has('graphql.jocasta.submitAnswer')")
   @Transactional
@@ -192,6 +199,7 @@ public class JocastaDataFetcher {
    * @param target - remote object string
    * @return the question id
    */
+  @Audited(event = "LINKQUESTION", entity = "Question")
   @DgsData(parentType = "QuestionMutations", field = "linkQuestion")
   @PreAuthorize("@permissions.has('graphql.jocasta.linkQuestion')")
   @Transactional

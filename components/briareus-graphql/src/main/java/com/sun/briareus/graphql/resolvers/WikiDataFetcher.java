@@ -1,5 +1,5 @@
 package com.sun.briareus.graphql.resolvers;
-
+import com.sun.base.audit.annotation.Audited;
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
 import com.sun.base.nlp.WikipediaRelatedTopic;
@@ -16,7 +16,7 @@ import com.sun.briareus.graphql.mappers.SummaryMapper;
 import java.util.List;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.sun.base.audit.annotation.NotAudited;
 @DgsComponent
 public class WikiDataFetcher {
 
@@ -38,6 +38,7 @@ public class WikiDataFetcher {
    *
    * @return a new WikiQueries instance
    */
+  @NotAudited(reason = "namespace root")
   @DgsData(parentType = "Query", field = "wikiQueries")
   public WikiQueries getWikiQueries() {
     return WikiQueries.newBuilder().build();
@@ -49,6 +50,7 @@ public class WikiDataFetcher {
    * @param title the page title
    * @return the summary or null
    */
+  @Audited(event = "WIKIPEDIASUMMARY")
   @DgsData(parentType = "WikiQueries", field = "wikipediaSummary")
   @PreAuthorize("@permissions.has('graphql.briareus.wikipediaSummary')")
   @Transactional(readOnly = true)
@@ -63,6 +65,7 @@ public class WikiDataFetcher {
    * @param word the headword
    * @return the entry or null
    */
+  @Audited(event = "WIKTIONARYENTRY")
   @DgsData(parentType = "WikiQueries", field = "wiktionaryEntry")
   @PreAuthorize("@permissions.has('graphql.briareus.wiktionaryEntry')")
   @Transactional(readOnly = true)
@@ -77,6 +80,7 @@ public class WikiDataFetcher {
    * @param query the search query
    * @return the summaries for matches
    */
+  @Audited(event = "WIKIPEDIASEARCH")
   @DgsData(parentType = "WikiQueries", field = "wikipediaSearch")
   @PreAuthorize("@permissions.has('graphql.briareus.wikipediaSearch')")
   @Transactional(readOnly = true)
@@ -91,6 +95,7 @@ public class WikiDataFetcher {
    * @param title the page title
    * @return the plaintext or null
    */
+  @Audited(event = "WIKIPEDIAPAGE")
   @DgsData(parentType = "WikiQueries", field = "wikipediaPage")
   @PreAuthorize("@permissions.has('graphql.briareus.wikipediaPage')")
   @Transactional(readOnly = true)
@@ -104,6 +109,7 @@ public class WikiDataFetcher {
    * @param title the page title
    * @return the related topics
    */
+  @Audited(event = "WIKIPEDIARELATEDTOPICS")
   @DgsData(parentType = "WikiQueries", field = "wikipediaRelatedTopics")
   @PreAuthorize("@permissions.has('graphql.briareus.wikipediaRelatedTopics')")
   @Transactional(readOnly = true)

@@ -2,6 +2,7 @@ package com.sun.gaia.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
+import com.sun.base.audit.annotation.Audited;
 import com.sun.gaia.codegen.types.ExpireTailscaleDeviceResponse;
 import com.sun.gaia.codegen.types.TailscaleDevice;
 import com.sun.gaia.graphql.mappers.TailscaleDeviceMapper;
@@ -31,6 +32,7 @@ public class TailscaleDataFetcher {
     this.tailscaleDeviceMapper = tailscaleDeviceMapper;
   }
 
+  @Audited(event = "TAILSCALEDEVICE_LIST", entity = "TailscaleDevice")
   @DgsData(parentType = "GaiaQueries", field = "tailscaleDevices")
   @PreAuthorize("@permissions.has('graphql.gaia.tailscaleDevices')")
   @Transactional(readOnly = true)
@@ -38,6 +40,7 @@ public class TailscaleDataFetcher {
     return tailscaleDeviceMapper.map(tailscaleDeviceService.listAll());
   }
 
+  @Audited(event = "TAILSCALEDEVICE_VIEW", entity = "TailscaleDevice")
   @DgsData(parentType = "GaiaQueries", field = "tailscaleDevice")
   @PreAuthorize("@permissions.has('graphql.gaia.tailscaleDevice')")
   @Transactional(readOnly = true)
@@ -49,6 +52,7 @@ public class TailscaleDataFetcher {
     }
   }
 
+  @Audited(event = "TAILSCALEDEVICE_EXPIRE", entity = "TailscaleDevice")
   @DgsData(parentType = "GaiaMutations", field = "expireTailscaleDevice")
   @PreAuthorize("@permissions.has('graphql.gaia.expireTailscaleDevice')")
   @Transactional

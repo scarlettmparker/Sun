@@ -2,6 +2,7 @@ package com.sun.gaia.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
+import com.sun.base.audit.annotation.Audited;
 import com.sun.base.error.MutationException;
 import com.sun.gaia.codegen.types.DeletePropertyEntryResponse;
 import com.sun.gaia.codegen.types.PropertySetEntry;
@@ -52,6 +53,7 @@ public class PropertySetDataFetcher {
    * @param entry the entry name, or null for all entries
    * @return the values map, or null when a named entry is missing
    */
+  @Audited(event = "PROPERTYSETENTRY_VIEW", entity = "PropertySetEntry")
   @DgsData(parentType = "GaiaQueries", field = "propertySet")
   @PreAuthorize("permitAll()")
   @Transactional(readOnly = true)
@@ -75,6 +77,7 @@ public class PropertySetDataFetcher {
    * @param name the property set name
    * @return the entries
    */
+  @Audited(event = "PROPERTYSETENTRY_LIST", entity = "PropertySetEntry")
   @DgsData(parentType = "GaiaQueries", field = "propertySets")
   @PreAuthorize("permitAll()")
   @Transactional(readOnly = true)
@@ -91,6 +94,7 @@ public class PropertySetDataFetcher {
    * @param name the property set name
    * @return the schema, or null when absent
    */
+  @Audited(event = "PROPERTYSETSCHEMA_VIEW", entity = "PropertySetSchema")
   @DgsData(parentType = "GaiaQueries", field = "propertySetSchema")
   @PreAuthorize("permitAll()")
   @Transactional(readOnly = true)
@@ -106,6 +110,7 @@ public class PropertySetDataFetcher {
    * @param ownerKey the owner key, or null for all
    * @return the schemas
    */
+  @Audited(event = "PROPERTYSETSCHEMA_LIST", entity = "PropertySetSchema")
   @DgsData(parentType = "GaiaQueries", field = "propertySetSchemas")
   @PreAuthorize("permitAll()")
   @Transactional(readOnly = true)
@@ -118,6 +123,7 @@ public class PropertySetDataFetcher {
    /**
     * Property-set entries the remote user may execute.
     */
+  @Audited(event = "PROPERTYSETENTRY_LIST", entity = "PropertySetEntry")
   @DgsData(parentType = "GaiaQueries", field = "accessibleCommandIntents")
   @PreAuthorize("@permissions.has('graphql.gaia.accessibleCommandIntents')")
   @Transactional(readOnly = true)
@@ -143,6 +149,7 @@ public class PropertySetDataFetcher {
    * @param input the values to store
    * @return the saved entry
    */
+  @Audited(event = "PROPERTYSETENTRY_UPSERT", entity = "PropertySetEntry")
   @DgsData(parentType = "GaiaMutations", field = "upsertPropertyEntry")
   @PreAuthorize("@permissions.has('graphql.gaia.upsertPropertyEntry')")
   @Transactional
@@ -165,6 +172,7 @@ public class PropertySetDataFetcher {
    * @param input the property and value
    * @return the saved entry
    */
+  @Audited(event = "PROPERTYSETENTRY_SET", entity = "PropertySetEntry")
   @DgsData(parentType = "GaiaMutations", field = "setProperty")
   @PreAuthorize("@permissions.has('graphql.gaia.setProperty')")
   @Transactional
@@ -184,6 +192,7 @@ public class PropertySetDataFetcher {
    * @param input the schema input
    * @return the saved schema
    */
+  @Audited(event = "PROPERTYSETSCHEMA_REGISTER", entity = "PropertySetSchema")
   @DgsData(parentType = "GaiaMutations", field = "registerPropertySetSchema")
   @PreAuthorize("@permissions.has('graphql.gaia.registerPropertySetSchema')")
   @Transactional
@@ -206,6 +215,7 @@ public class PropertySetDataFetcher {
    * @param entry the entry name
    * @return the result
    */
+  @Audited(event = "PROPERTYSETENTRY_DELETE", entity = "PropertySetEntry")
   @DgsData(parentType = "GaiaMutations", field = "deletePropertyEntry")
   @PreAuthorize("@permissions.has('graphql.gaia.deletePropertyEntry')")
   @Transactional

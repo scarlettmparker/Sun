@@ -2,6 +2,7 @@ package com.sun.hades.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
+import com.sun.base.audit.annotation.Audited;
 import com.sun.hades.codegen.types.AddCommentResponse;
 import com.sun.hades.codegen.types.CommentInput;
 import com.sun.hades.codegen.types.DeleteCommentResponse;
@@ -65,6 +66,7 @@ public class ReaderCommentDataFetcher {
    * @param pagination the pagination input
    * @return a page of comments
    */
+  @Audited(event = "READERCOMMENT_LIST", entity = "ReaderComment")
   @DgsData(parentType = "HadesQueries", field = "comments")
   @PreAuthorize("@permissions.has('graphql.hades.comments')")
   @Transactional(readOnly = true)
@@ -98,6 +100,7 @@ public class ReaderCommentDataFetcher {
    * @param input the comment input
    * @return the add-comment response
    */
+  @Audited(event = "READERCOMMENT_CREATE", entity = "ReaderComment", sensitiveFields = {"body"})
   @DgsData(parentType = "HadesMutations", field = "addComment")
   @PreAuthorize("@permissions.has('graphql.hades.addComment')")
   @Transactional
@@ -122,6 +125,7 @@ public class ReaderCommentDataFetcher {
    * @param body the new body
    * @return the edit-comment response
    */
+  @Audited(event = "READERCOMMENT_UPDATE", entity = "ReaderComment", sensitiveFields = {"body"})
   @DgsData(parentType = "HadesMutations", field = "editComment")
   @PreAuthorize("@permissions.has('graphql.hades.editComment')")
   @Transactional
@@ -142,6 +146,7 @@ public class ReaderCommentDataFetcher {
    * @param id the comment id
    * @return the delete-comment response
    */
+  @Audited(event = "READERCOMMENT_DELETE", entity = "ReaderComment")
   @DgsData(parentType = "HadesMutations", field = "deleteComment")
   @PreAuthorize("@permissions.has('graphql.hades.deleteComment')")
   @Transactional

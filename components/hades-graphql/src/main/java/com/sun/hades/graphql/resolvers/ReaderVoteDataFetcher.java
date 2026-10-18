@@ -2,6 +2,7 @@ package com.sun.hades.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
+import com.sun.base.audit.annotation.Audited;
 import com.sun.hades.codegen.types.VoteInput;
 import com.sun.hades.codegen.types.VoteReaderResponse;
 import com.sun.hades.graphql.mappers.ReaderAnnotationMapper;
@@ -50,6 +51,7 @@ public class ReaderVoteDataFetcher {
    * @param targetId the target id
    * @return the vote value
    */
+  @Audited(event = "READERVOTE_VIEW", entity = "ReaderVote")
   @DgsData(parentType = "HadesQueries", field = "myVote")
   @PreAuthorize("@permissions.has('graphql.hades.myVote')")
   @Transactional(readOnly = true)
@@ -63,6 +65,7 @@ public class ReaderVoteDataFetcher {
    * @param input the vote input
    * @return the vote response
    */
+  @Audited(event = "READERVOTE_VOTE", entity = "ReaderVote")
   @DgsData(parentType = "HadesMutations", field = "vote")
   @PreAuthorize("@permissions.has('graphql.hades.vote')")
   @Transactional
@@ -82,6 +85,7 @@ public class ReaderVoteDataFetcher {
    * @param targetId the target id
    * @return the vote response
    */
+  @Audited(event = "READERVOTE_DELETE", entity = "ReaderVote")
   @DgsData(parentType = "HadesMutations", field = "removeVote")
   @PreAuthorize("@permissions.has('graphql.hades.removeVote')")
   @Transactional

@@ -1,5 +1,5 @@
 package com.sun.cerberus.graphql.resolvers;
-
+import com.sun.base.audit.annotation.Audited;
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
 import com.sun.cerberus.codegen.types.CreateGalleryItemResponse;
@@ -17,7 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.sun.base.audit.annotation.NotAudited;
 @DgsComponent
 public class GalleryDataFetcher {
 
@@ -36,6 +36,7 @@ public class GalleryDataFetcher {
    *
    * @return a new GalleryQueries instance
    */
+  @NotAudited(reason = "namespace root")
   @DgsData(parentType = "Query", field = "galleryQueries")
   public GalleryQueries getGalleryQueries() {
     return GalleryQueries.newBuilder().build();
@@ -46,6 +47,7 @@ public class GalleryDataFetcher {
    *
    * @return a list of GalleryItem objects
    */
+  @Audited(event = "LIST")
   @DgsData(parentType = "GalleryQueries", field = "list")
   @PreAuthorize("@permissions.has('graphql.cerberus.list')")
   @Transactional
@@ -67,6 +69,7 @@ public class GalleryDataFetcher {
    * @param id the gallery item ID
    * @return the GalleryItem object
    */
+  @Audited(event = "LOCATE")
   @DgsData(parentType = "GalleryQueries", field = "locate")
   @PreAuthorize("@permissions.has('graphql.cerberus.locate')")
   @Transactional
@@ -88,6 +91,7 @@ public class GalleryDataFetcher {
    * @param ids the list of foreign object IDs to search for
    * @return a list of GalleryItem objects
    */
+  @Audited(event = "LISTBYREMOTEOBJECTS", entity = "ByRemoteObject")
   @DgsData(parentType = "GalleryQueries", field = "listByRemoteObjects")
   @PreAuthorize("@permissions.has('graphql.cerberus.listByRemoteObjects')")
   @Transactional
@@ -109,6 +113,7 @@ public class GalleryDataFetcher {
    * @param ids the gallery item IDs
    * @return a list of GalleryItem objects
    */
+  @Audited(event = "LOCATEGALLERYITEMS", entity = "GalleryItem")
   @DgsData(parentType = "GalleryQueries", field = "locateGalleryItems")
   @PreAuthorize("@permissions.has('graphql.cerberus.locateGalleryItems')")
   @Transactional
@@ -129,6 +134,7 @@ public class GalleryDataFetcher {
    *
    * @return a new GalleryMutations instance
    */
+  @NotAudited(reason = "namespace root")
   @DgsData(parentType = "Mutation", field = "galleryMutations")
   public GalleryMutations getGalleryMutations() {
     return GalleryMutations.newBuilder().build();
@@ -140,6 +146,7 @@ public class GalleryDataFetcher {
    * @param input the input data for the gallery item
    * @return the created gallery item
    */
+  @Audited(event = "CREATE")
   @DgsData(parentType = "GalleryMutations", field = "create")
   @PreAuthorize("@permissions.has('graphql.cerberus.create')")
   @Transactional

@@ -1,5 +1,5 @@
 package com.sun.fates.graphql.resolvers;
-
+import com.sun.base.audit.annotation.Audited;
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
 import com.sun.fates.codegen.types.CreatePersonResponse;
@@ -27,7 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.sun.base.audit.annotation.NotAudited;
 /**
  * Data fetchers for the people queries and mutations.
  */
@@ -54,6 +54,7 @@ public class FatesDataFetcher {
    *
    * @return the FatesQueries builder
    */
+  @NotAudited(reason = "namespace root")
   @DgsData(parentType = "Query", field = "fatesQueries")
   public FatesQueries getFatesQueries() {
     return FatesQueries.newBuilder().build();
@@ -65,6 +66,7 @@ public class FatesDataFetcher {
    * @param id the person id
    * @return the Person object
    */
+  @Audited(event = "PERSON")
   @DgsData(parentType = "FatesQueries", field = "person")
   @PreAuthorize("@permissions.has('graphql.fates.person')")
   @Transactional(readOnly = true)
@@ -79,6 +81,7 @@ public class FatesDataFetcher {
    *
    * @return a list of Person objects
    */
+  @Audited(event = "LISTPEOPLE", entity = "People")
   @DgsData(parentType = "FatesQueries", field = "listPeople")
   @PreAuthorize("@permissions.has('graphql.fates.listPeople')")
   @Transactional(readOnly = true)
@@ -94,6 +97,7 @@ public class FatesDataFetcher {
    * @param id the place id
    * @return the Place object
    */
+  @Audited(event = "PLACE")
   @DgsData(parentType = "FatesQueries", field = "place")
   @PreAuthorize("@permissions.has('graphql.fates.place')")
   @Transactional(readOnly = true)
@@ -108,6 +112,7 @@ public class FatesDataFetcher {
    *
    * @return a list of Place objects
    */
+  @Audited(event = "LISTPLACES", entity = "Place")
   @DgsData(parentType = "FatesQueries", field = "listPlaces")
   @PreAuthorize("@permissions.has('graphql.fates.listPlaces')")
   @Transactional(readOnly = true)
@@ -122,6 +127,7 @@ public class FatesDataFetcher {
    *
    * @return the FatesMutations builder
    */
+  @NotAudited(reason = "namespace root")
   @DgsData(parentType = "Mutation", field = "fatesMutations")
   public FatesMutations getFatesMutations() {
     return FatesMutations.newBuilder().build();
@@ -133,6 +139,7 @@ public class FatesDataFetcher {
    * @param input the person input
    * @return the created person
    */
+  @Audited(event = "CREATEPERSON", entity = "Person")
   @DgsData(parentType = "FatesMutations", field = "createPerson")
   @PreAuthorize("@permissions.has('graphql.fates.createPerson')")
   @Transactional
@@ -153,6 +160,7 @@ public class FatesDataFetcher {
    * @param input the person input
    * @return the updated person
    */
+  @Audited(event = "SAVEPERSON", entity = "Person")
   @DgsData(parentType = "FatesMutations", field = "savePerson")
   @PreAuthorize("@permissions.has('graphql.fates.savePerson')")
   @Transactional
@@ -174,6 +182,7 @@ public class FatesDataFetcher {
    * @param id the person id
    * @return the deleted person id
    */
+  @Audited(event = "DELETEPERSON", entity = "Person")
   @DgsData(parentType = "FatesMutations", field = "deletePerson")
   @PreAuthorize("@permissions.has('graphql.fates.deletePerson')")
   @Transactional
@@ -193,6 +202,7 @@ public class FatesDataFetcher {
    * @param input the place input
    * @return the created place
    */
+  @Audited(event = "CREATEPLACE", entity = "Place")
   @DgsData(parentType = "FatesMutations", field = "createPlace")
   @PreAuthorize("@permissions.has('graphql.fates.createPlace')")
   @Transactional
@@ -213,6 +223,7 @@ public class FatesDataFetcher {
    * @param input the place input
    * @return the updated place
    */
+  @Audited(event = "SAVEPLACE", entity = "Place")
   @DgsData(parentType = "FatesMutations", field = "savePlace")
   @PreAuthorize("@permissions.has('graphql.fates.savePlace')")
   @Transactional
@@ -234,6 +245,7 @@ public class FatesDataFetcher {
    * @param id the place id
    * @return the deleted place id
    */
+  @Audited(event = "DELETEPLACE", entity = "Place")
   @DgsData(parentType = "FatesMutations", field = "deletePlace")
   @PreAuthorize("@permissions.has('graphql.fates.deletePlace')")
   @Transactional

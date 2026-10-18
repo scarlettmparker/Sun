@@ -2,6 +2,7 @@ package com.sun.gaia.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
+import com.sun.base.audit.annotation.Audited;
 import com.sun.gaia.codegen.types.IssueApiKeyResponse;
 import com.sun.gaia.codegen.types.IssuedApiKey;
 import com.sun.gaia.codegen.types.RevokeApiKeyResponse;
@@ -44,6 +45,7 @@ public class ApiKeyDataFetcher {
    * @param name            the key label
    * @return the issued key and its one-time plaintext
    */
+  @Audited(event = "APIKEY_ISSUE", entity = "ApiKey")
   @DgsData(parentType = "GaiaMutations", field = "issueApiKey")
   @PreAuthorize("@permissions.has('graphql.gaia.issueApiKey')")
   @Transactional
@@ -67,6 +69,7 @@ public class ApiKeyDataFetcher {
    * @param id the key id
    * @return a success result
    */
+  @Audited(event = "APIKEY_REVOKE", entity = "ApiKey")
   @DgsData(parentType = "GaiaMutations", field = "revokeApiKey")
   @PreAuthorize("@permissions.has('graphql.gaia.revokeApiKey')")
   @Transactional
@@ -85,6 +88,7 @@ public class ApiKeyDataFetcher {
    * @param id the key id
    * @return the rotated key and its one-time plaintext
    */
+  @Audited(event = "APIKEY_ROTATE", entity = "ApiKey")
   @DgsData(parentType = "GaiaMutations", field = "rotateApiKey")
   @PreAuthorize("@permissions.has('graphql.gaia.rotateApiKey')")
   @Transactional

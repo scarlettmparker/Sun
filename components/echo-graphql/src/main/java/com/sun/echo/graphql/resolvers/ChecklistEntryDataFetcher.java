@@ -1,5 +1,5 @@
 package com.sun.echo.graphql.resolvers;
-
+import com.sun.base.audit.annotation.Audited;
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
 import com.sun.echo.codegen.types.AddItemResponse;
@@ -73,6 +73,7 @@ public class ChecklistEntryDataFetcher {
    * @param id the entry id
    * @return the ChecklistEntry object
    */
+  @Audited(event = "ENTRY")
   @DgsData(parentType = "ChecklistQueries", field = "entry")
   @PreAuthorize("@permissions.has('graphql.echo.entry')")
   @Transactional(readOnly = true)
@@ -86,6 +87,7 @@ public class ChecklistEntryDataFetcher {
    * @param id the entry id
    * @return the ChecklistDetail object
    */
+  @Audited(event = "ENTRYDETAILS")
   @DgsData(parentType = "ChecklistQueries", field = "entryDetails")
   @PreAuthorize("@permissions.has('graphql.echo.entryDetails')")
   @Transactional(readOnly = true)
@@ -100,6 +102,7 @@ public class ChecklistEntryDataFetcher {
    * @param pagination the pagination and sort input
    * @return a page of ChecklistEntryItem objects
    */
+  @Audited(event = "ENTRYITEMS")
   @DgsData(parentType = "ChecklistQueries", field = "entryItems")
   @PreAuthorize("@permissions.has('graphql.echo.entryItems')")
   @Transactional(readOnly = true)
@@ -119,6 +122,7 @@ public class ChecklistEntryDataFetcher {
    *
    * @return a list of ChecklistEntry objects
    */
+  @Audited(event = "LISTENTRIES", entity = "Entrie")
   @DgsData(parentType = "ChecklistQueries", field = "listEntries")
   @PreAuthorize("@permissions.has('graphql.echo.listEntries')")
   @Transactional(readOnly = true)
@@ -132,6 +136,7 @@ public class ChecklistEntryDataFetcher {
    * @param name an optional name
    * @return the created checklist entry
    */
+  @Audited(event = "CREATECHECKLIST", entity = "Checklist")
   @DgsData(parentType = "ChecklistMutations", field = "createChecklist")
   @PreAuthorize("@permissions.has('graphql.echo.createChecklist')")
   @Transactional
@@ -153,6 +158,7 @@ public class ChecklistEntryDataFetcher {
    * @param templateId the template id
    * @return the created checklist entry
    */
+  @Audited(event = "CREATECHECKLISTFROMTEMPLATE", entity = "ChecklistFromTemplate")
   @DgsData(parentType = "ChecklistMutations", field = "createChecklistFromTemplate")
   @PreAuthorize("@permissions.has('graphql.echo.createChecklistFromTemplate')")
   @Transactional
@@ -173,6 +179,7 @@ public class ChecklistEntryDataFetcher {
    * @param name an optional name for the new entry
    * @return the created checklist entry
    */
+  @Audited(event = "CREATECHECKLISTFROMTEMPLATES", entity = "ChecklistFromTemplate")
   @DgsData(parentType = "ChecklistMutations", field = "createChecklistFromTemplates")
   @PreAuthorize("@permissions.has('graphql.echo.createChecklistFromTemplates')")
   @Transactional
@@ -193,6 +200,7 @@ public class ChecklistEntryDataFetcher {
    * @param input the entry input
    * @return the saved checklist entry
    */
+  @Audited(event = "SAVECHECKLIST", entity = "Checklist")
   @DgsData(parentType = "ChecklistMutations", field = "saveChecklist")
   @PreAuthorize("@permissions.has('graphql.echo.saveChecklist')")
   @Transactional
@@ -214,6 +222,7 @@ public class ChecklistEntryDataFetcher {
    * @param id the entry id
    * @return the completed checklist entry
    */
+  @Audited(event = "COMPLETECHECKLIST", entity = "Checklist")
   @DgsData(parentType = "ChecklistMutations", field = "completeChecklist")
   @PreAuthorize("@permissions.has('graphql.echo.completeChecklist')")
   @Transactional
@@ -233,6 +242,7 @@ public class ChecklistEntryDataFetcher {
    * @param id the entry id
    * @return the archived checklist entry
    */
+  @Audited(event = "ARCHIVECHECKLIST", entity = "Checklist")
   @DgsData(parentType = "ChecklistMutations", field = "archiveChecklist")
   @PreAuthorize("@permissions.has('graphql.echo.archiveChecklist')")
   @Transactional
@@ -252,6 +262,7 @@ public class ChecklistEntryDataFetcher {
    * @param id the entry id
    * @return the deleted entry id
    */
+  @Audited(event = "DELETECHECKLIST", entity = "Checklist")
   @DgsData(parentType = "ChecklistMutations", field = "deleteChecklist")
   @PreAuthorize("@permissions.has('graphql.echo.deleteChecklist')")
   @Transactional
@@ -274,6 +285,7 @@ public class ChecklistEntryDataFetcher {
    * @param position an optional explicit position
    * @return the updated checklist entry
    */
+  @Audited(event = "ADDITEM", entity = "Item")
   @DgsData(parentType = "ChecklistMutations", field = "addItem")
   @PreAuthorize("@permissions.has('graphql.echo.addItem')")
   @Transactional
@@ -295,6 +307,7 @@ public class ChecklistEntryDataFetcher {
    * @param itemId the item id
    * @return the updated checklist entry
    */
+  @Audited(event = "REMOVEITEM", entity = "Item")
   @DgsData(parentType = "ChecklistMutations", field = "removeItem")
   @PreAuthorize("@permissions.has('graphql.echo.removeItem')")
   @Transactional
@@ -317,6 +330,7 @@ public class ChecklistEntryDataFetcher {
    * @param status the new status (NOT_STARTED, COMPLETE, FAILED, or NOT_NEEDED)
    * @return the updated checklist entry
    */
+  @Audited(event = "SETITEMSTATUS", entity = "ItemStatu")
   @DgsData(parentType = "ChecklistMutations", field = "setItemStatus")
   @PreAuthorize("@permissions.has('graphql.echo.setItemStatus')")
   @Transactional
