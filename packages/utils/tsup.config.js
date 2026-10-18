@@ -7,7 +7,6 @@ export default defineConfig({
     "src/background-colour.ts",
     "src/css-inlining.ts",
     "src/date.ts",
-    "src/posthog.tsx",
     "src/nlp.ts",
     "src/cidr.ts",
     "src/avatar-colour.ts",
@@ -18,12 +17,5 @@ export default defineConfig({
   clean: true,
   minify: false,
   sourcemap: true,
-  external: [
-    "react",
-    "react-dom",
-    "react/jsx-runtime",
-    "@posthog/react",
-    "posthog-js",
-    "posthog-node",
-  ],
+  external: [],
 });

@@ -1,6 +1,6 @@
 {
   "name": "@sun/utils",
-  "version": "0.1.29",
+  "version": "0.2.0",
   "description": "Shared utilities across Sun ecosystem apps",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -26,19 +26,6 @@
   },
   "publishConfig": {
     "registry": "https://registry.int.scarlettparker.co.uk"
-  },
-  "peerDependencies": {
-    "@posthog/react": "*",
-    "posthog-js": "*",
-    "react": "^19.0.0"
-  },
-  "peerDependenciesMeta": {
-    "@posthog/react": {
-      "optional": true
-    },
-    "posthog-js": {
-      "optional": true
-    }
   },
   "devDependencies": {
     "tsup": "^8.3.5",
