@@ -17,12 +17,15 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
  * Rejects any request whose X-Client-Id / X-Client-Secret pair is not known.
+ * The public SDL endpoint is exempt so frontend codegen can pull the schema.
  */
 @Component
 @Profile("!test")
 @ConditionalOnProperty(name = "app.bypass-permissions", havingValue = "false", matchIfMissing = true)
 @Order(Ordered.HIGHEST_PRECEDENCE + 40)
 public class ClientSecretFilter extends OncePerRequestFilter {
+
+  private static final String SCHEMA_PATH = "/graphql/schema";
 
   private final Map<String, String> secrets;
 
@@ -33,6 +36,12 @@ public class ClientSecretFilter extends OncePerRequestFilter {
    */
   public ClientSecretFilter(ClientSecretProperties properties) {
     this.secrets = properties.secrets() == null ? Map.of() : properties.secrets();
+  }
+
+  @Override
+  protected boolean shouldNotFilter(HttpServletRequest request) {
+    return "GET".equalsIgnoreCase(request.getMethod())
+        && SCHEMA_PATH.equals(request.getRequestURI());
   }
 
   @Override
