@@ -1,4 +1,4 @@
-import { defineLoader } from "@sun/ssr";
+import { defineLoader, sharedCall, SHARED_TTL } from "@sun/ssr";
 import { parseThemes, type ResolvedTheme } from "@sun/utils/property-set";
 import { fetchPropertySet } from "./api";
 
@@ -8,17 +8,20 @@ import { fetchPropertySet } from "./api";
 defineLoader({
   pattern: "themes",
   async loader(): Promise<{ themes: ResolvedTheme }> {
-    try {
-      let propertySet: unknown = null;
-      const themesResult = await fetchPropertySet("ReactApp", "themes");
-      if (themesResult.success) {
-        propertySet = (
+    const themes = await sharedCall(
+      "shared:themes",
+      SHARED_TTL.CONFIG,
+      async () => {
+        const themesResult = await fetchPropertySet("ReactApp", "themes");
+        if (!themesResult.success) {
+          throw new Error("themes unavailable");
+        }
+        const propertySet = (
           themesResult.data as { gaiaQueries?: { propertySet?: unknown } }
         )?.gaiaQueries?.propertySet;
-      }
-      return { themes: parseThemes(propertySet) };
-    } catch {
-      return { themes: { current: null, all: [] } };
-    }
+        return parseThemes(propertySet);
+      },
+    ).catch(() => ({ current: null, all: [] }));
+    return { themes };
   },
 });

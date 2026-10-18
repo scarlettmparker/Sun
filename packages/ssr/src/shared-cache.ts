@@ -1,24 +1,26 @@
 /**
- * @fileoverview Cross-request TTL cache for data that doesn't depend on the
- * caller.
+ * @fileoverview Cross-request TTL cache for cookie-independent data.
  */
 
 type SharedEntry = {
-  /** Cached value */
+  /**
+   * Cached value
+   */
   value?: unknown;
-  /** In-flight promise */
+  /**
+   * In-flight promise
+   */
   pending?: Promise<unknown>;
-  /** Creation timestamp */
+  /**
+   * Creation timestamp
+   */
   timestamp: number;
 };
 
 const STORE_KEY = "__sun_sharedCache";
 
 /**
- * The process-wide store. Kept on globalThis because @sun/ssr ships as separate
- * index/react/server bundles that each get their own module scope.
- *
- * @returns The shared map.
+ * @returns The process-wide store.
  */
 function store(): Map<string, SharedEntry> {
   const g = globalThis as unknown as Record<
@@ -30,10 +32,10 @@ function store(): Map<string, SharedEntry> {
 
 /**
  * Returns the cached value for a key, loading it on a miss. Concurrent misses
- * share one in-flight promise. Errors are not cached.
+ * share one in-flight promise.
  *
- * @param key - Stable cache key.
- * @param ttlMs - Freshness window; 0 keeps only the in-flight sharing.
+ * @param key - Cache key.
+ * @param ttlMs - Freshness window in ms.
  * @param load - Runs on a miss.
  * @returns The cached or freshly loaded value.
  */
@@ -66,10 +68,9 @@ export async function sharedCall<T>(
 }
 
 /**
- * Drops entries matching the given keys. Each key is matched whole and by its
- * base (everything before the param block), so a pattern clears every variant.
+ * Drops entries matching the given keys, whole or by their param-block base.
  *
- * @param keys - Cache keys or key bases to drop.
+ * @param keys - Cache keys or key bases.
  */
 export function invalidateSharedCache(keys: string[]): void {
   const entries = store();
@@ -91,14 +92,19 @@ export function clearSharedCache(): void {
 }
 
 /**
- * Freshness windows for {@link sharedCall}, named by what the data is rather
- * than the duration, so call sites read as intent.
+ * Freshness window
  */
 export const SHARED_TTL = {
-  /** Config that only changes on deploy, such as theme and property sets. */
+  /**
+   * Config that only changes on deploy, such as theme and property sets.
+   */
   CONFIG: 5 * 60_000,
-  /** A public list page. */
+  /**
+   * A public list page.
+   */
   LIST: 15_000,
-  /** A single public record. */
+  /**
+   * A single public record.
+   */
   RECORD: 30_000,
 } as const;

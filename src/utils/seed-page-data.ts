@@ -1,4 +1,4 @@
-import { getRequestCache, makeCacheKey } from "@sun/ssr";
+import { getRequestCache, makeCacheKey, sharedCall, SHARED_TTL } from "@sun/ssr";
 import { fetchPropertySet } from "./api";
 import type { MeQuery } from "~/generated/graphql";
 
@@ -24,25 +24,27 @@ function seed(key: string, result: Record<string, unknown>): void {
  * @returns the level name to hex colour map
  */
 export async function loadLevelColours(): Promise<LevelColours> {
-  const res = await fetchPropertySet("ReactApp", "reader-level-colours");
-  if (!res.success || !res.data) {
-    return {};
-  }
-  const entries = (
-    res.data as {
-      gaiaQueries?: { propertySet?: Record<string, { colour?: string }> };
+  return sharedCall("shared:levelColours", SHARED_TTL.CONFIG, async () => {
+    const res = await fetchPropertySet("ReactApp", "reader-level-colours");
+    if (!res.success || !res.data) {
+      throw new Error("reader-level-colours unavailable");
     }
-  )?.gaiaQueries?.propertySet;
-  if (!entries) {
-    return {};
-  }
-  const colours: LevelColours = {};
-  for (const [name, value] of Object.entries(entries)) {
-    if (value?.colour) {
-      colours[name] = value.colour;
+    const entries = (
+      res.data as {
+        gaiaQueries?: { propertySet?: Record<string, { colour?: string }> };
+      }
+    )?.gaiaQueries?.propertySet;
+    if (!entries) {
+      return {};
     }
-  }
-  return colours;
+    const colours: LevelColours = {};
+    for (const [name, value] of Object.entries(entries)) {
+      if (value?.colour) {
+        colours[name] = value.colour;
+      }
+    }
+    return colours;
+  }).catch(() => ({}));
 }
 
 /**

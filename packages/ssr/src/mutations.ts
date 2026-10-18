@@ -55,7 +55,6 @@ async function executeMutation(
     throw new MutationError(`Unknown mutation path: ${path}`, 404);
   }
   const result = await handler(body, context);
-  // A handler that declares the keys it changed flushes the shared reads.
   if (
     result &&
     typeof result === "object" &&

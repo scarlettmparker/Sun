@@ -11,6 +11,7 @@ import {
 } from "@sun/ssr/server";
 import { createI18nInstance } from "./utils/i18n";
 import { fetchPropertySet } from "./utils/api";
+import { sharedCall, SHARED_TTL } from "@sun/ssr";
 import { parseThemes } from "@sun/utils/property-set";
 import { configureApi } from "@sun/api";
 import { AUTH_COOKIE } from "./utils/auth";
@@ -59,19 +60,16 @@ const renderer = createRenderer({
     });
   },
   async resolveTheme() {
-    try {
-      // Sun loads its themes from the "themes" property set.
-      let propertySet: unknown = null;
+    return sharedCall("shared:themes", SHARED_TTL.CONFIG, async () => {
       const themesResult = await fetchPropertySet("ReactApp", "themes");
-      if (themesResult.success) {
-        propertySet = (
-          themesResult.data as { gaiaQueries?: { propertySet?: unknown } }
-        )?.gaiaQueries?.propertySet;
+      if (!themesResult.success) {
+        throw new Error("themes unavailable");
       }
+      const propertySet = (
+        themesResult.data as { gaiaQueries?: { propertySet?: unknown } }
+      )?.gaiaQueries?.propertySet;
       return parseThemes(propertySet);
-    } catch {
-      return { current: null, all: [] };
-    }
+    }).catch(() => ({ current: null, all: [] }));
   },
 });
 
