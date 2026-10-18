@@ -2,7 +2,6 @@ package com.sun.cerberus.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
-import com.sun.base.error.MutationException;
 import com.sun.cerberus.codegen.types.CreateGalleryItemResponse;
 import com.sun.cerberus.codegen.types.GalleryItem;
 import com.sun.cerberus.codegen.types.GalleryItemInput;
@@ -147,18 +146,13 @@ public class GalleryDataFetcher {
   public CreateGalleryItemResponse create(GalleryItemInput input) {
     logger.info("Creating gallery item with title: {}", input.getTitle());
 
-    try {
-      GalleryItemEntity galleryItemEntity = galleryItemMapper.mapInput(input);
-      GalleryItemEntity savedEntity = cerberusService.save(galleryItemEntity);
+    GalleryItemEntity galleryItemEntity = galleryItemMapper.mapInput(input);
+    GalleryItemEntity savedEntity = cerberusService.save(galleryItemEntity);
 
-      logger.info("Successfully created gallery item with id: {}", savedEntity.getId());
-      return CreateGalleryItemResponse.newBuilder()
-          .message("Gallery item created successfully")
-          .item(galleryItemMapper.map(savedEntity))
-          .build();
-    } catch (Exception e) {
-      logger.error("Failed to create gallery item with title: {}", input.getTitle(), e);
-      throw new MutationException("Failed to create gallery item: " + e.getMessage(), e);
-    }
+    logger.info("Successfully created gallery item with id: {}", savedEntity.getId());
+    return CreateGalleryItemResponse.newBuilder()
+        .message("Gallery item created successfully")
+        .item(galleryItemMapper.map(savedEntity))
+        .build();
   }
 }

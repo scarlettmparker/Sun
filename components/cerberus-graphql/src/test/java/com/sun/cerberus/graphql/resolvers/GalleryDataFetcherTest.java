@@ -18,7 +18,6 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.ArgumentMatchers.any;
 import java.util.Optional;
 
-import com.sun.base.error.MutationException;
 import com.sun.cerberus.graphql.mappers.GalleryItemMapper;
 import com.sun.cerberus.service.CerberusService;
 import com.sun.cerberus.model.GalleryItemEntity;
@@ -191,7 +190,7 @@ class GalleryDataFetcherTest {
   }
 
   @Test
-  void create_shouldThrowMutationExceptionWhenExceptionOccurs() {
+  void create_shouldPropagateExceptionWhenExceptionOccurs() {
     GalleryItemInput input = GalleryItemInput.newBuilder()
         .title("New Gallery Item")
         .description("New Description")
@@ -211,7 +210,7 @@ class GalleryDataFetcherTest {
     doThrow(new RuntimeException("Database error")).when(cerberusService).save(galleryItemEntity);
 
     assertThatThrownBy(() -> galleryDataFetcher.create(input))
-        .isInstanceOf(MutationException.class)
-        .hasMessageContaining("Failed to create gallery item: Database error");
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Database error");
   }
 }
