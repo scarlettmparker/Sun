@@ -2,7 +2,6 @@ package com.sun.hades.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
-import com.sun.base.error.MutationException;
 import com.sun.hades.codegen.types.AddCommentResponse;
 import com.sun.hades.codegen.types.CommentInput;
 import com.sun.hades.codegen.types.DeleteCommentResponse;
@@ -103,22 +102,17 @@ public class ReaderCommentDataFetcher {
   @PreAuthorize("@permissions.has('graphql.hades.addComment')")
   @Transactional
   public AddCommentResponse addComment(CommentInput input) {
-    try {
-      UUID id = commentService.addComment(
-          UUID.fromString(input.getAnnotationId()),
-          input.getParentId() == null ? null : UUID.fromString(input.getParentId()),
-          input.getBody());
-      logger.info("addComment succeeded for id {}", id);
-      ReaderCommentEntity comment = commentService.findById(id)
-          .orElseThrow(() -> new IllegalArgumentException("Comment not found: " + id));
-      return AddCommentResponse.newBuilder()
-          .message("Comment added successfully")
-          .comment(commentMapper.map(comment, null, null))
-          .build();
-    } catch (Exception e) {
-      logger.error("addComment failed", e);
-      throw new MutationException("addComment failed: " + e.getMessage(), e);
-    }
+    UUID id = commentService.addComment(
+        UUID.fromString(input.getAnnotationId()),
+        input.getParentId() == null ? null : UUID.fromString(input.getParentId()),
+        input.getBody());
+    logger.info("addComment succeeded for id {}", id);
+    ReaderCommentEntity comment = commentService.findById(id)
+        .orElseThrow(() -> new IllegalArgumentException("Comment not found: " + id));
+    return AddCommentResponse.newBuilder()
+        .message("Comment added successfully")
+        .comment(commentMapper.map(comment, null, null))
+        .build();
   }
 
   /**
@@ -132,19 +126,14 @@ public class ReaderCommentDataFetcher {
   @PreAuthorize("@permissions.has('graphql.hades.editComment')")
   @Transactional
   public EditCommentResponse editComment(String id, String body) {
-    try {
-      UUID commentId = commentService.editComment(UUID.fromString(id), body);
-      logger.info("editComment succeeded for id {}", commentId);
-      ReaderCommentEntity comment = commentService.findById(commentId)
-          .orElseThrow(() -> new IllegalArgumentException("Comment not found: " + commentId));
-      return EditCommentResponse.newBuilder()
-          .message("Comment updated successfully")
-          .comment(commentMapper.map(comment, null, null))
-          .build();
-    } catch (Exception e) {
-      logger.error("editComment failed", e);
-      throw new MutationException("editComment failed: " + e.getMessage(), e);
-    }
+    UUID commentId = commentService.editComment(UUID.fromString(id), body);
+    logger.info("editComment succeeded for id {}", commentId);
+    ReaderCommentEntity comment = commentService.findById(commentId)
+        .orElseThrow(() -> new IllegalArgumentException("Comment not found: " + commentId));
+    return EditCommentResponse.newBuilder()
+        .message("Comment updated successfully")
+        .comment(commentMapper.map(comment, null, null))
+        .build();
   }
 
   /**
@@ -157,16 +146,11 @@ public class ReaderCommentDataFetcher {
   @PreAuthorize("@permissions.has('graphql.hades.deleteComment')")
   @Transactional
   public DeleteCommentResponse deleteComment(String id) {
-    try {
-      commentService.deleteComment(UUID.fromString(id));
-      logger.info("deleteComment succeeded for id {}", id);
-      return DeleteCommentResponse.newBuilder()
-          .message("Comment deleted successfully")
-          .id(id)
-          .build();
-    } catch (Exception e) {
-      logger.error("deleteComment failed", e);
-      throw new MutationException("deleteComment failed: " + e.getMessage(), e);
-    }
+    commentService.deleteComment(UUID.fromString(id));
+    logger.info("deleteComment succeeded for id {}", id);
+    return DeleteCommentResponse.newBuilder()
+        .message("Comment deleted successfully")
+        .id(id)
+        .build();
   }
 }

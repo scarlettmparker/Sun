@@ -2,7 +2,6 @@ package com.sun.hades.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
-import com.sun.base.error.MutationException;
 import com.sun.hades.codegen.types.VoteInput;
 import com.sun.hades.codegen.types.VoteReaderResponse;
 import com.sun.hades.graphql.mappers.ReaderAnnotationMapper;
@@ -68,17 +67,12 @@ public class ReaderVoteDataFetcher {
   @PreAuthorize("@permissions.has('graphql.hades.vote')")
   @Transactional
   public VoteReaderResponse vote(VoteInput input) {
-    try {
-      UUID id = voteService.vote(
-          input.getTargetType(),
-          UUID.fromString(input.getTargetId()),
-          input.getValue());
-      logger.info("vote succeeded for id {}", id);
-      return response("Vote recorded successfully", input.getTargetType(), id);
-    } catch (Exception e) {
-      logger.error("vote failed", e);
-      throw new MutationException("vote failed: " + e.getMessage(), e);
-    }
+    UUID id = voteService.vote(
+        input.getTargetType(),
+        UUID.fromString(input.getTargetId()),
+        input.getValue());
+    logger.info("vote succeeded for id {}", id);
+    return response("Vote recorded successfully", input.getTargetType(), id);
   }
 
   /**
@@ -92,14 +86,9 @@ public class ReaderVoteDataFetcher {
   @PreAuthorize("@permissions.has('graphql.hades.removeVote')")
   @Transactional
   public VoteReaderResponse removeVote(ReaderVoteTarget targetType, String targetId) {
-    try {
-      UUID id = voteService.removeVote(targetType, UUID.fromString(targetId));
-      logger.info("removeVote succeeded for id {}", id);
-      return response("Vote removed successfully", targetType, id);
-    } catch (Exception e) {
-      logger.error("removeVote failed", e);
-      throw new MutationException("removeVote failed: " + e.getMessage(), e);
-    }
+    UUID id = voteService.removeVote(targetType, UUID.fromString(targetId));
+    logger.info("removeVote succeeded for id {}", id);
+    return response("Vote removed successfully", targetType, id);
   }
 
   /**

@@ -9,7 +9,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.sun.base.error.MutationException;
 import com.sun.hades.codegen.types.AnnotationInput;
 import com.sun.hades.codegen.types.AttachReaderObjectResponse;
 import com.sun.hades.codegen.types.CreateAnnotationResponse;
@@ -142,7 +141,7 @@ class ReaderAnnotationDataFetcherTest {
         .textId(textId.toString()).startOffset(0).endOffset(10).body("body").build();
 
     assertThatThrownBy(() -> fetcher.createAnnotation(input))
-        .isInstanceOf(MutationException.class)
+        .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("overlaps");
   }
 
@@ -168,7 +167,7 @@ class ReaderAnnotationDataFetcherTest {
     when(annotationService.editAnnotation(eq(id), any())).thenThrow(new IllegalArgumentException("Not the author"));
 
     assertThatThrownBy(() -> fetcher.editAnnotation(id.toString(), "body"))
-        .isInstanceOf(MutationException.class)
+        .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("Not the author");
   }
 
@@ -189,7 +188,7 @@ class ReaderAnnotationDataFetcherTest {
         .when(annotationService).deleteAnnotation(id);
 
     assertThatThrownBy(() -> fetcher.deleteAnnotation(id.toString()))
-        .isInstanceOf(MutationException.class);
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test

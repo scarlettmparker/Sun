@@ -2,7 +2,6 @@ package com.sun.hades.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
-import com.sun.base.error.MutationException;
 import com.sun.base.ratelimit.RateLimit;
 import com.sun.hades.codegen.types.AnnotationInput;
 import com.sun.hades.codegen.types.AttachReaderObjectResponse;
@@ -151,20 +150,15 @@ public class ReaderAnnotationDataFetcher {
   @RateLimit(capacity = 1, refillPerSecond = 0.0667)
   @Transactional
   public CreateAnnotationResponse createAnnotation(AnnotationInput input) {
-    try {
-      UUID id = annotationService.createAnnotation(
-          UUID.fromString(input.getTextId()), input.getStartOffset(), input.getEndOffset(), input.getBody());
-      logger.info("createAnnotation succeeded for id {}", id);
-      ReaderAnnotationEntity annotation = annotationService.findById(id)
-          .orElseThrow(() -> new IllegalArgumentException("Annotation not found: " + id));
-      return CreateAnnotationResponse.newBuilder()
-          .message("Annotation created successfully")
-          .annotation(annotationMapper.map(annotation, null, null, 0, null))
-          .build();
-    } catch (Exception e) {
-      logger.error("createAnnotation failed", e);
-      throw new MutationException("createAnnotation failed: " + e.getMessage(), e);
-    }
+    UUID id = annotationService.createAnnotation(
+        UUID.fromString(input.getTextId()), input.getStartOffset(), input.getEndOffset(), input.getBody());
+    logger.info("createAnnotation succeeded for id {}", id);
+    ReaderAnnotationEntity annotation = annotationService.findById(id)
+        .orElseThrow(() -> new IllegalArgumentException("Annotation not found: " + id));
+    return CreateAnnotationResponse.newBuilder()
+        .message("Annotation created successfully")
+        .annotation(annotationMapper.map(annotation, null, null, 0, null))
+        .build();
   }
 
   /**
@@ -178,19 +172,14 @@ public class ReaderAnnotationDataFetcher {
   @PreAuthorize("@permissions.has('graphql.hades.editAnnotation')")
   @Transactional
   public EditAnnotationResponse editAnnotation(String id, String body) {
-    try {
-      UUID annotationId = annotationService.editAnnotation(UUID.fromString(id), body);
-      logger.info("editAnnotation succeeded for id {}", annotationId);
-      ReaderAnnotationEntity annotation = annotationService.findById(annotationId)
-          .orElseThrow(() -> new IllegalArgumentException("Annotation not found: " + annotationId));
-      return EditAnnotationResponse.newBuilder()
-          .message("Annotation updated successfully")
-          .annotation(annotationMapper.map(annotation, null, null, 0, null))
-          .build();
-    } catch (Exception e) {
-      logger.error("editAnnotation failed", e);
-      throw new MutationException("editAnnotation failed: " + e.getMessage(), e);
-    }
+    UUID annotationId = annotationService.editAnnotation(UUID.fromString(id), body);
+    logger.info("editAnnotation succeeded for id {}", annotationId);
+    ReaderAnnotationEntity annotation = annotationService.findById(annotationId)
+        .orElseThrow(() -> new IllegalArgumentException("Annotation not found: " + annotationId));
+    return EditAnnotationResponse.newBuilder()
+        .message("Annotation updated successfully")
+        .annotation(annotationMapper.map(annotation, null, null, 0, null))
+        .build();
   }
 
   /**
@@ -203,17 +192,12 @@ public class ReaderAnnotationDataFetcher {
   @PreAuthorize("@permissions.has('graphql.hades.deleteAnnotation')")
   @Transactional
   public DeleteAnnotationResponse deleteAnnotation(String id) {
-    try {
-      annotationService.deleteAnnotation(UUID.fromString(id));
-      logger.info("deleteAnnotation succeeded for id {}", id);
-      return DeleteAnnotationResponse.newBuilder()
-          .message("Annotation deleted successfully")
-          .id(id)
-          .build();
-    } catch (Exception e) {
-      logger.error("deleteAnnotation failed", e);
-      throw new MutationException("deleteAnnotation failed: " + e.getMessage(), e);
-    }
+    annotationService.deleteAnnotation(UUID.fromString(id));
+    logger.info("deleteAnnotation succeeded for id {}", id);
+    return DeleteAnnotationResponse.newBuilder()
+        .message("Annotation deleted successfully")
+        .id(id)
+        .build();
   }
 
   /**
@@ -227,16 +211,11 @@ public class ReaderAnnotationDataFetcher {
   @PreAuthorize("@permissions.has('graphql.hades.attachObject')")
   @Transactional
   public AttachReaderObjectResponse attachObject(String source, String target) {
-    try {
-      UUID id = annotationService.attach(UUID.fromString(source), target);
-      logger.info("attachObject succeeded for id {}", id);
-      return AttachReaderObjectResponse.newBuilder()
-          .message("Object attached successfully")
-          .id(id.toString())
-          .build();
-    } catch (Exception e) {
-      logger.error("attachObject failed", e);
-      throw new MutationException("attachObject failed: " + e.getMessage(), e);
-    }
+    UUID id = annotationService.attach(UUID.fromString(source), target);
+    logger.info("attachObject succeeded for id {}", id);
+    return AttachReaderObjectResponse.newBuilder()
+        .message("Object attached successfully")
+        .id(id.toString())
+        .build();
   }
 }

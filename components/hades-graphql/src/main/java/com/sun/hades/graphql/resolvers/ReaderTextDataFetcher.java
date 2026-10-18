@@ -3,7 +3,6 @@ package com.sun.hades.graphql.resolvers;
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
 import com.netflix.graphql.dgs.DgsDataFetchingEnvironment;
-import com.sun.base.error.MutationException;
 import com.sun.base.util.FilterSpec;
 import com.sun.base.util.GraphQLSupport;
 import com.sun.gaia.service.UserContextHolder;
@@ -231,21 +230,16 @@ public class ReaderTextDataFetcher {
   @PreAuthorize("@permissions.has('graphql.hades.createSource')")
   @Transactional
   public CreateSourceResponse createSource(String name, String url) {
-    try {
-      requireUser();
-      ReaderSourceEntity entity = new ReaderSourceEntity();
-      entity.setName(name);
-      entity.setUrl(url);
-      ReaderSourceEntity saved = sourceService.save(entity);
-      logger.info("createSource succeeded for id {}", saved.getId());
-      return CreateSourceResponse.newBuilder()
-          .message("Source created successfully")
-          .source(sourceMapper.map(saved))
-          .build();
-    } catch (Exception e) {
-      logger.error("createSource failed", e);
-      throw new MutationException("createSource failed: " + e.getMessage(), e);
-    }
+    requireUser();
+    ReaderSourceEntity entity = new ReaderSourceEntity();
+    entity.setName(name);
+    entity.setUrl(url);
+    ReaderSourceEntity saved = sourceService.save(entity);
+    logger.info("createSource succeeded for id {}", saved.getId());
+    return CreateSourceResponse.newBuilder()
+        .message("Source created successfully")
+        .source(sourceMapper.map(saved))
+        .build();
   }
 
   /**
@@ -258,19 +252,14 @@ public class ReaderTextDataFetcher {
   @PreAuthorize("@permissions.has('graphql.hades.createText')")
   @Transactional
   public CreateTextResponse createText(ReaderTextInput input) {
-    try {
-      requireUser();
-      ReaderTextEntity entity = textMapper.mapInput(input);
-      ReaderTextEntity saved = textService.save(entity);
-      logger.info("createText succeeded for id {}", saved.getId());
-      return CreateTextResponse.newBuilder()
-          .message("Text created successfully")
-          .text(textMapper.map(saved))
-          .build();
-    } catch (Exception e) {
-      logger.error("createText failed", e);
-      throw new MutationException("createText failed: " + e.getMessage(), e);
-    }
+    requireUser();
+    ReaderTextEntity entity = textMapper.mapInput(input);
+    ReaderTextEntity saved = textService.save(entity);
+    logger.info("createText succeeded for id {}", saved.getId());
+    return CreateTextResponse.newBuilder()
+        .message("Text created successfully")
+        .text(textMapper.map(saved))
+        .build();
   }
 
   /**
@@ -283,21 +272,16 @@ public class ReaderTextDataFetcher {
   @PreAuthorize("@permissions.has('graphql.hades.archiveText')")
   @Transactional
   public ArchiveTextResponse archiveText(String id) {
-    try {
-      requireUser();
-      ReaderTextEntity text = textService.findById(UUID.fromString(id))
-          .orElseThrow(() -> new IllegalArgumentException("Text not found: " + id));
-      text.setStatus(ReaderTextStatus.ARCHIVED);
-      ReaderTextEntity saved = textService.save(text);
-      logger.info("archiveText succeeded for id {}", saved.getId());
-      return ArchiveTextResponse.newBuilder()
-          .message("Text archived successfully")
-          .text(textMapper.map(saved))
-          .build();
-    } catch (Exception e) {
-      logger.error("archiveText failed", e);
-      throw new MutationException("archiveText failed: " + e.getMessage(), e);
-    }
+    requireUser();
+    ReaderTextEntity text = textService.findById(UUID.fromString(id))
+        .orElseThrow(() -> new IllegalArgumentException("Text not found: " + id));
+    text.setStatus(ReaderTextStatus.ARCHIVED);
+    ReaderTextEntity saved = textService.save(text);
+    logger.info("archiveText succeeded for id {}", saved.getId());
+    return ArchiveTextResponse.newBuilder()
+        .message("Text archived successfully")
+        .text(textMapper.map(saved))
+        .build();
   }
 
   /**
@@ -310,17 +294,12 @@ public class ReaderTextDataFetcher {
   @PreAuthorize("@permissions.has('graphql.hades.markViewed')")
   @Transactional
   public MarkViewedResponse markViewed(String textId) {
-    try {
-      textViewService.markViewed(UUID.fromString(textId));
-      logger.info("markViewed succeeded for id {}", textId);
-      return MarkViewedResponse.newBuilder()
-          .message("Text marked as viewed")
-          .textId(textId)
-          .build();
-    } catch (Exception e) {
-      logger.error("markViewed failed", e);
-      throw new MutationException("markViewed failed: " + e.getMessage(), e);
-    }
+    textViewService.markViewed(UUID.fromString(textId));
+    logger.info("markViewed succeeded for id {}", textId);
+    return MarkViewedResponse.newBuilder()
+        .message("Text marked as viewed")
+        .textId(textId)
+        .build();
   }
 
   /**

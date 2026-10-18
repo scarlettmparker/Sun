@@ -7,7 +7,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.netflix.graphql.dgs.DgsDataFetchingEnvironment;
-import com.sun.base.error.MutationException;
 import com.sun.gaia.service.UserContextHolder;
 import com.sun.hades.codegen.types.ArchiveTextResponse;
 import com.sun.hades.codegen.types.CreateSourceResponse;
@@ -241,7 +240,7 @@ class ReaderTextDataFetcherTest {
     UserContextHolder.clear();
 
     assertThatThrownBy(() -> fetcher.createSource("Name", "https://example.com"))
-        .isInstanceOf(MutationException.class);
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
@@ -269,7 +268,7 @@ class ReaderTextDataFetcherTest {
     when(textService.save(any())).thenThrow(new RuntimeException("fail"));
 
     assertThatThrownBy(() -> fetcher.createText(input))
-        .isInstanceOf(MutationException.class)
+        .isInstanceOf(RuntimeException.class)
         .hasMessageContaining("fail");
   }
 
@@ -299,7 +298,7 @@ class ReaderTextDataFetcherTest {
     when(textService.findById(id)).thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> fetcher.archiveText(id.toString()))
-        .isInstanceOf(MutationException.class);
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
@@ -319,6 +318,6 @@ class ReaderTextDataFetcherTest {
         .when(textViewService).markViewed(id);
 
     assertThatThrownBy(() -> fetcher.markViewed(id.toString()))
-        .isInstanceOf(MutationException.class);
+        .isInstanceOf(IllegalArgumentException.class);
   }
 }

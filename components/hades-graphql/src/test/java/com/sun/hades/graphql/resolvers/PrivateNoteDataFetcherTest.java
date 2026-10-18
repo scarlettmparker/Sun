@@ -8,7 +8,6 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.sun.base.error.MutationException;
 import com.sun.hades.codegen.types.CreatePrivateNoteResponse;
 import com.sun.hades.codegen.types.DeletePrivateNoteResponse;
 import com.sun.hades.codegen.types.PagedPrivateNotes;
@@ -90,7 +89,7 @@ class PrivateNoteDataFetcherTest {
         .thenThrow(new IllegalArgumentException("Invalid private note"));
 
     assertThatThrownBy(() -> fetcher.createPrivateNote(input))
-        .isInstanceOf(MutationException.class)
+        .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("Invalid private note");
   }
 
@@ -110,7 +109,7 @@ class PrivateNoteDataFetcherTest {
     doThrow(new IllegalArgumentException("Not the owner")).when(privateNoteService).deletePrivateNote(id);
 
     assertThatThrownBy(() -> fetcher.deletePrivateNote(id.toString()))
-        .isInstanceOf(MutationException.class);
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
@@ -135,6 +134,6 @@ class PrivateNoteDataFetcherTest {
         .thenThrow(new IllegalArgumentException("Text not found"));
 
     assertThatThrownBy(() -> fetcher.shareNotes(input))
-        .isInstanceOf(MutationException.class);
+        .isInstanceOf(IllegalArgumentException.class);
   }
 }

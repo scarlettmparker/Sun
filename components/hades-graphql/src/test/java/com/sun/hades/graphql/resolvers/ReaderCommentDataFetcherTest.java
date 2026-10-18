@@ -8,7 +8,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.sun.base.error.MutationException;
 import com.sun.hades.codegen.types.AddCommentResponse;
 import com.sun.hades.codegen.types.CommentInput;
 import com.sun.hades.codegen.types.DeleteCommentResponse;
@@ -138,7 +137,7 @@ class ReaderCommentDataFetcherTest {
     when(commentService.addComment(any(), any(), any())).thenThrow(new IllegalArgumentException("Invalid comment"));
 
     assertThatThrownBy(() -> fetcher.addComment(input))
-        .isInstanceOf(MutationException.class);
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
@@ -174,6 +173,6 @@ class ReaderCommentDataFetcherTest {
         .when(commentService).deleteComment(id);
 
     assertThatThrownBy(() -> fetcher.deleteComment(id.toString()))
-        .isInstanceOf(MutationException.class);
+        .isInstanceOf(IllegalArgumentException.class);
   }
 }

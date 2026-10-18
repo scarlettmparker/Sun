@@ -2,7 +2,6 @@ package com.sun.hades.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
-import com.sun.base.error.MutationException;
 import com.sun.hades.codegen.types.CreatePrivateNoteResponse;
 import com.sun.hades.codegen.types.DeletePrivateNoteResponse;
 import com.sun.hades.codegen.types.PagedPrivateNotes;
@@ -90,23 +89,18 @@ public class PrivateNoteDataFetcher {
   @PreAuthorize("@permissions.has('graphql.hades.createPrivateNote')")
   @Transactional
   public CreatePrivateNoteResponse createPrivateNote(PrivateNoteInput input) {
-    try {
-      UUID id = privateNoteService.createPrivateNote(
-          UUID.fromString(input.getTextId()),
-          input.getStartOffset(),
-          input.getEndOffset(),
-          input.getBody());
-      logger.info("createPrivateNote succeeded for id {}", id);
-      PrivateNoteEntity note = privateNoteService.findById(id)
-          .orElseThrow(() -> new IllegalArgumentException("Private note not found: " + id));
-      return CreatePrivateNoteResponse.newBuilder()
-          .message("Private note created successfully")
-          .note(privateNoteMapper.map(note, null))
-          .build();
-    } catch (Exception e) {
-      logger.error("createPrivateNote failed", e);
-      throw new MutationException("createPrivateNote failed: " + e.getMessage(), e);
-    }
+    UUID id = privateNoteService.createPrivateNote(
+        UUID.fromString(input.getTextId()),
+        input.getStartOffset(),
+        input.getEndOffset(),
+        input.getBody());
+    logger.info("createPrivateNote succeeded for id {}", id);
+    PrivateNoteEntity note = privateNoteService.findById(id)
+        .orElseThrow(() -> new IllegalArgumentException("Private note not found: " + id));
+    return CreatePrivateNoteResponse.newBuilder()
+        .message("Private note created successfully")
+        .note(privateNoteMapper.map(note, null))
+        .build();
   }
 
   /**
@@ -119,17 +113,12 @@ public class PrivateNoteDataFetcher {
   @PreAuthorize("@permissions.has('graphql.hades.deletePrivateNote')")
   @Transactional
   public DeletePrivateNoteResponse deletePrivateNote(String id) {
-    try {
-      privateNoteService.deletePrivateNote(UUID.fromString(id));
-      logger.info("deletePrivateNote succeeded for id {}", id);
-      return DeletePrivateNoteResponse.newBuilder()
-          .message("Private note deleted successfully")
-          .id(id)
-          .build();
-    } catch (Exception e) {
-      logger.error("deletePrivateNote failed", e);
-      throw new MutationException("deletePrivateNote failed: " + e.getMessage(), e);
-    }
+    privateNoteService.deletePrivateNote(UUID.fromString(id));
+    logger.info("deletePrivateNote succeeded for id {}", id);
+    return DeletePrivateNoteResponse.newBuilder()
+        .message("Private note deleted successfully")
+        .id(id)
+        .build();
   }
 
   /**
@@ -142,28 +131,23 @@ public class PrivateNoteDataFetcher {
   @PreAuthorize("@permissions.has('graphql.hades.shareNotes')")
   @Transactional
   public ShareNotesResponse shareNotes(ShareNotesInput input) {
-    try {
-      UUID id = privateNoteService.shareNotes(
-          UUID.fromString(input.getTextId()),
-          input.getSubjectIds() == null ? List.of() : input.getSubjectIds().stream()
-              .map(s -> {
-                try {
-                  return UUID.fromString(s);
-                } catch (Exception e) {
-                  return null;
-                }
-              })
-              .filter(s -> s != null)
-              .toList(),
-          input.getSubjectEmails() == null ? List.of() : input.getSubjectEmails());
-      logger.info("shareNotes succeeded for id {}", id);
-      return ShareNotesResponse.newBuilder()
-          .message("Notes shared successfully")
-          .id(id.toString())
-          .build();
-    } catch (Exception e) {
-      logger.error("shareNotes failed", e);
-      throw new MutationException("shareNotes failed: " + e.getMessage(), e);
-    }
+    UUID id = privateNoteService.shareNotes(
+        UUID.fromString(input.getTextId()),
+        input.getSubjectIds() == null ? List.of() : input.getSubjectIds().stream()
+            .map(s -> {
+              try {
+                return UUID.fromString(s);
+              } catch (Exception e) {
+                return null;
+              }
+            })
+            .filter(s -> s != null)
+            .toList(),
+        input.getSubjectEmails() == null ? List.of() : input.getSubjectEmails());
+    logger.info("shareNotes succeeded for id {}", id);
+    return ShareNotesResponse.newBuilder()
+        .message("Notes shared successfully")
+        .id(id.toString())
+        .build();
   }
 }
