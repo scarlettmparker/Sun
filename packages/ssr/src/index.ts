@@ -43,6 +43,8 @@ export {
   SHARED_TTL,
 } from "./shared-cache";
 
+export { globalSingleton } from "./global-state";
+
 export { pageDataRpcHandler } from "./rpc-handler";
 
 export { executeMutation } from "./client-mutation";

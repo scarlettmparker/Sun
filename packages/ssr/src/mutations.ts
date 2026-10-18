@@ -3,6 +3,7 @@
  * Provides a registry for mutation handlers and a function to execute mutations.
  */
 
+import { globalSingleton } from "./global-state";
 import { MutationError } from "./mutation-error";
 import { invalidateSharedCache } from "./shared-cache";
 
@@ -22,7 +23,10 @@ export type MutationHandler<TResponse = unknown> = (
   context: MutationContext,
 ) => Promise<TResponse>;
 
-const mutationHandlers: Record<string, MutationHandler<unknown>> = {};
+const mutationHandlers = globalSingleton<Record<string, MutationHandler<unknown>>>(
+  "ssr.mutationHandlers",
+  () => ({}),
+);
 
 /**
  * Registers a mutation handler for a specific path.

@@ -1,7 +1,11 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { generateCspNonce } from "@sun/security";
+import { globalSingleton } from "./global-state";
 
-const cspNonceAls = new AsyncLocalStorage<string>();
+const cspNonceAls = globalSingleton(
+  "ssr.cspNonceAls",
+  () => new AsyncLocalStorage<string>(),
+);
 
 /**
  * Gets the per-request CSP nonce, if available.

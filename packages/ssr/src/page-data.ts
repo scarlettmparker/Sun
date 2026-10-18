@@ -4,6 +4,7 @@
  */
 
 import { CSRF_HEADER, getCsrfToken } from "./csrf";
+import { globalSingleton } from "./global-state";
 import { invalidateSharedCache } from "./shared-cache";
 
 /**
@@ -24,7 +25,10 @@ type PageDataLoader = (
 
 // Event emitter for cache hydration
 type CacheHydratedListener = () => void;
-const cacheHydratedListeners: Set<CacheHydratedListener> = new Set();
+const cacheHydratedListeners = globalSingleton<Set<CacheHydratedListener>>(
+  "ssr.cacheHydratedListeners",
+  () => new Set(),
+);
 
 export function onCacheHydrated(listener: CacheHydratedListener): () => void {
   cacheHydratedListeners.add(listener);
@@ -38,13 +42,13 @@ function notifyCacheHydrated() {
 /**
  * Cache TTL configuration. Apps override via configurePageData() at boot.
  */
-const cacheTtlConfig: {
+const cacheTtlConfig = globalSingleton<{
   defaultMs: number;
   perPattern: Record<string, number>;
-} = {
-  defaultMs: 300000, // 5 minutes default
+}>("ssr.pageDataTtlConfig", () => ({
+  defaultMs: 300000,
   perPattern: {},
-};
+}));
 
 /**
  * Configures page-data cache TTL. Call once at app boot (e.g. from the app's
@@ -84,22 +88,30 @@ export type CacheRecord = {
  * each postlude contains only the keys the current render resolved. On the
  * client there is one session-level map (hydrated from the SSR postlude).
  */
-const clientCache = new Map<string, CacheRecord>();
+const clientCache = globalSingleton<Map<string, CacheRecord>>(
+  "ssr.clientCache",
+  () => new Map(),
+);
 type RequestCacheProvider = () => Map<string, CacheRecord> | null;
-let requestCacheProvider: RequestCacheProvider | null = null;
 type RequestCookieProvider = () => string | undefined;
-let requestCookieProvider: RequestCookieProvider | null = null;
+type RequestIpProvider = () => string | undefined;
+
+const requestProviders = globalSingleton<{
+  cache: RequestCacheProvider | null;
+  cookie: RequestCookieProvider | null;
+  ip: RequestIpProvider | null;
+}>("ssr.requestProviders", () => ({ cache: null, cookie: null, ip: null }));
 
 /** server.ts calls this at boot to plug in the AsyncLocalStorage-backed store. */
 export function setRequestCacheProvider(provider: RequestCacheProvider): void {
-  requestCacheProvider = provider;
+  requestProviders.cache = provider;
 }
 
 /** server.ts calls this at boot to plug in the request's Cookie header. */
 export function setRequestCookieProvider(
   provider: RequestCookieProvider,
 ): void {
-  requestCookieProvider = provider;
+  requestProviders.cookie = provider;
 }
 
 /**
@@ -107,13 +119,11 @@ export function setRequestCookieProvider(
  * request; otherwise undefined.
  */
 export function getRequestCookie(): string | undefined {
-  return requestCookieProvider?.();
+  return requestProviders.cookie?.();
 }
 
-let requestIpProvider: (() => string | undefined) | null = null;
-
-export function setRequestIpProvider(provider: () => string | undefined): void {
-  requestIpProvider = provider;
+export function setRequestIpProvider(provider: RequestIpProvider): void {
+  requestProviders.ip = provider;
 }
 
 /**
@@ -121,13 +131,13 @@ export function setRequestIpProvider(provider: () => string | undefined): void {
  * otherwise undefined.
  */
 export function getRequestIp(): string | undefined {
-  return requestIpProvider?.();
+  return requestProviders.ip?.();
 }
 
 function activeCache(): Map<string, CacheRecord> {
   // Server inside a request -> that request's map; otherwise the client/session map.
-  if (typeof window === "undefined" && requestCacheProvider) {
-    const store = requestCacheProvider();
+  if (typeof window === "undefined" && requestProviders.cache) {
+    const store = requestProviders.cache();
     if (store) return store;
   }
   return clientCache;
@@ -236,15 +246,9 @@ export function hydratePageData(
  * Registry of page data loaders.
  * Maps route patterns to their data-loading functions (multiple allowed).
  */
-const GLOBAL_KEY = "__sun_pageDataLoaders";
-function getPageDataLoaders(): Record<string, PageDataLoader[]> {
-  const g = globalThis as unknown as Record<
-    string,
-    Record<string, PageDataLoader[]> | undefined
-  >;
-  return g[GLOBAL_KEY] ?? (g[GLOBAL_KEY] = {});
-}
-export const pageDataLoaders = getPageDataLoaders();
+export const pageDataLoaders = globalSingleton<
+  Record<string, PageDataLoader[]>
+>("ssr.pageDataLoaders", () => ({}));
 
 type PageDataCache = Record<
   string,
@@ -254,7 +258,10 @@ type PageDataCache = Record<
 /**
  * Cache for page data to avoid re-fetching on every request (production only).
  */
-const pageDataCache: PageDataCache = {};
+const pageDataCache = globalSingleton<PageDataCache>(
+  "ssr.pageDataCache",
+  () => ({}),
+);
 
 function registerPageDataLoader(pattern: string, loader: PageDataLoader): void {
   const list = pageDataLoaders[pattern] || [];
@@ -375,7 +382,7 @@ function readPageData<T>(
     activeCache().set(cacheKey, record);
 
     const context: PageDataContext = {
-      cookie: requestCookieProvider?.(),
+      cookie: requestProviders.cookie?.(),
     };
 
     const loadPromise: Promise<Record<string, unknown> | null> =
@@ -648,7 +655,10 @@ export function invalidateCacheKeys(patterns: string[]): boolean {
 // cache keys that should be refreshed (or undefined for a blanket refresh).
 type InvalidationListener = (cacheKeys?: string[]) => void;
 
-const invalidationSubscribers = new Set<InvalidationListener>();
+const invalidationSubscribers = globalSingleton<Set<InvalidationListener>>(
+  "ssr.invalidationSubscribers",
+  () => new Set(),
+);
 
 export function subscribeDataInvalidation(
   fn: InvalidationListener,
@@ -685,7 +695,10 @@ export function revalidatePageData(cacheKeys?: string[]): void {
 
 // Separate channel for in-place writes. Patch listeners re-render from the cache
 // without a /__page-data round-trip, unlike invalidation listeners which refetch.
-const dataPatchSubscribers = new Set<InvalidationListener>();
+const dataPatchSubscribers = globalSingleton<Set<InvalidationListener>>(
+  "ssr.dataPatchSubscribers",
+  () => new Set(),
+);
 
 export function subscribeDataPatch(fn: InvalidationListener): () => void {
   dataPatchSubscribers.add(fn);

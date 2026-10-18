@@ -1,5 +1,9 @@
 import { print, type DocumentNode } from "graphql";
-import { getRequestCookie, getRequestIp } from "@sun/ssr";
+import {
+  getRequestCookie,
+  getRequestIp,
+  globalSingleton,
+} from "@sun/ssr";
 
 export type ApiResponse<T> = {
   success: boolean;
@@ -8,11 +12,15 @@ export type ApiResponse<T> = {
   statusCode?: number;
 };
 
-let authCookieName: string | undefined;
-let clientSecret: string | undefined;
-let clientId: string | undefined;
-let apiKey: string | undefined;
-let appBaseUrl: string | undefined;
+type ApiConfig = {
+  authCookie?: string;
+  clientSecret?: string;
+  clientId?: string;
+  apiKey?: string;
+  appBaseUrl?: string;
+};
+
+const apiConfig = globalSingleton<ApiConfig>("api.config", () => ({}));
 
 /**
  * Sets the auth cookie name and per-app backend credentials. Server-only: call
@@ -25,11 +33,7 @@ export function configureApi(config: {
   apiKey?: string;
   appBaseUrl?: string;
 }): void {
-  authCookieName = config.authCookie;
-  clientSecret = config.clientSecret;
-  clientId = config.clientId;
-  apiKey = config.apiKey;
-  appBaseUrl = config.appBaseUrl;
+  Object.assign(apiConfig, config);
 }
 
 /**
@@ -55,8 +59,8 @@ function resolveAuthToken(authToken?: string): string | undefined {
     return authToken;
   }
   const cookie = getRequestCookie();
-  return cookie && authCookieName
-    ? getCookieValue(cookie, authCookieName)
+  return cookie && apiConfig.authCookie
+    ? getCookieValue(cookie, apiConfig.authCookie)
     : undefined;
 }
 
@@ -112,21 +116,21 @@ export async function executeDocument<T, V = Record<string, unknown>>(
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
   }
-  if (clientSecret) {
-    headers["X-Client-Secret"] = clientSecret;
-    if (clientId) {
-      headers["X-Client-Id"] = clientId;
+  if (apiConfig.clientSecret) {
+    headers["X-Client-Secret"] = apiConfig.clientSecret;
+    if (apiConfig.clientId) {
+      headers["X-Client-Id"] = apiConfig.clientId;
     }
   }
-  if (apiKey) {
-    headers["X-Api-Key"] = apiKey;
+  if (apiConfig.apiKey) {
+    headers["X-Api-Key"] = apiConfig.apiKey;
   }
   const clientIp = getRequestIp();
   if (clientIp) {
     headers["X-Forwarded-For"] = clientIp;
   }
-  if (appBaseUrl) {
-    headers["X-App-Base-Url"] = appBaseUrl;
+  if (apiConfig.appBaseUrl) {
+    headers["X-App-Base-Url"] = apiConfig.appBaseUrl;
   }
 
   const retries = options?.retries ?? [500, 2000, 4000, 6000];
