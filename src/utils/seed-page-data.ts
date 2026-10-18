@@ -55,8 +55,8 @@ export async function loadLevelColours(): Promise<LevelColours> {
 export async function seedPageData(
   user: MeQuery["gaiaQueries"]["me"] | null,
 ): Promise<void> {
-  seed(makeCacheKey("currentUser:currentUser", {}), { currentUser: user });
-  seed(makeCacheKey("levelColours:levelColours", {}), {
+  seed(makeCacheKey("currentUser", {}), { currentUser: user });
+  seed(makeCacheKey("levelColours", {}), {
     levelColours: await loadLevelColours(),
   });
 }

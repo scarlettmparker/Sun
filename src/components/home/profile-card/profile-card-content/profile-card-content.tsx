@@ -28,7 +28,7 @@ type CurrentUser = NonNullable<MeQuery["gaiaQueries"]["me"]>;
  */
 const ProfileCardContent = () => {
   const { t } = useTranslation("home");
-  const cacheKey = makeCacheKey("currentUser:currentUser", {});
+  const cacheKey = makeCacheKey("currentUser", {});
   const [, forceUpdate] = useReducer((x: number) => x + 1, 0);
 
   useEffect(() => {

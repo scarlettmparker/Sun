@@ -55,7 +55,7 @@ const AttachTextPickerItems = (props: AttachTextPickerItemsProps) => {
     startTransition(async () => {
       try {
         await attachRemoteObject(postId, `hades:text:${textId}`);
-        revalidatePageData([makeCacheKey("blog/:id:blogPost", { id: postId })]);
+        revalidatePageData([makeCacheKey("blog/:id", { id: postId })]);
       } catch {
         // leave the picker open on failure
       }
