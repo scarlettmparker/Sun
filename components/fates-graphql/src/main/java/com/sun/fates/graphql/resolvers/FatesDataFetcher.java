@@ -2,7 +2,6 @@ package com.sun.fates.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
-import com.sun.base.error.MutationException;
 import com.sun.fates.codegen.types.CreatePersonResponse;
 import com.sun.fates.codegen.types.CreatePlaceResponse;
 import com.sun.fates.codegen.types.DeletePersonResponse;
@@ -138,19 +137,14 @@ public class FatesDataFetcher {
   @PreAuthorize("@permissions.has('graphql.fates.createPerson')")
   @Transactional
   public CreatePersonResponse createPerson(PersonInput input) {
-    try {
-      PersonEntity entity = new PersonEntity();
-      personMapper.map(input, entity);
-      PersonEntity saved = personService.save(entity);
-      logger.info("createPerson succeeded for id {}", saved.getId());
-      return CreatePersonResponse.newBuilder()
-          .message("createPerson succeeded")
-          .person(personMapper.map(saved))
-          .build();
-    } catch (Exception e) {
-      logger.error("createPerson failed", e);
-      throw new MutationException("createPerson failed: " + e.getMessage(), e);
-    }
+    PersonEntity entity = new PersonEntity();
+    personMapper.map(input, entity);
+    PersonEntity saved = personService.save(entity);
+    logger.info("createPerson succeeded for id {}", saved.getId());
+    return CreatePersonResponse.newBuilder()
+        .message("createPerson succeeded")
+        .person(personMapper.map(saved))
+        .build();
   }
 
   /**
@@ -163,20 +157,15 @@ public class FatesDataFetcher {
   @PreAuthorize("@permissions.has('graphql.fates.savePerson')")
   @Transactional
   public SavePersonResponse savePerson(PersonInput input) {
-    try {
-      PersonEntity entity = personService.findById(UUID.fromString(input.getId()))
-          .orElseThrow(() -> new IllegalArgumentException("Person not found: " + input.getId()));
-      personMapper.map(input, entity);
-      PersonEntity saved = personService.save(entity);
-      logger.info("savePerson succeeded for id {}", saved.getId());
-      return SavePersonResponse.newBuilder()
-          .message("savePerson succeeded")
-          .person(personMapper.map(saved))
-          .build();
-    } catch (Exception e) {
-      logger.error("savePerson failed", e);
-      throw new MutationException("savePerson failed: " + e.getMessage(), e);
-    }
+    PersonEntity entity = personService.findById(UUID.fromString(input.getId()))
+        .orElseThrow(() -> new IllegalArgumentException("Person not found: " + input.getId()));
+    personMapper.map(input, entity);
+    PersonEntity saved = personService.save(entity);
+    logger.info("savePerson succeeded for id {}", saved.getId());
+    return SavePersonResponse.newBuilder()
+        .message("savePerson succeeded")
+        .person(personMapper.map(saved))
+        .build();
   }
 
   /**
@@ -189,18 +178,13 @@ public class FatesDataFetcher {
   @PreAuthorize("@permissions.has('graphql.fates.deletePerson')")
   @Transactional
   public DeletePersonResponse deletePerson(String id) {
-    try {
-      UUID personId = UUID.fromString(id);
-      personService.deleteById(personId);
-      logger.info("deletePerson succeeded for id {}", personId);
-      return DeletePersonResponse.newBuilder()
-          .message("deletePerson succeeded")
-          .id(personId.toString())
-          .build();
-    } catch (Exception e) {
-      logger.error("deletePerson failed", e);
-      throw new MutationException("deletePerson failed: " + e.getMessage(), e);
-    }
+    UUID personId = UUID.fromString(id);
+    personService.deleteById(personId);
+    logger.info("deletePerson succeeded for id {}", personId);
+    return DeletePersonResponse.newBuilder()
+        .message("deletePerson succeeded")
+        .id(personId.toString())
+        .build();
   }
 
   /**
@@ -213,19 +197,14 @@ public class FatesDataFetcher {
   @PreAuthorize("@permissions.has('graphql.fates.createPlace')")
   @Transactional
   public CreatePlaceResponse createPlace(PlaceInput input) {
-    try {
-      PlaceEntity entity = new PlaceEntity();
-      placeMapper.map(input, entity);
-      PlaceEntity saved = placeService.save(entity);
-      logger.info("createPlace succeeded for id {}", saved.getId());
-      return CreatePlaceResponse.newBuilder()
-          .message("createPlace succeeded")
-          .place(placeMapper.map(saved))
-          .build();
-    } catch (Exception e) {
-      logger.error("createPlace failed", e);
-      throw new MutationException("createPlace failed: " + e.getMessage(), e);
-    }
+    PlaceEntity entity = new PlaceEntity();
+    placeMapper.map(input, entity);
+    PlaceEntity saved = placeService.save(entity);
+    logger.info("createPlace succeeded for id {}", saved.getId());
+    return CreatePlaceResponse.newBuilder()
+        .message("createPlace succeeded")
+        .place(placeMapper.map(saved))
+        .build();
   }
 
   /**
@@ -238,20 +217,15 @@ public class FatesDataFetcher {
   @PreAuthorize("@permissions.has('graphql.fates.savePlace')")
   @Transactional
   public SavePlaceResponse savePlace(PlaceInput input) {
-    try {
-      PlaceEntity entity = placeService.findById(UUID.fromString(input.getId()))
-          .orElseThrow(() -> new IllegalArgumentException("Place not found: " + input.getId()));
-      placeMapper.map(input, entity);
-      PlaceEntity saved = placeService.save(entity);
-      logger.info("savePlace succeeded for id {}", saved.getId());
-      return SavePlaceResponse.newBuilder()
-          .message("savePlace succeeded")
-          .place(placeMapper.map(saved))
-          .build();
-    } catch (Exception e) {
-      logger.error("savePlace failed", e);
-      throw new MutationException("savePlace failed: " + e.getMessage(), e);
-    }
+    PlaceEntity entity = placeService.findById(UUID.fromString(input.getId()))
+        .orElseThrow(() -> new IllegalArgumentException("Place not found: " + input.getId()));
+    placeMapper.map(input, entity);
+    PlaceEntity saved = placeService.save(entity);
+    logger.info("savePlace succeeded for id {}", saved.getId());
+    return SavePlaceResponse.newBuilder()
+        .message("savePlace succeeded")
+        .place(placeMapper.map(saved))
+        .build();
   }
 
   /**
@@ -264,17 +238,12 @@ public class FatesDataFetcher {
   @PreAuthorize("@permissions.has('graphql.fates.deletePlace')")
   @Transactional
   public DeletePlaceResponse deletePlace(String id) {
-    try {
-      UUID placeId = UUID.fromString(id);
-      placeService.deleteById(placeId);
-      logger.info("deletePlace succeeded for id {}", placeId);
-      return DeletePlaceResponse.newBuilder()
-          .message("deletePlace succeeded")
-          .id(placeId.toString())
-          .build();
-    } catch (Exception e) {
-      logger.error("deletePlace failed", e);
-      throw new MutationException("deletePlace failed: " + e.getMessage(), e);
-    }
+    UUID placeId = UUID.fromString(id);
+    placeService.deleteById(placeId);
+    logger.info("deletePlace succeeded for id {}", placeId);
+    return DeletePlaceResponse.newBuilder()
+        .message("deletePlace succeeded")
+        .id(placeId.toString())
+        .build();
   }
 }
