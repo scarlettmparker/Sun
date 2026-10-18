@@ -1,3 +1,5 @@
+# VM deploy unit. Local dev units come from vm/sun/render-units.ts.
+
 [Unit]
 Description=Sun GraphQL Backend
 After=network.target postgresql.service
