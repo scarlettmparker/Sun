@@ -317,50 +317,44 @@ public class FilestoreDataFetcher {
 
     logger.info("Deleting key recursively from bucket: {} with key: {}", bucket, key);
 
-    try {
-      List<ObjectIdentifier> currentBatch = new ArrayList<>();
-      int totalDeleted = 0;
-      currentBatch.add(ObjectIdentifier.builder().key(key).build());
+    List<ObjectIdentifier> currentBatch = new ArrayList<>();
+    int totalDeleted = 0;
+    currentBatch.add(ObjectIdentifier.builder().key(key).build());
 
-      // Add the prefix explicitly to catch standard nested folder structures
-      String prefix = key.endsWith("/") ? key : key + "/";
-      if (!prefix.equals(key)) {
-        currentBatch.add(ObjectIdentifier.builder().key(prefix).build());
-      }
+    // Add the prefix explicitly to catch standard nested folder structures
+    String prefix = key.endsWith("/") ? key : key + "/";
+    if (!prefix.equals(key)) {
+      currentBatch.add(ObjectIdentifier.builder().key(prefix).build());
+    }
 
-      ListObjectsV2Request listReq = ListObjectsV2Request.builder()
-          .bucket(bucket)
-          .prefix(prefix)
-          .build();
+    ListObjectsV2Request listReq = ListObjectsV2Request.builder()
+        .bucket(bucket)
+        .prefix(prefix)
+        .build();
 
-      // .contents() flattens the paginated pages into a continuous stream of S3Objects
-      for (S3Object s3Object : s3Client.listObjectsV2Paginator(listReq).contents()) {
-        currentBatch.add(ObjectIdentifier.builder().key(s3Object.key()).build());
+    // .contents() flattens the paginated pages into a continuous stream of S3Objects
+    for (S3Object s3Object : s3Client.listObjectsV2Paginator(listReq).contents()) {
+      currentBatch.add(ObjectIdentifier.builder().key(s3Object.key()).build());
 
-        // S3 allows a max of 1000 objects per DeleteObjects request.
-        // Flush the batch once we hit this limit to keep memory usage flat.
-        if (currentBatch.size() >= 1000) {
-          totalDeleted += flushDeleteBatch(bucket, currentBatch);
-        }
-      }
-
-      // Flush any leftover objects in the final, partial batch
-      if (!currentBatch.isEmpty()) {
+      // S3 allows a max of 1000 objects per DeleteObjects request.
+      // Flush the batch once we hit this limit to keep memory usage flat.
+      if (currentBatch.size() >= 1000) {
         totalDeleted += flushDeleteBatch(bucket, currentBatch);
       }
-
-      keyDetailService.archiveRecursive(bucket, key);
-
-      logger.info("Successfully deleted {} key(s) under '{}' in bucket: {}", totalDeleted, key, bucket);
-      return DeleteKeyResponse.newBuilder()
-          .message("deleteKey succeeded")
-          .key(key)
-          .build();
-
-    } catch (Exception e) {
-      logger.error("Failed to recursively delete key: {} from bucket: {}", key, bucket, e);
-      throw new MutationException("deleteKey failed: " + e.getMessage(), e);
     }
+
+    // Flush any leftover objects in the final, partial batch
+    if (!currentBatch.isEmpty()) {
+      totalDeleted += flushDeleteBatch(bucket, currentBatch);
+    }
+
+    keyDetailService.archiveRecursive(bucket, key);
+
+    logger.info("Successfully deleted {} key(s) under '{}' in bucket: {}", totalDeleted, key, bucket);
+    return DeleteKeyResponse.newBuilder()
+        .message("deleteKey succeeded")
+        .key(key)
+        .build();
   }
 
   /**
@@ -395,102 +389,96 @@ public class FilestoreDataFetcher {
 
     logger.info("Initiating rename in bucket '{}': '{}' -> '{}' (merge={})", bucket, sourceKey, targetKey, merge);
 
-    try {
-      // Get all objects matching the source prefix
-      List<S3Object> sourceObjects = s3Client.listObjectsV2Paginator(b -> b.bucket(bucket).prefix(sourceKey))
-          .contents().stream()
-          .collect(Collectors.toList());
+    // Get all objects matching the source prefix
+    List<S3Object> sourceObjects = s3Client.listObjectsV2Paginator(b -> b.bucket(bucket).prefix(sourceKey))
+        .contents().stream()
+        .collect(Collectors.toList());
 
-      if (sourceObjects.isEmpty()) {
-        logger.warn("No objects found matching source key/prefix: {}", sourceKey);
-        return RenameKeyResponse.newBuilder()
-            .message("renameKey failed: no objects found at " + sourceKey)
-            .success(false)
-            .hasConflicts(false)
-            .conflicts(new ArrayList<>())
-            .build();
-      }
-
-      boolean isSourceDir = sourceKey.endsWith("/");
-      String cleanSourcePrefix = isSourceDir ? sourceKey : sourceKey + "/";
-      String cleanTargetPrefix = targetKey.endsWith("/") ? targetKey : targetKey + "/";
-
-      // Map all target paths and optionally inspect for destination conflicts
-      List<String> conflicts = new ArrayList<>();
-      List<Map.Entry<String, String>> moves = new ArrayList<>();
-
-      for (S3Object obj : sourceObjects) {
-        String srcPath = obj.key();
-        String destPath;
-
-        if (srcPath.equals(sourceKey)) {
-          // Exact match on the key itself
-          destPath = isSourceDir ? cleanTargetPrefix : targetKey;
-        } else if (srcPath.startsWith(cleanSourcePrefix)) {
-          destPath = cleanTargetPrefix + srcPath.substring(cleanSourcePrefix.length());
-        } else {
-          continue;
-        }
-
-        moves.add(new AbstractMap.SimpleEntry<>(srcPath, destPath));
-
-        if (!merge) {
-          try {
-            s3Client.headObject(b -> b.bucket(bucket).key(destPath));
-            // Object exists at destination
-            conflicts.add(destPath);
-          } catch (NoSuchKeyException e) {
-          }
-        }
-      }
-
-      // Halt if unapproved conflicts occur
-      if (!merge && !conflicts.isEmpty()) {
-        logger.warn("Aborting rename operation due to {} conflicts at target destination.", conflicts.size());
-        return RenameKeyResponse.newBuilder()
-            .message("renameKey failed: " + conflicts.size() + " conflict(s) at target destination")
-            .success(false)
-            .hasConflicts(true)
-            .conflicts(conflicts)
-            .build();
-      }
-
-      List<ObjectIdentifier> sourceIdsToDelete = new ArrayList<>();
-      for (Map.Entry<String, String> move : moves) {
-        String src = move.getKey();
-        String dest = move.getValue();
-
-        logger.debug("Moving {} -> {}", src, dest);
-
-        // Copy item to target location
-        s3Client.copyObject(CopyObjectRequest.builder()
-            .copySource(bucket + "/" + src)
-            .destinationBucket(bucket)
-            .destinationKey(dest)
-            .build());
-
-        sourceIdsToDelete.add(ObjectIdentifier.builder().key(src).build());
-      }
-
-      keyDetailService.updatePath(bucket, sourceKey, targetKey);
-
-      // Batch clear out the old source files
-      if (!sourceIdsToDelete.isEmpty()) {
-        flushDeleteBatch(bucket, sourceIdsToDelete);
-      }
-
-      logger.info("Successfully completed move sequence for {} key variations.", moves.size());
+    if (sourceObjects.isEmpty()) {
+      logger.warn("No objects found matching source key/prefix: {}", sourceKey);
       return RenameKeyResponse.newBuilder()
-          .message("renameKey succeeded")
-          .success(true)
+          .message("renameKey failed: no objects found at " + sourceKey)
+          .success(false)
           .hasConflicts(false)
           .conflicts(new ArrayList<>())
           .build();
-
-    } catch (Exception e) {
-      logger.error("Failed to perform rename migration from '{}' to '{}'", sourceKey, targetKey, e);
-      throw new MutationException("renameKey failed: " + e.getMessage(), e);
     }
+
+    boolean isSourceDir = sourceKey.endsWith("/");
+    String cleanSourcePrefix = isSourceDir ? sourceKey : sourceKey + "/";
+    String cleanTargetPrefix = targetKey.endsWith("/") ? targetKey : targetKey + "/";
+
+    // Map all target paths and optionally inspect for destination conflicts
+    List<String> conflicts = new ArrayList<>();
+    List<Map.Entry<String, String>> moves = new ArrayList<>();
+
+    for (S3Object obj : sourceObjects) {
+      String srcPath = obj.key();
+      String destPath;
+
+      if (srcPath.equals(sourceKey)) {
+        // Exact match on the key itself
+        destPath = isSourceDir ? cleanTargetPrefix : targetKey;
+      } else if (srcPath.startsWith(cleanSourcePrefix)) {
+        destPath = cleanTargetPrefix + srcPath.substring(cleanSourcePrefix.length());
+      } else {
+        continue;
+      }
+
+      moves.add(new AbstractMap.SimpleEntry<>(srcPath, destPath));
+
+      if (!merge) {
+        try {
+          s3Client.headObject(b -> b.bucket(bucket).key(destPath));
+          // Object exists at destination
+          conflicts.add(destPath);
+        } catch (NoSuchKeyException e) {
+        }
+      }
+    }
+
+    // Halt if unapproved conflicts occur
+    if (!merge && !conflicts.isEmpty()) {
+      logger.warn("Aborting rename operation due to {} conflicts at target destination.", conflicts.size());
+      return RenameKeyResponse.newBuilder()
+          .message("renameKey failed: " + conflicts.size() + " conflict(s) at target destination")
+          .success(false)
+          .hasConflicts(true)
+          .conflicts(conflicts)
+          .build();
+    }
+
+    List<ObjectIdentifier> sourceIdsToDelete = new ArrayList<>();
+    for (Map.Entry<String, String> move : moves) {
+      String src = move.getKey();
+      String dest = move.getValue();
+
+      logger.debug("Moving {} -> {}", src, dest);
+
+      // Copy item to target location
+      s3Client.copyObject(CopyObjectRequest.builder()
+          .copySource(bucket + "/" + src)
+          .destinationBucket(bucket)
+          .destinationKey(dest)
+          .build());
+
+      sourceIdsToDelete.add(ObjectIdentifier.builder().key(src).build());
+    }
+
+    keyDetailService.updatePath(bucket, sourceKey, targetKey);
+
+    // Batch clear out the old source files
+    if (!sourceIdsToDelete.isEmpty()) {
+      flushDeleteBatch(bucket, sourceIdsToDelete);
+    }
+
+    logger.info("Successfully completed move sequence for {} key variations.", moves.size());
+    return RenameKeyResponse.newBuilder()
+        .message("renameKey succeeded")
+        .success(true)
+        .hasConflicts(false)
+        .conflicts(new ArrayList<>())
+        .build();
   }
 
   /**
