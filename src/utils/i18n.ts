@@ -1,13 +1,15 @@
 import i18n from "i18next";
-import { initReactI18next } from "react-i18next";
 
+/**
+ * Creates a bare i18next instance for the server renderer.
+ *
+ * @returns A new i18next instance.
+ */
 export function createI18nInstance() {
-  const instance = i18n.createInstance();
-  instance.use(initReactI18next);
-  return instance;
+  return i18n.createInstance();
 }
 
-i18n.use(initReactI18next).init({
+i18n.init({
   lng: "en",
   fallbackLng: "en",
   resources: {},

@@ -1,6 +1,6 @@
 import { Suspense, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@sun/i18n";
 import { BreadcrumbItem, Button, Card, CardBody, Form } from "@sun/components";
 import CreateBlogForm from "~/_components/blog/create/";
 import { CreateBlogSkeleton } from "~/_components/blog/create/skeletons";

@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@sun/i18n";
 import { usePageData } from "@sun/ssr/react";
 import { Card, CardBody } from "@sun/components";
 import type { ListBlogPostsQuery } from "~/generated/graphql";

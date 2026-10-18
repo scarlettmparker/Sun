@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@sun/i18n";
 import { usePageData } from "@sun/ssr/react";
 import {
   Button,

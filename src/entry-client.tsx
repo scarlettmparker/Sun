@@ -1,11 +1,11 @@
 import { BrowserRouter } from "react-router-dom";
 import { Router } from "./router";
-import { initReactI18next } from "react-i18next";
 import ReactDOM from "react-dom/client";
 import i18n from "i18next";
 import { Suspense } from "react";
 import ErrorBoundary from "./components/error-boundary";
 import Layout from "./components/layout";
+import { setI18n } from "@sun/i18n";
 import { initClientBootstrap } from "@sun/ssr";
 import { ensureDefaultTrustedPolicy } from "@sun/security/trusted-types";
 import { loadPersistedTheme, applyTheme } from "@sun/themes";
@@ -24,7 +24,7 @@ if (window.localStorage.getItem("sun:theme")) {
   applyTheme(window.__theme__ as never);
 }
 
-i18n.use(initReactI18next);
+setI18n(i18n);
 
 initClientBootstrap({ i18n }).then(() => {
   ReactDOM.hydrateRoot(

@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPortal } from "react-dom";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@sun/i18n";
 import { Button } from "@sun/components";
 import { RoleCheck } from "@sun/ssr/react";
 import { cn } from "~/utils/cn";

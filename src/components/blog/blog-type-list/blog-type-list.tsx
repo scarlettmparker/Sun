@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@sun/i18n";
 import { usePageData } from "@sun/ssr/react";
 import { Button } from "@sun/components";
 import { BookOpenOutline, DocumentTextOutline, InformationCircleOutline, LightBulbOutline, QuestionMarkCircleOutline, Squares2x2Outline, StarOutline } from "preact-heroicons";

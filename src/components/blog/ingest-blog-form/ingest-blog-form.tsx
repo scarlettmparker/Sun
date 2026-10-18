@@ -1,5 +1,5 @@
 import { Suspense, useState, useTransition } from "react";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@sun/i18n";
 import { Button, Card, CardBody, CardHeader, CardTitle } from "@sun/components";
 import { ingestBlogFromSource } from "~/server/actions/blog-post";
 import IngestBlogFormFields from "~/components/blog/ingest-blog-form-fields";

@@ -1,5 +1,5 @@
 import { Link, useSearchParams } from "react-router-dom";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@sun/i18n";
 import { BreadcrumbItem } from "@sun/components";
 import type { BlogPost } from "~/generated/graphql";
 import styles from "./blog-breadcrumb-inner.module.css";

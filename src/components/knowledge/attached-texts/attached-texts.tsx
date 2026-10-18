@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@sun/i18n";
 import { usePageData } from "@sun/ssr/react";
 import { Badge, Card, CardBody, CardHeader, CardTitle } from "@sun/components";
 import { CEFR_TO_KEY } from "~/utils/cefr";

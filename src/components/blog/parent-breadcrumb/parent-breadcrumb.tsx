@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@sun/i18n";
 import { BreadcrumbItem } from "@sun/components";
 import { usePageData } from "@sun/ssr/react";
 import type { LocateBlogPostQuery } from "~/generated/graphql";

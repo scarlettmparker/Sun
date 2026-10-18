@@ -7,6 +7,7 @@ import NotFound from "./routes/not-found";
 import { createRenderer, type RouteMeta } from "@sun/ssr/renderer";
 import { autoDiscoverRegistrations } from "@sun/ssr/server";
 import { createI18nInstance } from "./utils/i18n";
+import { setI18n } from "@sun/i18n";
 import { fetchPropertySet } from "./utils/api";
 import { sharedCall, SHARED_TTL } from "@sun/ssr";
 import { parseThemes } from "@sun/utils/property-set";
@@ -47,8 +48,9 @@ const renderer = createRenderer({
   siteUrl: "https://sun.scarlettparker.co.uk",
   defaultOgImage: "/og-default.png",
   initI18n(locale, translations) {
-    const i18n = createI18nInstance();
-    return i18n.init({
+    const instance = createI18nInstance();
+    setI18n(instance);
+    return instance.init({
       lng: locale,
       fallbackLng: "en",
       resources: { [locale]: translations } as never,

@@ -7,7 +7,7 @@ import { formatTime } from "./utils/format-time";
 import { formatHoverTime } from "./utils/format-hover-time";
 import StemSliders from "./stem-sliders";
 import styles from "./stem-player.module.css";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@sun/i18n";
 import { Song, Stem } from "~/generated/graphql";
 import { cn } from "~/utils/cn";
 
