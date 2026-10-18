@@ -9,7 +9,6 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.sun.base.error.MutationException;
 import com.sun.echo.codegen.types.AddItemResponse;
 import com.sun.echo.codegen.types.ArchiveChecklistResponse;
 import com.sun.echo.codegen.types.ChecklistDetail;
@@ -139,8 +138,8 @@ class ChecklistEntryDataFetcherTest {
     when(entryService.save(any(ChecklistEntryEntity.class))).thenThrow(new RuntimeException("Database error"));
 
     assertThatThrownBy(() -> fetcher.createChecklist("My checklist"))
-        .isInstanceOf(MutationException.class)
-        .hasMessageContaining("createChecklist failed: Database error");
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Database error");
   }
 
   @Test

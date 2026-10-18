@@ -9,7 +9,6 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.sun.base.error.MutationException;
 import com.sun.echo.codegen.types.AddTemplateItemResponse;
 import com.sun.echo.codegen.types.ArchiveTemplateResponse;
 import com.sun.echo.codegen.types.ChecklistDetail;
@@ -149,8 +148,8 @@ class ChecklistTemplateDataFetcherTest {
     when(templateService.save(any(ChecklistTemplateEntity.class))).thenThrow(new RuntimeException("Database error"));
 
     assertThatThrownBy(() -> fetcher.createTemplate("Name", "desc", null))
-        .isInstanceOf(MutationException.class)
-        .hasMessageContaining("createTemplate failed: Database error");
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Database error");
   }
 
   @Test

@@ -2,7 +2,6 @@ package com.sun.echo.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
-import com.sun.base.error.MutationException;
 import com.sun.echo.codegen.types.AttachChecklistObjectResponse;
 import com.sun.echo.codegen.types.DetachObjectResponse;
 import com.sun.echo.codegen.types.RemoteObjectReference;
@@ -96,20 +95,15 @@ public class ChecklistDetailDataFetcher {
   }
 
   /**
-   * Runs a mutation, logging the operation and raising a MutationException on failure.
+   * Runs a mutation and logs the operation.
    *
-   * @param op the operation name, for logging and messages
+   * @param op the operation name, for logging
    * @param action the mutation, returning its response
    * @return the mutation response
    */
   private <T> T mutate(String op, Supplier<T> action) {
-    try {
-      T response = action.get();
-      logger.info("{} succeeded", op);
-      return response;
-    } catch (Exception e) {
-      logger.error("{} failed", op, e);
-      throw new MutationException(op + " failed: " + e.getMessage(), e);
-    }
+    T response = action.get();
+    logger.info("{} succeeded", op);
+    return response;
   }
 }
