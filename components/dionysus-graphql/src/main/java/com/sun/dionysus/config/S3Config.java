@@ -57,4 +57,18 @@ public class S3Config {
                 .build())
         .build();
   }
+
+  @Bean
+  public S3Presigner internalS3Presigner() {
+    return S3Presigner.builder()
+        .endpointOverride(URI.create(endpoint))
+        .credentialsProvider(StaticCredentialsProvider.create(
+            AwsBasicCredentials.create(accessKey, secretKey)))
+        .region(Region.of("garage"))
+        .serviceConfiguration(
+            S3Configuration.builder()
+                .pathStyleAccessEnabled(true)
+                .build())
+        .build();
+  }
 }

@@ -11,6 +11,7 @@ import java.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -46,6 +47,7 @@ public class FileViewController {
   private S3Client s3Client;
 
   @Autowired
+  @Qualifier("internalS3Presigner")
   private S3Presigner s3Presigner;
 
   /**

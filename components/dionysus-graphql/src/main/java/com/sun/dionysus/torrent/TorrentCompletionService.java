@@ -24,6 +24,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -48,7 +49,7 @@ public class TorrentCompletionService {
   @Autowired private TorrentJobService jobService;
   @Autowired private KeyDetailService keyDetailService;
   @Autowired private S3Client s3Client;
-  @Autowired private S3Presigner s3Presigner;
+  @Autowired @Qualifier("internalS3Presigner") private S3Presigner s3Presigner;
   @Autowired private TorrentJobRegistry registry;
   @Autowired @Lazy private TransmissionGateway transmissionGateway;
 
@@ -146,13 +147,6 @@ public class TorrentCompletionService {
     ArrayList<String> uploadedKeys = new ArrayList<>();
 
     Path searchDir = scratch;
-    if (!Files.isDirectory(searchDir) || Files.list(searchDir).findAny().isEmpty()) {
-      Path txBase = Path.of("/var/lib/transmission-daemon/downloads");
-      if (Files.isDirectory(txBase)) {
-        searchDir = txBase;
-      }
-    }
-
     try (Stream<Path> paths = Files.walk(searchDir)) {
       var files = paths.filter(Files::isRegularFile).filter(this::isRealFile).toList();
       if (files.isEmpty()) {
@@ -248,11 +242,16 @@ public class TorrentCompletionService {
   }
 
   /**
-   * Skips libtorrent internal piece and part files.
+   * Skips in-progress downloads, piece files, and client-internal artefacts.
    */
   private boolean isRealFile(Path file) {
     String name = file.getFileName().toString();
-    return !name.endsWith(".parts") && !name.startsWith(".") && !name.contains(".pad");
+    return !name.endsWith(".part")
+        && !name.endsWith(".parts")
+        && !name.endsWith(".!qB")
+        && !name.endsWith(".!ut")
+        && !name.startsWith(".")
+        && !name.contains(".pad");
   }
 
   /**

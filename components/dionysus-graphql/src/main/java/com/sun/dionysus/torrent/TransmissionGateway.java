@@ -57,7 +57,7 @@ public class TransmissionGateway {
   private void download(UUID jobId, String source, File saveDir) {
     log.info("Starting download for job {} in {}", jobId, saveDir);
     saveDir.mkdirs();
-    exec("--add", source);
+    exec("--add", source, "--download-dir", saveDir.getAbsolutePath());
 
     String infoHash = jobService.findById(jobId).map(TorrentJobEntity::getInfoHash).orElse(null);
     String tid = null;
