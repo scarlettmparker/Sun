@@ -5,7 +5,7 @@ After=network.target sun-backend.service
 [Service]
 Type=simple
 WorkingDirectory=/opt/sun/web
-ExecStart=/usr/bin/npx tsx --loader ./css-loader.mjs server.js
+ExecStart=%h/.bun/bin/bun --preload ./css-plugin.ts server.js
 Environment=NODE_ENV=production
 Environment=SERVER_PORT=%i
 Environment=SUN_ENV=prod
