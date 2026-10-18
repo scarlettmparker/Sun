@@ -14,8 +14,16 @@ import {
   clientId,
   clientSecret,
 } from "./config.js";
+import { configureApi } from "@sun/api";
 import { setupRoutes } from "./routes/index.js";
 import { AUTH_COOKIE } from "./src/utils/auth.ts";
+
+configureApi({
+  authCookie: AUTH_COOKIE,
+  clientId,
+  clientSecret,
+  appBaseUrl: base,
+});
 
 const configure = async (app) => {
   const { default: formbody } = await import("@fastify/formbody");

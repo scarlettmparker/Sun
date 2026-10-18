@@ -76,11 +76,9 @@ export default defineConfig(() => {
     },
     ssr: {
       noExternal: [
-        "@sun/ssr",
         "@sun/components",
         "@sun/themes",
         "@sun/utils",
-        "@sun/api",
         "@sun/shared",
         "@sun/events",
         "@sun/security",
