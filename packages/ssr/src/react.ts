@@ -11,7 +11,6 @@ import { trackPageView } from "@sun/analytics";
 import {
   getPageData,
   makeCacheKey,
-  peekPageData,
   refetchEntry,
   subscribeDataInvalidation,
   subscribeDataPatch,
@@ -41,7 +40,7 @@ export function usePageData<T>(
   pattern: string,
   params?: Record<string, unknown>,
 ): { data: T } {
-  const cacheKey = makeCacheKey(`${pattern}:${key}`, params);
+  const cacheKey = makeCacheKey(pattern, params);
   const forceUpdate = useForceUpdate();
 
   useEffect(() => {
@@ -106,29 +105,11 @@ export const RoleCheck = ({
   children,
 }: RoleCheckProps) => {
   if (!roles.length) return null;
-  const cacheKey = makeCacheKey("currentRoles:currentRoles", {});
-  const forceUpdate = useForceUpdate();
-
-  useEffect(() => {
-    return subscribeDataInvalidation((affected) => {
-      if (!affected || affected.includes(cacheKey)) {
-        forceUpdate();
-      }
-    });
-  }, [cacheKey]);
-
-  const userRoles = peekPageData<string[]>(
+  const { data: userRoles } = usePageData<string[]>(
     "currentRoles",
     "currentRoles",
     {},
-  ) as string[] | null;
-
-  useEffect(() => {
-    if (userRoles == null) {
-      refetchEntry("currentRoles", "currentRoles", {}, forceUpdate);
-    }
-  }, [userRoles == null]);
-
+  );
   if (!userRoles || !userRoles.length) return null;
   const has =
     match === "all"

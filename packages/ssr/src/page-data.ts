@@ -346,7 +346,7 @@ function readPageData<T>(
   pattern: string,
   params?: Record<string, unknown>,
 ): { data: T } {
-  const cacheKey = makeCacheKey(`${pattern}:${key}`, params);
+  const cacheKey = makeCacheKey(pattern, params);
   let record = activeCache().get(cacheKey);
 
   if (
@@ -402,22 +402,14 @@ function readPageData<T>(
 
     const promise = loadPromise
       .then((merged) => {
-        if (!merged || !(key in merged)) {
-          record!.status = "resolved";
-          record!.result = merged ?? { [key]: null };
-          if (record!.result![key] === undefined)
-            record!.result![key] = null as unknown as Record<
-              string,
-              unknown
-            >[string];
-          record!.timestamp = Date.now();
-          return record!.result![key];
+        const result = merged ?? {};
+        if (result[key] === undefined) {
+          result[key] = null as unknown as Record<string, unknown>[string];
         }
-
         record!.status = "resolved";
-        record!.result = merged;
+        record!.result = result;
         record!.timestamp = Date.now();
-        return merged[key];
+        return result[key];
       })
       .catch((err) => {
         console.error(`Error fetching page data for ${key} (${pattern}):`, err);
@@ -454,7 +446,7 @@ export function getPageData<T>(
   pattern: string,
   params?: Record<string, unknown>,
 ): { data: T } {
-  const cacheKey = makeCacheKey(`${pattern}:${key}`, params);
+  const cacheKey = makeCacheKey(pattern, params);
   let record = activeCache().get(cacheKey);
 
   if (
@@ -476,16 +468,16 @@ export function getPageData<T>(
     record = undefined;
   }
 
-  // Fallback check to support key structures populated via hydratePageData
+  // Fallback check to support key structures populated by older snapshots.
   if (!record) {
-    const legacyHydrationKey = makeCacheKey(pattern, params);
-    record = activeCache().get(legacyHydrationKey);
+    const keyedHydrationKey = makeCacheKey(`${pattern}:${key}`, params);
+    record = activeCache().get(keyedHydrationKey);
     if (
       record &&
       record.status === "resolved" &&
       isCacheExpired(record, pattern)
     ) {
-      activeCache().delete(legacyHydrationKey);
+      activeCache().delete(keyedHydrationKey);
       record = undefined;
     }
   }
@@ -512,7 +504,7 @@ export function peekPageData<T>(
   pattern: string,
   params?: Record<string, unknown>,
 ): T | null {
-  const cacheKey = makeCacheKey(`${pattern}:${key}`, params);
+  const cacheKey = makeCacheKey(pattern, params);
   let record = activeCache().get(cacheKey);
 
   if (
@@ -536,36 +528,19 @@ export function peekPageData<T>(
   }
 
   if (!record) {
-    const legacyKey = makeCacheKey(pattern, params);
-    const legacy = activeCache().get(legacyKey);
-    if (legacy && legacy.status === "resolved") {
-      if (isCacheExpired(legacy, pattern)) {
-        refetchEntry(key, pattern, params, () => {});
-      }
-      return ((legacy.result as Record<string, unknown>)?.[key] as T) ?? null;
+    const keyedKey = makeCacheKey(`${pattern}:${key}`, params);
+    record = activeCache().get(keyedKey);
+    if (
+      record &&
+      record.status === "resolved" &&
+      isCacheExpired(record, pattern)
+    ) {
+      activeCache().delete(keyedKey);
+      record = undefined;
     }
   }
 
-  if (!record) {
-    try {
-      readPageData<T>(key, pattern, params);
-    } catch (e) {
-      if (e instanceof Promise) {
-        return null;
-      }
-      throw e;
-    }
-    record = activeCache().get(cacheKey);
-    if (!record || record.status !== "resolved") {
-      return null;
-    }
-  }
-
-  if (record.status === "pending") {
-    return null;
-  }
-
-  if (record.status === "rejected") {
+  if (!record || record.status !== "resolved") {
     return null;
   }
 
@@ -730,8 +705,9 @@ export function patchPageData<T>(
   if (typeof window === "undefined") {
     return;
   }
-  const cacheKey = makeCacheKey(`${pattern}:${key}`, params);
-  const record = activeCache().get(cacheKey);
+  const cacheKey = makeCacheKey(pattern, params);
+  const keyedKey = makeCacheKey(`${pattern}:${key}`, params);
+  const record = activeCache().get(cacheKey) ?? activeCache().get(keyedKey);
   const current = (record?.result?.[key] as T | undefined) ?? null;
   const next = updater(current);
   if (record) {
@@ -763,8 +739,10 @@ export function refetchEntry(
   fetchPageDataRpc(pattern, params)
     .then((merged) => {
       if (!merged) return;
-      const cacheKey = makeCacheKey(`${pattern}:${key}`, params);
-      const record = activeCache().get(cacheKey);
+      const cacheKey = makeCacheKey(pattern, params);
+      const keyedKey = makeCacheKey(`${pattern}:${key}`, params);
+      const record =
+        activeCache().get(cacheKey) ?? activeCache().get(keyedKey);
       if (record) {
         record.status = "resolved";
         record.result = merged;
