@@ -173,7 +173,7 @@ function anonymousId(ip: string | undefined, userAgent: string | undefined): str
  * @param token Auth JWT, or undefined.
  * @param ip Client ip.
  * @param userAgent Client user-agent.
- * @returns `user:<accountId>` when the token decodes, else `anon:<hash>`.
+ * @returns A user-prefixed id when the token decodes, else an anon-prefixed hash.
  */
 export function distinctIdFor(
   token: string | undefined,
@@ -248,7 +248,7 @@ export function trackPageView(input: PageViewInput): void {
 }
 
 /**
- * Records a successful sign-in: identifies the account, links the anonymous id
+ * Records a successful sign-in. Identifies the account, links the anonymous id
  * to it, and captures a `sign_in` event.
  *
  * @param input App name, auth token, and request details.
