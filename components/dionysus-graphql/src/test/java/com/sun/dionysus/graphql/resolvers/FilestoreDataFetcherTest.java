@@ -1,191 +1,502 @@
 package com.sun.dionysus.graphql.resolvers;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+import org.springframework.web.client.RestClient;
 import com.sun.dionysus.codegen.types.Bucket;
 import com.sun.dionysus.codegen.types.BucketKeyInput;
 import com.sun.dionysus.codegen.types.DeleteFileResponse;
 import com.sun.dionysus.codegen.types.DeleteKeyResponse;
-import com.sun.dionysus.codegen.types.GetPresignedDownloadUrlResponse;
-import com.sun.dionysus.codegen.types.GetPresignedUploadUrlResponse;
-import com.sun.dionysus.codegen.types.GetPresignedUploadUrlsResponse;
-import com.sun.dionysus.codegen.types.KeyDetail;
 import com.sun.dionysus.codegen.types.KeyEntry;
-import com.sun.dionysus.codegen.types.PresignInput;
+import com.sun.dionysus.codegen.types.KeyDetail;
 import com.sun.dionysus.codegen.types.PutKeyInput;
 import com.sun.dionysus.codegen.types.PutKeyResponse;
 import com.sun.dionysus.codegen.types.RenameKeyInput;
 import com.sun.dionysus.codegen.types.RenameKeyResponse;
-import com.sun.dionysus.graphql.services.FilestoreGraphQLService;
+import com.sun.dionysus.graphql.mappers.FileMapper;
+import com.sun.dionysus.graphql.mappers.KeyDetailMapper;
+import com.sun.dionysus.graphql.mappers.KeyEntryMapper;
+import com.sun.dionysus.model.KeyDetailEntity;
+import com.sun.dionysus.service.torrent.TorrentJobService;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.CommonPrefix;
+import software.amazon.awssdk.services.s3.model.S3Object;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectResponse;
+import software.amazon.awssdk.services.s3.model.DeleteObjectsRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectsResponse;
+import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
+import software.amazon.awssdk.services.s3.model.CopyObjectResponse;
+import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
+import software.amazon.awssdk.services.s3.paginators.ListObjectsV2Iterable;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
+import com.sun.dionysus.service.KeyDetailService;
+import com.sun.net.httpserver.HttpServer;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.URL;
+import java.time.Instant;
 import java.util.List;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import java.util.Optional;
+import java.util.function.Consumer;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class FilestoreDataFetcherTest {
 
-  @Mock private FilestoreGraphQLService filestoreGraphQLService;
-  @InjectMocks private FilestoreDataFetcher fetcher;
+  @Mock
+  private RestClient.Builder restClientBuilder;
 
-  @Test
-  void health_shouldDelegateToService() {
-    when(filestoreGraphQLService.health()).thenReturn("ok");
+  @Mock
+  private S3Client s3Client;
 
-    String result = fetcher.health();
+  @Mock
+  private S3Presigner s3Presigner;
 
-    assertThat(result).isEqualTo("ok");
-    verify(filestoreGraphQLService).health();
+  @Mock
+  private FileMapper fileMapper;
+
+  @Mock
+  private KeyEntryMapper keyEntryMapper;
+
+  @Mock
+  private KeyDetailMapper keyDetailMapper;
+
+  @Mock
+  private KeyDetailService keyDetailService;
+
+  @Mock
+  private TorrentJobService torrentJobService;
+
+  @InjectMocks
+  private FilestoreDataFetcher fetcher;
+
+  private RestClient restClient;
+
+  private HttpServer httpServer;
+
+  private URL putKeyUploadUrl;
+
+  @BeforeEach
+  void setup() throws IOException {
+    restClient = mock(RestClient.class);
+    when(restClientBuilder.build()).thenReturn(restClient);
+    fetcher.init();
+
+    httpServer = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
+    httpServer.createContext("/", exchange -> {
+      exchange.sendResponseHeaders(200, -1);
+      exchange.close();
+    });
+    httpServer.start();
+    putKeyUploadUrl = new URL("http://localhost:" + httpServer.getAddress().getPort() + "/upload");
+
+    when(torrentJobService.findVisibleInBucketUnderPrefix(anyString(), nullable(String.class)))
+        .thenReturn(List.of());
+    when(keyDetailService.listActiveForBucketAndPath(anyString(), anyString())).thenReturn(List.of());
+    when(keyDetailService.createOrUpdateDetail(anyString(), anyString(), any(), any())).thenAnswer(invocation -> {
+      KeyDetailEntity detail = new KeyDetailEntity();
+      detail.setBucket(invocation.getArgument(0));
+      detail.setKeyPath(invocation.getArgument(1));
+      return detail;
+    });
+    when(keyDetailService.locateByBucketAndKeyPath(anyString(), anyString())).thenReturn(Optional.empty());
+  }
+
+  @AfterEach
+  void teardown() {
+    if (httpServer != null) {
+      httpServer.stop(0);
+    }
   }
 
   @Test
-  void listBuckets_shouldDelegateToService() {
-    Bucket b = new Bucket();
-    b.setId("b1");
-    when(filestoreGraphQLService.listBuckets()).thenReturn(List.of(b));
+  void health_returnsResponseFromRestApi() {
+    String expected = "{\"status\":\"ok\"}";
+    stubRestGet(expected, String.class);
+
+    String result = fetcher.health();
+
+    assertThat(result).isEqualTo(expected);
+  }
+
+  @Test
+  void listBuckets_returnsBucketsFromRestApi() {
+    Bucket bucket = new Bucket();
+    bucket.setId("b1");
+    stubRestGet(new Bucket[] { bucket }, Bucket[].class);
 
     List<Bucket> result = fetcher.listBuckets();
 
     assertThat(result).hasSize(1);
-    verify(filestoreGraphQLService).listBuckets();
+    assertThat(result.get(0).getId()).isEqualTo("b1");
   }
 
   @Test
-  void listKeys_shouldDelegateToService() {
-    KeyEntry entry = new KeyEntry();
-    entry.setKey("a/");
-    when(filestoreGraphQLService.listKeys("bucket", "prefix/")).thenReturn(List.of(entry));
+  void putKey_withExplicitName_createsDirectoryAsIs() {
+    stubPutKeyUpload();
 
-    List<KeyEntry> result = fetcher.listKeys("bucket", "prefix/");
+    PutKeyResponse result = fetcher.putKey(
+        PutKeyInput.newBuilder().bucket("default-bucket").key("explicit-folder").build());
 
-    assertThat(result).hasSize(1);
-    verify(filestoreGraphQLService).listKeys("bucket", "prefix/");
+    assertThat(result.getKey()).isEqualTo("explicit-folder/");
+
+    ArgumentCaptor<PutObjectPresignRequest> captor = ArgumentCaptor.forClass(PutObjectPresignRequest.class);
+    verify(s3Presigner).presignPutObject(captor.capture());
+    assertThat(captor.getValue().putObjectRequest().key()).isEqualTo("explicit-folder/");
+    verify(s3Client, times(0)).listObjectsV2(any(ListObjectsV2Request.class));
   }
 
   @Test
-  void locate_shouldDelegateToService() {
-    KeyDetail detail = new KeyDetail();
-    detail.setBucket("b");
-    detail.setKeyPath("k");
-    when(filestoreGraphQLService.locate("b", "k")).thenReturn(detail);
+  void putKey_withNullKey_noConflict_createsRootNewKey() {
+    when(s3Client.listObjectsV2(any(ListObjectsV2Request.class)))
+        .thenReturn(ListObjectsV2Response.builder().build());
+    stubPutKeyUpload();
 
-    KeyDetail result = fetcher.locate("b", "k");
+    PutKeyResponse result = fetcher.putKey(
+        PutKeyInput.newBuilder().bucket("default-bucket").build());
 
-    assertThat(result).isEqualTo(detail);
-    verify(filestoreGraphQLService).locate("b", "k");
+    assertThat(result.getKey()).isEqualTo("new-key/");
   }
 
   @Test
-  void listImages_shouldDelegateToService() {
-    KeyDetail d = new KeyDetail();
-    when(filestoreGraphQLService.listImages("b")).thenReturn(List.of(d));
+  void putKey_withEmptyString_noConflict_createsRootNewKey() {
+    when(s3Client.listObjectsV2(any(ListObjectsV2Request.class)))
+        .thenReturn(ListObjectsV2Response.builder().build());
+    stubPutKeyUpload();
 
-    List<KeyDetail> result = fetcher.listImages("b");
+    PutKeyResponse result = fetcher.putKey(
+        PutKeyInput.newBuilder().bucket("default-bucket").key("   ").build());
 
-    assertThat(result).hasSize(1);
-    verify(filestoreGraphQLService).listImages("b");
+    assertThat(result.getKey()).isEqualTo("new-key/");
   }
 
   @Test
-  void locateImage_shouldDelegateToService() {
-    KeyDetail d = new KeyDetail();
-    when(filestoreGraphQLService.locateImage("b", "k")).thenReturn(d);
+  void putKey_withParentPath_hasConflicts_createsIncrementedNewKey() {
+    ListObjectsV2Response hit0 = ListObjectsV2Response.builder()
+        .contents(S3Object.builder().key("parent/new-key/").build())
+        .build();
+    ListObjectsV2Response hit1 = ListObjectsV2Response.builder()
+        .contents(S3Object.builder().key("parent/new-key-1/").build())
+        .build();
+    ListObjectsV2Response empty = ListObjectsV2Response.builder().build();
 
-    KeyDetail result = fetcher.locateImage("b", "k");
+    when(s3Client.listObjectsV2(any(ListObjectsV2Request.class)))
+        .thenReturn(hit0, hit1, empty);
+    stubPutKeyUpload();
 
-    assertThat(result).isEqualTo(d);
-    verify(filestoreGraphQLService).locateImage("b", "k");
+    PutKeyResponse result = fetcher.putKey(
+        PutKeyInput.newBuilder().bucket("default-bucket").key("parent/").build());
+
+    assertThat(result.getKey()).isEqualTo("parent/new-key-2/");
+    verify(s3Client, times(3)).listObjectsV2(any(ListObjectsV2Request.class));
   }
 
   @Test
-  void putKey_shouldDelegateToService() {
-    PutKeyInput input = PutKeyInput.newBuilder().bucket("b").key("k").build();
-    PutKeyResponse expected = PutKeyResponse.newBuilder().message("putKey succeeded").key("k").build();
-    when(filestoreGraphQLService.putKey("b", "k")).thenReturn(expected);
+  void deleteFile_returnsKey() {
+    when(s3Client.deleteObject(any(DeleteObjectRequest.class)))
+        .thenReturn(DeleteObjectResponse.builder().build());
 
-    PutKeyResponse result = fetcher.putKey(input);
+    DeleteFileResponse result = fetcher.deleteFile(
+        BucketKeyInput.newBuilder().bucket("default-bucket").key("test.txt").build());
 
-    assertThat(result).isEqualTo(expected);
-    verify(filestoreGraphQLService).putKey("b", "k");
+    assertThat(result.getKey()).isEqualTo("test.txt");
+    verify(s3Client).deleteObject(any(DeleteObjectRequest.class));
   }
 
   @Test
-  void deleteFile_shouldDelegateToService() {
-    BucketKeyInput input = BucketKeyInput.newBuilder().bucket("b").key("k").build();
-    DeleteFileResponse expected = DeleteFileResponse.newBuilder().message("deleteFile succeeded").key("k").build();
-    when(filestoreGraphQLService.deleteFile("b", "k")).thenReturn(expected);
+  void listKeys_returnsDirectoryAndFileEntries() {
+    CommonPrefix prefix = CommonPrefix.builder().prefix("dir/").build();
+    S3Object file = S3Object.builder()
+        .key("dir/file.txt")
+        .size(42L)
+        .lastModified(Instant.parse("2024-01-01T10:00:00Z"))
+        .build();
+    ListObjectsV2Response resp = ListObjectsV2Response.builder()
+        .commonPrefixes(prefix)
+        .contents(file)
+        .build();
 
-    DeleteFileResponse result = fetcher.deleteFile(input);
+    KeyDetailEntity dirDetail = new KeyDetailEntity();
+    dirDetail.setKeyPath("dir/");
+    dirDetail.setName("My Directory");
+    dirDetail.setDescription("Directory description");
 
-    assertThat(result.getKey()).isEqualTo("k");
-    verify(filestoreGraphQLService).deleteFile("b", "k");
+    KeyDetailEntity fileDetail = new KeyDetailEntity();
+    fileDetail.setKeyPath("dir/file.txt");
+    fileDetail.setName("My File");
+    fileDetail.setDescription("File description");
+
+    when(keyDetailService.listActiveForBucketAndPath("bucket", "dir/"))
+        .thenReturn(List.of(dirDetail, fileDetail));
+    ListObjectsV2Iterable paginator = pagesPaginator(resp);
+    when(s3Client.listObjectsV2Paginator(any(ListObjectsV2Request.class))).thenReturn(paginator);
+
+    KeyEntry dirEntry = new KeyEntry();
+    dirEntry.setKey("dir/");
+    dirEntry.setIsDirectory(true);
+    dirEntry.setName("My Directory");
+    dirEntry.setDescription("Directory description");
+
+    KeyEntry fileEntry = new KeyEntry();
+    fileEntry.setKey("dir/file.txt");
+    fileEntry.setIsDirectory(false);
+    fileEntry.setSize(42);
+    fileEntry.setLastModified("2024-01-01T10:00:00Z");
+    fileEntry.setName("My File");
+    fileEntry.setDescription("File description");
+
+    when(keyEntryMapper.mapDirectory(any(CommonPrefix.class), nullable(KeyDetailEntity.class))).thenReturn(dirEntry);
+    when(keyEntryMapper.mapFile(any(S3Object.class), nullable(KeyDetailEntity.class))).thenReturn(fileEntry);
+
+    List<KeyEntry> result = fetcher.listKeys("bucket", "dir/");
+
+    assertThat(result).hasSize(2);
+    assertThat(result.get(0).getKey()).isEqualTo("dir/");
+    assertThat(result.get(0).getIsDirectory()).isTrue();
+    assertThat(result.get(0).getName()).isEqualTo("My Directory");
+    assertThat(result.get(1).getKey()).isEqualTo("dir/file.txt");
+    assertThat(result.get(1).getIsDirectory()).isFalse();
+    assertThat(result.get(1).getSize()).isEqualTo(42);
+    assertThat(result.get(1).getName()).isEqualTo("My File");
   }
 
   @Test
-  void deleteKey_shouldDelegateToService() {
-    BucketKeyInput input = BucketKeyInput.newBuilder().bucket("b").key("k").build();
-    DeleteKeyResponse expected = DeleteKeyResponse.newBuilder().message("deleteKey succeeded").key("k").build();
-    when(filestoreGraphQLService.deleteKey("b", "k")).thenReturn(expected);
+  void listKeys_withoutKeyDetail_returnsEntriesWithoutMetadata() {
+    CommonPrefix prefix = CommonPrefix.builder().prefix("folder/").build();
+    S3Object file = S3Object.builder().key("folder/file.txt").size(100L).build();
+    ListObjectsV2Response resp = ListObjectsV2Response.builder()
+        .commonPrefixes(prefix)
+        .contents(file)
+        .build();
 
-    DeleteKeyResponse result = fetcher.deleteKey(input);
+    when(keyDetailService.listActiveForBucketAndPath("bucket", "folder/")).thenReturn(List.of());
+    ListObjectsV2Iterable paginator = pagesPaginator(resp);
+    when(s3Client.listObjectsV2Paginator(any(ListObjectsV2Request.class))).thenReturn(paginator);
 
-    assertThat(result.getKey()).isEqualTo("k");
-    verify(filestoreGraphQLService).deleteKey("b", "k");
+    KeyEntry dirEntry = new KeyEntry();
+    dirEntry.setKey("folder/");
+    dirEntry.setIsDirectory(true);
+
+    KeyEntry fileEntry = new KeyEntry();
+    fileEntry.setKey("folder/file.txt");
+    fileEntry.setIsDirectory(false);
+    fileEntry.setSize(100);
+
+    when(keyEntryMapper.mapDirectory(any(CommonPrefix.class), nullable(KeyDetailEntity.class))).thenReturn(dirEntry);
+    when(keyEntryMapper.mapFile(any(S3Object.class), nullable(KeyDetailEntity.class))).thenReturn(fileEntry);
+
+    List<KeyEntry> result = fetcher.listKeys("bucket", "folder/");
+
+    assertThat(result).hasSize(2);
+    assertThat(result.get(0).getName()).isNull();
+    assertThat(result.get(1).getName()).isNull();
   }
 
   @Test
-  void renameKey_shouldDelegateToService() {
-    RenameKeyInput input = RenameKeyInput.newBuilder().bucket("b").sourceKey("s").targetKey("t").merge(false).build();
-    RenameKeyResponse expected = RenameKeyResponse.newBuilder()
-        .message("renameKey succeeded").success(true).hasConflicts(false).conflicts(List.of()).build();
-    when(filestoreGraphQLService.renameKey("b", "s", "t", false)).thenReturn(expected);
+  void deleteKey_returnsKey() {
+    ListObjectsV2Iterable paginator = contentsPaginator();
+    when(s3Client.listObjectsV2Paginator(any(ListObjectsV2Request.class))).thenReturn(paginator);
+    when(s3Client.deleteObjects(any(DeleteObjectsRequest.class)))
+        .thenReturn(DeleteObjectsResponse.builder().build());
 
-    RenameKeyResponse result = fetcher.renameKey(input);
+    DeleteKeyResponse result = fetcher.deleteKey(
+        BucketKeyInput.newBuilder().bucket("default-bucket").key("folder/").build());
 
-    assertThat(result).isEqualTo(expected);
-    verify(filestoreGraphQLService).renameKey("b", "s", "t", false);
+    assertThat(result.getKey()).isEqualTo("folder/");
+    verify(s3Client).deleteObjects(any(DeleteObjectsRequest.class));
   }
 
   @Test
-  void getPresignedUploadUrl_shouldDelegateToService() {
-    PresignInput input = PresignInput.newBuilder().bucket("b").key("k").contentType("text/plain").build();
-    GetPresignedUploadUrlResponse expected = GetPresignedUploadUrlResponse.newBuilder()
-        .message("getPresignedUploadUrl succeeded").url("url").build();
-    when(filestoreGraphQLService.getPresignedUploadUrl("b", "k", "text/plain")).thenReturn(expected);
+  void deleteKey_deletesExactAndSubKeys() {
+    S3Object marker = S3Object.builder().key("dir/").build();
+    S3Object child = S3Object.builder().key("dir/child.txt").build();
+    ListObjectsV2Iterable paginator = contentsPaginator(marker, child);
+    when(s3Client.listObjectsV2Paginator(any(ListObjectsV2Request.class))).thenReturn(paginator);
+    when(s3Client.deleteObjects(any(DeleteObjectsRequest.class)))
+        .thenReturn(DeleteObjectsResponse.builder().build());
 
-    GetPresignedUploadUrlResponse result = fetcher.getPresignedUploadUrl(input);
+    DeleteKeyResponse result = fetcher.deleteKey(
+        BucketKeyInput.newBuilder().bucket("bucket").key("dir").build());
 
-    assertThat(result.getUrl()).isEqualTo("url");
-    verify(filestoreGraphQLService).getPresignedUploadUrl("b", "k", "text/plain");
+    assertThat(result.getKey()).isEqualTo("dir");
+    verify(s3Client).deleteObjects(any(DeleteObjectsRequest.class));
   }
 
   @Test
-  void getPresignedUploadUrls_shouldDelegateToService() {
-    PresignInput i = PresignInput.newBuilder().bucket("b").key("k").build();
-    GetPresignedUploadUrlsResponse expected = GetPresignedUploadUrlsResponse.newBuilder()
-        .message("getPresignedUploadUrls succeeded").urls(List.of("u1")).build();
-    when(filestoreGraphQLService.getPresignedUploadUrls(List.of(i))).thenReturn(expected);
+  void deleteKey_handlesPaginationAndBatch() {
+    S3Object a = S3Object.builder().key("big/a").build();
+    S3Object b = S3Object.builder().key("big/b").build();
+    ListObjectsV2Iterable paginator = contentsPaginator(a, b);
+    when(s3Client.listObjectsV2Paginator(any(ListObjectsV2Request.class))).thenReturn(paginator);
+    when(s3Client.deleteObjects(any(DeleteObjectsRequest.class)))
+        .thenReturn(DeleteObjectsResponse.builder().build());
 
-    GetPresignedUploadUrlsResponse result = fetcher.getPresignedUploadUrls(List.of(i));
+    DeleteKeyResponse result = fetcher.deleteKey(
+        BucketKeyInput.newBuilder().bucket("bkt").key("big").build());
 
-    assertThat(result.getUrls()).containsExactly("u1");
-    verify(filestoreGraphQLService).getPresignedUploadUrls(List.of(i));
+    assertThat(result.getKey()).isEqualTo("big");
+    verify(s3Client).deleteObjects(any(DeleteObjectsRequest.class));
+  }
+
+  /**
+   * Even with no child objects, the key marker itself is still deleted.
+   */
+  @Test
+  void deleteKey_withNoChildObjects_deletesKeyItself() {
+    ListObjectsV2Iterable paginator = contentsPaginator();
+    when(s3Client.listObjectsV2Paginator(any(ListObjectsV2Request.class))).thenReturn(paginator);
+    when(s3Client.deleteObjects(any(DeleteObjectsRequest.class)))
+        .thenReturn(DeleteObjectsResponse.builder().build());
+
+    DeleteKeyResponse result = fetcher.deleteKey(
+        BucketKeyInput.newBuilder().bucket("bucket").key("emptykey").build());
+
+    assertThat(result.getKey()).isEqualTo("emptykey");
+    verify(s3Client).deleteObjects(any(DeleteObjectsRequest.class));
   }
 
   @Test
-  void getPresignedDownloadUrl_shouldDelegateToService() {
-    BucketKeyInput input = BucketKeyInput.newBuilder().bucket("b").key("k").build();
-    GetPresignedDownloadUrlResponse expected = GetPresignedDownloadUrlResponse.newBuilder()
-        .message("getPresignedDownloadUrl succeeded").url("dl").build();
-    when(filestoreGraphQLService.getPresignedDownloadUrl("b", "k")).thenReturn(expected);
+  void renameKey_noSourceObjects_returnsFalse() {
+    ListObjectsV2Iterable paginator = contentsPaginator();
+    when(s3Client.listObjectsV2Paginator(any(Consumer.class))).thenReturn(paginator);
 
-    GetPresignedDownloadUrlResponse result = fetcher.getPresignedDownloadUrl(input);
+    RenameKeyResponse result = fetcher.renameKey(RenameKeyInput.newBuilder()
+        .bucket("bucket").sourceKey("old.txt").targetKey("new.txt").merge(false).build());
 
-    assertThat(result.getUrl()).isEqualTo("dl");
-    verify(filestoreGraphQLService).getPresignedDownloadUrl("b", "k");
+    assertThat(result.getSuccess()).isFalse();
+    assertThat(result.getHasConflicts()).isFalse();
+    assertThat(result.getConflicts()).isEmpty();
+  }
+
+  @Test
+  void renameKey_withoutMergeAndHasConflicts_returnsConflicts() {
+    S3Object sourceObj = S3Object.builder().key("old.txt").build();
+    ListObjectsV2Iterable paginator = contentsPaginator(sourceObj);
+    when(s3Client.listObjectsV2Paginator(any(Consumer.class))).thenReturn(paginator);
+    when(s3Client.headObject(any(Consumer.class))).thenReturn(HeadObjectResponse.builder().build());
+
+    RenameKeyResponse result = fetcher.renameKey(RenameKeyInput.newBuilder()
+        .bucket("bucket").sourceKey("old.txt").targetKey("new.txt").merge(false).build());
+
+    assertThat(result.getSuccess()).isFalse();
+    assertThat(result.getHasConflicts()).isTrue();
+    assertThat(result.getConflicts()).containsExactly("new.txt");
+  }
+
+  @Test
+  void renameKey_withMergeTrue_bypassesConflictsAndExecutesMove() {
+    S3Object sourceObj = S3Object.builder().key("old.txt").build();
+    ListObjectsV2Iterable paginator = contentsPaginator(sourceObj);
+    when(s3Client.listObjectsV2Paginator(any(Consumer.class))).thenReturn(paginator);
+    when(s3Client.copyObject(any(CopyObjectRequest.class))).thenReturn(CopyObjectResponse.builder().build());
+    when(s3Client.deleteObjects(any(DeleteObjectsRequest.class))).thenReturn(DeleteObjectsResponse.builder().build());
+
+    RenameKeyResponse result = fetcher.renameKey(RenameKeyInput.newBuilder()
+        .bucket("bucket").sourceKey("old.txt").targetKey("new.txt").merge(true).build());
+
+    assertThat(result.getSuccess()).isTrue();
+    assertThat(result.getHasConflicts()).isFalse();
+    verify(s3Client).copyObject(any(CopyObjectRequest.class));
+    verify(s3Client).deleteObjects(any(DeleteObjectsRequest.class));
+  }
+
+  @Test
+  void locate_returnsMappedKeyDetail() {
+    KeyDetailEntity entity = new KeyDetailEntity();
+    entity.setBucket("my-bucket");
+    entity.setKeyPath("documents/report.pdf");
+    entity.setName("Quarterly Report");
+    entity.setDescription("Q4 financial summary");
+
+    KeyDetail expected = new KeyDetail();
+    expected.setBucket("my-bucket");
+    expected.setKeyPath("documents/report.pdf");
+    expected.setName("Quarterly Report");
+    expected.setDescription("Q4 financial summary");
+
+    when(keyDetailService.locateByBucketAndKeyPath("my-bucket", "documents/report.pdf"))
+        .thenReturn(Optional.of(entity));
+    when(keyDetailMapper.map(entity)).thenReturn(expected);
+
+    KeyDetail result = fetcher.locate("my-bucket", "documents/report.pdf");
+
+    assertThat(result).isNotNull();
+    assertThat(result.getBucket()).isEqualTo("my-bucket");
+    assertThat(result.getKeyPath()).isEqualTo("documents/report.pdf");
+    assertThat(result.getName()).isEqualTo("Quarterly Report");
+  }
+
+  @Test
+  void locate_returnsNullWhenNotFound() {
+    when(keyDetailService.locateByBucketAndKeyPath("my-bucket", "missing.txt"))
+        .thenReturn(Optional.empty());
+
+    KeyDetail result = fetcher.locate("my-bucket", "missing.txt");
+
+    assertThat(result).isNull();
+  }
+
+  /**
+   * Stubs the presigner so putKey's placeholder upload targets the local server.
+   */
+  private void stubPutKeyUpload() {
+    PresignedPutObjectRequest presigned = mock(PresignedPutObjectRequest.class);
+    when(presigned.url()).thenReturn(putKeyUploadUrl);
+    when(s3Presigner.presignPutObject(any(PutObjectPresignRequest.class))).thenReturn(presigned);
+  }
+
+  /**
+   * Stubs the RestClient GET fluent chain to return the given body.
+   */
+  @SuppressWarnings("unchecked")
+  private <T> void stubRestGet(T body, Class<T> responseType) {
+    RestClient.RequestHeadersUriSpec uriSpec = mock(RestClient.RequestHeadersUriSpec.class);
+    RestClient.ResponseSpec responseSpec = mock(RestClient.ResponseSpec.class);
+    when(restClient.get()).thenReturn(uriSpec);
+    when(uriSpec.uri(anyString())).thenReturn(uriSpec);
+    when(uriSpec.header(anyString(), any(String[].class))).thenReturn(uriSpec);
+    when(uriSpec.retrieve()).thenReturn(responseSpec);
+    when(responseSpec.body(responseType)).thenReturn(body);
+  }
+
+  /**
+   * Builds a paginator mock whose page iterator yields the given response pages.
+   */
+  private ListObjectsV2Iterable pagesPaginator(ListObjectsV2Response... pages) {
+    ListObjectsV2Iterable paginator = mock(ListObjectsV2Iterable.class);
+    List<ListObjectsV2Response> pageList = List.of(pages);
+    when(paginator.iterator()).thenReturn(pageList.iterator());
+    return paginator;
+  }
+
+  /**
+   * Builds a paginator mock whose contents stream yields the given objects.
+   */
+  private ListObjectsV2Iterable contentsPaginator(S3Object... objects) {
+    ListObjectsV2Iterable paginator = mock(ListObjectsV2Iterable.class);
+    List<S3Object> contents = List.of(objects);
+    when(paginator.contents()).thenReturn(() -> contents.iterator());
+    return paginator;
   }
 }
