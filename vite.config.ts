@@ -1,6 +1,6 @@
 import { defineConfig } from "vitest/config";
 import preact from "@preact/preset-vite";
-import { compression } from "@sun/build";
+import { compression, forbidModules } from "@sun/build";
 import { visualizer } from "rollup-plugin-visualizer";
 import path from "node:path";
 
@@ -11,7 +11,7 @@ export default defineConfig(() => {
       .filter(Boolean) ?? [];
 
   return {
-    plugins: [preact(), compression()],
+    plugins: [preact(), compression(), forbidModules(["react", "react-dom"])],
     resolve: {
       alias: {
         "~": path.resolve(import.meta.dirname, "./src"),
