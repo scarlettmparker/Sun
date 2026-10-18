@@ -50,8 +50,8 @@ describe("buildSecurityHeaders", () => {
         directive.trim().startsWith("connect-src"),
       ) ?? "";
 
-    expect(connect).toContain("https://*.posthog.com");
     expect(connect).toContain("https://*.scarlettparker.co.uk");
+    expect(connect).not.toContain("posthog");
     expect(connect).not.toMatch(/(^|\s)https:(\s|;|$)/);
   });
 });
