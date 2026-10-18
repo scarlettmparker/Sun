@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import type { ReactElement } from "react";
+import { createElement, Suspense } from "preact/compat";
 import { renderToPipeableStream } from "preact-render-to-string/stream-node";
 import { inlineCss, generateCssTag } from "@sun/utils/css-inlining";
 import { getRequestCache } from "./page-data";
@@ -372,7 +373,9 @@ async function renderApp(
 
     // Never pass bootstrapModules: it lands before the postlude fills
     // window.__serverCacheData__, so the client boots too early on first load.
-    const stream = renderToPipeableStream(app, {
+    const stream = renderToPipeableStream(
+      createElement(Suspense, { fallback: null }, app),
+      {
       nonce,
       onShellReady() {
         const rawCssTag = generateCssTag(isProduction, cssContent, clientCss);
@@ -460,6 +463,9 @@ async function renderApp(
           <script type="module" src="${clientJs}"${nonceAttr}></script>
         </body>
       </html>`;
+      },
+      onError(error: unknown) {
+        console.error("SSR stream error:", error);
       },
     });
   });
