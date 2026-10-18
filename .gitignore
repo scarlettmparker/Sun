@@ -17,7 +17,6 @@ public/*
 !public/cv.pdf
 !public/fonts/
 !public/fonts/**
-# Large media, not in git for now
 public/_components/
 .env*
 
