@@ -4,10 +4,9 @@ import {
   type ReactNode,
   useCallback,
   useEffect,
-  useOptimistic,
   useReducer,
   useRef,
-  useTransition,
+  useState,
 } from "react";
 import { trackPageView } from "@sun/analytics";
 import {
@@ -172,10 +171,9 @@ export type UseMutationOptions<TPayload, TResponse, TBase> = {
 };
 
 /**
- * Wraps a mutation in React's useOptimistic: the reducer applies immediately, the
- * action runs in a transition, and the optimistic state reverts once the
- * transition settles. onSuccess writes the response into the cache first, so the
- * revert lands on authoritative data.
+ * Applies the reducer immediately, runs the action, and clears the optimistic
+ * state once every in-flight mutation settles. onSuccess writes the response
+ * into the cache first, so the clear lands on authoritative data.
  *
  * @returns A tuple of the optimistic value, a run function, and the pending flag.
  */
@@ -183,25 +181,34 @@ export function useMutation<TPayload, TResponse, TBase = TPayload>(
   options: UseMutationOptions<TPayload, TResponse, TBase>,
 ): [TBase, (payload: TPayload) => void, boolean] {
   const { base, reducer, action, onSuccess, onError } = options;
-  const [optimistic, dispatchOptimistic] = useOptimistic(base, reducer);
-  const [pending, startTransition] = useTransition();
+  const [optimistic, setOptimistic] = useState<TBase | null>(null);
+  const [pending, setPending] = useState(false);
+  const inFlight = useRef(0);
 
   const run = useCallback(
     (payload: TPayload) => {
-      startTransition(async () => {
-        dispatchOptimistic(payload);
+      inFlight.current += 1;
+      setPending(true);
+      setOptimistic((current) => reducer(current ?? base, payload));
+      void (async () => {
         try {
           const response = await action(payload);
           onSuccess?.(response, payload);
         } catch (error) {
           onError?.(toMutationError(error), payload);
+        } finally {
+          inFlight.current -= 1;
+          if (inFlight.current === 0) {
+            setOptimistic(null);
+            setPending(false);
+          }
         }
-      });
+      })();
     },
-    [action, onSuccess, onError, dispatchOptimistic],
+    [base, reducer, action, onSuccess, onError],
   );
 
-  return [optimistic, run, pending];
+  return [optimistic ?? base, run, pending];
 }
 
 /**

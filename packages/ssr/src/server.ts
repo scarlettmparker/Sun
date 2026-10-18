@@ -29,7 +29,6 @@ export type { QueryFetchResult } from "./query";
 export { loadModule } from "./load-module";
 export { renderApp } from "./render-stream";
 export type { RenderAppOptions } from "./render-stream";
-export { createRenderer } from "./renderer";
 export type {
   AppRenderConfig,
   RenderOptions,
