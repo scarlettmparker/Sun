@@ -12,7 +12,7 @@ steps:
       - bun run build
 
   build-backend:
-    image: gradle:8.14-jdk21
+    image: eclipse-temurin:25-jdk
     volumes:
       - sun-gradle-cache:/root/.gradle
     commands:
