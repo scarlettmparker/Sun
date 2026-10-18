@@ -346,7 +346,7 @@ class AccountDataFetcherTest {
         .thenThrow(new IllegalArgumentException("Invalid reactivation token"));
 
     assertThatThrownBy(() -> fetcher.confirmAccountReactivation("bad-token"))
-        .isInstanceOf(MutationException.class)
+        .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("Invalid reactivation token");
   }
 

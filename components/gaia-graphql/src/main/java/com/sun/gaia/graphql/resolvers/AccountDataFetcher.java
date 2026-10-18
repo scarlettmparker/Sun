@@ -364,15 +364,11 @@ public class AccountDataFetcher {
   @DgsEnableDataFetcherInstrumentation(false)
   @Transactional
   public ResetPasswordResponse resetPassword(String token, String newPassword) {
-    try {
-      UUID accountId = passwordResetService.useToken(token);
-      accountService.changePassword(accountId, newPassword);
-      return ResetPasswordResponse.newBuilder()
-          .message("Password reset succeeded")
-          .build();
-    } catch (Exception e) {
-      throw new MutationException(e.getMessage(), e);
-    }
+    UUID accountId = passwordResetService.useToken(token);
+    accountService.changePassword(accountId, newPassword);
+    return ResetPasswordResponse.newBuilder()
+        .message("Password reset succeeded")
+        .build();
   }
 
   /**
@@ -417,18 +413,13 @@ public class AccountDataFetcher {
         .filter(account -> provider.equals(account.getProvider()))
         .findFirst()
         .map(account -> {
-          try {
-            var token = reactivationService.createToken(account.getId());
-            String reactivationLink = GaiaGraphQLSupport.resolveBaseUrl(appBaseUrl) + "/reactivate?token=" + token.getToken();
-            emailService.sendReactivationEmail(email, reactivationLink);
-            logger.info("Reactivation email sent for account {}", account.getId());
-            return RequestAccountReactivationResponse.newBuilder()
-                .message("Reactivation email sent")
-                .build();
-          } catch (Exception e) {
-            logger.error("Failed to send reactivation email for account {}", account.getId(), e);
-            throw new MutationException("Failed to send reactivation email", e);
-          }
+          var token = reactivationService.createToken(account.getId());
+          String reactivationLink = GaiaGraphQLSupport.resolveBaseUrl(appBaseUrl) + "/reactivate?token=" + token.getToken();
+          emailService.sendReactivationEmail(email, reactivationLink);
+          logger.info("Reactivation email sent for account {}", account.getId());
+          return RequestAccountReactivationResponse.newBuilder()
+              .message("Reactivation email sent")
+              .build();
         })
         .orElseGet(() -> {
           logger.warn("Reactivation requested for unknown or active email");
@@ -446,18 +437,14 @@ public class AccountDataFetcher {
   @DgsEnableDataFetcherInstrumentation(false)
   @Transactional
   public ConfirmAccountReactivationResponse confirmAccountReactivation(String token) {
-    try {
-      UUID accountId = reactivationService.useToken(token);
-      AccountEntity account = accountService.findById(accountId)
-          .orElseThrow(() -> new IllegalArgumentException("Account not found"));
-      account.setStatus(AccountStatus.ACTIVE);
-      accountService.save(account);
-      logger.info("Reactivated account {}", accountId);
-      return ConfirmAccountReactivationResponse.newBuilder()
-          .message("Account reactivated")
-          .build();
-    } catch (Exception e) {
-      throw new MutationException(e.getMessage(), e);
-    }
+    UUID accountId = reactivationService.useToken(token);
+    AccountEntity account = accountService.findById(accountId)
+        .orElseThrow(() -> new IllegalArgumentException("Account not found"));
+    account.setStatus(AccountStatus.ACTIVE);
+    accountService.save(account);
+    logger.info("Reactivated account {}", accountId);
+    return ConfirmAccountReactivationResponse.newBuilder()
+        .message("Account reactivated")
+        .build();
   }
 }
