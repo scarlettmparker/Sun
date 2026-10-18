@@ -14,6 +14,9 @@ const LOCALE_FALLBACK = ["en-GB", "en"];
 /** Memoised production CSS bundle for the process. */
 let cssPromise: Promise<string> | null = null;
 
+/** Memoised head metadata, keyed by its inputs. */
+const metaCache = new Map<string, string>();
+
 /**
  * Per-route SEO metadata injected into the document head.
  */
@@ -279,6 +282,10 @@ function metaTags(
     : undefined;
   const locale = opts.locale ?? "en_GB";
 
+  const cacheKey = `${title}|${description ?? ""}|${ogImageRaw ?? ""}|${canonical ?? ""}|${locale}`;
+  const cached = metaCache.get(cacheKey);
+  if (cached !== undefined) return cached;
+
   const tags: string[] = [];
   tags.push(`<title>${escapeHtml(title)}</title>`);
   if (description) {
@@ -323,7 +330,10 @@ function metaTags(
   tags.push(`<link rel="icon" href="/favicon.ico" sizes="any" />`);
   tags.push(`<link rel="apple-touch-icon" href="/favicon.ico" />`);
   tags.push(`<meta name="theme-color" content="#000000" />`);
-  return tags.join("\n              ");
+  const html = tags.join("\n              ");
+  if (metaCache.size >= 500) metaCache.clear();
+  metaCache.set(cacheKey, html);
+  return html;
 }
 
 function themeStyle(theme: Record<string, string> | null, nonce?: string): string {

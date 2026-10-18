@@ -20,6 +20,11 @@ type SharedEntry = {
 const STORE_KEY = "__sun_sharedCache";
 
 /**
+ * Maximum entries retained before the oldest is evicted.
+ */
+const MAX_ENTRIES = 1000;
+
+/**
  * @returns The process-wide store.
  */
 function store(): Map<string, SharedEntry> {
@@ -28,6 +33,24 @@ function store(): Map<string, SharedEntry> {
     Map<string, SharedEntry> | undefined
   >;
   return g[STORE_KEY] ?? (g[STORE_KEY] = new Map());
+}
+
+/**
+ * Evicts the oldest entry when the store exceeds its bound.
+ *
+ * @param entries - The shared store.
+ */
+function bound(entries: Map<string, SharedEntry>): void {
+  if (entries.size <= MAX_ENTRIES) return;
+  let oldestKey: string | undefined;
+  let oldest = Number.POSITIVE_INFINITY;
+  for (const [key, entry] of entries) {
+    if (entry.timestamp < oldest) {
+      oldest = entry.timestamp;
+      oldestKey = key;
+    }
+  }
+  if (oldestKey !== undefined) entries.delete(oldestKey);
 }
 
 /**
@@ -57,6 +80,7 @@ export async function sharedCall<T>(
     try {
       const value = await load();
       entries.set(key, { value, timestamp: Date.now() });
+      bound(entries);
       return value;
     } catch (error) {
       entries.delete(key);
@@ -64,6 +88,7 @@ export async function sharedCall<T>(
     }
   })();
   entries.set(key, { pending, timestamp: Date.now() });
+  bound(entries);
   return pending;
 }
 
