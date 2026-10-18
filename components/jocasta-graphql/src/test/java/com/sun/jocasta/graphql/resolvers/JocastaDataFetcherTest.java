@@ -1,4 +1,4 @@
-package com.sun.jocasta.graphql.services;
+package com.sun.jocasta.graphql.resolvers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -37,9 +37,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 
-@DisplayName("JocastaGraphQLService")
+@DisplayName("JocastaDataFetcher")
 @ExtendWith(MockitoExtension.class)
-class JocastaGraphQLServiceTest {
+class JocastaDataFetcherTest {
 
   @Mock private JocastaQuestionService questionService;
   @Mock private JocastaAnswerService answerService;
@@ -47,7 +47,7 @@ class JocastaGraphQLServiceTest {
   @Mock private QuestionMapper questionMapper;
   @Mock private AnswerMapper answerMapper;
 
-  @InjectMocks private JocastaGraphQLService service;
+  @InjectMocks private JocastaDataFetcher fetcher;
 
   @Test
   @DisplayName("listQuestions with remoteObject returns paged")
@@ -60,7 +60,7 @@ class JocastaGraphQLServiceTest {
     Question mapped = Question.newBuilder().id(entity.getId().toString()).stem("What is ____ [concept]?").answer("a").build();
     when(questionMapper.map(entity)).thenReturn(mapped);
 
-    PagedQuestions result = service.listQuestions("briareus:post:123", null);
+    PagedQuestions result = fetcher.listQuestions("briareus:post:123", null);
 
     assertThat(result.getItems()).hasSize(1);
     assertThat(result.getPageInfo().getTotalCount()).isEqualTo(1);
@@ -77,7 +77,7 @@ class JocastaGraphQLServiceTest {
     Question mapped = Question.newBuilder().id(entity.getId().toString()).stem("s").answer("a").build();
     when(questionMapper.map(entity)).thenReturn(mapped);
 
-    PagedQuestions result = service.listQuestions(null, null);
+    PagedQuestions result = fetcher.listQuestions(null, null);
 
     assertThat(result.getItems()).hasSize(1);
   }
@@ -92,7 +92,7 @@ class JocastaGraphQLServiceTest {
     Question mapped = Question.newBuilder().id(id.toString()).stem("s").answer("a").build();
     when(questionMapper.map(entity)).thenReturn(mapped);
 
-    Question result = service.locateQuestion(id.toString());
+    Question result = fetcher.locateQuestion(id.toString());
 
     assertThat(result).isEqualTo(mapped);
   }
@@ -111,7 +111,7 @@ class JocastaGraphQLServiceTest {
     when(questionService.createBulk(any())).thenReturn(List.of(saved));
     when(questionMapper.map(saved)).thenReturn(mapped);
 
-    BulkCreateQuestionsResponse result = service.bulkCreateQuestions(List.of(input));
+    BulkCreateQuestionsResponse result = fetcher.bulkCreateQuestions(List.of(input));
 
     assertThat(result.getQuestions()).containsExactly(mapped);
     assertThat(result.getMessage()).isEqualTo("bulkCreateQuestions succeeded");
@@ -122,7 +122,7 @@ class JocastaGraphQLServiceTest {
   @Test
   @DisplayName("bulkCreateQuestions throws when empty")
   void bulkCreateQuestions_throwsWhenEmpty() {
-    assertThatThrownBy(() -> service.bulkCreateQuestions(List.of()))
+    assertThatThrownBy(() -> fetcher.bulkCreateQuestions(List.of()))
         .isInstanceOf(MutationException.class)
         .hasMessageContaining("Inputs required");
   }
@@ -146,7 +146,7 @@ class JocastaGraphQLServiceTest {
     when(answerService.submit(mapped)).thenReturn(saved);
     when(answerMapper.map(saved)).thenReturn(mappedAnswer);
 
-    SubmitAnswerResponse result = service.submitAnswer(qid.toString(), input);
+    SubmitAnswerResponse result = fetcher.submitAnswer(qid.toString(), input);
 
     assertThat(result.getAnswer()).isEqualTo(mappedAnswer);
     verify(answerMapper).mapInput(qid.toString(), input);
@@ -160,7 +160,7 @@ class JocastaGraphQLServiceTest {
     when(questionService.findById(qid)).thenReturn(Optional.empty());
     AnswerInput input = AnswerInput.newBuilder().myAnswer("my").correct(true).correctAnswer("corr").build();
 
-    assertThatThrownBy(() -> service.submitAnswer(qid.toString(), input))
+    assertThatThrownBy(() -> fetcher.submitAnswer(qid.toString(), input))
         .isInstanceOf(MutationException.class)
         .hasMessageContaining("Question not found");
   }
@@ -173,7 +173,7 @@ class JocastaGraphQLServiceTest {
     entity.setId(qid);
     when(questionService.linkQuestion(qid, "briareus:post:999")).thenReturn(Optional.of(entity));
 
-    LinkQuestionResponse result = service.linkQuestion(qid.toString(), "briareus:post:999");
+    LinkQuestionResponse result = fetcher.linkQuestion(qid.toString(), "briareus:post:999");
 
     assertThat(result.getId()).isEqualTo(qid.toString());
   }
@@ -191,7 +191,7 @@ class JocastaGraphQLServiceTest {
         .id(entity.getId().toString()).questionId(qid.toString()).myAnswer("my").correct(true).correctAnswer("c").build();
     when(answerMapper.map(entity)).thenReturn(mapped);
 
-    PagedAnswers result = service.listAnswers(qid.toString(), null);
+    PagedAnswers result = fetcher.listAnswers(qid.toString(), null);
 
     assertThat(result.getItems()).hasSize(1);
   }
