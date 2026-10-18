@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-import com.sun.base.error.MutationException;
 import com.sun.gaia.service.AccountService;
 import com.sun.icarus.codegen.types.CreateThreadInput;
 import com.sun.icarus.codegen.types.CreateThreadResponse;
@@ -71,12 +70,12 @@ class IcarusDataFetcherTest {
   }
 
   @Test
-  void createThread_shouldThrowMutationExceptionWhenServiceThrows() {
+  void createThread_shouldPropagateExceptionWhenServiceThrows() {
     when(threadService.create(any(), any())).thenThrow(new RuntimeException("Database error"));
 
     assertThatThrownBy(() -> fetcher.createThread(CreateThreadInput.newBuilder()
         .title("Thread").remoteObject("hades:annotation:abc").build()))
-        .isInstanceOf(MutationException.class)
+        .isInstanceOf(RuntimeException.class)
         .hasMessageContaining("Database error");
   }
 }

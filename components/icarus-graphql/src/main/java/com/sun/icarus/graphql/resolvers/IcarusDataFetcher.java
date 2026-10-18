@@ -2,7 +2,6 @@ package com.sun.icarus.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
-import com.sun.base.error.MutationException;
 import com.sun.base.util.PageRequests;
 import com.sun.gaia.service.AccountService;
 import com.sun.icarus.codegen.types.ArchiveThreadResponse;
@@ -212,19 +211,14 @@ public class IcarusDataFetcher {
   @PreAuthorize("@permissions.has('graphql.icarus.createThread')")
   @Transactional
   public CreateThreadResponse createThread(CreateThreadInput input) {
-    try {
-      UUID id = threadService.create(input.getTitle(), input.getRemoteObject());
-      ForumThreadEntity thread = threadService.findById(id)
-          .orElseThrow(() -> new IllegalArgumentException("Thread not found: " + id));
-      logger.info("createThread succeeded for id {}", id);
-      return CreateThreadResponse.newBuilder()
-          .message("createThread succeeded")
-          .thread(threadMapper.map(thread))
-          .build();
-    } catch (Exception e) {
-      logger.error("createThread failed", e);
-      throw new MutationException("createThread failed: " + e.getMessage(), e);
-    }
+    UUID id = threadService.create(input.getTitle(), input.getRemoteObject());
+    ForumThreadEntity thread = threadService.findById(id)
+        .orElseThrow(() -> new IllegalArgumentException("Thread not found: " + id));
+    logger.info("createThread succeeded for id {}", id);
+    return CreateThreadResponse.newBuilder()
+        .message("createThread succeeded")
+        .thread(threadMapper.map(thread))
+        .build();
   }
 
   /**
@@ -237,19 +231,14 @@ public class IcarusDataFetcher {
   @PreAuthorize("@permissions.has('graphql.icarus.lockThread')")
   @Transactional
   public LockThreadResponse lockThread(String id) {
-    try {
-      UUID threadId = threadService.setStatus(UUID.fromString(id), ThreadStatus.LOCKED);
-      ForumThreadEntity thread = threadService.findById(threadId)
-          .orElseThrow(() -> new IllegalArgumentException("Thread not found: " + threadId));
-      logger.info("lockThread succeeded for id {}", threadId);
-      return LockThreadResponse.newBuilder()
-          .message("lockThread succeeded")
-          .thread(threadMapper.map(thread))
-          .build();
-    } catch (Exception e) {
-      logger.error("lockThread failed", e);
-      throw new MutationException("lockThread failed: " + e.getMessage(), e);
-    }
+    UUID threadId = threadService.setStatus(UUID.fromString(id), ThreadStatus.LOCKED);
+    ForumThreadEntity thread = threadService.findById(threadId)
+        .orElseThrow(() -> new IllegalArgumentException("Thread not found: " + threadId));
+    logger.info("lockThread succeeded for id {}", threadId);
+    return LockThreadResponse.newBuilder()
+        .message("lockThread succeeded")
+        .thread(threadMapper.map(thread))
+        .build();
   }
 
   /**
@@ -262,19 +251,14 @@ public class IcarusDataFetcher {
   @PreAuthorize("@permissions.has('graphql.icarus.archiveThread')")
   @Transactional
   public ArchiveThreadResponse archiveThread(String id) {
-    try {
-      UUID threadId = threadService.setStatus(UUID.fromString(id), ThreadStatus.ARCHIVED);
-      ForumThreadEntity thread = threadService.findById(threadId)
-          .orElseThrow(() -> new IllegalArgumentException("Thread not found: " + threadId));
-      logger.info("archiveThread succeeded for id {}", threadId);
-      return ArchiveThreadResponse.newBuilder()
-          .message("archiveThread succeeded")
-          .thread(threadMapper.map(thread))
-          .build();
-    } catch (Exception e) {
-      logger.error("archiveThread failed", e);
-      throw new MutationException("archiveThread failed: " + e.getMessage(), e);
-    }
+    UUID threadId = threadService.setStatus(UUID.fromString(id), ThreadStatus.ARCHIVED);
+    ForumThreadEntity thread = threadService.findById(threadId)
+        .orElseThrow(() -> new IllegalArgumentException("Thread not found: " + threadId));
+    logger.info("archiveThread succeeded for id {}", threadId);
+    return ArchiveThreadResponse.newBuilder()
+        .message("archiveThread succeeded")
+        .thread(threadMapper.map(thread))
+        .build();
   }
 
   /**
@@ -287,21 +271,16 @@ public class IcarusDataFetcher {
   @PreAuthorize("@permissions.has('graphql.icarus.createPost')")
   @Transactional
   public CreatePostResponse createPost(CreatePostInput input) {
-    try {
-      UUID id = postService.addPost(
-          UUID.fromString(input.getThreadId()),
-          input.getParentId() == null ? null : UUID.fromString(input.getParentId()),
-          input.getBody());
-      ForumPost post = mapPost(id);
-      logger.info("createPost succeeded for id {}", id);
-      return CreatePostResponse.newBuilder()
-          .message("createPost succeeded")
-          .post(post)
-          .build();
-    } catch (Exception e) {
-      logger.error("createPost failed", e);
-      throw new MutationException("createPost failed: " + e.getMessage(), e);
-    }
+    UUID id = postService.addPost(
+        UUID.fromString(input.getThreadId()),
+        input.getParentId() == null ? null : UUID.fromString(input.getParentId()),
+        input.getBody());
+    ForumPost post = mapPost(id);
+    logger.info("createPost succeeded for id {}", id);
+    return CreatePostResponse.newBuilder()
+        .message("createPost succeeded")
+        .post(post)
+        .build();
   }
 
   /**
@@ -315,18 +294,13 @@ public class IcarusDataFetcher {
   @PreAuthorize("@permissions.has('graphql.icarus.editPost')")
   @Transactional
   public EditPostResponse editPost(String id, String body) {
-    try {
-      UUID postId = postService.editPost(UUID.fromString(id), body);
-      ForumPost post = mapPost(postId);
-      logger.info("editPost succeeded for id {}", postId);
-      return EditPostResponse.newBuilder()
-          .message("editPost succeeded")
-          .post(post)
-          .build();
-    } catch (Exception e) {
-      logger.error("editPost failed", e);
-      throw new MutationException("editPost failed: " + e.getMessage(), e);
-    }
+    UUID postId = postService.editPost(UUID.fromString(id), body);
+    ForumPost post = mapPost(postId);
+    logger.info("editPost succeeded for id {}", postId);
+    return EditPostResponse.newBuilder()
+        .message("editPost succeeded")
+        .post(post)
+        .build();
   }
 
   /**
@@ -339,17 +313,12 @@ public class IcarusDataFetcher {
   @PreAuthorize("@permissions.has('graphql.icarus.deletePost')")
   @Transactional
   public DeletePostResponse deletePost(String id) {
-    try {
-      UUID postId = postService.deletePost(UUID.fromString(id));
-      logger.info("deletePost succeeded for id {}", postId);
-      return DeletePostResponse.newBuilder()
-          .message("deletePost succeeded")
-          .id(postId.toString())
-          .build();
-    } catch (Exception e) {
-      logger.error("deletePost failed", e);
-      throw new MutationException("deletePost failed: " + e.getMessage(), e);
-    }
+    UUID postId = postService.deletePost(UUID.fromString(id));
+    logger.info("deletePost succeeded for id {}", postId);
+    return DeletePostResponse.newBuilder()
+        .message("deletePost succeeded")
+        .id(postId.toString())
+        .build();
   }
 
   /**
@@ -362,18 +331,13 @@ public class IcarusDataFetcher {
   @PreAuthorize("@permissions.has('graphql.icarus.vote')")
   @Transactional
   public VoteForumResponse vote(ForumVoteInput input) {
-    try {
-      UUID postId = voteService.vote(UUID.fromString(input.getPostId()), input.getValue());
-      ForumPost post = mapPost(postId);
-      logger.info("vote succeeded for id {}", postId);
-      return VoteForumResponse.newBuilder()
-          .message("vote succeeded")
-          .post(post)
-          .build();
-    } catch (Exception e) {
-      logger.error("vote failed", e);
-      throw new MutationException("vote failed: " + e.getMessage(), e);
-    }
+    UUID postId = voteService.vote(UUID.fromString(input.getPostId()), input.getValue());
+    ForumPost post = mapPost(postId);
+    logger.info("vote succeeded for id {}", postId);
+    return VoteForumResponse.newBuilder()
+        .message("vote succeeded")
+        .post(post)
+        .build();
   }
 
   /**
@@ -386,18 +350,13 @@ public class IcarusDataFetcher {
   @PreAuthorize("@permissions.has('graphql.icarus.removeVote')")
   @Transactional
   public RemoveVoteResponse removeVote(String postId) {
-    try {
-      UUID id = voteService.removeVote(UUID.fromString(postId));
-      ForumPost post = mapPost(id);
-      logger.info("removeVote succeeded for id {}", id);
-      return RemoveVoteResponse.newBuilder()
-          .message("removeVote succeeded")
-          .post(post)
-          .build();
-    } catch (Exception e) {
-      logger.error("removeVote failed", e);
-      throw new MutationException("removeVote failed: " + e.getMessage(), e);
-    }
+    UUID id = voteService.removeVote(UUID.fromString(postId));
+    ForumPost post = mapPost(id);
+    logger.info("removeVote succeeded for id {}", id);
+    return RemoveVoteResponse.newBuilder()
+        .message("removeVote succeeded")
+        .post(post)
+        .build();
   }
 
   /**
@@ -411,17 +370,12 @@ public class IcarusDataFetcher {
   @PreAuthorize("@permissions.has('graphql.icarus.attachObject')")
   @Transactional
   public AttachForumObjectResponse attachObject(String source, String target) {
-    try {
-      UUID id = threadService.attach(UUID.fromString(source), target);
-      logger.info("attachObject succeeded for id {}", id);
-      return AttachForumObjectResponse.newBuilder()
-          .message("attachObject succeeded")
-          .id(id.toString())
-          .build();
-    } catch (Exception e) {
-      logger.error("attachObject failed", e);
-      throw new MutationException("attachObject failed: " + e.getMessage(), e);
-    }
+    UUID id = threadService.attach(UUID.fromString(source), target);
+    logger.info("attachObject succeeded for id {}", id);
+    return AttachForumObjectResponse.newBuilder()
+        .message("attachObject succeeded")
+        .id(id.toString())
+        .build();
   }
 
   /**
