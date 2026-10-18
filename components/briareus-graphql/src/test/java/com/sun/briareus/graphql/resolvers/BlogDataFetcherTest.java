@@ -247,7 +247,7 @@ class BlogDataFetcherTest {
     doThrow(new RuntimeException("Database error")).when(briareusService).save(postEntity);
 
     assertThatThrownBy(() -> blogDataFetcher.createBlogPost("New Blog Post", input))
-        .isInstanceOf(MutationException.class)
+        .isInstanceOf(RuntimeException.class)
         .hasMessageContaining("Database error");
   }
 }

@@ -6,7 +6,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-import com.sun.base.error.MutationException;
 import com.sun.base.permify.PermifyClient;
 import com.sun.briareus.codegen.types.BlogDetail;
 import com.sun.briareus.codegen.types.BlogPost;
@@ -170,7 +169,7 @@ class BlogDetailDataFetcherTest {
         .build();
 
     assertThatThrownBy(() -> fetcher.updateBlogWithProperties(postId.toString(), input))
-        .isInstanceOf(MutationException.class)
+        .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("type immutable");
   }
 }

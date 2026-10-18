@@ -2,7 +2,6 @@ package com.sun.briareus.graphql.resolvers;
 
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
-import com.sun.base.error.MutationException;
 import com.sun.base.permify.PermifyClient;
 import com.sun.base.permify.PermifyUtil;
 import com.sun.briareus.codegen.types.AttachedText;
@@ -127,44 +126,39 @@ public class BlogDetailDataFetcher {
   @PreAuthorize("@permissions.has('graphql.briareus.createBlogWithProperties')")
   @Transactional
   public CreateBlogWithPropertiesResponse createBlogWithProperties(BlogWithPropertiesInput input) {
-    try {
-      if (input.getTitle() == null || input.getTitle().isBlank()) {
-        throw new IllegalArgumentException("Title is required");
-      }
-      if (input.getTypeId() == null || input.getTypeId().isBlank()) {
-        throw new IllegalArgumentException("Type is required");
-      }
-      BlogPostTypeEntity type = blogPostTypeService.findById(UUID.fromString(input.getTypeId()))
-          .orElseThrow(() -> new IllegalArgumentException("Type not found: " + input.getTypeId()));
-      if (input.getParentId() != null && !input.getParentId().isBlank()) {
-        validateParent(input.getParentId());
-      }
-      BlogPostInput postInput = blogPostMapper.toPostInput(input);
-      PostEntity postEntity = blogPostMapper.mapInput(input.getTitle(), postInput);
-      postEntity.setType(type);
-      if (input.getParentId() != null && !input.getParentId().isBlank()) {
-        postEntity.setParentId(UUID.fromString(input.getParentId()));
-      }
-      PostEntity saved = briareusService.save(postEntity);
-      writeOwnerTuple(saved.getId());
-      if (input.getPropertySet() != null) {
-        Map<String, Object> values = toMap(input.getPropertySet());
-        if (values != null && !values.isEmpty()) {
-          String schemaName = schemaNameFor(type);
-          propertySetService.upsertEntry(OWNER_BLOG, schemaName, "briareus:post:" + saved.getId(), values, false);
-          handleGalleryForPropertySet(saved.getId(), values);
-        }
-      }
-      handleRemoteObjectGalleryLinks(saved);
-      logger.info("createBlogWithProperties succeeded {}", saved.getId());
-      return CreateBlogWithPropertiesResponse.newBuilder()
-          .message("Created")
-          .post(blogPostMapper.map(saved))
-          .build();
-    } catch (Exception e) {
-      logger.error("createBlogWithProperties failed", e);
-      throw new MutationException(e.getMessage(), e);
+    if (input.getTitle() == null || input.getTitle().isBlank()) {
+      throw new IllegalArgumentException("Title is required");
     }
+    if (input.getTypeId() == null || input.getTypeId().isBlank()) {
+      throw new IllegalArgumentException("Type is required");
+    }
+    BlogPostTypeEntity type = blogPostTypeService.findById(UUID.fromString(input.getTypeId()))
+        .orElseThrow(() -> new IllegalArgumentException("Type not found: " + input.getTypeId()));
+    if (input.getParentId() != null && !input.getParentId().isBlank()) {
+      validateParent(input.getParentId());
+    }
+    BlogPostInput postInput = blogPostMapper.toPostInput(input);
+    PostEntity postEntity = blogPostMapper.mapInput(input.getTitle(), postInput);
+    postEntity.setType(type);
+    if (input.getParentId() != null && !input.getParentId().isBlank()) {
+      postEntity.setParentId(UUID.fromString(input.getParentId()));
+    }
+    PostEntity saved = briareusService.save(postEntity);
+    writeOwnerTuple(saved.getId());
+    if (input.getPropertySet() != null) {
+      Map<String, Object> values = toMap(input.getPropertySet());
+      if (values != null && !values.isEmpty()) {
+        String schemaName = schemaNameFor(type);
+        propertySetService.upsertEntry(OWNER_BLOG, schemaName, "briareus:post:" + saved.getId(), values, false);
+        handleGalleryForPropertySet(saved.getId(), values);
+      }
+    }
+    handleRemoteObjectGalleryLinks(saved);
+    logger.info("createBlogWithProperties succeeded {}", saved.getId());
+    return CreateBlogWithPropertiesResponse.newBuilder()
+        .message("Created")
+        .post(blogPostMapper.map(saved))
+        .build();
   }
 
   /**
@@ -178,46 +172,41 @@ public class BlogDetailDataFetcher {
   @PreAuthorize("@permissions.has('graphql.briareus.updateBlogWithProperties')")
   @Transactional
   public UpdateBlogWithPropertiesResponse updateBlogWithProperties(String id, BlogWithPropertiesInput input) {
-    try {
-      UUID postId = UUID.fromString(id);
-      PostEntity post = briareusService.locatePost(postId)
-          .orElseThrow(() -> new IllegalArgumentException("Post not found: " + id));
-      if (!canEdit(post)) {
-        throw new IllegalArgumentException("Not authorized to edit post: " + id);
-      }
-      if (input.getTypeId() != null && !input.getTypeId().isBlank()) {
-        UUID newTypeId = UUID.fromString(input.getTypeId());
-        if (post.getType() != null && !post.getType().getId().equals(newTypeId)) {
-          throw new IllegalArgumentException("type immutable");
-        }
-      }
-      if (input.getTitle() != null && !input.getTitle().isBlank()) {
-        post.setTitle(input.getTitle());
-      }
-      BlogPostInput postInput = blogPostMapper.toPostInput(input);
-      blogPostMapper.update(post, postInput);
-      if (input.getParentId() != null && !input.getParentId().isBlank()) {
-        validateParent(input.getParentId());
-        post.setParentId(UUID.fromString(input.getParentId()));
-      }
-      PostEntity saved = briareusService.save(post);
-      if (input.getPropertySet() != null) {
-        Map<String, Object> values = toMap(input.getPropertySet());
-        if (values != null) {
-          String schemaName = schemaNameFor(saved.getType());
-          propertySetService.upsertEntry(OWNER_BLOG, schemaName, "briareus:post:" + saved.getId(), values, false);
-          handleGalleryForPropertySet(saved.getId(), values);
-        }
-      }
-      logger.info("updateBlogWithProperties succeeded {}", saved.getId());
-      return UpdateBlogWithPropertiesResponse.newBuilder()
-          .message("Updated")
-          .post(blogPostMapper.map(saved))
-          .build();
-    } catch (Exception e) {
-      logger.error("updateBlogWithProperties failed", e);
-      throw new MutationException(e.getMessage(), e);
+    UUID postId = UUID.fromString(id);
+    PostEntity post = briareusService.locatePost(postId)
+        .orElseThrow(() -> new IllegalArgumentException("Post not found: " + id));
+    if (!canEdit(post)) {
+      throw new IllegalArgumentException("Not authorized to edit post: " + id);
     }
+    if (input.getTypeId() != null && !input.getTypeId().isBlank()) {
+      UUID newTypeId = UUID.fromString(input.getTypeId());
+      if (post.getType() != null && !post.getType().getId().equals(newTypeId)) {
+        throw new IllegalArgumentException("type immutable");
+      }
+    }
+    if (input.getTitle() != null && !input.getTitle().isBlank()) {
+      post.setTitle(input.getTitle());
+    }
+    BlogPostInput postInput = blogPostMapper.toPostInput(input);
+    blogPostMapper.update(post, postInput);
+    if (input.getParentId() != null && !input.getParentId().isBlank()) {
+      validateParent(input.getParentId());
+      post.setParentId(UUID.fromString(input.getParentId()));
+    }
+    PostEntity saved = briareusService.save(post);
+    if (input.getPropertySet() != null) {
+      Map<String, Object> values = toMap(input.getPropertySet());
+      if (values != null) {
+        String schemaName = schemaNameFor(saved.getType());
+        propertySetService.upsertEntry(OWNER_BLOG, schemaName, "briareus:post:" + saved.getId(), values, false);
+        handleGalleryForPropertySet(saved.getId(), values);
+      }
+    }
+    logger.info("updateBlogWithProperties succeeded {}", saved.getId());
+    return UpdateBlogWithPropertiesResponse.newBuilder()
+        .message("Updated")
+        .post(blogPostMapper.map(saved))
+        .build();
   }
 
   /**

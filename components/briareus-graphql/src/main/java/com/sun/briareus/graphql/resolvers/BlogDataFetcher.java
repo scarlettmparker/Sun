@@ -209,24 +209,19 @@ public class BlogDataFetcher {
   public CreateBlogPostResponse createBlogPost(String title, BlogPostInput input) {
     logger.info("Creating blog post with title: {}", title);
 
-    try {
-      if (title == null || title.isBlank()) {
-        throw new IllegalArgumentException("Title is required");
-      }
-      validateParent(input.getParentId());
-      PostEntity postEntity = blogPostMapper.mapInput(title, input);
-      PostEntity savedEntity = briareusService.save(postEntity);
-      writeOwnerTuple(savedEntity.getId());
-
-      logger.info("Successfully created blog post with id: {}", savedEntity.getId());
-      return CreateBlogPostResponse.newBuilder()
-          .message("createBlogPost succeeded")
-          .post(blogPostMapper.map(savedEntity))
-          .build();
-    } catch (Exception e) {
-      logger.error("Failed to create blog post with title: {}", title, e);
-      throw new MutationException(e.getMessage(), e);
+    if (title == null || title.isBlank()) {
+      throw new IllegalArgumentException("Title is required");
     }
+    validateParent(input.getParentId());
+    PostEntity postEntity = blogPostMapper.mapInput(title, input);
+    PostEntity savedEntity = briareusService.save(postEntity);
+    writeOwnerTuple(savedEntity.getId());
+
+    logger.info("Successfully created blog post with id: {}", savedEntity.getId());
+    return CreateBlogPostResponse.newBuilder()
+        .message("createBlogPost succeeded")
+        .post(blogPostMapper.map(savedEntity))
+        .build();
   }
 
   /**
@@ -242,25 +237,20 @@ public class BlogDataFetcher {
   public UpdateBlogPostResponse updateBlogPost(String id, BlogPostInput input) {
     logger.info("Updating blog post with id: {}", id);
 
-    try {
-      UUID postId = UUID.fromString(id);
-      PostEntity post = briareusService.locatePost(postId)
-          .orElseThrow(() -> new IllegalArgumentException("Post not found: " + id));
-      if (!canEdit(post)) {
-        throw new IllegalArgumentException("Not authorized to edit post: " + id);
-      }
-      blogPostMapper.update(post, input);
-      PostEntity saved = briareusService.save(post);
-
-      logger.info("Successfully updated blog post with id: {}", saved.getId());
-      return UpdateBlogPostResponse.newBuilder()
-          .message("updateBlogPost succeeded")
-          .post(blogPostMapper.map(saved))
-          .build();
-    } catch (Exception e) {
-      logger.error("Failed to update blog post with id: {}", id, e);
-      throw new MutationException(e.getMessage(), e);
+    UUID postId = UUID.fromString(id);
+    PostEntity post = briareusService.locatePost(postId)
+        .orElseThrow(() -> new IllegalArgumentException("Post not found: " + id));
+    if (!canEdit(post)) {
+      throw new IllegalArgumentException("Not authorized to edit post: " + id);
     }
+    blogPostMapper.update(post, input);
+    PostEntity saved = briareusService.save(post);
+
+    logger.info("Successfully updated blog post with id: {}", saved.getId());
+    return UpdateBlogPostResponse.newBuilder()
+        .message("updateBlogPost succeeded")
+        .post(blogPostMapper.map(saved))
+        .build();
   }
 
   /**
@@ -483,83 +473,78 @@ public class BlogDataFetcher {
   public IngestBlogFromSourceResponse ingestBlogFromSource(IngestBlogInput input) {
     logger.info("Ingesting blog from source");
 
-    try {
-      if (input == null) {
-        throw new IllegalArgumentException("Input is required");
-      }
-      String title = input.getTitle();
-      String typeName = input.getTypeName();
-      SourceKind sourceKind = input.getSourceKind();
-      String sourceId = input.getSourceId();
-      if (title == null || title.isBlank()) {
-        throw new IllegalArgumentException("Title is required");
-      }
-      if (typeName == null || typeName.isBlank()) {
-        throw new IllegalArgumentException("Type name is required");
-      }
-      if (sourceKind == null) {
-        throw new IllegalArgumentException("Source kind is required");
-      }
-      if (sourceId == null || sourceId.isBlank()) {
-        throw new IllegalArgumentException("Source id is required");
-      }
-      UUID viewer = requireUser();
-      BlogPostTypeEntity type = blogPostTypeService
-          .findByName(typeName)
-          .orElseThrow(() -> new IllegalArgumentException("Unknown type: " + typeName));
-      String norm = sourceId.toLowerCase().trim();
-      String summary;
-      String sourceUrl;
-      List<String> edges = new ArrayList<>();
-      if (sourceKind == SourceKind.WIKIPEDIA) {
-        WikipediaSummary s = wikipediaService.summary(norm);
-        if (s == null || s.extract() == null || s.extract().isBlank()) {
-          throw new IllegalArgumentException("not_found");
-        }
-        summary = s.extract();
-        sourceUrl = s.pageUrl();
-        if (sourceUrl == null || sourceUrl.isBlank()) {
-          sourceUrl = "https://en.wikipedia.org/wiki/" + norm;
-        }
-        edges.add("source:wikipedia:" + norm);
-        edges.add("wikipedia:page:" + norm);
-      } else if (sourceKind == SourceKind.WIKTIONARY) {
-        WiktionaryEntry e = wiktionaryService.define(norm);
-        if (e == null || e.definitions().isEmpty()) {
-          throw new IllegalArgumentException("not_found");
-        }
-        summary = String.join("\n\n", e.definitions());
-        sourceUrl = e.sourceUrl();
-        if (sourceUrl == null || sourceUrl.isBlank()) {
-          sourceUrl = "https://en.wiktionary.org/wiki/" + norm;
-        }
-        edges.add("source:wiktionary:" + norm);
-      } else {
-        throw new IllegalArgumentException("Unsupported sourceKind");
-      }
-      PostEntity post = new PostEntity();
-      post.setTitle(title.trim());
-      post.setContent(summary + "\n\nSource: " + sourceUrl);
-      post.setType(type);
-      post.setLanguage("en");
-      post.setTags(List.of(sourceKind.name().toLowerCase(), "ingested"));
-      post.setRemoteObject(edges);
-      UUID parentId = validateParent(input.getParentId());
-      if (parentId != null) {
-        post.setParentId(parentId);
-      }
-      PostEntity saved = briareusService.save(post);
-      writeOwnerTuple(saved.getId());
-
-      logger.info("Successfully ingested blog with id: {}", saved.getId());
-      return IngestBlogFromSourceResponse.newBuilder()
-          .message("ingestBlogFromSource succeeded")
-          .post(blogPostMapper.map(saved))
-          .build();
-    } catch (Exception e) {
-      logger.error("Failed to ingest blog from source", e);
-      throw new MutationException(e.getMessage(), e);
+    if (input == null) {
+      throw new IllegalArgumentException("Input is required");
     }
+    String title = input.getTitle();
+    String typeName = input.getTypeName();
+    SourceKind sourceKind = input.getSourceKind();
+    String sourceId = input.getSourceId();
+    if (title == null || title.isBlank()) {
+      throw new IllegalArgumentException("Title is required");
+    }
+    if (typeName == null || typeName.isBlank()) {
+      throw new IllegalArgumentException("Type name is required");
+    }
+    if (sourceKind == null) {
+      throw new IllegalArgumentException("Source kind is required");
+    }
+    if (sourceId == null || sourceId.isBlank()) {
+      throw new IllegalArgumentException("Source id is required");
+    }
+    UUID viewer = requireUser();
+    BlogPostTypeEntity type = blogPostTypeService
+        .findByName(typeName)
+        .orElseThrow(() -> new IllegalArgumentException("Unknown type: " + typeName));
+    String norm = sourceId.toLowerCase().trim();
+    String summary;
+    String sourceUrl;
+    List<String> edges = new ArrayList<>();
+    if (sourceKind == SourceKind.WIKIPEDIA) {
+      WikipediaSummary s = wikipediaService.summary(norm);
+      if (s == null || s.extract() == null || s.extract().isBlank()) {
+        throw new IllegalArgumentException("not_found");
+      }
+      summary = s.extract();
+      sourceUrl = s.pageUrl();
+      if (sourceUrl == null || sourceUrl.isBlank()) {
+        sourceUrl = "https://en.wikipedia.org/wiki/" + norm;
+      }
+      edges.add("source:wikipedia:" + norm);
+      edges.add("wikipedia:page:" + norm);
+    } else if (sourceKind == SourceKind.WIKTIONARY) {
+      WiktionaryEntry e = wiktionaryService.define(norm);
+      if (e == null || e.definitions().isEmpty()) {
+        throw new IllegalArgumentException("not_found");
+      }
+      summary = String.join("\n\n", e.definitions());
+      sourceUrl = e.sourceUrl();
+      if (sourceUrl == null || sourceUrl.isBlank()) {
+        sourceUrl = "https://en.wiktionary.org/wiki/" + norm;
+      }
+      edges.add("source:wiktionary:" + norm);
+    } else {
+      throw new IllegalArgumentException("Unsupported sourceKind");
+    }
+    PostEntity post = new PostEntity();
+    post.setTitle(title.trim());
+    post.setContent(summary + "\n\nSource: " + sourceUrl);
+    post.setType(type);
+    post.setLanguage("en");
+    post.setTags(List.of(sourceKind.name().toLowerCase(), "ingested"));
+    post.setRemoteObject(edges);
+    UUID parentId = validateParent(input.getParentId());
+    if (parentId != null) {
+      post.setParentId(parentId);
+    }
+    PostEntity saved = briareusService.save(post);
+    writeOwnerTuple(saved.getId());
+
+    logger.info("Successfully ingested blog with id: {}", saved.getId());
+    return IngestBlogFromSourceResponse.newBuilder()
+        .message("ingestBlogFromSource succeeded")
+        .post(blogPostMapper.map(saved))
+        .build();
   }
 
   /**
@@ -574,24 +559,19 @@ public class BlogDataFetcher {
   public DeleteBlogPostResponse deleteBlogPost(String id) {
     logger.info("Deleting blog post with id: {}", id);
 
-    try {
-      UUID postId = UUID.fromString(id);
-      PostEntity post = briareusService.locatePost(postId)
-          .orElseThrow(() -> new IllegalArgumentException("Post not found: " + id));
-      if (!canEdit(post)) {
-        throw new IllegalArgumentException("Not authorized to delete post: " + id);
-      }
-      deleteWithChildren(postId);
-
-      logger.info("Successfully deleted blog post with id: {}", postId);
-      return DeleteBlogPostResponse.newBuilder()
-          .message("deleteBlogPost succeeded")
-          .id(postId.toString())
-          .build();
-    } catch (Exception e) {
-      logger.error("Failed to delete blog post with id: {}", id, e);
-      throw new MutationException(e.getMessage(), e);
+    UUID postId = UUID.fromString(id);
+    PostEntity post = briareusService.locatePost(postId)
+        .orElseThrow(() -> new IllegalArgumentException("Post not found: " + id));
+    if (!canEdit(post)) {
+      throw new IllegalArgumentException("Not authorized to delete post: " + id);
     }
+    deleteWithChildren(postId);
+
+    logger.info("Successfully deleted blog post with id: {}", postId);
+    return DeleteBlogPostResponse.newBuilder()
+        .message("deleteBlogPost succeeded")
+        .id(postId.toString())
+        .build();
   }
 
   /**
