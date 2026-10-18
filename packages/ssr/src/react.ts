@@ -6,8 +6,10 @@ import {
   useEffect,
   useOptimistic,
   useReducer,
+  useRef,
   useTransition,
 } from "react";
+import { trackPageView } from "@sun/analytics";
 import {
   getPageData,
   makeCacheKey,
@@ -54,6 +56,23 @@ export function usePageData<T>(
   }, [cacheKey]);
 
   return getPageData<T>(key, pattern, params);
+}
+
+/**
+ * Sends a pageview for client-side navigations, skipping the first render
+ * because the server already captured that pageview.
+ *
+ * @param pathname Current pathname.
+ */
+export function usePageViewTracking(pathname: string): void {
+  const mounted = useRef(false);
+  useEffect(() => {
+    if (!mounted.current) {
+      mounted.current = true;
+      return;
+    }
+    trackPageView(window.location.href);
+  }, [pathname]);
 }
 
 type RoleCheckProps = {

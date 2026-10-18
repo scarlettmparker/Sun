@@ -62,5 +62,5 @@ export type {
 export { initClientBootstrap } from "./client-bootstrap";
 export type { BootstrapI18n } from "./client-bootstrap";
 
-export { RoleCheck, useMutation } from "./react";
+export { RoleCheck, useMutation, usePageViewTracking } from "./react";
 export type { UseMutationOptions } from "./react";

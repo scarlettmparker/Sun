@@ -7,6 +7,7 @@ import { pageDataRpcHandler } from "./rpc-handler";
 import { mutationRegistry } from "./mutations";
 import { MutationError } from "./mutation-error";
 import { registerSecurity } from "./security";
+import { shutdownAnalytics, trackPageView } from "@sun/analytics/server";
 import { registerIpWhitelist, type IpWhitelistConfig } from "./ip-whitelist";
 import {
   setRequestCacheProvider,
@@ -116,6 +117,23 @@ interface CreateServerOptions {
    * Optional pre-route middleware/custom-route hook (COOP/COEP, download proxy).
    */
   configure?: ConfigureServer;
+  /**
+   * Enables server-side PostHog capture plus the /__analytics beacon.
+   */
+  analytics?: {
+    /**
+     * App name reported on every event.
+     */
+    app: string;
+    /**
+     * Cookie holding the auth JWT, used to attribute events to an account.
+     */
+    authCookie?: string;
+    /**
+     * Consent cookie that must read `accepted` before capturing.
+     */
+    consentCookie?: string;
+  };
 }
 
 type MiddieHandler = (req: IncomingMessage, res: ServerResponse) => void;
@@ -269,6 +287,10 @@ export async function createServer(
 
   app.post("/__page-data", pageDataRpcHandler());
 
+  if (options.analytics) {
+    app.post("/__analytics", analyticsBeaconHandler(options.analytics));
+  }
+
   await setupRoutes(app, vite);
 
   app.route({
@@ -299,6 +321,7 @@ export async function createServer(
 
     try {
       await app.close();
+      await shutdownAnalytics();
     } catch (err) {
       console.error("Error during graceful shutdown:", err);
     }
@@ -321,6 +344,45 @@ export async function createServer(
   process.on("SIGINT", () => void gracefulShutdown("SIGINT"));
 
   return address;
+}
+
+/**
+ * Builds the POST /__analytics handler. Attributes the beacon's url to the
+ * request and forwards it to PostHog.
+ *
+ * @param config Analytics app name and cookie names.
+ * @returns A Fastify POST route handler.
+ */
+function analyticsBeaconHandler(config: {
+  /**
+   * App name reported on the event.
+   */
+  app: string;
+  /**
+   * Cookie holding the auth JWT.
+   */
+  authCookie?: string;
+  /**
+   * Consent cookie that must read `accepted`.
+   */
+  consentCookie?: string;
+}): (request: FastifyRequest, reply: FastifyReply) => Promise<void> {
+  return async (request, reply): Promise<void> => {
+    const { url } = (request.body as { url?: string } | undefined) ?? {};
+    if (url) {
+      trackPageView({
+        app: config.app,
+        url,
+        authCookie: config.authCookie,
+        consentCookie: config.consentCookie,
+        cookie: request.headers.cookie,
+        ip: request.ip,
+        userAgent: request.headers["user-agent"],
+        referrer: request.headers.referer,
+      });
+    }
+    reply.code(204).send();
+  };
 }
 
 /**

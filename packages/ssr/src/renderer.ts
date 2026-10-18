@@ -120,10 +120,6 @@ export type AppRenderConfig = {
     translations: Record<string, unknown>,
   ) => Promise<unknown> | unknown;
   /**
-   * Emits window.__posthog_key__/__posthog_host__ when true.
-   */
-  posthog?: boolean;
-  /**
    * Emits window.__FRONTEND_MODE__ when true.
    */
   emitFrontendMode?: boolean;
@@ -339,8 +335,6 @@ async function renderApp(
   const themes = theme?.all ?? [];
 
   const extraGlobals = config.windowGlobals?.(options) ?? {};
-  const posthogKey = config.posthog ? (process.env.POSTHOG_API_KEY ?? "") : "";
-  const posthogHost = config.posthog ? (process.env.POSTHOG_HOST ?? "") : "";
 
   const cssContent = await inlineCss(isProduction, clientCss);
 
@@ -372,9 +366,6 @@ async function renderApp(
           __theme__: currentTheme,
           __themes__: themes,
           __serverCacheData__: {},
-          ...(config.posthog
-            ? { __posthog_key__: posthogKey, __posthog_host__: posthogHost }
-            : {}),
           ...(config.emitFrontendMode && frontendMode
             ? { __FRONTEND_MODE__: frontendMode }
             : {}),
