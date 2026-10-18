@@ -3,7 +3,7 @@
  * Tests the MarkdownViewer component's rendering, highlighting, and prop handling.
  */
 
-import { render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/preact";
 import { MarkdownViewer } from "@sun/components";
 import {
   restoreConsoleError,

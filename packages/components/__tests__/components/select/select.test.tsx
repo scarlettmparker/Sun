@@ -3,7 +3,7 @@
  * Tests the Select component's rendering, props handling, and form integration.
  */
 
-import { render, screen, fireEvent, within } from "@testing-library/react";
+import { render, screen, fireEvent, within } from "@testing-library/preact";
 import {
   restoreConsoleError,
   suppressConsoleErrorsFromTests,

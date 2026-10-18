@@ -3,7 +3,7 @@
  * Tests the open/close behavior, item activation, asChild support, submenus, keyboard navigation.
  */
 
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/preact";
 import {
   Button,
   DropdownMenu,

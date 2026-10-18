@@ -6,7 +6,7 @@ import React, {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import { X } from "lucide-preact";
 import { cn } from "~/utils/cn";
 import styles from "./dialog.module.css";
 

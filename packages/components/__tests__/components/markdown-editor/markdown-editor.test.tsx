@@ -9,7 +9,7 @@ import {
   fireEvent,
   waitFor,
   act,
-} from "@testing-library/react";
+} from "@testing-library/preact";
 import userEvent from "@testing-library/user-event";
 import { MarkdownEditor } from "@sun/components";
 import {
@@ -453,7 +453,11 @@ describe("MarkdownEditor", () => {
     const editor = screen.getByTestId("editor");
 
     // A dead-key / IME composition starts (e.g. Greek tonos, ´ + ε => έ)
-    fireEvent.compositionStart(editor);
+    act(() => {
+      editor.dispatchEvent(
+        new CompositionEvent("compositionstart", { bubbles: true }),
+      );
+    });
     // The browser inserts intermediate text and fires input mid-composition
     editor.textContent = "έ";
     fireEvent.input(editor);
@@ -475,11 +479,19 @@ describe("MarkdownEditor", () => {
 
     const editor = screen.getByTestId("editor");
 
-    fireEvent.compositionStart(editor);
+    act(() => {
+      editor.dispatchEvent(
+        new CompositionEvent("compositionstart", { bubbles: true }),
+      );
+    });
     editor.textContent = "έχω";
     fireEvent.input(editor);
     // The composed text is finalised only when the composition ends.
-    fireEvent.compositionEnd(editor);
+    act(() => {
+      editor.dispatchEvent(
+        new CompositionEvent("compositionend", { bubbles: true }),
+      );
+    });
 
     expect(onChange).toHaveBeenCalledTimes(1);
     const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0];
@@ -501,10 +513,20 @@ describe("MarkdownEditor", () => {
 
     const editor = screen.getByTestId("editor");
 
-    fireEvent.compositionStart(editor);
+    act(() => {
+      editor.dispatchEvent(
+        new CompositionEvent("compositionstart", { bubbles: true }),
+      );
+    });
     editor.textContent = "έ";
-    fireEvent.input(editor);
-    fireEvent.compositionEnd(editor);
+    act(() => {
+      editor.dispatchEvent(new InputEvent("input", { bubbles: true }));
+    });
+    act(() => {
+      editor.dispatchEvent(
+        new CompositionEvent("compositionend", { bubbles: true }),
+      );
+    });
 
     const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0];
 

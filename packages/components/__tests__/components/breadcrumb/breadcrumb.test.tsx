@@ -8,7 +8,7 @@
  * // popBreadcrumbs(2); deleteBreadcrumb(0); deleteAllBreadcrumbs();
  */
 
-import { render, screen, act } from "@testing-library/react";
+import { render, screen, act } from "@testing-library/preact";
 import {
   Breadcrumb,
   BreadcrumbItem,

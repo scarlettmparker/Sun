@@ -3,7 +3,7 @@
  * Tests the TextArea component's rendering, styling, and attribute passing.
  */
 
-import { render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/preact";
 import { TextArea } from "@sun/components";
 
 describe("TextArea", () => {

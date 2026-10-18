@@ -3,7 +3,7 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
-} from "lucide-react";
+} from "lucide-preact";
 import Button from "../button";
 import { cn } from "~/utils/cn";
 import styles from "./pagination.module.css";

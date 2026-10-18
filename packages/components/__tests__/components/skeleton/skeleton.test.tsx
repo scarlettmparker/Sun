@@ -3,7 +3,7 @@
  * Tests the Skeleton component's rendering and prop handling.
  */
 
-import { render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/preact";
 import { Skeleton } from "@sun/components";
 
 vi.mock("~/components/skeleton/skeleton.module.css", () => {

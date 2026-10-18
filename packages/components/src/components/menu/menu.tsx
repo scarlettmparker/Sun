@@ -13,7 +13,7 @@ import React, {
   type MouseEvent,
 } from "react";
 import { createPortal } from "react-dom";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-preact";
 import { cn } from "~/utils/cn";
 import Button from "../button";
 

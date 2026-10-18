@@ -7,7 +7,7 @@ vi.mock("~/components/markdown-editor", () => ({
   default: () => <div data-testid="markdown-editor" />,
 }));
 
-import { render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/preact";
 import {
   Form,
   FormField,

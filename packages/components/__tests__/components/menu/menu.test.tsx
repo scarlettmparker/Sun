@@ -6,7 +6,7 @@
  */
 
 import React, { useRef, useState } from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/preact";
 import {
   MenuItem,
   MenuSub,

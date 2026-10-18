@@ -3,7 +3,7 @@
  * Tests the open/close behavior, item activation, and asChild support.
  */
 
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/preact";
 import {
   Button,
   ContextMenu,

@@ -1,10 +1,10 @@
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
+import preact from "@preact/preset-vite";
 import dts from "vite-plugin-dts";
 
 export default defineConfig({
   plugins: [
-    react(),
+    preact(),
     dts({
       include: ["src/**/*.ts", "src/**/*.tsx"],
       exclude: ["__tests__/**", "testing/**", "src/**/*.test.*"],
@@ -18,7 +18,12 @@ export default defineConfig({
     },
     cssCodeSplit: false,
     rollupOptions: {
-      external: ["react", "react-dom", "react/jsx-runtime"],
+      external: [
+        "preact",
+        "preact/compat",
+        "preact/hooks",
+        "preact/jsx-runtime",
+      ],
     },
   },
 });

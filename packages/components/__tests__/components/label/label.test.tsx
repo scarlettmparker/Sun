@@ -3,7 +3,7 @@
  * Tests the Label component's rendering, attribute passing, and children display.
  */
 
-import { render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/preact";
 import { Label } from "@sun/components";
 
 describe("Label", () => {

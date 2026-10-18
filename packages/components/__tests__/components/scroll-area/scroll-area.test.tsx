@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/preact";
 import { ScrollArea } from "@sun/components";
 
 describe("ScrollArea", () => {
@@ -14,7 +14,7 @@ describe("ScrollArea", () => {
       </ScrollArea>,
     );
     const area = screen.getByTestId("area");
-    expect(area).toHaveStyle("max-height: 22rem");
+    expect(area.firstElementChild).toHaveStyle("max-height: 22rem");
   });
 
   it("does not set max-height when not provided", () => {

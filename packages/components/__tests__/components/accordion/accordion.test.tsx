@@ -3,7 +3,7 @@
  * Tests toggling open state and ARIA wiring.
  */
 
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/preact";
 import { Accordion, AccordionTrigger, AccordionContent } from "@sun/components";
 
 vi.mock("~/components/accordion/accordion.module.css", () => {

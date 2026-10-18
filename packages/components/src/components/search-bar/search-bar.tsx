@@ -1,7 +1,7 @@
 import { useRef, useEffect } from "react";
 import Input from "../input";
 import Button from "../button";
-import { Search, X } from "lucide-react";
+import { Search, X } from "lucide-preact";
 import { cn } from "~/utils/cn";
 import styles from "./search-bar.module.css";
 

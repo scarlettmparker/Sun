@@ -3,7 +3,7 @@
  * Ensures the shared separator renders and accepts custom attributes.
  */
 
-import { render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/preact";
 import { Separator } from "@sun/components";
 
 describe("Separator", () => {

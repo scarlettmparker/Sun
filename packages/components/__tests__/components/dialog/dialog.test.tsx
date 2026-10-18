@@ -3,7 +3,7 @@
  * Tests the Dialog component and its sub-components for rendering, styling, portal behavior, and attribute passing.
  */
 
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/preact";
 import userEvent from "@testing-library/user-event";
 import {
   Dialog,

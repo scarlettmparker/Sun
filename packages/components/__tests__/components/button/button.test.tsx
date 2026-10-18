@@ -3,7 +3,7 @@
  * Tests the Button component's variants, styling, and attribute passing.
  */
 
-import { render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/preact";
 import { Button } from "@sun/components";
 
 describe("Button", () => {

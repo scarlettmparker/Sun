@@ -3,7 +3,7 @@
  * Tests the Sidebar component's styling, children rendering, and attribute passing.
  */
 
-import { render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/preact";
 import { Sidebar } from "@sun/components";
 
 describe("Sidebar", () => {

@@ -3,7 +3,7 @@
  * Tests open/close timing, group instant-switch, asChild, positioning, and focus.
  */
 
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/preact";
 import {
   Tooltip,
   TooltipContent,
@@ -33,7 +33,7 @@ describe("Tooltip", () => {
       </Tooltip>,
     );
 
-    fireEvent.mouseEnter(screen.getByText(/hover me/i));
+    fireEvent.mouseEnter(screen.getByText(/hover me/i).parentElement as HTMLElement);
     expect(screen.queryByText("Tooltip text")).not.toBeInTheDocument();
   });
 
@@ -47,7 +47,7 @@ describe("Tooltip", () => {
       </Tooltip>,
     );
 
-    fireEvent.mouseEnter(screen.getByText(/hover me/i));
+    fireEvent.mouseEnter(screen.getByText(/hover me/i).parentElement as HTMLElement);
     act(() => {
       vi.advanceTimersByTime(OPEN_DELAY);
     });
@@ -64,7 +64,7 @@ describe("Tooltip", () => {
       </Tooltip>,
     );
 
-    const trigger = screen.getByText(/hover me/i);
+    const trigger = screen.getByText(/hover me/i).parentElement as HTMLElement;
     fireEvent.mouseEnter(trigger);
     act(() => {
       vi.advanceTimersByTime(OPEN_DELAY);
@@ -88,7 +88,7 @@ describe("Tooltip", () => {
       </Tooltip>,
     );
 
-    const trigger = screen.getByText(/hover me/i);
+    const trigger = screen.getByText(/hover me/i).parentElement as HTMLElement;
     fireEvent.mouseEnter(trigger);
     act(() => {
       vi.advanceTimersByTime(OPEN_DELAY);
@@ -115,8 +115,9 @@ describe("Tooltip", () => {
       </Tooltip>,
     );
 
-    fireEvent.focus(screen.getByText(/focus me/i));
+    const trigger = screen.getByText(/focus me/i).parentElement as HTMLElement;
     act(() => {
+      trigger.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
       vi.advanceTimersByTime(OPEN_DELAY);
     });
     expect(screen.getByText("Tooltip text")).toBeInTheDocument();
@@ -132,13 +133,16 @@ describe("Tooltip", () => {
       </Tooltip>,
     );
 
-    const trigger = screen.getByText(/focus me/i);
-    fireEvent.focus(trigger);
+    const trigger = screen.getByText(/focus me/i).parentElement as HTMLElement;
     act(() => {
+      trigger.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
       vi.advanceTimersByTime(OPEN_DELAY);
     });
+    expect(screen.getByText("Tooltip text")).toBeInTheDocument();
 
-    fireEvent.blur(trigger);
+    act(() => {
+      trigger.dispatchEvent(new FocusEvent("focusout", { bubbles: true }));
+    });
     act(() => {
       vi.advanceTimersByTime(CLOSE_DELAY);
     });
@@ -193,13 +197,13 @@ describe("TooltipGroup", () => {
       </TooltipGroup>,
     );
 
-    fireEvent.mouseEnter(screen.getByText(/first/i));
+    fireEvent.mouseEnter(screen.getByText(/first/i).parentElement as HTMLElement);
     act(() => {
       vi.advanceTimersByTime(OPEN_DELAY);
     });
     expect(screen.getByText("First tooltip")).toBeInTheDocument();
 
-    fireEvent.mouseEnter(screen.getByText(/second/i));
+    fireEvent.mouseEnter(screen.getByText(/second/i).parentElement as HTMLElement);
     act(() => {
       vi.advanceTimersByTime(0);
     });
@@ -224,7 +228,7 @@ describe("TooltipGroup", () => {
       </TooltipGroup>,
     );
 
-    const first = screen.getByText(/first/i);
+    const first = screen.getByText(/first/i).parentElement as HTMLElement;
     fireEvent.mouseEnter(first);
     act(() => {
       vi.advanceTimersByTime(OPEN_DELAY);
@@ -235,7 +239,7 @@ describe("TooltipGroup", () => {
       vi.advanceTimersByTime(CLOSE_DELAY);
     });
 
-    fireEvent.mouseEnter(screen.getByText(/second/i));
+    fireEvent.mouseEnter(screen.getByText(/second/i).parentElement as HTMLElement);
     act(() => {
       vi.advanceTimersByTime(OPEN_DELAY - 100);
     });

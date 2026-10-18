@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useId, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-preact";
 import { cn } from "~/utils/cn";
 import styles from "./accordion.module.css";
 

@@ -3,7 +3,7 @@
  * Tests the Input component's types, styling, and attribute passing.
  */
 
-import { render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/preact";
 import { Input } from "@sun/components";
 
 describe("Input", () => {

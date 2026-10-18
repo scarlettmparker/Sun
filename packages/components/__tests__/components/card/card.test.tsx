@@ -3,7 +3,7 @@
  * Tests the Card component and its sub-components for rendering, styling, and attribute passing.
  */
 
-import { render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/preact";
 import {
   Card,
   CardHeader,
