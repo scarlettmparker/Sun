@@ -88,7 +88,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
     String operation = operationName(bodyText);
 
     RateLimitBinding binding = registry.forOperation(operation).orElse(null);
-    String bucketName = binding == null ? DEFAULT_BUCKET : binding.bucket();
+    String bucketName = binding == null
+        ? (operation == null || operation.isBlank() ? DEFAULT_BUCKET : operation)
+        : binding.bucket();
     RateLimitConfig config = binding == null ? defaultConfig() : binding.config();
     String key = key(request, bucketName);
 

@@ -187,6 +187,7 @@ function isCacheExpired(
 ): boolean {
   if (!record.timestamp) return false;
   const ttl = getCacheTTL(pattern);
+  if (ttl <= 0) return false;
   const age = Date.now() - record.timestamp;
   return age > ttl;
 }
