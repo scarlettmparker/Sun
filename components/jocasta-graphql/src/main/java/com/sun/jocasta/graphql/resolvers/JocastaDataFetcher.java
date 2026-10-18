@@ -3,7 +3,6 @@ package com.sun.jocasta.graphql.resolvers;
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsData;
 import com.netflix.graphql.dgs.InputArgument;
-import com.sun.base.error.MutationException;
 import com.sun.base.util.PageRequests;
 import com.sun.jocasta.codegen.types.Answer;
 import com.sun.jocasta.codegen.types.AnswerInput;
@@ -141,31 +140,26 @@ public class JocastaDataFetcher {
   @PreAuthorize("@permissions.has('graphql.jocasta.bulkCreateQuestions')")
   @Transactional
   public BulkCreateQuestionsResponse bulkCreateQuestions(@InputArgument List<QuestionInput> inputs) {
-    try {
-      if (inputs == null || inputs.isEmpty()) {
-        throw new IllegalArgumentException("Inputs required");
-      }
-      List<QuestionEntity> entities = new ArrayList<>();
-      for (QuestionInput input : inputs) {
-        if (input.getStem() == null || input.getStem().isBlank()) {
-          throw new IllegalArgumentException("Stem required");
-        }
-        if (input.getAnswer() == null || input.getAnswer().isBlank()) {
-          throw new IllegalArgumentException("Answer required");
-        }
-        entities.add(questionMapper.mapInput(input));
-      }
-      List<QuestionEntity> saved = questionService.createBulk(entities);
-      List<Question> questions = saved.stream().map(questionMapper::map).toList();
-      logger.info("bulkCreateQuestions succeeded for {} questions", questions.size());
-      return BulkCreateQuestionsResponse.newBuilder()
-          .message("bulkCreateQuestions succeeded")
-          .questions(questions)
-          .build();
-    } catch (Exception e) {
-      logger.error("bulkCreateQuestions failed", e);
-      throw new MutationException("bulkCreateQuestions failed: " + e.getMessage(), e);
+    if (inputs == null || inputs.isEmpty()) {
+      throw new IllegalArgumentException("Inputs required");
     }
+    List<QuestionEntity> entities = new ArrayList<>();
+    for (QuestionInput input : inputs) {
+      if (input.getStem() == null || input.getStem().isBlank()) {
+        throw new IllegalArgumentException("Stem required");
+      }
+      if (input.getAnswer() == null || input.getAnswer().isBlank()) {
+        throw new IllegalArgumentException("Answer required");
+      }
+      entities.add(questionMapper.mapInput(input));
+    }
+    List<QuestionEntity> saved = questionService.createBulk(entities);
+    List<Question> questions = saved.stream().map(questionMapper::map).toList();
+    logger.info("bulkCreateQuestions succeeded for {} questions", questions.size());
+    return BulkCreateQuestionsResponse.newBuilder()
+        .message("bulkCreateQuestions succeeded")
+        .questions(questions)
+        .build();
   }
 
   /**
@@ -179,21 +173,16 @@ public class JocastaDataFetcher {
   @PreAuthorize("@permissions.has('graphql.jocasta.submitAnswer')")
   @Transactional
   public SubmitAnswerResponse submitAnswer(@InputArgument String questionId, @InputArgument("input") AnswerInput input) {
-    try {
-      UUID qid = UUID.fromString(questionId);
-      questionService.findById(qid)
-          .orElseThrow(() -> new IllegalArgumentException("Question not found: " + questionId));
-      AnswerEntity e = answerMapper.mapInput(questionId, input);
-      AnswerEntity saved = answerService.submit(e);
-      logger.info("submitAnswer succeeded for id {}", saved.getId());
-      return SubmitAnswerResponse.newBuilder()
-          .message("submitAnswer succeeded")
-          .answer(answerMapper.map(saved))
-          .build();
-    } catch (Exception e) {
-      logger.error("submitAnswer failed", e);
-      throw new MutationException("submitAnswer failed: " + e.getMessage(), e);
-    }
+    UUID qid = UUID.fromString(questionId);
+    questionService.findById(qid)
+        .orElseThrow(() -> new IllegalArgumentException("Question not found: " + questionId));
+    AnswerEntity e = answerMapper.mapInput(questionId, input);
+    AnswerEntity saved = answerService.submit(e);
+    logger.info("submitAnswer succeeded for id {}", saved.getId());
+    return SubmitAnswerResponse.newBuilder()
+        .message("submitAnswer succeeded")
+        .answer(answerMapper.map(saved))
+        .build();
   }
 
   /**
@@ -207,22 +196,17 @@ public class JocastaDataFetcher {
   @PreAuthorize("@permissions.has('graphql.jocasta.linkQuestion')")
   @Transactional
   public LinkQuestionResponse linkQuestion(@InputArgument String questionId, @InputArgument String target) {
-    try {
-      UUID qid = UUID.fromString(questionId);
-      if (target == null || target.isBlank()) {
-        throw new IllegalArgumentException("Target required");
-      }
-      questionService.linkQuestion(qid, target)
-          .orElseThrow(() -> new IllegalArgumentException("Question not found: " + questionId));
-      logger.info("linkQuestion succeeded for id {}", qid);
-      return LinkQuestionResponse.newBuilder()
-          .message("linkQuestion succeeded")
-          .id(qid.toString())
-          .build();
-    } catch (Exception e) {
-      logger.error("linkQuestion failed", e);
-      throw new MutationException("linkQuestion failed: " + e.getMessage(), e);
+    UUID qid = UUID.fromString(questionId);
+    if (target == null || target.isBlank()) {
+      throw new IllegalArgumentException("Target required");
     }
+    questionService.linkQuestion(qid, target)
+        .orElseThrow(() -> new IllegalArgumentException("Question not found: " + questionId));
+    logger.info("linkQuestion succeeded for id {}", qid);
+    return LinkQuestionResponse.newBuilder()
+        .message("linkQuestion succeeded")
+        .id(qid.toString())
+        .build();
   }
 
   /**

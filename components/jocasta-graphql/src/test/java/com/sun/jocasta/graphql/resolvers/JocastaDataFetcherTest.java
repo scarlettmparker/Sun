@@ -7,7 +7,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.sun.base.error.MutationException;
 import com.sun.jocasta.codegen.types.Answer;
 import com.sun.jocasta.codegen.types.AnswerInput;
 import com.sun.jocasta.codegen.types.BulkCreateQuestionsResponse;
@@ -123,7 +122,7 @@ class JocastaDataFetcherTest {
   @DisplayName("bulkCreateQuestions throws when empty")
   void bulkCreateQuestions_throwsWhenEmpty() {
     assertThatThrownBy(() -> fetcher.bulkCreateQuestions(List.of()))
-        .isInstanceOf(MutationException.class)
+        .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("Inputs required");
   }
 
@@ -161,7 +160,7 @@ class JocastaDataFetcherTest {
     AnswerInput input = AnswerInput.newBuilder().myAnswer("my").correct(true).correctAnswer("corr").build();
 
     assertThatThrownBy(() -> fetcher.submitAnswer(qid.toString(), input))
-        .isInstanceOf(MutationException.class)
+        .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("Question not found");
   }
 
