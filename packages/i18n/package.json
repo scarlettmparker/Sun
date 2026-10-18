@@ -1,0 +1,35 @@
+{
+  "name": "@sun/i18n",
+  "version": "0.1.1",
+  "description": "Preact binding for i18next in Sun ecosystem apps",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "publish": "bun publish --registry https://registry.int.scarlettparker.co.uk"
+  },
+  "peerDependencies": {
+    "i18next": ">=23",
+    "preact": "^11.0.0"
+  },
+  "devDependencies": {
+    "i18next": "^25.0.0",
+    "preact": "^11.0.1",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2"
+  },
+  "publishConfig": {
+    "registry": "https://registry.int.scarlettparker.co.uk"
+  }
+}
