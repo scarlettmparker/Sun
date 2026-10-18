@@ -42,7 +42,7 @@ class TorrentJobServiceTest {
   void hasActiveAt_returnsTrueWhenVisibleJobTargetsKey() {
     TorrentJobEntity job = newJob("h", "bucket", "dir/file.txt");
     job.setStatus(TorrentStatus.DOWNLOADING);
-    when(repository.findByBucketAndStatusIn("bucket", TorrentJobService.VISIBLE_STATUSES))
+    when(repository.findByBucketAndStatusIn("bucket", TorrentJobService.ACTIVE_STATUSES))
         .thenReturn(List.of(job));
 
     assertThat(service.hasActiveAt("bucket", "dir/file.txt")).isTrue();
@@ -52,7 +52,7 @@ class TorrentJobServiceTest {
   void hasActiveAt_returnsFalseWhenCompletedJobTargetsKey() {
     TorrentJobEntity job = newJob("h", "bucket", "dir/file.txt");
     job.setStatus(TorrentStatus.COMPLETED);
-    when(repository.findByBucketAndStatusIn("bucket", TorrentJobService.VISIBLE_STATUSES))
+    when(repository.findByBucketAndStatusIn("bucket", TorrentJobService.ACTIVE_STATUSES))
         .thenReturn(List.of());
 
     assertThat(service.hasActiveAt("bucket", "dir/file.txt")).isFalse();
