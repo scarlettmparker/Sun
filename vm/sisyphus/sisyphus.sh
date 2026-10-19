@@ -12,6 +12,7 @@ SELF="$(readlink -f "${BASH_SOURCE[0]}")"
 VM_DIR="$(dirname "$SELF")"
 REPO="$(cd "$VM_DIR/../.." && pwd)"
 FILES="$VM_DIR/files"
+BACKEND_ENV="$REPO/components/sun-graphql/src/main/resources/.env"
 
 # shellcheck source=sisyphus.conf
 . "$VM_DIR/sisyphus.conf"
@@ -24,6 +25,9 @@ device_exists() { incus config device show "$NAME" 2>/dev/null | grep -q "^$1:";
 
 log() { printf '\033[1;36m==>\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33mwarn:\033[0m %s\n' "$*" >&2; }
+
+# Read one KEY=value from the backend .env.
+envval() { grep -E "^$1=" "$BACKEND_ENV" 2>/dev/null | head -n1 | cut -d= -f2- || true; }
 
 # ── storage ──────────────────────────────────────────────────────────────────
 
@@ -111,7 +115,7 @@ ensure_container() {
   incus config set "$NAME" limits.memory.swap true
 }
 
-# Push the static NIC config and settle the guest's clock/hostname.
+# Push the static NIC config and set the hostname.
 configure_guest() {
   log "guest: hostname, static NIC"
   ic hostnamectl set-hostname "$NAME" >/dev/null 2>&1 || true
@@ -122,6 +126,48 @@ configure_guest() {
   ic systemctl restart systemd-networkd >/dev/null 2>&1 || true
   ic systemctl daemon-reload >/dev/null 2>&1 || true
   ic systemctl mask systemd-networkd-wait-online.service >/dev/null 2>&1 || true
+}
+
+# JRE and data services. dpkg gates each package so re-runs are cheap.
+install_packages() {
+  local missing=() pkg
+  for pkg in openjdk-25-jre-headless postgresql redis-server; do
+    ic dpkg -s "$pkg" >/dev/null 2>&1 || missing+=("$pkg")
+  done
+  [ "${#missing[@]}" -eq 0 ] && return 0
+  log "guest: installing ${missing[*]}"
+  ic env DEBIAN_FRONTEND=noninteractive apt-get update -qq
+  ic env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+    -o Dpkg::Options::=--force-confold "${missing[@]}"
+}
+
+# Small-box tuning plus the shared sun role and database.
+configure_postgres() {
+  local pg_conf pw sql
+  pg_conf="$(ic bash -c 'ls -d /etc/postgresql/*/main' | head -n1)"
+  [ -n "$pg_conf" ] || { warn "no postgres config dir found"; return 1; }
+
+  log "guest: postgres tuning"
+  ic mkdir -p "$pg_conf/conf.d"
+  sudo incus file push -q -p --mode 0644 \
+    "$FILES/postgres-tuning.conf" "$NAME$pg_conf/conf.d/99-sisyphus.conf"
+  ic systemctl restart postgresql
+
+  pw="$(envval SPRING_DATASOURCE_PASSWORD)"
+  [ -n "$pw" ] || { warn "SPRING_DATASOURCE_PASSWORD missing from $BACKEND_ENV"; return 1; }
+
+  log "guest: sun role + database"
+  mkdir -p /tmp/opencode
+  sql=/tmp/opencode/sisyphus-db.sql
+  umask 077
+  DB_PASSWORD="${pw//\'/\'\'}" envsubst '${DB_PASSWORD}' \
+    < "$FILES/init-db.sql" > "$sql"
+  sudo incus exec "$NAME" -- rm -f /tmp/init-db.sql
+  sudo incus file push -q -p --mode 0600 --uid 0 --gid 0 "$sql" "$NAME/tmp/init-db.sql"
+  ic chown postgres:postgres /tmp/init-db.sql
+  ic su postgres -c 'psql -v ON_ERROR_STOP=1 -q -f /tmp/init-db.sql'
+  sudo incus exec "$NAME" -- rm -f /tmp/init-db.sql
+  rm -f "$sql"
 }
 
 # Caps the box's swap usage.
@@ -147,6 +193,8 @@ provision() {
   ensure_ufw
   ensure_hosts
   configure_guest
+  install_packages
+  configure_postgres
   tune_swap
   log "provisioned. backend will be published at http://$HOST_ALIAS:$HOST_PORT/graphql"
 }
