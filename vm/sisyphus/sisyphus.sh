@@ -4,6 +4,8 @@
 # Tunables live in sisyphus.conf.
 #   ./sisyphus.sh provision              box: storage, network, limits
 #   ./sisyphus.sh deploy [--skip-build]  build, push, restart the backend
+#   ./sisyphus.sh bootstrap [--force]    (re)load the Hibernate base schema
+#   ./sisyphus.sh gen-schema             regenerate files/base-schema.sql
 #   ./sisyphus.sh status | shell | stop | start | destroy
 
 set -euo pipefail
@@ -14,6 +16,7 @@ REPO="$(cd "$VM_DIR/../.." && pwd)"
 FILES="$VM_DIR/files"
 BACKEND_ENV="$REPO/components/sun-graphql/src/main/resources/.env"
 JAR="$REPO/components/sun-graphql/build/libs/sun-graphql-0.0.1-SNAPSHOT.jar"
+BASE_SCHEMA="$FILES/base-schema.sql"
 
 # shellcheck source=sisyphus.conf
 . "$VM_DIR/sisyphus.conf"
@@ -173,40 +176,46 @@ configure_postgres() {
 
 # ── data ─────────────────────────────────────────────────────────────────────
 
-# Clones the host sun database once. Flyway cannot bootstrap a clean database on
-# its own: the seed migrations reference tables that Hibernate creates.
-seed_db() {
-  local dump=/tmp/opencode/sun-dump.sql pw pgpass pwpg
-  if ic test -f "$APP_DIR/.db-seeded"; then
-    log "db: already seeded"
+# Applies the Hibernate base schema once. Flyway cannot create the base tables
+# itself: its seed migrations reference Hibernate-owned tables (gaia_accounts,
+# ...) and columns (createdat). files/base-schema.sql is generated from the
+# entities by gen-schema; Flyway then layers its migrations, which are
+# idempotent for the tables Hibernate already owns.
+bootstrap_db() {
+  local pw pwpg pgpass
+  [ -f "$BASE_SCHEMA" ] || { warn "missing $BASE_SCHEMA; run gen-schema"; return 1; }
+  if ic test -f "$APP_DIR/.db-bootstrapped"; then
+    log "db: already bootstrapped"
     return 0
   fi
-  log "db: cloning host sun into $NAME"
+  log "db: applying Hibernate base schema"
   ic mkdir -p "$APP_DIR"
-  ic systemctl stop permify >/dev/null 2>&1 || true
-
-  mkdir -p /tmp/opencode
-  ( umask 077
-    sudo -u postgres pg_dump --no-owner --no-acl sun > "$dump" )
+  ic systemctl stop sun-backend permify >/dev/null 2>&1 || true
 
   pw="$(envval SPRING_DATASOURCE_PASSWORD)"
+  [ -n "$pw" ] || { warn "SPRING_DATASOURCE_PASSWORD missing from $BACKEND_ENV"; return 1; }
   pwpg="${pw//\\/\\\\}"; pwpg="${pwpg//:/\\:}"
-  pgpass=/tmp/opencode/pgpass
+  pgpass=/tmp/opencode/pgpass-bootstrap
   ( umask 077
     printf '127.0.0.1:5432:sun:sun:%s\n' "$pwpg" > "$pgpass" )
 
-  ic su postgres -c 'dropdb --if-exists sun'
-  ic su postgres -c 'createdb -O sun sun'
+  ic su postgres -c "psql -tAc \"select pg_terminate_backend(pid) from pg_stat_activity where datname='sun'\"" >/dev/null 2>&1 || true
+  ic su postgres -c 'dropdb --if-exists sun; createdb -O sun sun'
 
-  sudo incus exec "$NAME" -- rm -f /tmp/sun-dump.sql /root/.pgpass
-  sudo incus file push -q -p --mode 0600 --uid 0 --gid 0 "$dump" "$NAME/tmp/sun-dump.sql"
+  sudo incus exec "$NAME" -- rm -f /tmp/base-schema.sql /root/.pgpass
+  sudo incus file push -q -p --mode 0600 --uid 0 --gid 0 \
+    "$BASE_SCHEMA" "$NAME/tmp/base-schema.sql"
   sudo incus file push -q -p --mode 0600 --uid 0 --gid 0 "$pgpass" "$NAME/root/.pgpass"
-  ic bash -c 'PGPASSFILE=/root/.pgpass psql -q -v ON_ERROR_STOP=1 -h 127.0.0.1 -U sun -d sun -f /tmp/sun-dump.sql'
-  sudo incus exec "$NAME" -- rm -f /tmp/sun-dump.sql /root/.pgpass
-  rm -f "$dump" "$pgpass"
+  ic bash -c 'PGPASSFILE=/root/.pgpass psql -q -v ON_ERROR_STOP=1 -h 127.0.0.1 -U sun -d sun -f /tmp/base-schema.sql'
+  sudo incus exec "$NAME" -- rm -f /tmp/base-schema.sql /root/.pgpass
+  rm -f "$pgpass"
 
-  ic touch "$APP_DIR/.db-seeded"
-  log "db: seeded"
+  ic touch "$APP_DIR/.db-bootstrapped"
+  if ic test -f /etc/systemd/system/sun-backend.service; then
+    ic systemctl reset-failed sun-backend >/dev/null 2>&1 || true
+    ic systemctl start sun-backend >/dev/null 2>&1 || true
+  fi
+  log "db: bootstrapped"
 }
 
 # ── permify ──────────────────────────────────────────────────────────────────
@@ -319,7 +328,8 @@ wait_backend() {
   return 1
 }
 
-deploy_backend() {
+# Pushes the jar, rendered env, launcher and unit. No service changes.
+push_backend_files() {
   log "push: jar + env + unit"
   ic mkdir -p "$APP_DIR"
 
@@ -339,11 +349,66 @@ deploy_backend() {
     "$FILES/sun-backend.service" "$NAME/etc/systemd/system/sun-backend.service"
 
   ic systemctl daemon-reload
+}
+
+deploy_backend() {
+  push_backend_files
   ic systemctl enable sun-backend >/dev/null 2>&1 || true
   ic systemctl reset-failed sun-backend >/dev/null 2>&1 || true
   ic systemctl restart sun-backend
   wait_backend
   log "backend up at http://$HOST_ALIAS:$HOST_PORT/graphql"
+}
+
+# Regenerates files/base-schema.sql by asking Hibernate to emit its DDL into a
+# scratch database on the box. Run after entity changes; commit the result.
+gen_schema() {
+  local scratch=sun_base i
+  [ -f "$JAR" ] || { warn "jar missing at $JAR; run deploy first"; return 1; }
+  log "schema: generating from $(basename "$JAR")"
+  push_backend_files
+  ic systemctl stop sun-backend >/dev/null 2>&1 || true
+
+  ic su postgres -c "dropdb --if-exists $scratch; createdb -O sun $scratch"
+  sudo incus exec "$NAME" -- bash -c "
+    set -a; . $APP_DIR/.env; set +a
+    cd $APP_DIR
+    nohup java -Xms256m -Xmx\${JVM_XMX:-1g} -jar sun-graphql.jar \
+      --server.port=0 \
+      --spring.datasource.url=jdbc:postgresql://127.0.0.1:5432/$scratch \
+      --spring.flyway.enabled=false \
+      --spring.jpa.hibernate.ddl-auto=create \
+      --app.bypass-permissions=true --permify.enabled=false \
+      >/tmp/gen-schema.log 2>&1 &
+    echo \"schema: hibernate running (pid \$!)\""
+
+  for i in $(seq 1 90); do
+    if [ "$(ic su postgres -c "psql -tAc \"select count(*) from pg_tables where schemaname='public' and tablename='gaia_accounts'\" $scratch 2>/dev/null" | tr -d '[:space:]')" = "1" ]; then
+      break
+    fi
+    sleep 2
+  done
+  ic pkill -f 'sun-graphql.jar' >/dev/null 2>&1 || true
+  sleep 1
+
+  ic su postgres -c "pg_dump --schema-only --no-owner --no-acl $scratch" \
+    | {
+        printf '%s\n' '-- sisyphus base schema: the DDL Hibernate generates for every entity.'
+        printf '%s\n' '-- Generated by `sisyphus.sh gen-schema`; do not edit by hand.'
+        printf '%s\n' '-- Flyway migrations are applied on top of this at first boot.'
+        printf '%s\n' '--'
+        cat
+      } > "$BASE_SCHEMA"
+  ic su postgres -c "dropdb --if-exists $scratch"
+
+  [ "$(grep -c 'CREATE TABLE public\.' "$BASE_SCHEMA")" -gt 0 ] \
+    || { warn "schema export produced no tables; see /tmp/gen-schema.log"; return 1; }
+  log "schema: wrote $BASE_SCHEMA ($(grep -c 'CREATE TABLE public\.' "$BASE_SCHEMA") tables)"
+
+  if ic test -f /etc/systemd/system/sun-backend.service; then
+    ic systemctl reset-failed sun-backend >/dev/null 2>&1 || true
+    ic systemctl start sun-backend >/dev/null 2>&1 || true
+  fi
 }
 
 deploy() {
@@ -376,7 +441,7 @@ provision() {
   configure_guest
   install_packages
   configure_postgres
-  seed_db
+  bootstrap_db
   install_permify
   wait_permify
   migrate_permify_schema
@@ -405,6 +470,11 @@ status() {
 case "${1:-}" in
   provision) provision ;;
   deploy) shift; deploy "${1:-}" ;;
+  bootstrap)
+    ic rm -f "$APP_DIR/.db-bootstrapped" >/dev/null 2>&1 || true
+    bootstrap_db
+    ;;
+  gen-schema) gen_schema ;;
   status) status ;;
   shell) shift; sudo incus exec "$NAME" -- bash -l ;;
   stop) incus stop "$NAME" ;;
