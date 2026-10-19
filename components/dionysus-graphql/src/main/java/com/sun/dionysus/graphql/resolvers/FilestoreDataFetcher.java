@@ -59,7 +59,7 @@ public class FilestoreDataFetcher {
   @Value("${GARAGE_SECRET_KEY}")
   private String garageSecretKey;
 
-  @Value("${filestore.api.url:https://filestore.int.scarlettparker.co.uk}")
+  @Value("${filestore.api.url:http://localhost:3903}")
   private String filestoreApiUrl;
 
   private final S3Client s3Client;
@@ -106,7 +106,7 @@ public class FilestoreDataFetcher {
   public String health() {
     logger.info("Calling external health REST API");
     String response = restClient.get()
-        .uri(filestoreApiUrl + "/api/health")
+        .uri(filestoreApiUrl + "/health")
         .retrieve()
         .body(String.class);
     logger.info("Health response: {}", response);
@@ -122,7 +122,7 @@ public class FilestoreDataFetcher {
   public List<Bucket> listBuckets() {
     logger.info("Calling ListBuckets REST API");
     Bucket[] buckets = restClient.get()
-        .uri(filestoreApiUrl + "/api/v2/ListBuckets")
+        .uri(filestoreApiUrl + "/v2/ListBuckets")
         .header(HttpHeaders.AUTHORIZATION, "Bearer " + garageSecretKey)
         .retrieve()
         .body(Bucket[].class);
