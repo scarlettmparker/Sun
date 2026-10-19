@@ -20,6 +20,17 @@ const DEFAULT_ALLOWED_ORIGINS = [
  */
 const CSRF_MAX_AGE = 86_400;
 
+/**
+ * Reads the first value of a header that a proxy may have sent more than once.
+ *
+ * @param value The raw header value, or undefined when absent.
+ * @returns The first comma-separated value, trimmed.
+ */
+function firstHeaderValue(value: string | undefined): string {
+  if (!value) return "";
+  return value.split(",")[0].trim();
+}
+
 export interface SecurityConfig {
   /**
    * HMAC key signing CSRF tokens. When unset, CSRF checks are skipped.
@@ -43,7 +54,9 @@ export interface SecurityConfig {
  * @returns True when the host matches an allowed suffix.
  */
 function isOriginAllowed(request: SunRequest, suffixes: string[]): boolean {
-  const raw = request.headers.origin ?? request.headers.referer;
+  const raw = firstHeaderValue(
+    request.headers.origin ?? request.headers.referer,
+  );
   if (!raw || typeof raw !== "string") return false;
   let hostname: string;
   try {
@@ -173,7 +186,7 @@ export function registerSecurity(app: SunApp, config: SecurityConfig): void {
     if (!config.isProduction) {
       return;
     }
-    const host = request.headers.host || "";
+    const host = firstHeaderValue(request.headers.host);
     if (
       host.includes("localhost") ||
       host.includes("127.0.0.1") ||
@@ -181,7 +194,9 @@ export function registerSecurity(app: SunApp, config: SecurityConfig): void {
     ) {
       return;
     }
-    const proto = request.headers["x-forwarded-proto"] as string | undefined;
+    const proto = firstHeaderValue(
+      request.headers["x-forwarded-proto"] as string | undefined,
+    );
     if (proto === "https") {
       return;
     }
@@ -193,9 +208,11 @@ export function registerSecurity(app: SunApp, config: SecurityConfig): void {
 
   app.addHook("onRequest", async (request, reply) => {
     if (SAFE_METHODS.has(request.method.toUpperCase())) return;
-    const raw = request.headers.origin ?? request.headers.referer;
+    const raw = firstHeaderValue(
+      request.headers.origin ?? request.headers.referer,
+    );
     if (!raw || typeof raw !== "string") {
-      const host = request.headers.host || "";
+      const host = firstHeaderValue(request.headers.host);
       if (
         host.includes("localhost") ||
         host.includes("127.0.0.1") ||
