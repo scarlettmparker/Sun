@@ -17,6 +17,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 /**
@@ -25,6 +26,7 @@ import org.springframework.stereotype.Component;
  * level 2, e.g. {@code mutation { hadesMutations { createAnnotation } }}.
  */
 @Component
+@ConditionalOnProperty(prefix = "audit", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class AuditInstrumentation extends SimpleInstrumentation {
 
   private static final InstrumentationContext<Object> NOOP = new InstrumentationContext<>() {

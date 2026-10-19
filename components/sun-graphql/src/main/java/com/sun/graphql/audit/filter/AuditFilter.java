@@ -27,7 +27,6 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.ContentCachingRequestWrapper;
-import org.springframework.web.util.ContentCachingResponseWrapper;
 
 /**
  * Captures each request and writes an audit row for it via AuditEventService.
@@ -74,7 +73,6 @@ public class AuditFilter extends OncePerRequestFilter {
 
     auditContext.begin();
     ContentCachingRequestWrapper wrappedRequest = new ContentCachingRequestWrapper(request, MAX_CACHED_BODY_BYTES);
-    ContentCachingResponseWrapper wrappedResponse = new ContentCachingResponseWrapper(response);
 
     auditContext.setStartedAt(Instant.now());
     auditContext.setEndpoint(request.getRequestURI());
@@ -91,11 +89,11 @@ public class AuditFilter extends OncePerRequestFilter {
     }
 
     try {
-      chain.doFilter(wrappedRequest, wrappedResponse);
+      chain.doFilter(wrappedRequest, response);
     } finally {
       try {
-        auditContext.setHttpStatus(wrappedResponse.getStatus());
-        if (wrappedResponse.getStatus() != 429) {
+        auditContext.setHttpStatus(response.getStatus());
+        if (response.getStatus() != 429) {
           ensureOperationRecorded(wrappedRequest);
           long durationMs = auditContext.getStartedAt() == null
               ? 0L
@@ -119,7 +117,6 @@ public class AuditFilter extends OncePerRequestFilter {
             auditContext.getCorrelationId(), e);
       } finally {
         auditContext.clear();
-        wrappedResponse.copyBodyToResponse();
       }
     }
   }

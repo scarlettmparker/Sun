@@ -222,6 +222,16 @@ bootstrap_db() {
 
 # Installs the release binary once, renders its config with the DB password and
 # (re)starts the unit.
+# Bounds Redis; it only holds JWT sessions and revocation keys.
+configure_redis() {
+  local conf=/etc/redis/redis.conf
+  ic test -f "$conf" || { warn "no redis config at $conf"; return 0; }
+  if ! ic grep -q '^# sisyphus tuning' "$conf"; then
+    ic bash -c "printf '\n# sisyphus tuning\nmaxmemory 64mb\nmaxmemory-policy volatile-lru\n' >> '$conf'"
+  fi
+  ic systemctl restart redis-server
+}
+
 install_permify() {
   local arch tarball yaml pw tmp
   arch="$(ic uname -m)"
@@ -441,6 +451,7 @@ provision() {
   configure_guest
   install_packages
   configure_postgres
+  configure_redis
   bootstrap_db
   install_permify
   wait_permify

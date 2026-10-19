@@ -1,6 +1,8 @@
 package com.sun.graphql.config;
 
 import com.sun.gaia.service.UserContextHolder;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import graphql.language.Document;
 import graphql.parser.InvalidSyntaxException;
 import graphql.parser.Parser;
@@ -15,9 +17,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
+import java.time.Duration;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
@@ -47,7 +48,10 @@ public class RateLimitFilter extends OncePerRequestFilter {
   private static final String GRAPHQL_PATH = "/graphql";
   private static final String DEFAULT_BUCKET = "default";
 
-  private final Map<String, TokenBucket> buckets = new ConcurrentHashMap<>();
+  private final Cache<String, TokenBucket> buckets = Caffeine.newBuilder()
+      .expireAfterAccess(Duration.ofMinutes(10))
+      .maximumSize(10_000)
+      .build();
   private final boolean enabled;
   private final RateLimitProperties properties;
   private final RateLimitRegistry registry;
@@ -94,7 +98,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     RateLimitConfig config = binding == null ? defaultConfig() : binding.config();
     String key = key(request, bucketName);
 
-    TokenBucket bucket = buckets.computeIfAbsent(key, k -> new TokenBucket(
+    TokenBucket bucket = buckets.get(key, k -> new TokenBucket(
         config.capacity(), config.refillPerSecond()));
     if (!bucket.tryAcquire()) {
       response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());

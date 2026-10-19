@@ -89,137 +89,192 @@ public class AuditContext {
   }
 
   private AuditState state() {
-    AuditState s = holder.get();
-    if (s == null) {
-      s = new AuditState();
-      holder.set(s);
-    }
-    return s;
+    return holder.get();
   }
 
   /**
    * Records one operation for the request.
    */
   public void addOperation(AuditOperation operation) {
-    state().operations.add(operation);
+    AuditState s = state();
+    if (s != null) {
+      s.operations.add(operation);
+    }
   }
 
   /**
    * Returns the operations captured for the request so far.
    */
   public List<AuditOperation> operations() {
-    return state().operations;
+    AuditState s = state();
+    return s == null ? List.of() : s.operations;
   }
 
   public UUID getCorrelationId() {
-    return state().correlationId;
+    AuditState s = state();
+    return s == null ? null : s.correlationId;
   }
 
   public void setCorrelationId(UUID correlationId) {
-    state().correlationId = correlationId;
+    AuditState s = state();
+    if (s != null) {
+      s.correlationId = correlationId;
+    }
   }
 
   public Instant getStartedAt() {
-    return state().startedAt;
+    AuditState s = state();
+    return s == null ? null : s.startedAt;
   }
 
   public void setStartedAt(Instant startedAt) {
-    state().startedAt = startedAt;
+    AuditState s = state();
+    if (s != null) {
+      s.startedAt = startedAt;
+    }
   }
 
   public String getEndpoint() {
-    return state().endpoint;
+    AuditState s = state();
+    return s == null ? null : s.endpoint;
   }
 
   public void setEndpoint(String endpoint) {
-    state().endpoint = endpoint;
+    AuditState s = state();
+    if (s != null) {
+      s.endpoint = endpoint;
+    }
   }
 
   public String getMethod() {
-    return state().method;
+    AuditState s = state();
+    return s == null ? null : s.method;
   }
 
   public void setMethod(String method) {
-    state().method = method;
+    AuditState s = state();
+    if (s != null) {
+      s.method = method;
+    }
   }
 
   public String getIpAddress() {
-    return state().ipAddress;
+    AuditState s = state();
+    return s == null ? null : s.ipAddress;
   }
 
   public void setIpAddress(String ipAddress) {
-    state().ipAddress = ipAddress;
+    AuditState s = state();
+    if (s != null) {
+      s.ipAddress = ipAddress;
+    }
   }
 
   public String getUserAgent() {
-    return state().userAgent;
+    AuditState s = state();
+    return s == null ? null : s.userAgent;
   }
 
   public void setUserAgent(String userAgent) {
-    state().userAgent = userAgent;
+    AuditState s = state();
+    if (s != null) {
+      s.userAgent = userAgent;
+    }
   }
 
   public int getHttpStatus() {
-    return state().httpStatus;
+    AuditState s = state();
+    return s == null ? 0 : s.httpStatus;
   }
 
   public void setHttpStatus(int httpStatus) {
-    state().httpStatus = httpStatus;
+    AuditState s = state();
+    if (s != null) {
+      s.httpStatus = httpStatus;
+    }
   }
 
   public UUID getUserId() {
-    return state().userId;
+    AuditState s = state();
+    return s == null ? null : s.userId;
   }
 
   public void setUserId(UUID userId) {
-    state().userId = userId;
+    AuditState s = state();
+    if (s != null) {
+      s.userId = userId;
+    }
   }
 
   public String getUserName() {
-    return state().userName;
+    AuditState s = state();
+    return s == null ? null : s.userName;
   }
 
   public void setUserName(String userName) {
-    state().userName = userName;
+    AuditState s = state();
+    if (s != null) {
+      s.userName = userName;
+    }
   }
 
   public List<String> getUserRoles() {
-    return state().userRoles;
+    AuditState s = state();
+    return s == null ? null : s.userRoles;
   }
 
   public void setUserRoles(List<String> userRoles) {
-    state().userRoles = userRoles;
+    AuditState s = state();
+    if (s != null) {
+      s.userRoles = userRoles;
+    }
   }
 
   public Object getPendingArguments() {
-    return state().pendingArguments;
+    AuditState s = state();
+    return s == null ? null : s.pendingArguments;
   }
 
   public void setPendingArguments(Object arguments) {
-    state().pendingArguments = arguments;
+    AuditState s = state();
+    if (s != null) {
+      s.pendingArguments = arguments;
+    }
   }
 
   public String getPendingField() {
-    return state().pendingField;
+    AuditState s = state();
+    return s == null ? null : s.pendingField;
   }
 
   public void setPendingField(String field) {
-    state().pendingField = field;
+    AuditState s = state();
+    if (s != null) {
+      s.pendingField = field;
+    }
   }
 
   public Object getPendingBeforePayload() {
-    return state().pendingBeforePayload;
+    AuditState s = state();
+    return s == null ? null : s.pendingBeforePayload;
   }
 
   public void setPendingBeforePayload(Object beforePayload) {
-    state().pendingBeforePayload = beforePayload;
+    AuditState s = state();
+    if (s != null) {
+      s.pendingBeforePayload = beforePayload;
+    }
   }
 
   public boolean isPendingExcluded() {
-    return state().pendingExcluded;
+    AuditState s = state();
+    return s != null && s.pendingExcluded;
   }
 
   public void setPendingExcluded(boolean excluded) {
-    state().pendingExcluded = excluded;
+    AuditState s = state();
+    if (s != null) {
+      s.pendingExcluded = excluded;
+    }
   }
 }

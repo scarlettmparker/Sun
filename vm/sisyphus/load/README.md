@@ -19,10 +19,13 @@ empty reader table, warm JVM, 0 failed requests:
 | VUs | RPS | median | p95 | p99 | max |
 | --- | --- | --- | --- | --- | --- |
 | 20 | 3,642 | 2.8 ms | 9.6 ms | 23 ms | 91 ms |
-| 5,000 | 6,321 | 112 ms | 236 ms | 629 ms | 52 s |
+| 5,000 | 8,174 | 88 ms | 180 ms | 558 ms | 38 s |
 
-A second 5,000-VU run peaked at 7,533 RPS (p95 162 ms, p99 843 ms). CPU is the
-limit: the cgroup is pinned at ~2 cores and memory settles around 1.2 GiB.
-Tomcat queues past `max-connections=1000` rather than rejecting, so failures
-stay at zero while the tail grows. Cold-JVM runs are noticeably slower; warm up
-before comparing points.
+Memory settles around 700 MB after the run with ~100 MB of live heap; G1 pauses
+are 2-6 ms and there are no full GCs. CPU remains the limit: Tomcat queues past
+`max-connections=1000` rather than rejecting, so failures stay at zero while the
+tail grows. Cold-JVM runs are noticeably slower; warm up before comparing points.
+
+Before the audit ThreadLocal fix and the preparsed-document cache, the same
+5,000-VU run did 6,321 RPS (p95 236 ms) and left the container at 1.33 GiB.
+

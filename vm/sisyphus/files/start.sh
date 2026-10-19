@@ -14,10 +14,24 @@ jvm=(
   "-Xms256m"
   "-Xmx$JVM_XMX"
   "-XX:MaxMetaspaceSize=$JVM_METASPACE"
-  "-XX:+UseSerialGC"
+  "-XX:+UseG1GC"
+  "-XX:MaxGCPauseMillis=100"
+  "-XX:+ParallelRefProcEnabled"
+  "-XX:MinHeapFreeRatio=20"
+  "-XX:MaxHeapFreeRatio=50"
+  "-XX:G1PeriodicGCInterval=300000"
+  "-XX:+G1PeriodicGCInvokesConcurrent"
   "-XX:+ExitOnOutOfMemoryError"
+  "-XX:+HeapDumpOnOutOfMemoryError"
+  "-XX:HeapDumpPath=/opt/sun/backend/heapdump.hprof"
+  "-XX:NativeMemoryTracking=summary"
+  "-Xlog:gc*:file=/opt/sun/backend/gc.log:time,uptime,level,tags:filecount=5,filesize=10M"
   "-Xss512k"
 )
+
+if [ "${JFR:-off}" = "on" ]; then
+  jvm+=("-XX:StartFlightRecording=settings=profile,filename=/opt/sun/backend/recording.jfr,dumponexit=true")
+fi
 
 app=(
   "--server.tomcat.threads.max=50"
