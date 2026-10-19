@@ -2,7 +2,7 @@
 -- user_id is NULL for anonymous or system events. namespace records the
 -- sub-service the operation came from (HADES, GAIA, APOLLO, ...).
 
-CREATE TABLE audit_events (
+CREATE TABLE IF NOT EXISTS audit_events (
     id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
     created_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -33,11 +33,11 @@ CREATE TABLE audit_events (
     row_hash         TEXT NOT NULL
 );
 
-CREATE INDEX idx_audit_events_time        ON audit_events (created_at DESC);
-CREATE INDEX idx_audit_events_correlation ON audit_events (correlation_id);
-CREATE INDEX idx_audit_events_user        ON audit_events (user_id, created_at DESC);
-CREATE INDEX idx_audit_events_target      ON audit_events (target_entity, target_entity_id);
-CREATE INDEX idx_audit_events_namespace   ON audit_events (namespace, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_events_time        ON audit_events (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_events_correlation ON audit_events (correlation_id);
+CREATE INDEX IF NOT EXISTS idx_audit_events_user        ON audit_events (user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_events_target      ON audit_events (target_entity, target_entity_id);
+CREATE INDEX IF NOT EXISTS idx_audit_events_namespace   ON audit_events (namespace, created_at DESC);
 
 -- Append-only: triggers reject UPDATE and DELETE so the trail cannot be edited.
 CREATE OR REPLACE FUNCTION block_audit_mutation() RETURNS trigger AS $$
