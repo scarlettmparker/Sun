@@ -56,3 +56,10 @@ connections is the best point on this box.
 Before the audit leak fix, the 2 vCPU / 2 GiB box held 8,174 RPS at 5,000 VUs
 but sat at 650 MB RSS. The old 1 vCPU numbers were measured against an empty
 reader table and are not comparable.
+
+## Native image
+
+A GraalVM 25 native build compiles and gets through Hibernate once the tracing
+agent supplies the generated proxy classes. It then fails on Spring CGLIB AOP
+with `CglibAopProxy$SerializableNoOp cannot be cast to Dispatcher`. That needs a
+proxy-strategy port rather than another agent hint, so the box stays on the JVM.
