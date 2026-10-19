@@ -135,7 +135,7 @@ configure_guest() {
 # JRE and data services. dpkg gates each package so re-runs are cheap.
 install_packages() {
   local missing=() pkg
-  for pkg in openjdk-25-jre-headless postgresql redis-server; do
+  for pkg in openjdk-25-jre-headless openjdk-25-jdk-headless postgresql redis-server; do
     ic dpkg -s "$pkg" >/dev/null 2>&1 || missing+=("$pkg")
   done
   [ "${#missing[@]}" -eq 0 ] && return 0
@@ -305,7 +305,7 @@ render_env() {
   fi
   mkdir -p /tmp/opencode
   ( umask 077
-    sed -e 's|^SPRING_DATASOURCE_URL=.*|SPRING_DATASOURCE_URL=jdbc:postgresql://127.0.0.1:5432/sun|' \
+    sed -e 's|^SPRING_DATASOURCE_URL=.*|SPRING_DATASOURCE_URL=jdbc:postgresql://127.0.0.1:5432/sun?reWriteBatchedInserts=true|' \
         -e 's|^SPRING_DATASOURCE_USERNAME=.*|SPRING_DATASOURCE_USERNAME=sun|' \
         -e "s|^RATE_LIMIT_ENABLED=.*|RATE_LIMIT_ENABLED=$rate|" \
         -e "s|^AUDIT_ENABLED=.*|AUDIT_ENABLED=$audit|" \
@@ -314,8 +314,22 @@ render_env() {
     {
       echo "AUTH=$AUTH"
       echo "IP_WHITELIST_ENABLED=$ip"
+      echo "JVM_XMS=$JVM_XMS"
       echo "JVM_XMX=$JVM_XMX"
       echo "JVM_METASPACE=$JVM_METASPACE"
+      echo "JVM_CPUS=$JVM_CPUS"
+      echo "JVM_GC=$JVM_GC"
+      echo "JVM_CDS=$JVM_CDS"
+      echo "NMT=$NMT"
+      echo "COMPACT_HEADERS=$COMPACT_HEADERS"
+      if [ "${MODULES:-full}" = "reader" ]; then
+        for module in APOLLO BRIAREUS CERBERUS DIONYSUS ECHO JOCASTA NARCISSUS; do
+          echo "${module}_ENABLED=false"
+        done
+      fi
+      if [ "${LAZY_INIT:-off}" = "on" ]; then
+        echo "SPRING_MAIN_LAZY_INITIALIZATION=true"
+      fi
     } >> "$out"
   )
 }
@@ -451,11 +465,19 @@ provision() {
   configure_guest
   install_packages
   configure_postgres
-  configure_redis
+  if [ "$AUTH" = "on" ]; then
+    configure_redis
+  else
+    ic systemctl disable --now redis-server >/dev/null 2>&1 || true
+  fi
   bootstrap_db
-  install_permify
-  wait_permify
-  migrate_permify_schema
+  if [ "$AUTH" = "on" ]; then
+    install_permify
+    wait_permify
+    migrate_permify_schema
+  else
+    ic systemctl disable --now permify >/dev/null 2>&1 || true
+  fi
   tune_swap
   log "provisioned. backend will be published at http://$HOST_ALIAS:$HOST_PORT/graphql"
 }

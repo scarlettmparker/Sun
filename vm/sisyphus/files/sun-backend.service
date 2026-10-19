@@ -2,7 +2,7 @@
 Description=Sun GraphQL Backend
 After=network-online.target postgresql.service redis-server.service permify.service
 Wants=network-online.target
-Requires=postgresql.service permify.service
+Requires=postgresql.service
 StartLimitIntervalSec=120
 StartLimitBurst=5
 
@@ -14,8 +14,8 @@ ExecStart=/opt/sun/backend/start.sh
 Restart=always
 RestartSec=5
 TimeoutStopSec=35
-MemoryHigh=1400M
-MemoryMax=1700M
+MemoryHigh=340M
+MemoryMax=400M
 
 [Install]
 WantedBy=multi-user.target

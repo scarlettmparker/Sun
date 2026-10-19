@@ -47,7 +47,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -119,7 +118,6 @@ public class ReaderTextDataFetcher {
   @Audited(event = "READERTEXT_LIST", entity = "ReaderText")
   @DgsData(parentType = "HadesQueries", field = "texts")
   @PreAuthorize("@permissions.has('graphql.hades.texts')")
-  @Cacheable("texts")
   @Transactional(readOnly = true)
   public PagedReaderTexts texts(PaginationInput pagination) {
     Pageable pageable = HadesGraphQLSupport.toPageable(pagination, "level", Sort.Direction.ASC);

@@ -42,7 +42,6 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -147,7 +146,6 @@ public class AccountDataFetcher {
   @Audited(event = "ACCOUNT_LIST", entity = "Account")
   @DgsData(parentType = "GaiaQueries", field = "accounts")
   @PreAuthorize("@permissions.has('graphql.gaia.accounts')")
-  @Cacheable("accounts")
   @Transactional(readOnly = true)
   public PagedAccounts accounts(PaginationInput pagination) {
     Pageable pageable = GaiaGraphQLSupport.toPageable(pagination, "username", Sort.Direction.ASC);
