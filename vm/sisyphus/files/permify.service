@@ -1,0 +1,14 @@
+[Unit]
+Description=Permify Authorization Service
+After=network.target postgresql.service
+Requires=postgresql.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/permify
+ExecStart=/opt/permify/permify serve --config /opt/permify/permify.yaml
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

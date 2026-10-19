@@ -159,15 +159,79 @@ configure_postgres() {
   log "guest: sun role + database"
   mkdir -p /tmp/opencode
   sql=/tmp/opencode/sisyphus-db.sql
-  umask 077
-  DB_PASSWORD="${pw//\'/\'\'}" envsubst '${DB_PASSWORD}' \
-    < "$FILES/init-db.sql" > "$sql"
+  ( umask 077
+    DB_PASSWORD="${pw//\'/\'\'}" envsubst '${DB_PASSWORD}' \
+      < "$FILES/init-db.sql" > "$sql" )
   sudo incus exec "$NAME" -- rm -f /tmp/init-db.sql
   sudo incus file push -q -p --mode 0600 --uid 0 --gid 0 "$sql" "$NAME/tmp/init-db.sql"
   ic chown postgres:postgres /tmp/init-db.sql
   ic su postgres -c 'psql -v ON_ERROR_STOP=1 -q -f /tmp/init-db.sql'
   sudo incus exec "$NAME" -- rm -f /tmp/init-db.sql
   rm -f "$sql"
+}
+
+# ── permify ──────────────────────────────────────────────────────────────────
+
+# Installs the release binary once, renders its config with the DB password and
+# (re)starts the unit.
+install_permify() {
+  local arch tarball yaml pw tmp
+  arch="$(ic uname -m)"
+  case "$arch" in x86_64) arch=amd64 ;; aarch64) arch=arm64 ;; esac
+  mkdir -p /tmp/opencode
+
+  if ! ic test -x "$PERMIFY_DIR/permify"; then
+    log "guest: permify $PERMIFY_VERSION ($arch)"
+    tarball="/tmp/opencode/permify-${PERMIFY_VERSION}-${arch}.tar.gz"
+    [ -f "$tarball" ] || curl -fsSL \
+      "https://github.com/Permify/permify/releases/download/${PERMIFY_VERSION}/permify_${PERMIFY_VERSION#v}_Linux_${arch}.tar.gz" \
+      -o "$tarball"
+    tmp="$(mktemp -d)"
+    tar -xzf "$tarball" -C "$tmp" permify
+    ic mkdir -p "$PERMIFY_DIR"
+    sudo incus exec "$NAME" -- rm -f "$PERMIFY_DIR/permify"
+    sudo incus file push -q -p --mode 0755 --uid 0 --gid 0 \
+      "$tmp/permify" "$NAME$PERMIFY_DIR/permify"
+    rm -rf "$tmp"
+  fi
+
+  pw="$(envval SPRING_DATASOURCE_PASSWORD)"
+  yaml=/tmp/opencode/permify.yaml
+  ( umask 077
+    SPRING_DATASOURCE_PASSWORD="$pw" envsubst '${SPRING_DATASOURCE_PASSWORD}' \
+      < "$REPO/permify/permify.yaml" > "$yaml" )
+  sudo incus exec "$NAME" -- rm -f "$PERMIFY_DIR/permify.yaml"
+  sudo incus file push -q -p --mode 0600 --uid 0 --gid 0 \
+    "$yaml" "$NAME$PERMIFY_DIR/permify.yaml"
+  rm -f "$yaml"
+
+  sudo incus file push -q -p --mode 0644 --uid 0 --gid 0 \
+    "$FILES/permify.service" "$NAME/etc/systemd/system/permify.service"
+  ic systemctl daemon-reload
+  ic systemctl enable permify >/dev/null 2>&1 || true
+  ic systemctl restart permify
+}
+
+# Blocks until Permify answers on its health endpoint.
+wait_permify() {
+  local addr="${CONTAINER_IP%/*}" i
+  for i in $(seq 1 30); do
+    curl -sf "http://$addr:3477/healthz" >/dev/null 2>&1 && return 0
+    sleep 1
+  done
+  warn "permify did not become healthy within 30s"
+  return 1
+}
+
+# Writes the repo schema so Permify is primed even when the backend runs with
+# its own schema push disabled (AUTH=off).
+migrate_permify_schema() {
+  local addr="${CONTAINER_IP%/*}" body
+  body="$(python3 -c 'import json,sys; print(json.dumps({"schema": open(sys.argv[1]).read()}))' \
+    "$REPO/permify/schema.zed")"
+  curl -sf -X POST "http://$addr:3477/v1/tenants/t1/schemas/write" \
+    -H 'content-type: application/json' -d "$body" >/dev/null
+  log "permify: schema migrated"
 }
 
 # Caps the box's swap usage.
@@ -195,6 +259,9 @@ provision() {
   configure_guest
   install_packages
   configure_postgres
+  install_permify
+  wait_permify
+  migrate_permify_schema
   tune_swap
   log "provisioned. backend will be published at http://$HOST_ALIAS:$HOST_PORT/graphql"
 }
@@ -207,6 +274,9 @@ status() {
   log "limits"
   incus config get "$NAME" limits.cpu 2>/dev/null || true
   incus config get "$NAME" limits.memory 2>/dev/null || true
+  log "permify"
+  curl -s -o /dev/null -w 'healthz %{http_code}\n' \
+    "http://${CONTAINER_IP%/*}:3477/healthz" || warn "no response yet"
   log "http"
   curl -s -o /dev/null -w 'http %{http_code} in %{time_total}s\n' \
     "http://$HOST_ALIAS:$HOST_PORT/graphql" || warn "no response yet"
