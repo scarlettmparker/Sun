@@ -13,6 +13,7 @@ VM_DIR="$(dirname "$SELF")"
 REPO="$(cd "$VM_DIR/../.." && pwd)"
 FILES="$VM_DIR/files"
 BACKEND_ENV="$REPO/components/sun-graphql/src/main/resources/.env"
+JAR="$REPO/components/sun-graphql/build/libs/sun-graphql-0.0.1-SNAPSHOT.jar"
 
 # shellcheck source=sisyphus.conf
 . "$VM_DIR/sisyphus.conf"
@@ -170,6 +171,44 @@ configure_postgres() {
   rm -f "$sql"
 }
 
+# ── data ─────────────────────────────────────────────────────────────────────
+
+# Clones the host sun database once. Flyway cannot bootstrap a clean database on
+# its own: the seed migrations reference tables that Hibernate creates.
+seed_db() {
+  local dump=/tmp/opencode/sun-dump.sql pw pgpass pwpg
+  if ic test -f "$APP_DIR/.db-seeded"; then
+    log "db: already seeded"
+    return 0
+  fi
+  log "db: cloning host sun into $NAME"
+  ic mkdir -p "$APP_DIR"
+  ic systemctl stop permify >/dev/null 2>&1 || true
+
+  mkdir -p /tmp/opencode
+  ( umask 077
+    sudo -u postgres pg_dump --no-owner --no-acl sun > "$dump" )
+
+  pw="$(envval SPRING_DATASOURCE_PASSWORD)"
+  pwpg="${pw//\\/\\\\}"; pwpg="${pwpg//:/\\:}"
+  pgpass=/tmp/opencode/pgpass
+  ( umask 077
+    printf '127.0.0.1:5432:sun:sun:%s\n' "$pwpg" > "$pgpass" )
+
+  ic su postgres -c 'dropdb --if-exists sun'
+  ic su postgres -c 'createdb -O sun sun'
+
+  sudo incus exec "$NAME" -- rm -f /tmp/sun-dump.sql /root/.pgpass
+  sudo incus file push -q -p --mode 0600 --uid 0 --gid 0 "$dump" "$NAME/tmp/sun-dump.sql"
+  sudo incus file push -q -p --mode 0600 --uid 0 --gid 0 "$pgpass" "$NAME/root/.pgpass"
+  ic bash -c 'PGPASSFILE=/root/.pgpass psql -q -v ON_ERROR_STOP=1 -h 127.0.0.1 -U sun -d sun -f /tmp/sun-dump.sql'
+  sudo incus exec "$NAME" -- rm -f /tmp/sun-dump.sql /root/.pgpass
+  rm -f "$dump" "$pgpass"
+
+  ic touch "$APP_DIR/.db-seeded"
+  log "db: seeded"
+}
+
 # ── permify ──────────────────────────────────────────────────────────────────
 
 # Installs the release binary once, renders its config with the DB password and
@@ -234,6 +273,84 @@ migrate_permify_schema() {
   log "permify: schema migrated"
 }
 
+# ── backend ──────────────────────────────────────────────────────────────────
+
+# Renders the container .env from the repo .env, pinning the datasource to the
+# local box and forcing the toggles that match AUTH.
+render_env() {
+  local out=/tmp/opencode/sisyphus.env rate audit ip
+  if [ "$AUTH" = "on" ]; then
+    rate=true; audit=true; ip=true
+  else
+    rate=false; audit=false; ip=false
+  fi
+  mkdir -p /tmp/opencode
+  ( umask 077
+    sed -e 's|^SPRING_DATASOURCE_URL=.*|SPRING_DATASOURCE_URL=jdbc:postgresql://127.0.0.1:5432/sun|' \
+        -e 's|^SPRING_DATASOURCE_USERNAME=.*|SPRING_DATASOURCE_USERNAME=sun|' \
+        -e "s|^RATE_LIMIT_ENABLED=.*|RATE_LIMIT_ENABLED=$rate|" \
+        -e "s|^AUDIT_ENABLED=.*|AUDIT_ENABLED=$audit|" \
+        -e 's|^CEFR_INFERENCE_ENABLED=.*|CEFR_INFERENCE_ENABLED=false|' \
+        "$BACKEND_ENV" > "$out"
+    {
+      echo "AUTH=$AUTH"
+      echo "IP_WHITELIST_ENABLED=$ip"
+      echo "JVM_XMX=$JVM_XMX"
+      echo "JVM_METASPACE=$JVM_METASPACE"
+    } >> "$out"
+  )
+}
+
+build_backend() {
+  log "build: sun-graphql bootJar"
+  "$REPO/components/sun-graphql/gradlew" -p "$REPO/components" :sun-graphql:bootJar --quiet
+  [ -f "$JAR" ] || { warn "jar missing at $JAR"; return 1; }
+  log "build: $(du -h "$JAR" | cut -f1)"
+}
+
+# Blocks until the schema endpoint answers.
+wait_backend() {
+  local addr="${CONTAINER_IP%/*}" i
+  for i in $(seq 1 90); do
+    curl -sf "http://$addr:8083/graphql/schema" >/dev/null 2>&1 && return 0
+    sleep 1
+  done
+  warn "backend did not answer within 90s"
+  return 1
+}
+
+deploy_backend() {
+  log "push: jar + env + unit"
+  ic mkdir -p "$APP_DIR"
+
+  sudo incus exec "$NAME" -- rm -f "$APP_DIR/sun-graphql.jar"
+  sudo incus file push -q -p --mode 0644 --uid 0 --gid 0 \
+    "$JAR" "$NAME$APP_DIR/sun-graphql.jar"
+
+  render_env
+  sudo incus exec "$NAME" -- rm -f "$APP_DIR/.env"
+  sudo incus file push -q -p --mode 0600 --uid 0 --gid 0 \
+    /tmp/opencode/sisyphus.env "$NAME$APP_DIR/.env"
+  rm -f /tmp/opencode/sisyphus.env
+
+  sudo incus file push -q -p --mode 0755 --uid 0 --gid 0 \
+    "$FILES/start.sh" "$NAME$APP_DIR/start.sh"
+  sudo incus file push -q -p --mode 0644 --uid 0 --gid 0 \
+    "$FILES/sun-backend.service" "$NAME/etc/systemd/system/sun-backend.service"
+
+  ic systemctl daemon-reload
+  ic systemctl enable sun-backend >/dev/null 2>&1 || true
+  ic systemctl reset-failed sun-backend >/dev/null 2>&1 || true
+  ic systemctl restart sun-backend
+  wait_backend
+  log "backend up at http://$HOST_ALIAS:$HOST_PORT/graphql"
+}
+
+deploy() {
+  [ "${1:-}" = "--skip-build" ] || build_backend
+  deploy_backend
+}
+
 # Caps the box's swap usage.
 tune_swap() {
   local cg="/sys/fs/cgroup/lxc.payload.$NAME" bytes
@@ -259,6 +376,7 @@ provision() {
   configure_guest
   install_packages
   configure_postgres
+  seed_db
   install_permify
   wait_permify
   migrate_permify_schema
@@ -277,6 +395,8 @@ status() {
   log "permify"
   curl -s -o /dev/null -w 'healthz %{http_code}\n' \
     "http://${CONTAINER_IP%/*}:3477/healthz" || warn "no response yet"
+  log "backend"
+  ic systemctl --no-pager --lines=0 status sun-backend 2>&1 | head -n 4 || true
   log "http"
   curl -s -o /dev/null -w 'http %{http_code} in %{time_total}s\n' \
     "http://$HOST_ALIAS:$HOST_PORT/graphql" || warn "no response yet"
@@ -284,6 +404,7 @@ status() {
 
 case "${1:-}" in
   provision) provision ;;
+  deploy) shift; deploy "${1:-}" ;;
   status) status ;;
   shell) shift; sudo incus exec "$NAME" -- bash -l ;;
   stop) incus stop "$NAME" ;;
