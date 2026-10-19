@@ -101,6 +101,42 @@ public class JwtService {
   }
 
   /**
+   * Whether a token id has been revoked.
+   *
+   * @param jti the token id, or null
+   * @return true when the token is revoked
+   */
+  public boolean isRevoked(String jti) {
+    if (jti == null || redisTemplate == null) {
+      return false;
+    }
+    try {
+      return Boolean.TRUE.equals(redisTemplate.hasKey("revoked:" + jti));
+    } catch (Exception e) {
+      logger.warn("Redis check failed for jti {}", jti, e);
+      return false;
+    }
+  }
+
+  /**
+   * Verifies a token, checks revocation, and returns the account id.
+   *
+   * @param token the bearer token
+   * @return the account id, or null when the token is invalid or revoked
+   */
+  public UUID authenticatedAccountId(String token) {
+    try {
+      Claims claims = verifyToken(token);
+      if (isRevoked(claims.get("jti", String.class))) {
+        return null;
+      }
+      return UUID.fromString(claims.getSubject());
+    } catch (JwtException | IllegalArgumentException e) {
+      return null;
+    }
+  }
+
+  /**
    * Revokes a token by its jti until natural expiry.
    */
   public void revokeToken(String token) {

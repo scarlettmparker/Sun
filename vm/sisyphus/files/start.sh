@@ -14,6 +14,7 @@ JVM_GC="${JVM_GC:-g1}"
 JVM_CDS="${JVM_CDS:-on}"
 NMT="${NMT:-off}"
 COMPACT_HEADERS="${COMPACT_HEADERS:-off}"
+VIRTUAL_THREADS="${VIRTUAL_THREADS:-off}"
 APP_JAR="${APP_JAR:-/opt/sun/backend/sun-graphql.jar}"
 
 jvm=(
@@ -66,10 +67,15 @@ app=(
   "--server.tomcat.threads.max=24"
   "--server.tomcat.threads.min-spare=2"
   "--server.tomcat.max-connections=1000"
+  "--server.tomcat.accept-count=2048"
   "--spring.datasource.hikari.maximum-pool-size=4"
   "--spring.datasource.hikari.minimum-idle=1"
   "--spring.jpa.hibernate.ddl-auto=none"
 )
+
+if [ "$VIRTUAL_THREADS" = "on" ]; then
+  app+=("--spring.threads.virtual.enabled=true")
+fi
 
 if [ "$AUTH" != "on" ]; then
   app+=(

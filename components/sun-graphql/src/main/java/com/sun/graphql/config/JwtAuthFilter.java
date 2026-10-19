@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.UUID;
 import org.springframework.context.annotation.Profile;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -22,6 +23,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
  */
 @Component
 @Profile("!test")
+@ConditionalOnProperty(name = "app.bypass-permissions", havingValue = "false", matchIfMissing = true)
 @Order(Ordered.HIGHEST_PRECEDENCE + 50)
 public class JwtAuthFilter extends OncePerRequestFilter {
 
@@ -40,16 +42,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     String authHeader = request.getHeader("Authorization");
     if (authHeader != null && authHeader.startsWith("Bearer ")) {
       String token = authHeader.substring(7);
-      if (jwtService.isValid(token)) {
-        UUID accountId = jwtService.extractAccountId(token);
-        accountRepository.findById(accountId)
-            .filter(a -> a.getStatus() == AccountStatus.ACTIVE)
-            .ifPresent(a -> UserContextHolder.setUserId(accountId));
-      } else {
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.setContentType("application/json");
-        response.getWriter().write("{\"error\":\"Invalid or expired token\"}");
+      UUID accountId = jwtService.authenticatedAccountId(token);
+      if (accountId == null) {
+        unauthorized(response);
         return;
+      }
+      if (accountRepository.existsByIdAndStatus(accountId, AccountStatus.ACTIVE)) {
+        UserContextHolder.setUserId(accountId);
       }
     }
     try {
@@ -57,5 +56,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     } finally {
       UserContextHolder.clear();
     }
+  }
+
+  /**
+   * Writes the standard unauthorized response.
+   *
+   * @param response the servlet response
+   * @throws IOException when writing fails
+   */
+  private void unauthorized(HttpServletResponse response) throws IOException {
+    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+    response.setContentType("application/json");
+    response.getWriter().write("{\"error\":\"Invalid or expired token\"}");
   }
 }

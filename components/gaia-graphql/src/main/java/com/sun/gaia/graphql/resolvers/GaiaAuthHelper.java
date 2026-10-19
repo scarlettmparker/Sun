@@ -38,11 +38,11 @@ public class GaiaAuthHelper {
       String authHeader = request.getHeader("Authorization");
       if (authHeader != null && authHeader.startsWith("Bearer ")) {
         String token = authHeader.substring(7);
-        if (jwtService.isValid(token)) {
-          UUID accountId = jwtService.extractAccountId(token);
-          accountRepository.findById(accountId)
-              .filter(a -> a.getStatus() == AccountStatus.ACTIVE)
-              .ifPresent(a -> UserContextHolder.setUserId(accountId));
+        UUID accountId = jwtService.authenticatedAccountId(token);
+        if (accountId != null) {
+          if (accountRepository.existsByIdAndStatus(accountId, AccountStatus.ACTIVE)) {
+            UserContextHolder.setUserId(accountId);
+          }
         }
       }
     } catch (Exception e) {

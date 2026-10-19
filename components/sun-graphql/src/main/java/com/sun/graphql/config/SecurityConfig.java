@@ -41,7 +41,8 @@ class BypassSecurityConfig {
 
   @Bean
   SecurityFilterChain bypassFilterChain(HttpSecurity http) throws Exception {
-    http.csrf(csrf -> csrf.disable())
+    http.securityMatcher("/__bypass__")
+        .csrf(csrf -> csrf.disable())
         .sessionManagement(
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(requests -> requests.anyRequest().permitAll());

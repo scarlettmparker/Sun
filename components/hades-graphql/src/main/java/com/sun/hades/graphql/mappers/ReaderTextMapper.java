@@ -4,10 +4,9 @@ import java.time.ZoneOffset;
 import com.sun.hades.codegen.types.ReaderText;
 import com.sun.hades.codegen.types.ReaderTextInput;
 import com.sun.hades.model.ReaderTextEntity;
+import com.sun.hades.service.ReaderTextSummary;
 import com.sun.gaia.service.UserContextHolder;
 import java.util.UUID;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import com.sun.hades.model.enums.CefrLevel;
 
@@ -17,8 +16,6 @@ import com.sun.hades.model.enums.CefrLevel;
 @Component
 public class ReaderTextMapper {
 
-  private static final Logger logger = LoggerFactory.getLogger(ReaderTextMapper.class);
-
   /**
    * Maps a text entity to the GraphQL ReaderText type.
    *
@@ -26,7 +23,6 @@ public class ReaderTextMapper {
    * @return the GraphQL ReaderText
    */
   public ReaderText map(ReaderTextEntity entity) {
-    logger.debug("Mapping reader text {}", entity.getTitle());
     ReaderText text = ReaderText.newBuilder()
         .id(entity.getId().toString())
         .title(entity.getTitle())
@@ -38,8 +34,27 @@ public class ReaderTextMapper {
         .createdAt(entity.getCreatedAt() == null ? null : entity.getCreatedAt().atOffset(ZoneOffset.UTC))
         .updatedAt(entity.getLastUpdatedAt() == null ? null : entity.getLastUpdatedAt().atOffset(ZoneOffset.UTC))
         .build();
-    logger.debug("Mapped reader text {} with id {}", entity.getTitle(), text.getId());
     return text;
+  }
+
+  /**
+   * Maps a text summary to the GraphQL ReaderText type.
+   *
+   * @param summary the text summary
+   * @return the GraphQL ReaderText
+   */
+  public ReaderText map(ReaderTextSummary summary) {
+    return ReaderText.newBuilder()
+        .id(summary.id().toString())
+        .title(summary.title())
+        .language(summary.language())
+        .level(summary.level())
+        .ownerId(summary.ownerId() == null ? null : summary.ownerId().toString())
+        .sourceId(summary.sourceId() == null ? null : summary.sourceId().toString())
+        .status(summary.status())
+        .createdAt(summary.createdAt() == null ? null : summary.createdAt().atOffset(ZoneOffset.UTC))
+        .updatedAt(summary.lastUpdatedAt() == null ? null : summary.lastUpdatedAt().atOffset(ZoneOffset.UTC))
+        .build();
   }
 
   /**
@@ -49,7 +64,6 @@ public class ReaderTextMapper {
    * @return the mapped domain ReaderTextEntity
    */
   public ReaderTextEntity mapInput(ReaderTextInput input) {
-    logger.debug("Mapping input for reader text {}", input.getTitle());
     ReaderTextEntity entity = new ReaderTextEntity();
     entity.setTitle(input.getTitle());
     entity.setContent(input.getContent());

@@ -23,6 +23,15 @@ public interface AccountRepository extends BaseRepository<AccountEntity>, JpaSpe
 
   List<AccountEntity> findAllByPersonId(UUID personId);
 
+  /**
+   * Whether an account exists with the given status.
+   *
+   * @param id the account id
+   * @param status the status to match
+   * @return true when the account exists and matches
+   */
+  boolean existsByIdAndStatus(UUID id, AccountStatus status);
+
   Optional<AccountEntity> findByProviderAndProviderId(String provider, String providerId);
 
   @Query("select a from AccountEntity a where a.provider = :provider "

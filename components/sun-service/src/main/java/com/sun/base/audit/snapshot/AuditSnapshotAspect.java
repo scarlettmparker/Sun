@@ -7,11 +7,13 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.aop.support.AopUtils;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.stereotype.Component;
 
@@ -21,10 +23,12 @@ import org.springframework.stereotype.Component;
  */
 @Aspect
 @Component
+@ConditionalOnProperty(prefix = "audit", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class AuditSnapshotAspect {
 
   private final AuditContext auditContext;
   private final AuditSnapshotLoaders loaders;
+  private final Map<Method, Optional<Audited>> annotations = new ConcurrentHashMap<>();
 
   public AuditSnapshotAspect(AuditContext auditContext, AuditSnapshotLoaders loaders) {
     this.auditContext = auditContext;
@@ -52,7 +56,7 @@ public class AuditSnapshotAspect {
   }
 
   /**
-   * Resolves the audited annotation from the method or its target class.
+   * Resolves and caches the audited annotation from the method or its target class.
    *
    * @param joinPoint the intercepted method
    * @return the annotation, or null when absent
@@ -60,7 +64,8 @@ public class AuditSnapshotAspect {
   private Audited resolveAnnotation(ProceedingJoinPoint joinPoint) {
     MethodSignature signature = (MethodSignature) joinPoint.getSignature();
     Method method = AopUtils.getMostSpecificMethod(signature.getMethod(), joinPoint.getTarget().getClass());
-    return AnnotationUtils.findAnnotation(method, Audited.class);
+    return annotations.computeIfAbsent(method,
+        key -> Optional.ofNullable(AnnotationUtils.findAnnotation(key, Audited.class))).orElse(null);
   }
 
   /**

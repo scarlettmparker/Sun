@@ -5,6 +5,7 @@ import com.sun.hades.codegen.types.PageInfo;
 import com.sun.hades.codegen.types.PaginationInput;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 
 /**
@@ -44,6 +45,26 @@ public final class HadesGraphQLSupport {
         .size(result.getSize())
         .totalPages(result.getTotalPages())
         .totalCount((int) result.getTotalElements())
+        .hasNextPage(result.hasNext())
+        .hasPreviousPage(result.hasPrevious())
+        .build();
+  }
+
+  /**
+   * Builds page metadata from a slice and an explicit total.
+   *
+   * @param result the data slice
+   * @param totalCount the total matching rows
+   * @return the GraphQL PageInfo
+   */
+  public static PageInfo pageInfo(Slice<?> result, long totalCount) {
+    int totalPages = result.getSize() == 0 ? 0
+        : (int) ((totalCount + result.getSize() - 1) / result.getSize());
+    return PageInfo.newBuilder()
+        .page(result.getNumber())
+        .size(result.getSize())
+        .totalPages(totalPages)
+        .totalCount((int) totalCount)
         .hasNextPage(result.hasNext())
         .hasPreviousPage(result.hasPrevious())
         .build();

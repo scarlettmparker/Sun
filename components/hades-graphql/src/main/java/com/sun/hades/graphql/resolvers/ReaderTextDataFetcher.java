@@ -16,6 +16,7 @@ import com.sun.hades.codegen.types.HadesQueries;
 import com.sun.hades.codegen.types.MarkViewedResponse;
 import com.sun.hades.codegen.types.PagedReaderTexts;
 import com.sun.hades.codegen.types.PagedTextViews;
+import com.sun.hades.codegen.types.PageInfo;
 import com.sun.hades.codegen.types.PaginationInput;
 import com.sun.hades.codegen.types.ReaderSource;
 import com.sun.hades.codegen.types.ReaderText;
@@ -37,6 +38,7 @@ import com.sun.hades.model.enums.ReaderTextStatus;
 import com.sun.hades.repository.ReaderTextRepository;
 import com.sun.hades.service.ReaderSourceService;
 import com.sun.hades.service.ReaderTextService;
+import com.sun.hades.service.ReaderTextSummary;
 import com.sun.hades.service.TextViewService;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -49,6 +51,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
@@ -109,24 +112,40 @@ public class ReaderTextDataFetcher {
   /**
    * Lists texts, optionally filtered.
    *
-   * @param level optional CEFR level
-   * @param sourceId optional source id
-   * @param ownerId optional owner account id
    * @param pagination the pagination input
+   * @param env the data-fetching environment, used to skip the count when it is not selected
    * @return a page of texts
    */
   @Audited(event = "READERTEXT_LIST", entity = "ReaderText")
   @DgsData(parentType = "HadesQueries", field = "texts")
   @PreAuthorize("@permissions.has('graphql.hades.texts')")
   @Transactional(readOnly = true)
-  public PagedReaderTexts texts(PaginationInput pagination) {
+  public PagedReaderTexts texts(PaginationInput pagination, DgsDataFetchingEnvironment env) {
     Pageable pageable = HadesGraphQLSupport.toPageable(pagination, "level", Sort.Direction.ASC);
     List<FilterSpec> filters = GraphQLSupport.toFilterSpecs(
         pagination == null ? null : pagination.getFilters(),
         f -> new FilterSpec(f.getField(), f.getOperator().name(), f.getValue()));
-    Page<ReaderTextEntity> result = textService.list(filters, pageable);
-    List<ReaderText> items = result.getContent().stream().map(textMapper::map).toList();
-    return PagedReaderTexts.newBuilder().items(items).pageInfo(HadesGraphQLSupport.pageInfo(result)).build();
+    boolean includeTotal = env.getSelectionSet().contains("pageInfo/totalCount");
+    boolean hasFilters = filters != null && !filters.isEmpty();
+    if (hasFilters) {
+      Page<ReaderTextSummary> result = textService.listSummaries(filters, pageable);
+      return paged(result.getContent(), HadesGraphQLSupport.pageInfo(result));
+    }
+    Slice<ReaderTextSummary> result = textService.listSummaries(pageable);
+    long total = includeTotal ? textService.countActive() : 0;
+    return paged(result.getContent(), HadesGraphQLSupport.pageInfo(result, total));
+  }
+
+  /**
+   * Builds the paged response from summaries and page metadata.
+   *
+   * @param summaries the text summaries
+   * @param pageInfo the GraphQL page metadata
+   * @return the paged reader texts
+   */
+  private PagedReaderTexts paged(List<ReaderTextSummary> summaries, PageInfo pageInfo) {
+    List<ReaderText> items = summaries.stream().map(textMapper::map).toList();
+    return PagedReaderTexts.newBuilder().items(items).pageInfo(pageInfo).build();
   }
 
   /**

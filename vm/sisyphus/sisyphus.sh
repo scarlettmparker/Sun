@@ -322,6 +322,7 @@ render_env() {
       echo "JVM_CDS=$JVM_CDS"
       echo "NMT=$NMT"
       echo "COMPACT_HEADERS=$COMPACT_HEADERS"
+      echo "VIRTUAL_THREADS=$VIRTUAL_THREADS"
       if [ "${MODULES:-full}" = "reader" ]; then
         for module in APOLLO BRIAREUS CERBERUS DIONYSUS ECHO JOCASTA NARCISSUS; do
           echo "${module}_ENABLED=false"

@@ -30,7 +30,9 @@ import com.sun.hades.model.enums.CefrLevel;
 import com.sun.hades.model.enums.ReaderTextStatus;
 import com.sun.hades.service.ReaderSourceService;
 import com.sun.hades.service.ReaderTextService;
+import com.sun.hades.service.ReaderTextSummary;
 import com.sun.hades.service.TextViewService;
+import graphql.schema.DataFetchingFieldSelectionSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -42,8 +44,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 
 @ExtendWith(MockitoExtension.class)
 class ReaderTextDataFetcherTest {
@@ -56,6 +60,7 @@ class ReaderTextDataFetcherTest {
   @Mock private TextViewService textViewService;
   @Mock private WordReferenceService wordReferenceService;
   @Mock private DgsDataFetchingEnvironment env;
+  @Mock private DataFetchingFieldSelectionSet selectionSet;
 
   @InjectMocks private ReaderTextDataFetcher fetcher;
 
@@ -83,15 +88,18 @@ class ReaderTextDataFetcherTest {
 
   @Test
   void texts_returnsPaged() {
-    ReaderTextEntity entity = new ReaderTextEntity();
-    entity.setId(UUID.randomUUID());
-    entity.setTitle("Title");
-    Page<ReaderTextEntity> page = new PageImpl<>(List.of(entity), PageRequest.of(0, 20), 1);
-    when(textService.list(any(), any())).thenReturn(page);
-    ReaderText mapped = ReaderText.newBuilder().id(entity.getId().toString()).title("Title").build();
-    when(textMapper.map(entity)).thenReturn(mapped);
+    ReaderTextSummary summary = new ReaderTextSummary(UUID.randomUUID(), "Title", "en",
+        CefrLevel.A1, null, null, ReaderTextStatus.ACTIVE, null, null);
+    Slice<ReaderTextSummary> slice =
+        new SliceImpl<>(List.of(summary), PageRequest.of(0, 20), false);
+    when(env.getSelectionSet()).thenReturn(selectionSet);
+    when(selectionSet.contains("pageInfo/totalCount")).thenReturn(true);
+    when(textService.listSummaries(any(Pageable.class))).thenReturn(slice);
+    when(textService.countActive()).thenReturn(1L);
+    ReaderText mapped = ReaderText.newBuilder().id(summary.id().toString()).title("Title").build();
+    when(textMapper.map(summary)).thenReturn(mapped);
 
-    PagedReaderTexts result = fetcher.texts(null);
+    PagedReaderTexts result = fetcher.texts(null, env);
 
     assertThat(result.getItems()).hasSize(1);
     assertThat(result.getItems().get(0).getTitle()).isEqualTo("Title");
