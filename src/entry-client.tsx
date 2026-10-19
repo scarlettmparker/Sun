@@ -32,9 +32,7 @@ initClientBootstrap({ i18n }).then(() => {
     <BrowserRouter>
       <Layout>
         <ErrorBoundary>
-          <Suspense
-            fallback={<div className={styles.fallback} aria-hidden />}
-          >
+          <Suspense fallback={<div className={styles.fallback} aria-hidden />}>
             <Router />
           </Suspense>
         </ErrorBoundary>

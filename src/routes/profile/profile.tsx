@@ -22,11 +22,7 @@ type CurrentUser = NonNullable<MeQuery["gaiaQueries"]["me"]>;
  */
 const ProfilePage = () => {
   const { t } = useTranslation("home");
-  const { data: currentUser } = usePageData<CurrentUser | null>(
-    "currentUser",
-    "currentUser",
-    {},
-  );
+  const { data: currentUser } = usePageData<CurrentUser | null>("currentUser", "currentUser", {});
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 

@@ -79,12 +79,7 @@ type AccordionTriggerProps = React.HTMLAttributes<HTMLButtonElement>;
 /**
  * The clickable header that toggles the adjacent AccordionContent.
  */
-const AccordionTrigger = ({
-  className,
-  children,
-  onClick,
-  ...rest
-}: AccordionTriggerProps) => {
+const AccordionTrigger = ({ className, children, onClick, ...rest }: AccordionTriggerProps) => {
   const { open, setOpen, contentId } = useAccordion();
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setOpen(!open);
@@ -115,11 +110,7 @@ type AccordionContentProps = React.HTMLAttributes<HTMLDivElement>;
 /**
  * The collapsible region. Renders only while open.
  */
-const AccordionContent = ({
-  className,
-  children,
-  ...rest
-}: AccordionContentProps) => {
+const AccordionContent = ({ className, children, ...rest }: AccordionContentProps) => {
   const { open, contentId } = useAccordion();
   if (!open) {
     return null;

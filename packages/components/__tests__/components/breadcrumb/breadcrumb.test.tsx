@@ -31,11 +31,7 @@ describe("Breadcrumb", () => {
   it("supports dynamic add via context", () => {
     const Controller = () => {
       const { addBreadcrumb } = useBreadcrumbContext();
-      return (
-        <button onClick={() => addBreadcrumb({ label: "Home", href: "/" })}>
-          Add
-        </button>
-      );
+      return <button onClick={() => addBreadcrumb({ label: "Home", href: "/" })}>Add</button>;
     };
     render(
       <BreadcrumbProvider>
@@ -55,13 +51,7 @@ describe("Breadcrumb", () => {
       return (
         <>
           <button
-            onClick={() =>
-              ctx.setBreadcrumbs([
-                { label: "A" },
-                { label: "B" },
-                { label: "C" },
-              ])
-            }
+            onClick={() => ctx.setBreadcrumbs([{ label: "A" }, { label: "B" }, { label: "C" }])}
           >
             Set
           </button>

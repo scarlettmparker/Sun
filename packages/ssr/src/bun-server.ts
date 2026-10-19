@@ -178,10 +178,7 @@ function splitPath(pathname: string): string[] {
  * @param parts The request path segments.
  * @returns Captured params, or null when the route does not match.
  */
-function matchRoute(
-  route: Route,
-  parts: string[],
-): Record<string, string> | null {
+function matchRoute(route: Route, parts: string[]): Record<string, string> | null {
   const params: Record<string, string> = {};
   for (let i = 0; i < route.segments.length; i += 1) {
     const segment = route.segments[i];
@@ -302,9 +299,7 @@ function createResponseState(): ResponseState {
     },
     write(chunk) {
       if (ended) return true;
-      ensureStream().enqueue(
-        typeof chunk === "string" ? encoder.encode(chunk) : chunk,
-      );
+      ensureStream().enqueue(typeof chunk === "string" ? encoder.encode(chunk) : chunk);
       return true;
     },
     end(chunk) {
@@ -339,9 +334,7 @@ function createResponseState(): ResponseState {
  * @param state The per-request response state.
  * @returns The reply.
  */
-function createReply(
-  state: ResponseState,
-): SunReply & { settled: boolean } {
+function createReply(state: ResponseState): SunReply & { settled: boolean } {
   const reply = {
     settled: false,
     header(name: string, value: string) {
@@ -406,9 +399,7 @@ function createReply(
  * @param options Bind address and the shared route registration callback.
  * @returns The bound address and a stop function.
  */
-export async function startBunServer(
-  options: BunServerOptions,
-): Promise<BunServerHandleInfo> {
+export async function startBunServer(options: BunServerOptions): Promise<BunServerHandleInfo> {
   const runtime = bunRuntime();
   const routes: Route[] = [];
   const hooks: Record<HookName, Hook[]> = {
@@ -503,17 +494,13 @@ export async function startBunServer(
    * @param server The Bun server handle.
    * @returns The final response.
    */
-  const handle = async (
-    request: Request,
-    server: BunServerHandle,
-  ): Promise<Response> => {
+  const handle = async (request: Request, server: BunServerHandle): Promise<Response> => {
     const url = new URL(request.url);
     const method = request.method.toUpperCase();
     const headers = headersToRecord(request.headers);
     const ip = server.requestIP(request)?.address ?? "";
     const forwardedProto = headers["x-forwarded-proto"];
-    const protocol =
-      forwardedProto === "https" || url.protocol === "https:" ? "https" : "http";
+    const protocol = forwardedProto === "https" || url.protocol === "https:" ? "https" : "http";
 
     if (method === "GET" || method === "HEAD") {
       const staticResponse = await serveStatic(url.pathname);

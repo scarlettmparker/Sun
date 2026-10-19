@@ -9,13 +9,7 @@ type SkeletonProps = React.HTMLAttributes<HTMLDivElement>;
 const Skeleton = (props: SkeletonProps) => {
   const { className, ...rest } = props;
 
-  return (
-    <div
-      data-slot={styles.skeleton}
-      className={cn(className, styles.skeleton)}
-      {...rest}
-    />
-  );
+  return <div data-slot={styles.skeleton} className={cn(className, styles.skeleton)} {...rest} />;
 };
 
 export default Skeleton;

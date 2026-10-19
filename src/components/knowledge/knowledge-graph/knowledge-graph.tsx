@@ -22,12 +22,8 @@ type KnowledgeGraphProps = {
 const KnowledgeGraph = (props: KnowledgeGraphProps) => {
   const { post } = props;
   const remoteObject = post.remoteObject ?? [];
-  const blogTargets = remoteObject.filter((value) =>
-    value.startsWith("briareus:post:"),
-  );
-  const galleryTargets = remoteObject.filter((value) =>
-    value.startsWith("cerberus:gallery:"),
-  );
+  const blogTargets = remoteObject.filter((value) => value.startsWith("briareus:post:"));
+  const galleryTargets = remoteObject.filter((value) => value.startsWith("cerberus:gallery:"));
 
   return (
     <div className={styles.graph_wrapper}>

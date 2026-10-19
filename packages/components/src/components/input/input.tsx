@@ -38,11 +38,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>((props, ref) => {
 
   switch (type) {
     case "range": {
-      const {
-        orient = "horizontal",
-        className,
-        ...rangeProps
-      } = rest as RangeInputProps;
+      const { orient = "horizontal", className, ...rangeProps } = rest as RangeInputProps;
       return (
         <input
           ref={ref}
@@ -65,25 +61,11 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>((props, ref) => {
     }
     case "text": {
       const { className, ...textProps } = rest;
-      return (
-        <input
-          ref={ref}
-          {...textProps}
-          type="text"
-          className={cn(className, styles.text)}
-        />
-      );
+      return <input ref={ref} {...textProps} type="text" className={cn(className, styles.text)} />;
     }
     default: {
       const { className, ...restProps } = rest;
-      return (
-        <input
-          ref={ref}
-          {...restProps}
-          type={type}
-          className={cn(className, styles.text)}
-        />
-      );
+      return <input ref={ref} {...restProps} type={type} className={cn(className, styles.text)} />;
     }
   }
 });

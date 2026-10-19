@@ -1,12 +1,6 @@
 import { memo } from "react";
 import { useTranslation } from "@sun/i18n";
-import {
-  Card,
-  CardBody,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@sun/components";
+import { Card, CardBody, CardDescription, CardHeader, CardTitle } from "@sun/components";
 import { cn } from "~/utils/cn";
 import styles from "./spotify-card.module.css";
 

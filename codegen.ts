@@ -1,7 +1,6 @@
 import type { CodegenConfig } from "@graphql-codegen/cli";
 
-const schemaUrl =
-  process.env.GRAPHQL_SCHEMA_URL ?? "http://localhost:8083/graphql/schema";
+const schemaUrl = process.env.GRAPHQL_SCHEMA_URL ?? "http://localhost:8083/graphql/schema";
 
 const config: CodegenConfig = {
   overwrite: true,

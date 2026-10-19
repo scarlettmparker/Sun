@@ -25,38 +25,26 @@ type TaggedInputProps = React.HTMLAttributes<HTMLDivElement> & {
 /**
  * Container that wraps badges and an input.
  */
-const TaggedInput = forwardRef<HTMLInputElement, TaggedInputProps>(
-  (props, ref) => {
-    const {
-      children,
-      value,
-      onChange,
-      placeholder,
-      onKeyDown,
-      className,
-      ...rest
-    } = props;
-    const hasChildren = Array.isArray(children)
-      ? children.length > 0
-      : children != null && children !== false;
+const TaggedInput = forwardRef<HTMLInputElement, TaggedInputProps>((props, ref) => {
+  const { children, value, onChange, placeholder, onKeyDown, className, ...rest } = props;
+  const hasChildren = Array.isArray(children)
+    ? children.length > 0
+    : children != null && children !== false;
 
-    return (
-      <div className={cn(styles.container, className)} {...rest}>
-        {children}
-        <Input
-          ref={ref}
-          value={value}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            onChange(e.target.value)
-          }
-          onKeyDown={onKeyDown}
-          placeholder={hasChildren ? undefined : placeholder}
-          className={styles.input}
-        />
-      </div>
-    );
-  },
-);
+  return (
+    <div className={cn(styles.container, className)} {...rest}>
+      {children}
+      <Input
+        ref={ref}
+        value={value}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
+        onKeyDown={onKeyDown}
+        placeholder={hasChildren ? undefined : placeholder}
+        className={styles.input}
+      />
+    </div>
+  );
+});
 
 TaggedInput.displayName = "TaggedInput";
 

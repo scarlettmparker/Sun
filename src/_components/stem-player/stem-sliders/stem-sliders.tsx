@@ -82,15 +82,7 @@ function valueFromPointerY(y: number, rect: DOMRect): number {
  */
 const Slider = memo(
   (props: SliderProps) => {
-    const {
-      stem,
-      value,
-      i,
-      onPointerDown,
-      onPointerEnter,
-      onPointerLeave,
-      setOverlayRef,
-    } = props;
+    const { stem, value, i, onPointerDown, onPointerEnter, onPointerLeave, setOverlayRef } = props;
     return (
       <div className={styles.slider}>
         <Input
@@ -124,9 +116,7 @@ Slider.displayName = "Slider";
  * Rendering stem controls (labels and volume sliders).
  */
 const StemSliders = ({ stems, setVolume }: StemControlsProps) => {
-  const [values, setValues] = useState<number[]>(
-    () => stems?.map(() => 1) ?? [],
-  );
+  const [values, setValues] = useState<number[]>(() => stems?.map(() => 1) ?? []);
   const isDown = useRef(false);
   const activeIndex = useRef<number | null>(null);
   const lastValue = useRef(1);

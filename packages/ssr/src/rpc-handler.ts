@@ -12,8 +12,7 @@ type PageDataRequestBody = {
  */
 export function pageDataRpcHandler() {
   return async (request: SunRequest, reply: SunReply): Promise<void> => {
-    const { pattern, params } =
-      (request.body as PageDataRequestBody | undefined) ?? {};
+    const { pattern, params } = (request.body as PageDataRequestBody | undefined) ?? {};
     const loaders = pageDataLoaders[pattern ?? ""];
     if (!loaders || !loaders.length) {
       reply.send({ data: null });

@@ -27,8 +27,7 @@ function isPortOpen(port: number): Promise<boolean> {
  * Parses epoch millis from a systemd local-time timestamp.
  */
 function parseTimestamp(value: string): number | null {
-  const match =
-    /^[A-Za-z]+ (\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})/.exec(value);
+  const match = /^[A-Za-z]+ (\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})/.exec(value);
   if (!match) {
     return null;
   }
@@ -60,9 +59,7 @@ function formatSince(ms: number | null): string | null {
 /**
  * Reads a unit's active state and start time.
  */
-async function unitState(
-  unit: string,
-): Promise<{ active: boolean; since: number | null }> {
+async function unitState(unit: string): Promise<{ active: boolean; since: number | null }> {
   try {
     const { stdout } = await execFileAsync("systemctl", [
       "--user",
@@ -94,9 +91,7 @@ async function unitState(
  * Resolves the live unit for an app, following a blue-green pattern, and the
  * port that instance listens on.
  */
-async function resolveUnit(
-  app: AppEntry,
-): Promise<{ unit: string; port: number }> {
+async function resolveUnit(app: AppEntry): Promise<{ unit: string; port: number }> {
   if (!app.unitPattern) {
     return { unit: app.unit, port: app.port };
   }
@@ -145,10 +140,7 @@ export async function buildReport(): Promise<StatusReport> {
   const apps = await Promise.all(
     manifest.apps.map(async (app): Promise<AppStatus> => {
       const { unit, port } = await resolveUnit(app);
-      const [open, state] = await Promise.all([
-        isPortOpen(port),
-        unitState(unit),
-      ]);
+      const [open, state] = await Promise.all([isPortOpen(port), unitState(unit)]);
       return {
         key: app.key,
         name: app.name,

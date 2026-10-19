@@ -57,18 +57,8 @@ export {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "./components/dropdown-menu";
-export {
-  default as Accordion,
-  AccordionTrigger,
-  AccordionContent,
-} from "./components/accordion";
-export {
-  Form,
-  FormFooter,
-  FormField,
-  FormItem,
-  FormLabel,
-} from "./components/form";
+export { default as Accordion, AccordionTrigger, AccordionContent } from "./components/accordion";
+export { Form, FormFooter, FormField, FormItem, FormLabel } from "./components/form";
 export { default as Input } from "./components/input";
 export { default as JsonTextArea } from "./components/json-text-area";
 export { default as Label } from "./components/label";
@@ -84,11 +74,6 @@ export { default as Sidebar } from "./components/sidebar";
 export { default as Skeleton } from "./components/skeleton";
 export { default as TaggedInput } from "./components/tagged-input";
 export { default as TextArea } from "./components/textarea";
-export {
-  Tooltip,
-  TooltipContent,
-  TooltipGroup,
-  TooltipTrigger,
-} from "./components/tooltip";
+export { Tooltip, TooltipContent, TooltipGroup, TooltipTrigger } from "./components/tooltip";
 export { default as UICheck } from "./components/ui-check";
 export { cn } from "./utils/cn";

@@ -1,8 +1,5 @@
 import { BlogPost } from "~/generated/graphql";
-import {
-  groupPostsByMonthYear,
-  GroupedPost,
-} from "~/routes/blog/group-posts-by-month-year";
+import { groupPostsByMonthYear, GroupedPost } from "~/routes/blog/group-posts-by-month-year";
 
 describe("groupPostsByMonthYear", () => {
   it("should group posts by month and year", () => {

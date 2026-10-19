@@ -8,10 +8,7 @@ import { AUTH_COOKIE, getCurrentUser } from "~/utils/auth";
 defineLoader({
   pattern: "currentUser",
   async loader(_params, context) {
-    const token = getCookieValue(
-      (context as { cookie?: string } | undefined)?.cookie,
-      AUTH_COOKIE,
-    );
+    const token = getCookieValue((context as { cookie?: string } | undefined)?.cookie, AUTH_COOKIE);
     return { currentUser: await getCurrentUser(token) };
   },
 });

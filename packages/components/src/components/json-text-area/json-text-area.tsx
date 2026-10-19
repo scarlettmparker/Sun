@@ -16,10 +16,7 @@ type JsonTextAreaProps = {
    * Called with a validation error, or null when valid.
    */
   onError?: (error: string | null) => void;
-} & Omit<
-  React.TextareaHTMLAttributes<HTMLTextAreaElement>,
-  "value" | "onChange"
->;
+} & Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, "value" | "onChange">;
 
 /**
  * Text area that wraps the base TextArea and pretty-prints JSON on blur.

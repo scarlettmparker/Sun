@@ -26,12 +26,8 @@ configureApi({
 
 // Colocated loaders and mutation handlers self-register at boot.
 autoDiscoverRegistrations(import.meta.glob("./**/*-data.ts", { eager: true }));
-autoDiscoverRegistrations(
-  import.meta.glob("./**/*-mutations.ts", { eager: true }),
-);
-autoDiscoverRegistrations(
-  import.meta.glob("./server/**/*-registrations.ts", { eager: true }),
-);
+autoDiscoverRegistrations(import.meta.glob("./**/*-mutations.ts", { eager: true }));
+autoDiscoverRegistrations(import.meta.glob("./server/**/*-registrations.ts", { eager: true }));
 
 function matchMeta(url: string): RouteMeta | undefined {
   const matches = matchRoutes(routes, url);
@@ -72,9 +68,8 @@ const renderer = createRenderer({
       if (!themesResult.success) {
         throw new Error("themes unavailable");
       }
-      const propertySet = (
-        themesResult.data as { gaiaQueries?: { propertySet?: unknown } }
-      )?.gaiaQueries?.propertySet;
+      const propertySet = (themesResult.data as { gaiaQueries?: { propertySet?: unknown } })
+        ?.gaiaQueries?.propertySet;
       return parseThemes(propertySet);
     }).catch(() => ({ current: null, all: [] }));
   },

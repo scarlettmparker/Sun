@@ -8,13 +8,7 @@ vi.mock("~/components/markdown-editor", () => ({
 }));
 
 import { render, screen } from "@testing-library/preact";
-import {
-  Form,
-  FormField,
-  FormLabel,
-  FormItem,
-  FormFooter,
-} from "@sun/components";
+import { Form, FormField, FormLabel, FormItem, FormFooter } from "@sun/components";
 import { Input } from "@sun/components";
 import { TextArea } from "@sun/components";
 import { Select, SelectOption } from "@sun/components";
@@ -27,14 +21,7 @@ describe("Form", () => {
   });
 
   it("passes through form attributes correctly", () => {
-    render(
-      <Form
-        method="post"
-        action="/submit"
-        className="custom-form"
-        data-testid="form"
-      />,
-    );
+    render(<Form method="post" action="/submit" className="custom-form" data-testid="form" />);
     const form = screen.getByTestId("form");
     expect(form).toHaveAttribute("method", "post");
     expect(form).toHaveAttribute("action", "/submit");
@@ -123,11 +110,7 @@ describe("FormLabel", () => {
 
   it("passes through label attributes correctly", () => {
     render(
-      <FormLabel
-        className="custom-label"
-        aria-describedby="description"
-        data-testid="label"
-      >
+      <FormLabel className="custom-label" aria-describedby="description" data-testid="label">
         Label
       </FormLabel>,
     );
@@ -177,13 +160,7 @@ describe("FormFooter", () => {
   });
 
   it("passes through footer attributes correctly", () => {
-    render(
-      <FormFooter
-        className="custom-footer"
-        role="contentinfo"
-        data-testid="footer"
-      />,
-    );
+    render(<FormFooter className="custom-footer" role="contentinfo" data-testid="footer" />);
     const footer = screen.getByTestId("footer");
     expect(footer).toHaveClass("custom-footer");
     expect(footer).toHaveAttribute("role", "contentinfo");

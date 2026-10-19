@@ -1,10 +1,6 @@
 import { defineLoader } from "@sun/ssr";
 import { executeDocument } from "@sun/api";
-import {
-  ChildrenDocument,
-  type ChildrenQuery,
-  type PaginationInput,
-} from "~/generated/graphql";
+import { ChildrenDocument, type ChildrenQuery, type PaginationInput } from "~/generated/graphql";
 
 const EMPTY_CHILDREN: ChildrenQuery["blogQueries"]["children"] = {
   items: [],

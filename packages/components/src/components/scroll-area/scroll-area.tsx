@@ -21,10 +21,7 @@ const ScrollArea = (props: ScrollAreaProps) => {
   const dragging = useRef(false);
   const rafRef = useRef<number | null>(null);
 
-  const innerStyle = useMemo(
-    () => (maxHeight ? { maxHeight } : undefined),
-    [maxHeight],
-  );
+  const innerStyle = useMemo(() => (maxHeight ? { maxHeight } : undefined), [maxHeight]);
 
   /**
    * Reads dimensions without touching scrollTop to avoid re-renders on scroll.
@@ -144,12 +141,7 @@ const ScrollArea = (props: ScrollAreaProps) => {
 
   return (
     <div className={cn(styles.outer, className)} {...rest}>
-      <div
-        ref={innerRef}
-        className={styles.inner}
-        style={innerStyle}
-        onScroll={handleScroll}
-      >
+      <div ref={innerRef} className={styles.inner} style={innerStyle} onScroll={handleScroll}>
         {children}
       </div>
       {thumbVisible ? (

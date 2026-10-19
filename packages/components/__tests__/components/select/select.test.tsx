@@ -4,10 +4,7 @@
  */
 
 import { render, screen, fireEvent, within } from "@testing-library/preact";
-import {
-  restoreConsoleError,
-  suppressConsoleErrorsFromTests,
-} from "~/../testing/vitest/mock";
+import { restoreConsoleError, suppressConsoleErrorsFromTests } from "~/../testing/vitest/mock";
 import { Select, SelectOption } from "@sun/components";
 
 describe("Select", () => {

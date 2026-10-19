@@ -26,13 +26,7 @@ type SearchBarProps = Omit<
 /**
  * Search input with a search icon, clear button, and Enter/blur callback.
  */
-const SearchBar = ({
-  value,
-  onChange,
-  onSearch,
-  className,
-  ...rest
-}: SearchBarProps) => {
+const SearchBar = ({ value, onChange, onSearch, className, ...rest }: SearchBarProps) => {
   const lastSearched = useRef(value);
 
   // Reset the search tracker when the value is cleared externally
@@ -56,9 +50,7 @@ const SearchBar = ({
       <Input
         type="text"
         value={value}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-          onChange(e.target.value)
-        }
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
         onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
           if (e.key === "Enter") fire();
         }}

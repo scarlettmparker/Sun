@@ -32,9 +32,7 @@ describe("DropdownMenu", () => {
 
     fireEvent.click(trigger);
     expect(screen.getByRole("menu")).toBeInTheDocument();
-    expect(
-      screen.getByRole("menuitem", { name: /action/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: /action/i })).toBeInTheDocument();
 
     fireEvent.click(trigger);
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
@@ -131,9 +129,7 @@ describe("DropdownMenu", () => {
     );
 
     fireEvent.click(screen.getByText(/open/i));
-    expect(
-      screen.getByRole("menuitem", { name: /grouped/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: /grouped/i })).toBeInTheDocument();
   });
 
   it("opens and closes sub-menu using pointer events", () => {
@@ -154,13 +150,9 @@ describe("DropdownMenu", () => {
     fireEvent.click(screen.getByText(/open/i));
     const subTrigger = screen.getByText(/sub/i);
     fireEvent.pointerEnter(subTrigger);
-    expect(
-      screen.getByRole("menuitem", { name: /subitem/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: /subitem/i })).toBeInTheDocument();
     fireEvent.pointerLeave(subTrigger);
-    expect(
-      screen.queryByRole("menuitem", { name: /subitem/i }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: /subitem/i })).not.toBeInTheDocument();
   });
 
   it("closes on Escape key", () => {

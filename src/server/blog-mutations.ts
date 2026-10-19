@@ -96,11 +96,7 @@ defineMutation({
   path: "blog/ingest-source",
   async handler(body: Record<string, unknown>) {
     const input = body.input as IngestBlogInput | undefined;
-    if (
-      input == null ||
-      typeof input.title !== "string" ||
-      typeof input.sourceId !== "string"
-    ) {
+    if (input == null || typeof input.title !== "string" || typeof input.sourceId !== "string") {
       throw new MutationError("Invalid input");
     }
     const result = await mutateIngestBlogFromSource(input);

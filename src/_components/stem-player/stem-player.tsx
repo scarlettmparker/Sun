@@ -85,9 +85,7 @@ const StemPlayer = (props: StemPlayerProps) => {
    *
    * @param e Mouse event.
    */
-  const handleMasterVolumeMouseMove = (
-    e: React.MouseEvent<HTMLInputElement>,
-  ) => {
+  const handleMasterVolumeMouseMove = (e: React.MouseEvent<HTMLInputElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const percentage = x / rect.width;
@@ -118,11 +116,7 @@ const StemPlayer = (props: StemPlayerProps) => {
           max={2}
           step={0.01}
           value={masterVolume}
-          onChange={(e) =>
-            setMasterVolume(
-              Math.max(0, Math.min(2, parseFloat(e.target.value))),
-            )
-          }
+          onChange={(e) => setMasterVolume(Math.max(0, Math.min(2, parseFloat(e.target.value))))}
           onMouseMove={handleMasterVolumeMouseMove}
           className={styles.seeker}
           aria-label={t("controls.aria.master-volume")}
@@ -154,11 +148,7 @@ const StemPlayer = (props: StemPlayerProps) => {
         >
           <strong>{">>"}</strong>
         </Button>
-        <Label
-          htmlFor="seeker"
-          className={styles.timeLabel}
-          aria-label={t("playback")}
-        >
+        <Label htmlFor="seeker" className={styles.timeLabel} aria-label={t("playback")}>
           {formatTime(position)} / {formatTime(duration)}
         </Label>
         <Input

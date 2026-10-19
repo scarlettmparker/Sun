@@ -19,13 +19,9 @@ defineLoader({
       return { blogPost: EMPTY_POST };
     }
     try {
-      const result = await executeDocument<LocateBlogPostQuery>(
-        LocateBlogPostDocument,
-        { id },
-      );
+      const result = await executeDocument<LocateBlogPostQuery>(LocateBlogPostDocument, { id });
       const blogPost = result.success
-        ? (result.data as LocateBlogPostQuery | undefined)?.blogQueries
-            ?.locateBlogPost
+        ? (result.data as LocateBlogPostQuery | undefined)?.blogQueries?.locateBlogPost
         : null;
       return { blogPost: blogPost ?? EMPTY_POST };
     } catch {

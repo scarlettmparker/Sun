@@ -15,9 +15,7 @@ export async function loadModule(
   distPath?: string,
 ): Promise<Record<string, unknown>> {
   if (vite && typeof vite.ssrLoadModule === "function") {
-    const abs = srcPath.startsWith("/")
-      ? srcPath
-      : srcPath.replace(/^\.?\.?\//, "/");
+    const abs = srcPath.startsWith("/") ? srcPath : srcPath.replace(/^\.?\.?\//, "/");
     try {
       return (await vite.ssrLoadModule(abs)) as Record<string, unknown>;
     } catch {

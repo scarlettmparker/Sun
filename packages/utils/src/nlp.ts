@@ -93,10 +93,7 @@ export function tokenize(text: string): string[] {
  * @param stripDiacritics - whether to strip NFD diacritics
  * @returns normalized tokens
  */
-export function normalizeForFill(
-  text: string,
-  stripDiacritics = true,
-): string[] {
+export function normalizeForFill(text: string, stripDiacritics = true): string[] {
   let s = text.toLowerCase();
   if (stripDiacritics) s = s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   return s
@@ -119,8 +116,7 @@ export function levenshtein(a: string, b: string): number {
     prev[0] = i;
     for (let j = 1; j <= b.length; j++) {
       const above = prev[j];
-      prev[j] =
-        a[i - 1] === b[j - 1] ? diag : Math.min(diag, prev[j - 1], prev[j]) + 1;
+      prev[j] = a[i - 1] === b[j - 1] ? diag : Math.min(diag, prev[j - 1], prev[j]) + 1;
       diag = above;
     }
   }
@@ -156,11 +152,7 @@ export function bigramSimilarity(a: string, b: string): number {
  * @param opts - distance and bigram thresholds
  * @returns true when within thresholds
  */
-export function wordsMatch(
-  token: string,
-  word: string,
-  opts?: WordsMatchOptions,
-): boolean {
+export function wordsMatch(token: string, word: string, opts?: WordsMatchOptions): boolean {
   if (token === word) return true;
   // Pure numeric tokens (years, versions) must match exactly
   if (/^\d+$/.test(token) && /^\d+$/.test(word)) return false;
@@ -181,11 +173,7 @@ export function wordsMatch(
  * @param opts - thresholds and diacritic flag
  * @returns true when tokens match within thresholds
  */
-export function isFillCorrect(
-  input: string,
-  expected: string,
-  opts?: FillCorrectOptions,
-): boolean {
+export function isFillCorrect(input: string, expected: string, opts?: FillCorrectOptions): boolean {
   const strip = opts?.stripDiacritics ?? true;
   const aTokens = normalizeForFill(input, strip);
   const bTokens = normalizeForFill(expected, strip);
@@ -202,8 +190,7 @@ export function isFillCorrect(
   const maxDistance = opts?.maxDistance;
   const minBigram = opts?.minBigram;
   for (let i = 0; i < aTokens.length; i++) {
-    if (!wordsMatch(aTokens[i], bTokens[i], { maxDistance, minBigram }))
-      return false;
+    if (!wordsMatch(aTokens[i], bTokens[i], { maxDistance, minBigram })) return false;
   }
   return true;
 }
@@ -216,11 +203,7 @@ export function isFillCorrect(
  * @param opts - jaccard and consecutive thresholds
  * @returns true when overlap exceeds thresholds
  */
-export function areExplanationsOverlapping(
-  a: string,
-  b: string,
-  opts?: OverlapOptions,
-): boolean {
+export function areExplanationsOverlapping(a: string, b: string, opts?: OverlapOptions): boolean {
   const jaccardThreshold = opts?.jaccardThreshold ?? 0.6;
   const consecutiveThreshold = opts?.consecutiveThreshold ?? 6;
   const aTokens = normalizeForFill(a, true);

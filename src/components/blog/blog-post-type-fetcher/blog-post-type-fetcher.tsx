@@ -18,9 +18,11 @@ type BlogPostTypeFetcherProps = {
  */
 const BlogPostTypeFetcher = (props: BlogPostTypeFetcherProps) => {
   const { postId, onTypeChange } = props;
-  const { data: post } = usePageData<
-    LocateBlogPostQuery["blogQueries"]["locateBlogPost"]
-  >("blogPost", "blog/:id", { id: postId ?? "" });
+  const { data: post } = usePageData<LocateBlogPostQuery["blogQueries"]["locateBlogPost"]>(
+    "blogPost",
+    "blog/:id",
+    { id: postId ?? "" },
+  );
 
   useEffect(() => {
     if (postId) {

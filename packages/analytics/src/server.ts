@@ -144,9 +144,9 @@ export function accountIdFromToken(token: string | undefined): string | null {
   const parts = token.split(".");
   if (parts.length !== 3) return null;
   try {
-    const payload = JSON.parse(
-      Buffer.from(parts[1], "base64url").toString("utf8"),
-    ) as { sub?: unknown };
+    const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8")) as {
+      sub?: unknown;
+    };
     return typeof payload.sub === "string" && payload.sub ? payload.sub : null;
   } catch {
     return null;
@@ -205,10 +205,7 @@ export function captureEvent(
  * @param distinctId PostHog distinct id.
  * @param properties Person properties.
  */
-export function identifyUser(
-  distinctId: string,
-  properties?: EventProperties,
-): void {
+export function identifyUser(distinctId: string, properties?: EventProperties): void {
   getClient()?.identify({ distinctId, properties });
 }
 
@@ -225,9 +222,7 @@ export function trackPageView(input: PageViewInput): void {
     const consent = readCookie(input.cookie, input.consentCookie);
     if (consent !== "accepted") return;
   }
-  const token = input.authCookie
-    ? readCookie(input.cookie, input.authCookie)
-    : undefined;
+  const token = input.authCookie ? readCookie(input.cookie, input.authCookie) : undefined;
   const accountId = input.userId ?? accountIdFromToken(token);
   const distinctId = accountId
     ? `user:${accountId}`

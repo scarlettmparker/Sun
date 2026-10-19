@@ -12,8 +12,7 @@ import { createPortal } from "react-dom";
 import { cn } from "~/utils/cn";
 import styles from "./tooltip.module.css";
 
-const useIsomorphicLayoutEffect =
-  typeof window !== "undefined" ? useLayoutEffect : useEffect;
+const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 const OPEN_DELAY = 400;
 
@@ -122,19 +121,13 @@ const useTooltipPositioning = (
       if (side === "top" && trigger.top < rect.height + gap) {
         actualSide = "bottom";
       }
-      if (
-        side === "bottom" &&
-        trigger.bottom + rect.height + gap > window.innerHeight
-      ) {
+      if (side === "bottom" && trigger.bottom + rect.height + gap > window.innerHeight) {
         actualSide = "top";
       }
       if (side === "left" && trigger.left < rect.width + gap) {
         actualSide = "right";
       }
-      if (
-        side === "right" &&
-        trigger.right + rect.width + gap > window.innerWidth
-      ) {
+      if (side === "right" && trigger.right + rect.width + gap > window.innerWidth) {
         actualSide = "left";
       }
 
@@ -348,12 +341,7 @@ type TooltipContentProps = React.HTMLAttributes<HTMLDivElement> & {
  * @param className additional class names
  * @param children the tooltip content
  */
-const TooltipContent = ({
-  side = "top",
-  className,
-  children,
-  ...rest
-}: TooltipContentProps) => {
+const TooltipContent = ({ side = "top", className, children, ...rest }: TooltipContentProps) => {
   const { open, instant, triggerRef, show, hide } = useTooltip();
   const contentRef = useRef<HTMLDivElement>(null);
   const [rendered, setRendered] = useState(open);

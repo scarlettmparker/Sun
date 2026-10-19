@@ -16,9 +16,7 @@ defineLoader({
     let pagination: HadesTextsQueryVariables["pagination"] | undefined;
     if (typeof rawPagination === "string") {
       try {
-        pagination = JSON.parse(
-          rawPagination,
-        ) as HadesTextsQueryVariables["pagination"];
+        pagination = JSON.parse(rawPagination) as HadesTextsQueryVariables["pagination"];
       } catch {
         pagination = undefined;
       }
@@ -26,12 +24,12 @@ defineLoader({
       pagination = rawPagination as HadesTextsQueryVariables["pagination"];
     }
     try {
-      const result = await executeDocument<
-        HadesTextsQuery,
-        HadesTextsQueryVariables
-      >(HadesTextsDocument, {
-        pagination,
-      });
+      const result = await executeDocument<HadesTextsQuery, HadesTextsQueryVariables>(
+        HadesTextsDocument,
+        {
+          pagination,
+        },
+      );
       const payload = result.success
         ? (result.data as HadesTextsQuery | undefined)?.hadesQueries?.texts
         : null;

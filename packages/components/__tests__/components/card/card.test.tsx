@@ -99,9 +99,7 @@ describe("CardDescription", () => {
   });
 
   it("passes through attributes correctly", () => {
-    render(
-      <CardDescription data-testid="test-description">Content</CardDescription>,
-    );
+    render(<CardDescription data-testid="test-description">Content</CardDescription>);
     const description = screen.getByTestId("test-description");
     expect(description).toHaveAttribute("data-testid", "test-description");
   });

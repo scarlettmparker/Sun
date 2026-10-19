@@ -23,9 +23,7 @@ const RelatedGallery = (props: RelatedGalleryProps) => {
   const { ids, postId } = props;
   const { t } = useTranslation("blog");
   const { data: galleryItems } = usePageData<
-    NonNullable<
-      ListGalleryItemsByRemoteObjectsQuery["galleryQueries"]["listByRemoteObjects"]
-    >
+    NonNullable<ListGalleryItemsByRemoteObjectsQuery["galleryQueries"]["listByRemoteObjects"]>
   >("galleryItems", "blog/gallery", {
     ids: JSON.stringify(ids),
     postId,
@@ -47,11 +45,7 @@ const RelatedGallery = (props: RelatedGalleryProps) => {
               return null;
             }
             return (
-              <Link
-                key={item.id}
-                to={`/gallery/${item.id}`}
-                className={styles.row_link}
-              >
+              <Link key={item.id} to={`/gallery/${item.id}`} className={styles.row_link}>
                 <span className={styles.row_title}>{item.title}</span>
               </Link>
             );

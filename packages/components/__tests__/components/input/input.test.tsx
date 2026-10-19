@@ -36,14 +36,7 @@ describe("Input", () => {
   });
 
   it("passes through input attributes correctly", () => {
-    render(
-      <Input
-        type="email"
-        required
-        aria-label="Email input"
-        data-testid="email-input"
-      />,
-    );
+    render(<Input type="email" required aria-label="Email input" data-testid="email-input" />);
     const input = screen.getByTestId("email-input");
     expect(input).toHaveAttribute("type", "email");
     expect(input).toHaveAttribute("required");

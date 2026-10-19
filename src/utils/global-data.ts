@@ -13,33 +13,30 @@ import {
  * Loads the configurable level-to-colour map from gaia with a short timeout.
  */
 async function loadLevelColours(): Promise<Record<string, string>> {
-  return sharedCall(
-    "shared:levelColours",
-    SHARED_TTL.CONFIG,
-    async () => {
-      const result = await executeDocument<PropertySetQuery>(
-        PropertySetDocument,
-        {
-          ownerKey: "ReactApp",
-          name: "reader-level-colours",
-        },
-        undefined,
-        { retries: [], timeoutMs: 2000 },
-      );
-      const entries = (result.data as PropertySetQuery | undefined)?.gaiaQueries
-        ?.propertySet as Record<string, { colour?: string }> | undefined;
-      if (!entries) {
-        return {};
+  return sharedCall("shared:levelColours", SHARED_TTL.CONFIG, async () => {
+    const result = await executeDocument<PropertySetQuery>(
+      PropertySetDocument,
+      {
+        ownerKey: "ReactApp",
+        name: "reader-level-colours",
+      },
+      undefined,
+      { retries: [], timeoutMs: 2000 },
+    );
+    const entries = (result.data as PropertySetQuery | undefined)?.gaiaQueries?.propertySet as
+      | Record<string, { colour?: string }>
+      | undefined;
+    if (!entries) {
+      return {};
+    }
+    const colours: Record<string, string> = {};
+    for (const [name, value] of Object.entries(entries)) {
+      if (value?.colour) {
+        colours[name] = value.colour;
       }
-      const colours: Record<string, string> = {};
-      for (const [name, value] of Object.entries(entries)) {
-        if (value?.colour) {
-          colours[name] = value.colour;
-        }
-      }
-      return colours;
-    },
-  ).catch(() => ({}));
+    }
+    return colours;
+  }).catch(() => ({}));
 }
 
 /**
@@ -53,12 +50,10 @@ defineLoader({
       return { currentRoles: [] as string[] };
     }
     try {
-      const res = await executeDocument<MyRolesQuery>(
-        MyRolesDocument,
-        {},
-        token,
-        { retries: [], timeoutMs: 2000 },
-      );
+      const res = await executeDocument<MyRolesQuery>(MyRolesDocument, {}, token, {
+        retries: [],
+        timeoutMs: 2000,
+      });
       return { currentRoles: res.data?.gaiaQueries?.myRoles ?? [] };
     } catch {
       return { currentRoles: [] as string[] };

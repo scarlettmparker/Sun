@@ -10,20 +10,17 @@ import { Music } from "lucide-preact";
  * Stem Player Page component.
  */
 const StemPlayerPage = () => {
-  const { data: songs } = usePageData<
-    ListSongsQuery["stemPlayerQueries"]["list"]
-  >("songs", "stem-player");
+  const { data: songs } = usePageData<ListSongsQuery["stemPlayerQueries"]["list"]>(
+    "songs",
+    "stem-player",
+  );
 
   return (
     <>
       <Sidebar>
         <h3 className={styles.header}>Songs</h3>
         {songs?.map((song, idx) => (
-          <a
-            key={idx}
-            href={`/stem-player/${song?.id}`}
-            className={styles.songLink}
-          >
+          <a key={idx} href={`/stem-player/${song?.id}`} className={styles.songLink}>
             <Button variant="secondary" className={styles.songButton}>
               <Music width={16} height={16} />
               {song?.name}

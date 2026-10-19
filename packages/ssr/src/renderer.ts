@@ -136,18 +136,12 @@ export type AppRenderConfig = {
   /**
    * Optional theme resolver; returning null skips theme inlining.
    */
-  resolveTheme?: (opts: {
-    locale: string;
-    pageName: string;
-  }) => Promise<ResolvedTheme | null>;
+  resolveTheme?: (opts: { locale: string; pageName: string }) => Promise<ResolvedTheme | null>;
   /**
    * Optional hook initialising the server-side i18n instance with the loaded
    * namespace bundles.
    */
-  initI18n?: (
-    locale: string,
-    translations: Record<string, unknown>,
-  ) => Promise<unknown> | unknown;
+  initI18n?: (locale: string, translations: Record<string, unknown>) => Promise<unknown> | unknown;
   /**
    * Emits window.__FRONTEND_MODE__ when true.
    */
@@ -206,10 +200,7 @@ function loadTranslations(locale: string): Record<string, unknown> {
     const filePath = path.resolve(process.cwd(), `messages/${candidate}.json`);
     if (!fs.existsSync(filePath)) continue;
     try {
-      result = JSON.parse(fs.readFileSync(filePath, "utf-8")) as Record<
-        string,
-        unknown
-      >;
+      result = JSON.parse(fs.readFileSync(filePath, "utf-8")) as Record<string, unknown>;
     } catch {
       result = {};
     }
@@ -246,10 +237,7 @@ function escapeAttr(value: string): string {
 }
 
 function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 function toAbsoluteUrl(url: string, siteUrl?: string): string {
@@ -273,13 +261,8 @@ function metaTags(
   const title = meta?.title ?? fallbackTitle;
   const description = meta?.description ?? undefined;
   const ogImageRaw = meta?.ogImage ?? opts.defaultOgImage;
-  const canonical =
-    opts.siteUrl && opts.url
-      ? toAbsoluteUrl(opts.url, opts.siteUrl)
-      : undefined;
-  const ogImage = ogImageRaw
-    ? toAbsoluteUrl(ogImageRaw, opts.siteUrl)
-    : undefined;
+  const canonical = opts.siteUrl && opts.url ? toAbsoluteUrl(opts.url, opts.siteUrl) : undefined;
+  const ogImage = ogImageRaw ? toAbsoluteUrl(ogImageRaw, opts.siteUrl) : undefined;
   const locale = opts.locale ?? "en_GB";
 
   const cacheKey = `${title}|${description ?? ""}|${ogImageRaw ?? ""}|${canonical ?? ""}|${locale}`;
@@ -302,27 +285,19 @@ function metaTags(
   // title for OG/Twitter
   tags.push(`<meta property="og:title" content="${escapeAttr(title)}" />`);
   tags.push(`<meta name="twitter:title" content="${escapeAttr(title)}" />`);
-  tags.push(
-    `<meta property="og:site_name" content="${escapeAttr(fallbackTitle)}" />`,
-  );
-  tags.push(
-    `<meta property="og:locale" content="${escapeAttr(locale.replace("-", "_"))}" />`,
-  );
+  tags.push(`<meta property="og:site_name" content="${escapeAttr(fallbackTitle)}" />`);
+  tags.push(`<meta property="og:locale" content="${escapeAttr(locale.replace("-", "_"))}" />`);
   tags.push(`<meta property="og:type" content="website" />`);
   // image
   if (ogImage) {
     tags.push(`<meta property="og:image" content="${escapeAttr(ogImage)}" />`);
     tags.push(`<meta property="og:image:width" content="1200" />`);
     tags.push(`<meta property="og:image:height" content="630" />`);
-    tags.push(
-      `<meta property="og:image:alt" content="${escapeAttr(title)}" />`,
-    );
+    tags.push(`<meta property="og:image:alt" content="${escapeAttr(title)}" />`);
     tags.push(`<meta property="og:image:type" content="image/png" />`);
     tags.push(`<meta name="twitter:card" content="summary_large_image" />`);
     tags.push(`<meta name="twitter:image" content="${escapeAttr(ogImage)}" />`);
-    tags.push(
-      `<meta name="twitter:image:alt" content="${escapeAttr(title)}" />`,
-    );
+    tags.push(`<meta name="twitter:image:alt" content="${escapeAttr(title)}" />`);
   } else {
     tags.push(`<meta name="twitter:card" content="summary" />`);
   }
@@ -372,20 +347,8 @@ export function createRenderer(config: AppRenderConfig): {
   };
 }
 
-async function renderApp(
-  config: AppRenderConfig,
-  options: RenderOptions,
-): Promise<RenderResult> {
-  const {
-    app,
-    didMatch,
-    locale,
-    clientJs,
-    clientCss,
-    isProduction,
-    frontendMode,
-    meta,
-  } = options;
+async function renderApp(config: AppRenderConfig, options: RenderOptions): Promise<RenderResult> {
+  const { app, didMatch, locale, clientJs, clientCss, isProduction, frontendMode, meta } = options;
 
   if (!clientJs) {
     throw new Error("Missing required clientJs path");
@@ -423,9 +386,7 @@ async function renderApp(
 
     // Never pass bootstrapModules: it lands before the postlude fills
     // window.__serverCacheData__, so the client boots too early on first load.
-    const stream = renderToPipeableStream(
-      createElement(Suspense, { fallback: null }, app),
-      {
+    const stream = renderToPipeableStream(createElement(Suspense, { fallback: null }, app), {
       nonce,
       onShellReady() {
         const cssTag =
@@ -448,23 +409,16 @@ async function renderApp(
           __theme__: currentTheme,
           __themes__: themes,
           __serverCacheData__: {},
-          ...(config.emitFrontendMode && frontendMode
-            ? { __FRONTEND_MODE__: frontendMode }
-            : {}),
+          ...(config.emitFrontendMode && frontendMode ? { __FRONTEND_MODE__: frontendMode } : {}),
           ...extraGlobals,
         })
-          .map(
-            ([k, v]) =>
-              `window.${k} = ${k.startsWith("__locale") ? `'${v}'` : stableJson(v)};`,
-          )
+          .map(([k, v]) => `window.${k} = ${k.startsWith("__locale") ? `'${v}'` : stableJson(v)};`)
           .join("\n              ");
 
         const image = config.imagePreload?.({ url: options.url });
         const imagePreload = image
           ? `<link rel="preload" as="image" href="${escapeAttr(image.href)}"${
-              image.srcset
-                ? ` imagesrcset="${escapeAttr(image.srcset)}"`
-                : ""
+              image.srcset ? ` imagesrcset="${escapeAttr(image.srcset)}"` : ""
             }${image.sizes ? ` imagesizes="${escapeAttr(image.sizes)}"` : ""} />`
           : "";
         const prelude = `<!DOCTYPE html>

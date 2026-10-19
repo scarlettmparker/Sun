@@ -10,9 +10,7 @@ const NONCE = "dGVzdG5vbmNlMTIzNDU2";
 
 describe("buildSecurityHeaders", () => {
   it("emits each header exactly once", () => {
-    const entries = Object.entries(
-      buildSecurityHeaders({ isProduction: true, nonce: NONCE }),
-    );
+    const entries = Object.entries(buildSecurityHeaders({ isProduction: true, nonce: NONCE }));
     const names = entries.map(([key]) => key);
 
     expect(new Set(names).size).toBe(entries.length);
@@ -31,9 +29,7 @@ describe("buildSecurityHeaders", () => {
     const headers = buildSecurityHeaders({ isProduction: true, nonce: NONCE });
 
     expect(headers["X-Frame-Options"]).toBe("DENY");
-    expect(headers["Content-Security-Policy"]).toContain(
-      "frame-ancestors 'none'",
-    );
+    expect(headers["Content-Security-Policy"]).toContain("frame-ancestors 'none'");
   });
 
   it("binds inline scripts to the per-request nonce", () => {
@@ -46,9 +42,9 @@ describe("buildSecurityHeaders", () => {
   it("keeps connect-src to known origins", () => {
     const headers = buildSecurityHeaders({ isProduction: true, nonce: NONCE });
     const connect =
-      headers["Content-Security-Policy"].split(";").find((directive) =>
-        directive.trim().startsWith("connect-src"),
-      ) ?? "";
+      headers["Content-Security-Policy"]
+        .split(";")
+        .find((directive) => directive.trim().startsWith("connect-src")) ?? "";
 
     expect(connect).toContain("https://*.scarlettparker.co.uk");
     expect(connect).not.toContain("posthog");

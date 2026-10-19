@@ -10,12 +10,7 @@ export default defineConfig({
     css: false,
     server: {
       deps: {
-        inline: [
-          "lucide-react",
-          "@heroicons/react",
-          "react-router-dom",
-          "react-i18next",
-        ],
+        inline: ["lucide-react", "@heroicons/react", "react-router-dom", "react-i18next"],
       },
     },
     coverage: {
@@ -26,13 +21,22 @@ export default defineConfig({
   },
   resolve: {
     alias: [
-      { find: /^@sun\/components$/, replacement: path.resolve(import.meta.dirname, "./src/index.ts") },
+      {
+        find: /^@sun\/components$/,
+        replacement: path.resolve(import.meta.dirname, "./src/index.ts"),
+      },
       { find: "react-dom/test-utils", replacement: "preact/test-utils" },
       { find: "react-dom", replacement: "preact/compat" },
       { find: "react/jsx-runtime", replacement: "preact/jsx-runtime" },
       { find: "react", replacement: "preact/compat" },
-      { find: /^.+\.module\.css$/, replacement: path.resolve(import.meta.dirname, "./testing/vitest/css-module-mock.ts") },
-      { find: /^.+\.css$/, replacement: path.resolve(import.meta.dirname, "./testing/vitest/css-module-mock.ts") },
+      {
+        find: /^.+\.module\.css$/,
+        replacement: path.resolve(import.meta.dirname, "./testing/vitest/css-module-mock.ts"),
+      },
+      {
+        find: /^.+\.css$/,
+        replacement: path.resolve(import.meta.dirname, "./testing/vitest/css-module-mock.ts"),
+      },
       { find: "~", replacement: path.resolve(import.meta.dirname, "./src") },
     ],
   },

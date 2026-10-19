@@ -1,13 +1,7 @@
 import { memo, useMemo } from "react";
 import { useTranslation } from "@sun/i18n";
 import { FileText } from "lucide-preact";
-import {
-  Card,
-  CardBody,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@sun/components";
+import { Card, CardBody, CardDescription, CardHeader, CardTitle } from "@sun/components";
 import { getAge, getExperienceYoE } from "~/utils/age";
 import styles from "./hero-card.module.css";
 
@@ -23,10 +17,7 @@ const HeroCard = (props: HeroCardProps) => {
   const birthdayLabel = useMemo(() => t("hero.birthday-label"), [t]);
   const start = useMemo(() => new Date(2025, 2, 10), []);
   const yoe = useMemo(() => getExperienceYoE(start), [start]);
-  const experience = useMemo(
-    () => t("hero.experience", { count: yoe }),
-    [t, yoe],
-  );
+  const experience = useMemo(() => t("hero.experience", { count: yoe }), [t, yoe]);
   const experienceLabel = useMemo(() => t("hero.experience-label"), [t]);
 
   return (
@@ -88,11 +79,7 @@ const HeroCard = (props: HeroCardProps) => {
         <div className={styles.body}>
           <p className={styles.bio}>
             {t("hero.bio-prefix")} |{" "}
-            <span
-              className={styles.age}
-              title={experienceLabel}
-              aria-label={experienceLabel}
-            >
+            <span className={styles.age} title={experienceLabel} aria-label={experienceLabel}>
               {experience}
             </span>
             {" | "}

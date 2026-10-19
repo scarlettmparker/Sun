@@ -44,20 +44,12 @@ const UserMenu = () => {
 
 const UserMenuContent = () => {
   const { t } = useTranslation("home");
-  const { data: currentUser } = usePageData<CurrentUser | null>(
-    "currentUser",
-    "currentUser",
-    {},
-  );
+  const { data: currentUser } = usePageData<CurrentUser | null>("currentUser", "currentUser", {});
 
   if (!currentUser) {
     return (
       <Link to="/login">
-        <Button
-          variant="secondary"
-          title={t("profile.login")}
-          aria-label={t("profile.login")}
-        >
+        <Button variant="secondary" title={t("profile.login")} aria-label={t("profile.login")}>
           {t("profile.login")}
         </Button>
       </Link>
@@ -86,10 +78,7 @@ const UserMenuContent = () => {
           </CardHeader>
           <CardFooter className={styles.footer}>
             <Link to="/profile" onClick={(e) => e.stopPropagation()}>
-              <Button
-                title={t("profile.manage")}
-                aria-label={t("profile.manage")}
-              >
+              <Button title={t("profile.manage")} aria-label={t("profile.manage")}>
                 {t("profile.manage")}
               </Button>
             </Link>

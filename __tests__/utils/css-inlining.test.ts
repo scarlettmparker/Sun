@@ -47,14 +47,8 @@ describe("inlineCss", () => {
 
     expect(mockedPath.resolve).toHaveBeenCalledWith("src/styles");
     expect(mockedFs.readdir).toHaveBeenCalledWith("src/styles");
-    expect(mockedFs.readFile).toHaveBeenCalledWith(
-      "src/styles/globals.css",
-      "utf-8",
-    );
-    expect(mockedFs.readFile).toHaveBeenCalledWith(
-      "src/styles/markdown.css",
-      "utf-8",
-    );
+    expect(mockedFs.readFile).toHaveBeenCalledWith("src/styles/globals.css", "utf-8");
+    expect(mockedFs.readFile).toHaveBeenCalledWith("src/styles/markdown.css", "utf-8");
     expect(result).toBe("globals content\nmarkdown content\n");
   });
 
@@ -67,23 +61,15 @@ describe("inlineCss", () => {
 
     const result = await inlineCss(true, ["/assets/index.css"]);
 
-    expect(mockedPath.resolve).toHaveBeenCalledWith(
-      "dist/client",
-      "assets/index.css",
-    );
-    expect(mockedFs.readFile).toHaveBeenCalledWith(
-      "dist/client/assets/index.css",
-      "utf-8",
-    );
+    expect(mockedPath.resolve).toHaveBeenCalledWith("dist/client", "assets/index.css");
+    expect(mockedFs.readFile).toHaveBeenCalledWith("dist/client/assets/index.css", "utf-8");
     expect(result).toBe("\nmanifest css content");
   });
 
   it("should handle errors gracefully", async () => {
     mockedPath.resolve.mockImplementation(() => "src/styles");
     mockedFs.readdir.mockRejectedValue(new Error("Read error"));
-    const consoleWarnSpy = vi
-      .spyOn(console, "warn")
-      .mockImplementation(() => {});
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
     const result = await inlineCss(true, []);
 
@@ -103,10 +89,7 @@ describe("inlineCss", () => {
     });
 
     it("should return link tags when not in production and clientCss provided", () => {
-      const result = generateCssTag(false, "", [
-        "/assets/style.css",
-        "/assets/main.css",
-      ]);
+      const result = generateCssTag(false, "", ["/assets/style.css", "/assets/main.css"]);
       expect(result).toBe(
         '<link rel="stylesheet" href="/assets/style.css" /><link rel="stylesheet" href="/assets/main.css" />',
       );
@@ -118,9 +101,7 @@ describe("inlineCss", () => {
     });
 
     it("should prioritize inlined style over links when in production", () => {
-      const result = generateCssTag(true, "body { color: blue; }", [
-        "/assets/style.css",
-      ]);
+      const result = generateCssTag(true, "body { color: blue; }", ["/assets/style.css"]);
       expect(result).toBe("<style>body { color: blue; }</style>");
     });
   });

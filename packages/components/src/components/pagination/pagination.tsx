@@ -1,9 +1,4 @@
-import {
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-} from "lucide-preact";
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-preact";
 import Button from "../button";
 import { cn } from "~/utils/cn";
 import styles from "./pagination.module.css";
@@ -27,13 +22,7 @@ type PaginationProps = {
  * Pagination renders first/previous controls, a window of page numbers with
  * ellipses, and next/last controls.
  */
-const Pagination = ({
-  page,
-  totalPages,
-  onPageChange,
-  className,
-  ...rest
-}: PaginationProps) => {
+const Pagination = ({ page, totalPages, onPageChange, className, ...rest }: PaginationProps) => {
   if (totalPages <= 1) {
     return null;
   }

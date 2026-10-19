@@ -99,17 +99,9 @@ type RoleCheckProps = {
 /**
  * Renders children only when the current user holds the given roles.
  */
-export const RoleCheck = ({
-  roles,
-  match = "all",
-  children,
-}: RoleCheckProps) => {
+export const RoleCheck = ({ roles, match = "all", children }: RoleCheckProps) => {
   if (!roles.length) return null;
-  const { data: userRoles } = usePageData<string[]>(
-    "currentRoles",
-    "currentRoles",
-    {},
-  );
+  const { data: userRoles } = usePageData<string[]>("currentRoles", "currentRoles", {});
   if (!userRoles || !userRoles.length) return null;
   const has =
     match === "all"

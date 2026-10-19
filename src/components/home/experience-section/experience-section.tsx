@@ -1,11 +1,5 @@
 import { useTranslation } from "@sun/i18n";
-import {
-  Card,
-  CardBody,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@sun/components";
+import { Card, CardBody, CardDescription, CardHeader, CardTitle } from "@sun/components";
 import styles from "./experience-section.module.css";
 
 type ExperienceSectionProps = React.HTMLAttributes<HTMLDivElement>;

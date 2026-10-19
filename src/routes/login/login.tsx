@@ -1,11 +1,5 @@
 import { useTranslation } from "@sun/i18n";
-import {
-  Card,
-  CardBody,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@sun/components";
+import { Card, CardBody, CardHeader, CardTitle, CardDescription } from "@sun/components";
 import LoginForm from "~/components/auth/login-form";
 import styles from "./login.module.css";
 

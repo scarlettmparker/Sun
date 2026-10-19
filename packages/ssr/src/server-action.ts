@@ -30,11 +30,7 @@ export function defineAction<TDoc, TResponse = unknown>(opts: {
   document: TDoc;
 }): DefinedAction<TDoc, TResponse> {
   return {
-    run: (variables) =>
-      executeMutation<TResponse>(
-        opts.path,
-        variables as Record<string, unknown>,
-      ),
+    run: (variables) => executeMutation<TResponse>(opts.path, variables as Record<string, unknown>),
   };
 }
 

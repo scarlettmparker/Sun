@@ -40,11 +40,13 @@ const AttachTextPickerItems = (props: AttachTextPickerItemsProps) => {
       : undefined,
   };
 
-  const { data } = usePageData<
-    NonNullable<HadesTextsQuery["hadesQueries"]["texts"]>
-  >("hadesSearch", "blog/hadesSearch", {
-    pagination: JSON.stringify(pagination),
-  } as unknown as Record<string, string>);
+  const { data } = usePageData<NonNullable<HadesTextsQuery["hadesQueries"]["texts"]>>(
+    "hadesSearch",
+    "blog/hadesSearch",
+    {
+      pagination: JSON.stringify(pagination),
+    } as unknown as Record<string, string>,
+  );
   const items = data?.items ?? [];
   const { data: levelColours } = usePageData<Record<string, string> | null>(
     "levelColours",

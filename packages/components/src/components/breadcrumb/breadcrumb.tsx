@@ -51,9 +51,7 @@ type BreadcrumbContextValue = {
   deleteAllBreadcrumbs: () => void;
 };
 
-export const BreadcrumbContext = createContext<BreadcrumbContextValue | null>(
-  null,
-);
+export const BreadcrumbContext = createContext<BreadcrumbContextValue | null>(null);
 
 type BreadcrumbProviderProps = React.PropsWithChildren;
 
@@ -101,11 +99,7 @@ const BreadcrumbProvider = ({ children }: BreadcrumbProviderProps) => {
     deleteAllBreadcrumbs,
   };
 
-  return (
-    <BreadcrumbContext.Provider value={contextValue}>
-      {children}
-    </BreadcrumbContext.Provider>
-  );
+  return <BreadcrumbContext.Provider value={contextValue}>{children}</BreadcrumbContext.Provider>;
 };
 
 type BreadcrumbProps = React.HTMLAttributes<HTMLElement> & {
@@ -126,9 +120,7 @@ const Breadcrumb = (props: BreadcrumbProps) => {
   const context = useContext(BreadcrumbContext);
 
   if (!context) {
-    throw new Error(
-      "<Breadcrumb /> must be used within a <BreadcrumbProvider>",
-    );
+    throw new Error("<Breadcrumb /> must be used within a <BreadcrumbProvider>");
   }
 
   const { crumbs, current } = context;
@@ -138,15 +130,9 @@ const Breadcrumb = (props: BreadcrumbProps) => {
       <ol className={cn(styles.breadcrumb, className)}>
         {crumbs.map((crumb, index) => {
           // The item is visually active if it matches `current` or is the final node
-          const isActive =
-            current === crumb.href || index === crumbs.length - 1;
+          const isActive = current === crumb.href || index === crumbs.length - 1;
           return (
-            <BreadcrumbItem
-              key={index}
-              href={crumb.href}
-              active={isActive}
-              separator={separator}
-            >
+            <BreadcrumbItem key={index} href={crumb.href} active={isActive} separator={separator}>
               {crumb.label}
             </BreadcrumbItem>
           );
@@ -192,9 +178,7 @@ const BreadcrumbItem = (props: BreadcrumbItemProps) => {
   return (
     <>
       {renderContent()}
-      {!active && (
-        <span className={styles.breadcrumb_separator}>{separator}</span>
-      )}
+      {!active && <span className={styles.breadcrumb_separator}>{separator}</span>}
     </>
   );
 };
@@ -205,9 +189,7 @@ const BreadcrumbItem = (props: BreadcrumbItemProps) => {
 const useBreadcrumbContext = () => {
   const context = useContext(BreadcrumbContext);
   if (!context) {
-    throw new Error(
-      "useBreadcrumbContext must be used within a <BreadcrumbProvider>",
-    );
+    throw new Error("useBreadcrumbContext must be used within a <BreadcrumbProvider>");
   }
   return context;
 };

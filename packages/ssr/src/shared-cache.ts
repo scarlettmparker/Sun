@@ -28,10 +28,7 @@ const MAX_ENTRIES = 1000;
  * @returns The process-wide store.
  */
 function store(): Map<string, SharedEntry> {
-  const g = globalThis as unknown as Record<
-    string,
-    Map<string, SharedEntry> | undefined
-  >;
+  const g = globalThis as unknown as Record<string, Map<string, SharedEntry> | undefined>;
   return g[STORE_KEY] ?? (g[STORE_KEY] = new Map());
 }
 

@@ -30,12 +30,7 @@ const CreateBlogPostPage = () => {
     const typeId = formData.get("typeId") as string;
 
     try {
-      await createBlogPost(
-        title,
-        content,
-        typeId || undefined,
-        parentId || undefined,
-      );
+      await createBlogPost(title, content, typeId || undefined, parentId || undefined);
     } finally {
       setLoading(false);
     }
@@ -71,11 +66,7 @@ const CreateBlogPostPage = () => {
       <Card>
         <CardBody>
           <Suspense fallback={<CreateBlogSkeleton />}>
-            <Form
-              id="create-blog-form"
-              onSubmit={handleSubmit}
-              data-testid="create-blog-form"
-            >
+            <Form id="create-blog-form" onSubmit={handleSubmit} data-testid="create-blog-form">
               <CreateBlogForm />
             </Form>
           </Suspense>
@@ -83,11 +74,7 @@ const CreateBlogPostPage = () => {
       </Card>
       <div className={styles.form_actions}>
         <Link to={cancelTo}>
-          <Button
-            type="button"
-            variant="secondary"
-            title={t("form.cancel.title")}
-          >
+          <Button type="button" variant="secondary" title={t("form.cancel.title")}>
             {t("form.cancel.label")}
           </Button>
         </Link>

@@ -45,9 +45,7 @@ export type RenderAppOptions = {
   manifestPath?: string;
 };
 
-async function loadManifest(
-  manifestPath: string,
-): Promise<Record<string, unknown>> {
+async function loadManifest(manifestPath: string): Promise<Record<string, unknown>> {
   if (!manifest) {
     const raw = await fs.readFile(path.resolve(manifestPath), "utf-8");
     manifest = JSON.parse(raw);
@@ -76,10 +74,7 @@ type EntryRender = (options: {
  * Loads the app's entry-server render fn, resolves clientJs/clientCss, renders,
  * and pipes the HTML to the response.
  */
-export async function renderApp(
-  opts: RenderAppOptions,
-  res: NodeResponseLike,
-): Promise<void> {
+export async function renderApp(opts: RenderAppOptions, res: NodeResponseLike): Promise<void> {
   const { vite, isProduction } = opts;
   try {
     let render: EntryRender;
@@ -94,13 +89,8 @@ export async function renderApp(
       clientJs = "/src/entry-client-wrapper.js";
       clientCss = [];
     } else {
-      const productionManifest = await loadManifest(
-        opts.manifestPath ?? DEFAULT_MANIFEST_PATH,
-      );
-      const entryPath = path.resolve(
-        process.cwd(),
-        "dist/server/entry-server.js",
-      );
+      const productionManifest = await loadManifest(opts.manifestPath ?? DEFAULT_MANIFEST_PATH);
+      const entryPath = path.resolve(process.cwd(), "dist/server/entry-server.js");
       const entry = (await import(entryPath)) as { render: EntryRender };
       render = entry.render;
       const entryChunk = productionManifest["src/entry-client.tsx"] as {
@@ -144,9 +134,7 @@ export async function renderApp(
       },
       final(callback) {
         const postludeContent =
-          typeof rendered.postlude === "function"
-            ? rendered.postlude()
-            : rendered.postlude;
+          typeof rendered.postlude === "function" ? rendered.postlude() : rendered.postlude;
         res.write(postludeContent);
         res.end();
         callback();

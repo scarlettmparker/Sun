@@ -31,8 +31,8 @@ defineLoader({
         { ids },
       );
       const relatedPosts = result.success
-        ? ((result.data as ListBlogPostsByRemoteObjectsQuery | undefined)
-            ?.blogQueries?.listByRemoteObjects ?? [])
+        ? ((result.data as ListBlogPostsByRemoteObjectsQuery | undefined)?.blogQueries
+            ?.listByRemoteObjects ?? [])
         : [];
       return { relatedPosts: relatedPosts ?? [] };
     } catch {

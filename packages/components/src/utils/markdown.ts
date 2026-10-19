@@ -17,11 +17,7 @@ export const renderMarkdown = (text: string): string => {
       const { html, nextIndex } = parseFenceBlockViewer(lines, i);
       blocks.push(html);
       i = nextIndex;
-    } else if (
-      isTableRow(lines[i]) &&
-      i + 1 < lines.length &&
-      isDelimiterRow(lines[i + 1])
-    ) {
+    } else if (isTableRow(lines[i]) && i + 1 < lines.length && isDelimiterRow(lines[i + 1])) {
       const { html, nextIndex } = parseTableBlockViewer(lines, i);
       blocks.push(html);
       i = nextIndex;
@@ -199,16 +195,11 @@ function parseFenceBlockViewer(
  * @returns HTML for the line
  */
 function renderLine(line: string): string {
-  if (line.startsWith("# "))
-    return `<span class="md-h1">${renderInline(line.slice(2))}</span>`;
-  if (line.startsWith("## "))
-    return `<span class="md-h2">${renderInline(line.slice(3))}</span>`;
-  if (line.startsWith("### "))
-    return `<span class="md-h3">${renderInline(line.slice(4))}</span>`;
-  if (line.startsWith("#### "))
-    return `<span class="md-h4">${renderInline(line.slice(5))}</span>`;
-  if (line.startsWith("##### "))
-    return `<span class="md-h5">${renderInline(line.slice(6))}</span>`;
+  if (line.startsWith("# ")) return `<span class="md-h1">${renderInline(line.slice(2))}</span>`;
+  if (line.startsWith("## ")) return `<span class="md-h2">${renderInline(line.slice(3))}</span>`;
+  if (line.startsWith("### ")) return `<span class="md-h3">${renderInline(line.slice(4))}</span>`;
+  if (line.startsWith("#### ")) return `<span class="md-h4">${renderInline(line.slice(5))}</span>`;
+  if (line.startsWith("##### ")) return `<span class="md-h5">${renderInline(line.slice(6))}</span>`;
   if (line.startsWith("###### "))
     return `<span class="md-h6">${renderInline(line.slice(7))}</span>`;
   if (line.startsWith("- ") || line.startsWith("* ") || line.startsWith("+ ")) {
@@ -238,26 +229,16 @@ function parseTableBlockViewer(
   const headerCells = splitRow(headerLine);
   const colCount = headerCells.length;
   const headHtml = `<thead><tr>${headerCells
-    .map(
-      (cell, idx) =>
-        `<th${alignAttr(alignments[idx])}>${renderInline(cell.trim())}</th>`,
-    )
+    .map((cell, idx) => `<th${alignAttr(alignments[idx])}>${renderInline(cell.trim())}</th>`)
     .join("")}</tr></thead>`;
   const bodyRows: string[] = [];
   let idx = start + 2;
-  while (
-    idx < lines.length &&
-    isTableRow(lines[idx]) &&
-    !isDelimiterRow(lines[idx])
-  ) {
+  while (idx < lines.length && isTableRow(lines[idx]) && !isDelimiterRow(lines[idx])) {
     const cells = splitRow(lines[idx]);
     while (cells.length < colCount) cells.push("");
     if (cells.length > colCount) cells.length = colCount;
     const rowHtml = `<tr>${cells
-      .map(
-        (cell, cIdx) =>
-          `<td${alignAttr(alignments[cIdx])}>${renderInline(cell.trim())}</td>`,
-      )
+      .map((cell, cIdx) => `<td${alignAttr(alignments[cIdx])}>${renderInline(cell.trim())}</td>`)
       .join("")}</tr>`;
     bodyRows.push(rowHtml);
     idx += 1;
@@ -434,20 +415,13 @@ function escapeAttr(s: string): string {
  * @returns HTML string with spans for styling markdown elements.
  */
 export const highlightMarkdown = (text: string): string => {
-  const escaped = text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  const escaped = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
   const lines = escaped.split("\n");
   const out: string[] = [];
 
   for (let i = 0; i < lines.length;) {
-    if (
-      isTableRow(lines[i]) &&
-      i + 1 < lines.length &&
-      isDelimiterRow(lines[i + 1])
-    ) {
+    if (isTableRow(lines[i]) && i + 1 < lines.length && isDelimiterRow(lines[i + 1])) {
       const { html, nextIndex } = parseTableBlock(lines, i);
       out.push(html);
       i = nextIndex;
@@ -460,9 +434,7 @@ export const highlightMarkdown = (text: string): string => {
     }
   }
 
-  return out
-    .map((line) => (isTableHtml(line) ? line : processInline(line)))
-    .join("\n");
+  return out.map((line) => (isTableHtml(line) ? line : processInline(line))).join("\n");
 };
 
 /**
@@ -503,9 +475,7 @@ function isDelimiterRow(line: string): boolean {
 function isHrRow(line: string): boolean {
   const trimmed = line.trim();
   return (
-    /^(-\s*){3,}$/.test(trimmed) ||
-    /^(\*\s*){3,}$/.test(trimmed) ||
-    /^(_\s*){3,}$/.test(trimmed)
+    /^(-\s*){3,}$/.test(trimmed) || /^(\*\s*){3,}$/.test(trimmed) || /^(_\s*){3,}$/.test(trimmed)
   );
 }
 
@@ -527,10 +497,7 @@ function isTableHtml(html: string): boolean {
  * @param start - Start index of header row.
  * @returns HTML and next index after block.
  */
-function parseTableBlock(
-  lines: string[],
-  start: number,
-): { html: string; nextIndex: number } {
+function parseTableBlock(lines: string[], start: number): { html: string; nextIndex: number } {
   const headerLine = lines[start];
   const delimiterLine = lines[start + 1];
   const alignments = parseAlignments(delimiterLine);
@@ -539,29 +506,19 @@ function parseTableBlock(
   const colCount = headerCells.length;
 
   const headHtml = `<thead><tr>${headerCells
-    .map(
-      (cell, idx) =>
-        `<th${alignAttr(alignments[idx])}>${processInline(cell.trim())}</th>`,
-    )
+    .map((cell, idx) => `<th${alignAttr(alignments[idx])}>${processInline(cell.trim())}</th>`)
     .join("")}</tr></thead>`;
 
   const bodyRows: string[] = [];
   let idx = start + 2;
-  while (
-    idx < lines.length &&
-    isTableRow(lines[idx]) &&
-    !isDelimiterRow(lines[idx])
-  ) {
+  while (idx < lines.length && isTableRow(lines[idx]) && !isDelimiterRow(lines[idx])) {
     const cells = splitRow(lines[idx]);
     // Pad/truncate to colCount
     while (cells.length < colCount) cells.push("");
     if (cells.length > colCount) cells.length = colCount;
 
     const rowHtml = `<tr>${cells
-      .map(
-        (cell, cIdx) =>
-          `<td${alignAttr(alignments[cIdx])}>${processInline(cell.trim())}</td>`,
-      )
+      .map((cell, cIdx) => `<td${alignAttr(alignments[cIdx])}>${processInline(cell.trim())}</td>`)
       .join("")}</tr>`;
     bodyRows.push(rowHtml);
     idx += 1;
@@ -586,9 +543,7 @@ function splitRow(row: string): string[] {
   const placeholder = "\u00a7\u00a7PIPE\u00a7\u00a7";
   const protectedRow = inner.replace(/\\\|/g, placeholder);
   const rawCells = protectedRow.split("|");
-  return rawCells.map((c) =>
-    c.replace(new RegExp(placeholder, "g"), "|").trim(),
-  );
+  return rawCells.map((c) => c.replace(new RegExp(placeholder, "g"), "|").trim());
 }
 
 /**
@@ -597,9 +552,7 @@ function splitRow(row: string): string[] {
  * @param delimiter - Delimiter line.
  * @returns Alignments.
  */
-function parseAlignments(
-  delimiter: string,
-): Array<"left" | "center" | "right" | null> {
+function parseAlignments(delimiter: string): Array<"left" | "center" | "right" | null> {
   const cells = splitRow(delimiter);
   return cells.map((cell) => {
     const t = cell.trim();
@@ -773,8 +726,7 @@ function processInline(text: string): string {
   const { tokenized: spanTokenized, tokens: spanTokens } = extractSpans(text);
 
   // Also protect table tokens if any slipped through (defensive)
-  if (spanTokenized.includes("\u00a7\u00a7TABLE"))
-    return restoreSpans(spanTokenized, spanTokens);
+  if (spanTokenized.includes("\u00a7\u00a7TABLE")) return restoreSpans(spanTokenized, spanTokens);
 
   // First, protect links so they can be nested inside other inline (e.g., italic)
   // Balanced paren URLs like Shadow_(psychology) need depth counting, not [^)]+
@@ -917,10 +869,7 @@ function restoreSpans(input: string, tokens: string[]) {
  * @param replacer - called with raw link
  * @returns text with links replaced
  */
-function replaceLinksBalanced(
-  text: string,
-  replacer: (raw: string) => string,
-): string {
+function replaceLinksBalanced(text: string, replacer: (raw: string) => string): string {
   let out = "";
   let i = 0;
   while (i < text.length) {
@@ -997,9 +946,7 @@ function replaceSpanLinks(html: string): string {
  * @param text - raw [title](url)
  * @returns title and url or null
  */
-function extractLinkBalanced(
-  text: string,
-): { title: string; url: string } | null {
+function extractLinkBalanced(text: string): { title: string; url: string } | null {
   const open = text.indexOf("[");
   const close = text.indexOf("]", open + 1);
   if (open === -1 || close === -1 || text[close + 1] !== "(") return null;

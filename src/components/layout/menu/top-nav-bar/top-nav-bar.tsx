@@ -39,19 +39,13 @@ const TopNavBar = () => {
       ref={(el) => {
         if (el) el.setAttribute("data-nav-ref", "top-nav-bar");
       }}
-      className={cn(
-        styles.top_nav_bar,
-        isBlog && portalTarget && styles.top_nav_bar_portalled,
-      )}
+      className={cn(styles.top_nav_bar, isBlog && portalTarget && styles.top_nav_bar_portalled)}
     >
       {NAV_ITEMS.map((item) => {
-        const active =
-          item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+        const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
         const link = (
           <Link key={item.href} to={item.href}>
-            <Button variant={active ? "default" : "secondary"}>
-              {t(item.labelKey)}
-            </Button>
+            <Button variant={active ? "default" : "secondary"}>{t(item.labelKey)}</Button>
           </Link>
         );
         if (!item.role) {

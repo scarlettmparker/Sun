@@ -30,9 +30,7 @@ export function hashToHue(value: string): number {
  * @param hex hex colour including leading #
  * @returns HSL components or null when unparseable
  */
-export function hexToHsl(
-  hex: string,
-): { h: number; s: number; l: number } | null {
+export function hexToHsl(hex: string): { h: number; s: number; l: number } | null {
   const stripped = hex.trim().replace(/^#/, "");
   const full =
     stripped.length === 3
@@ -79,9 +77,7 @@ function readCssVar(name: string): string | undefined {
   if (typeof window === "undefined") {
     return undefined;
   }
-  const value = getComputedStyle(document.documentElement)
-    .getPropertyValue(name)
-    .trim();
+  const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   return value || undefined;
 }
 

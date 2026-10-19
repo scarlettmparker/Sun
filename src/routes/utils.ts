@@ -20,8 +20,8 @@ export async function getGalleryItemsByRemoteObjects(
     );
     if (result.success && result.data) {
       return {
-        galleryItems: (result.data as ListGalleryItemsByRemoteObjectsQuery)
-          .galleryQueries.listByRemoteObjects,
+        galleryItems: (result.data as ListGalleryItemsByRemoteObjectsQuery).galleryQueries
+          .listByRemoteObjects,
       };
     }
     return {

@@ -11,9 +11,7 @@ export async function loadModule(vite, srcPath, distPath) {
   if (vite && typeof vite.ssrLoadModule === "function") {
     try {
       // vite expects absolute-ish paths like '/src/..'
-      const abs = srcPath.startsWith("/")
-        ? srcPath
-        : srcPath.replace(/^\.?\.?\//, "/");
+      const abs = srcPath.startsWith("/") ? srcPath : srcPath.replace(/^\.?\.?\//, "/");
       return await vite.ssrLoadModule(abs);
     } catch (_) {
       // fallback to trying the original path if absolute failed

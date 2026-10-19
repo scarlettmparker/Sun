@@ -1,10 +1,5 @@
 import { executeDocument } from "@sun/api";
-import {
-  LoginDocument,
-  LogoutDocument,
-  MeDocument,
-  type MeQuery,
-} from "../generated/graphql";
+import { LoginDocument, LogoutDocument, MeDocument, type MeQuery } from "../generated/graphql";
 import { getCookieValue as getCookieValueFromApi } from "@sun/api";
 
 export const AUTH_COOKIE = "sun_auth";
@@ -14,10 +9,7 @@ export { getCookieValueFromApi as getCookieValue };
 /**
  * Builds the Set-Cookie value that stores the JWT.
  */
-export const buildAuthCookie = (
-  token: string,
-  maxAgeSeconds = 60 * 60 * 12,
-): string =>
+export const buildAuthCookie = (token: string, maxAgeSeconds = 60 * 60 * 12): string =>
   `${AUTH_COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=${maxAgeSeconds}`;
 
 /**
@@ -29,10 +21,7 @@ export const clearAuthCookie = (): string =>
 /**
  * Logs in via gaia and returns the JWT, or null if rejected.
  */
-export const loginViaGaia = async (
-  username: string,
-  password: string,
-): Promise<string | null> => {
+export const loginViaGaia = async (username: string, password: string): Promise<string | null> => {
   const res = await executeDocument<{
     gaiaMutations: { login: { token: string } | null };
   }>(LoginDocument, { input: { username, password } });
@@ -70,9 +59,7 @@ export async function getCurrentUser(
  *
  * @param token the JWT to revoke
  */
-export async function logoutViaBackend(
-  token: string | undefined,
-): Promise<void> {
+export async function logoutViaBackend(token: string | undefined): Promise<void> {
   if (!token) return;
   try {
     await executeDocument(LogoutDocument, {}, token);

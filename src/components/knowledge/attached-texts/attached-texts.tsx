@@ -46,8 +46,7 @@ const AttachedTexts = (props: AttachedTextsProps) => {
                     style={
                       levelColours?.[CEFR_TO_KEY[item.level]]
                         ? {
-                            backgroundColor:
-                              levelColours[CEFR_TO_KEY[item.level]],
+                            backgroundColor: levelColours[CEFR_TO_KEY[item.level]],
                           }
                         : undefined
                     }

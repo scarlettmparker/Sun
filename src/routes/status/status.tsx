@@ -8,9 +8,7 @@ import styles from "./status.module.css";
 const Status = () => {
   const { data } = usePageData<StatusReport>("status", "status");
   const backend = data.backend.available ? "available" : "unavailable";
-  const backendSince = data.backend.sinceLabel
-    ? ` since ${data.backend.sinceLabel}`
-    : "";
+  const backendSince = data.backend.sinceLabel ? ` since ${data.backend.sinceLabel}` : "";
 
   return (
     <div className={styles.status_wrapper}>
@@ -19,9 +17,7 @@ const Status = () => {
       <ul className={styles.list}>
         {data.apps.map((app) => (
           <li key={app.key} className={styles.row}>
-            {`${app.name}: ${app.state}${
-              app.sinceLabel ? ` since ${app.sinceLabel}` : ""
-            }`}
+            {`${app.name}: ${app.state}${app.sinceLabel ? ` since ${app.sinceLabel}` : ""}`}
           </li>
         ))}
       </ul>

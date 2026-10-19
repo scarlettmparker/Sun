@@ -17,9 +17,7 @@ let manifest;
  */
 async function loadManifest() {
   if (!manifest) {
-    manifest = JSON.parse(
-      await fs.readFile(path.resolve(manifestPath), "utf-8"),
-    );
+    manifest = JSON.parse(await fs.readFile(path.resolve(manifestPath), "utf-8"));
   }
   return manifest;
 }
@@ -40,16 +38,7 @@ async function loadManifest() {
  * @returns {Promise<void>} A promise that resolves when the rendering and streaming are complete.
  */
 export async function renderApp(
-  {
-    vite,
-    isProduction,
-    url,
-    locale,
-    pageName,
-    user,
-    mutationPayload,
-    invalidateCacheCookie,
-  },
+  { vite, isProduction, url, locale, pageName, user, mutationPayload, invalidateCacheCookie },
   res,
 ) {
   try {
@@ -102,9 +91,7 @@ export async function renderApp(
       },
       final(callback) {
         const postludeContent =
-          typeof rendered.postlude === "function"
-            ? rendered.postlude()
-            : rendered.postlude;
+          typeof rendered.postlude === "function" ? rendered.postlude() : rendered.postlude;
 
         res.write(postludeContent);
         res.end();

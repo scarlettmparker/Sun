@@ -157,19 +157,13 @@ describe("DialogDescription", () => {
   });
 
   it("passes through attributes correctly", () => {
-    render(
-      <DialogDescription data-testid="test-description">
-        Content
-      </DialogDescription>,
-    );
+    render(<DialogDescription data-testid="test-description">Content</DialogDescription>);
     const description = screen.getByTestId("test-description");
     expect(description).toHaveAttribute("data-testid", "test-description");
   });
 
   it("merges custom className with default classes", () => {
-    render(
-      <DialogDescription className="custom-class">Content</DialogDescription>,
-    );
+    render(<DialogDescription className="custom-class">Content</DialogDescription>);
     const description = screen.getByText("Content");
     expect(description).toHaveClass("dialog_description", "custom-class");
   });

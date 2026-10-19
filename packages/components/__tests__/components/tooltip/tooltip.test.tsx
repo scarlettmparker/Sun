@@ -4,12 +4,7 @@
  */
 
 import { act, fireEvent, render, screen } from "@testing-library/preact";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipGroup,
-  TooltipTrigger,
-} from "@sun/components";
+import { Tooltip, TooltipContent, TooltipGroup, TooltipTrigger } from "@sun/components";
 
 const OPEN_DELAY = 400;
 const CLOSE_DELAY = 650;

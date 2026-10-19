@@ -46,14 +46,13 @@ defineLoader({
         queries.push(inverseIds);
       }
       for (const queryIds of queries) {
-        const result =
-          await executeDocument<ListGalleryItemsByRemoteObjectsQuery>(
-            ListGalleryItemsByRemoteObjectsDocument,
-            { ids: queryIds },
-          );
+        const result = await executeDocument<ListGalleryItemsByRemoteObjectsQuery>(
+          ListGalleryItemsByRemoteObjectsDocument,
+          { ids: queryIds },
+        );
         const items = result.success
-          ? ((result.data as ListGalleryItemsByRemoteObjectsQuery | undefined)
-              ?.galleryQueries?.listByRemoteObjects ?? [])
+          ? ((result.data as ListGalleryItemsByRemoteObjectsQuery | undefined)?.galleryQueries
+              ?.listByRemoteObjects ?? [])
           : [];
         for (const item of items ?? []) {
           if (item == null || seen.has(item.id)) {

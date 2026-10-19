@@ -1,12 +1,6 @@
 import { Suspense, useState, useTransition } from "react";
 import { useTranslation } from "@sun/i18n";
-import {
-  Card,
-  CardBody,
-  CardHeader,
-  CardTitle,
-  SearchBar,
-} from "@sun/components";
+import { Card, CardBody, CardHeader, CardTitle, SearchBar } from "@sun/components";
 import AttachTextPickerItems from "~/components/blog/attach-text-picker-items";
 import AttachTextPickerPagination from "~/components/blog/attach-text-picker-pagination";
 import styles from "./attach-text-picker.module.css";
@@ -58,21 +52,13 @@ const AttachTextPicker = (props: AttachTextPickerProps) => {
               />
             </div>
             <Suspense fallback={<AttachTextPickerItemsSkeleton />}>
-              <AttachTextPickerItems
-                postId={postId}
-                query={query}
-                page={page}
-              />
+              <AttachTextPickerItems postId={postId} query={query} page={page} />
             </Suspense>
           </div>
         </CardBody>
       </Card>
       <Suspense fallback={null}>
-        <AttachTextPickerPagination
-          query={query}
-          page={page}
-          onPageChange={handlePageChange}
-        />
+        <AttachTextPickerPagination query={query} page={page} onPageChange={handlePageChange} />
       </Suspense>
     </>
   );

@@ -1,10 +1,4 @@
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { cn } from "~/utils/cn";
 import Button from "../button";
 import {
@@ -189,9 +183,7 @@ const ContextMenuTrigger = (props: ContextMenuTriggerProps) => {
     ...rest
   } = props;
   const { open, setOpen, setPosition, triggerId, contentId } = useContextMenu();
-  const touchTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
-    undefined,
-  );
+  const touchTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const LONG_PRESS_MS = 500;
 
   const clearTouchTimer = () => {
@@ -331,11 +323,7 @@ const ContextMenuItem = (props: ContextMenuItemProps) => {
 const ContextMenuGroup = (props: React.HTMLAttributes<HTMLDivElement>) => {
   const { className, children, ...rest } = props;
   return (
-    <div
-      className={cn(styles.context_menu_group, className)}
-      role="group"
-      {...rest}
-    >
+    <div className={cn(styles.context_menu_group, className)} role="group" {...rest}>
       {children}
     </div>
   );
@@ -379,10 +367,7 @@ type ContextMenuSubContentProps = React.HTMLAttributes<HTMLDivElement>;
  * nested context submenu when its trigger is active.
  */
 const ContextMenuSubContent = (props: ContextMenuSubContentProps) => (
-  <MenuSubContent
-    {...props}
-    className={cn(styles.context_menu_subcontent, props.className)}
-  />
+  <MenuSubContent {...props} className={cn(styles.context_menu_subcontent, props.className)} />
 );
 
 export default ContextMenu;

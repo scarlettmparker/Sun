@@ -1,11 +1,6 @@
 import { useEffect, useReducer, useState, useTransition } from "react";
 import { useTranslation } from "@sun/i18n";
-import {
-  makeCacheKey,
-  peekPageData,
-  refetchEntry,
-  subscribeDataInvalidation,
-} from "@sun/ssr";
+import { makeCacheKey, peekPageData, refetchEntry, subscribeDataInvalidation } from "@sun/ssr";
 import {
   Button,
   CardBody,
@@ -97,11 +92,7 @@ const ProfileCardContent = () => {
   return (
     <>
       <CardHeader className={styles.header}>
-        <SeededAvatar
-          username={currentUser.username}
-          size={64}
-          className={styles.header_avatar}
-        />
+        <SeededAvatar username={currentUser.username} size={64} className={styles.header_avatar} />
         <div className={styles.header_text}>
           <CardTitle>{currentUser.username}</CardTitle>
           <CardDescription>

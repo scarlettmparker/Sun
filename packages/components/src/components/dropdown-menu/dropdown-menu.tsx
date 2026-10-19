@@ -1,10 +1,4 @@
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { cn } from "~/utils/cn";
 import Button from "../button";
 import {
@@ -62,9 +56,7 @@ type DropdownMenuContextValue = {
 /**
  * React context for sharing dropdown menu state (open, trigger ref, ids, etc.).
  */
-const DropdownMenuContext = createContext<DropdownMenuContextValue | null>(
-  null,
-);
+const DropdownMenuContext = createContext<DropdownMenuContextValue | null>(null);
 
 /**
  * Scarlet Ui Dropdown Menu.
@@ -148,9 +140,7 @@ const DropdownMenu = (props: React.HTMLAttributes<HTMLDivElement>) => {
 const useDropdownMenu = () => {
   const ctx = useContext(DropdownMenuContext);
   if (!ctx) {
-    throw new Error(
-      "DropdownMenu components must be used inside a DropdownMenu",
-    );
+    throw new Error("DropdownMenu components must be used inside a DropdownMenu");
   }
   return ctx;
 };
@@ -210,8 +200,7 @@ type DropdownMenuContentProps = React.HTMLAttributes<HTMLDivElement>;
  * relative to the trigger element with viewport-aware flipping.
  */
 const DropdownMenuContent = (props: DropdownMenuContentProps) => {
-  const { open, contentId, triggerId, triggerRef, positionNonce } =
-    useDropdownMenu();
+  const { open, contentId, triggerId, triggerRef, positionNonce } = useDropdownMenu();
   const contentRef = useRef<HTMLDivElement>(null);
 
   useDropdownPositioning(contentRef, triggerRef, open, positionNonce);
@@ -251,13 +240,7 @@ type DropdownMenuItemProps = React.ComponentProps<typeof Button> & {
  */
 const DropdownMenuItem = (props: DropdownMenuItemProps) => {
   const { close } = useDropdownMenu();
-  return (
-    <MenuItem
-      {...props}
-      className={styles.dropdown_menu_item}
-      closeMenu={close}
-    />
-  );
+  return <MenuItem {...props} className={styles.dropdown_menu_item} closeMenu={close} />;
 };
 
 /**
@@ -266,11 +249,7 @@ const DropdownMenuItem = (props: DropdownMenuItemProps) => {
 const DropdownMenuGroup = (props: React.HTMLAttributes<HTMLDivElement>) => {
   const { className, children, ...rest } = props;
   return (
-    <div
-      className={cn(styles.dropdown_menu_group, className)}
-      role="group"
-      {...rest}
-    >
+    <div className={cn(styles.dropdown_menu_group, className)} role="group" {...rest}>
       {children}
     </div>
   );
@@ -284,13 +263,7 @@ type DropdownMenuSubProps = React.HTMLAttributes<HTMLDivElement>;
  */
 const DropdownMenuSub = (props: DropdownMenuSubProps) => {
   const { resetNonce } = useDropdownMenu();
-  return (
-    <MenuSub
-      {...props}
-      className={styles.dropdown_menu_sub}
-      resetNonce={resetNonce}
-    />
-  );
+  return <MenuSub {...props} className={styles.dropdown_menu_sub} resetNonce={resetNonce} />;
 };
 
 type DropdownMenuSubTriggerProps = React.ComponentProps<typeof Button>;

@@ -31,9 +31,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
         <div className={styles.error_boundary_card}>
           <Card>
             <CardBody>
-              <p style={{ color: "var(--destructive)" }}>
-                {this.state.error.message}
-              </p>
+              <p style={{ color: "var(--destructive)" }}>{this.state.error.message}</p>
             </CardBody>
           </Card>
         </div>

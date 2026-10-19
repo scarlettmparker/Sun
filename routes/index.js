@@ -63,9 +63,7 @@ export function setupRoutes(app, vite) {
     }
 
     const normalizedPath =
-      pathname.length > 1 && pathname.endsWith("/")
-        ? pathname.replace(/\/+$/, "")
-        : pathname;
+      pathname.length > 1 && pathname.endsWith("/") ? pathname.replace(/\/+$/, "") : pathname;
     const isPublic = PUBLIC_PAGES.has(normalizedPath);
 
     const token = getCookieValue(request.headers.cookie, AUTH_COOKIE);
@@ -97,8 +95,7 @@ export function setupRoutes(app, vite) {
     const locale = langHeader.split(",")[0] || "en";
 
     const pathOnly = url.split("?")[0];
-    const pageName =
-      pathOnly === "/" ? "home" : pathOnly.split("/")[1] || "home";
+    const pageName = pathOnly === "/" ? "home" : pathOnly.split("/")[1] || "home";
 
     trackPageView({
       app: "sun",

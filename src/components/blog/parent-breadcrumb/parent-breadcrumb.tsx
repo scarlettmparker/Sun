@@ -18,12 +18,13 @@ type ParentBreadcrumbProps = {
 const ParentBreadcrumb = (props: ParentBreadcrumbProps) => {
   const { parentId } = props;
   const { t } = useTranslation("blog");
-  const { data: parent } = usePageData<
-    LocateBlogPostQuery["blogQueries"]["locateBlogPost"]
-  >("blogPost", "blog/:id", { id: parentId });
+  const { data: parent } = usePageData<LocateBlogPostQuery["blogQueries"]["locateBlogPost"]>(
+    "blogPost",
+    "blog/:id",
+    { id: parentId },
+  );
 
-  const newLabel =
-    parent?.title == null ? t("breadcrumb.new") : t("breadcrumb.new-child");
+  const newLabel = parent?.title == null ? t("breadcrumb.new") : t("breadcrumb.new-child");
 
   return (
     <nav aria-label="breadcrumb">

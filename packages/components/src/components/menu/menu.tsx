@@ -18,8 +18,7 @@ import { cn } from "~/utils/cn";
 import Button from "../button";
 
 // Isomorphic layout effect to avoid SSR warnings
-const useIsomorphicLayoutEffect =
-  typeof window !== "undefined" ? useLayoutEffect : useEffect;
+const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 export type MenuItemProps = React.ComponentProps<typeof Button> & {
   asChild?: boolean;
@@ -90,11 +89,7 @@ const MenuItem = (props: MenuItemProps) => {
         if (disabled) {
           return;
         }
-        (
-          childProps.onClick as (
-            event: React.MouseEvent<HTMLButtonElement>,
-          ) => void
-        )?.(event);
+        (childProps.onClick as (event: React.MouseEvent<HTMLButtonElement>) => void)?.(event);
         onClick?.(event);
         onSelect?.();
         closeMenu();
@@ -105,20 +100,14 @@ const MenuItem = (props: MenuItemProps) => {
         }
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
-          (
-            childProps.onKeyDown as (
-              event: React.KeyboardEvent<HTMLButtonElement>,
-            ) => void
-          )?.(event);
+          (childProps.onKeyDown as (event: React.KeyboardEvent<HTMLButtonElement>) => void)?.(
+            event,
+          );
           onSelect?.();
           closeMenu();
           return;
         }
-        (
-          childProps.onKeyDown as (
-            event: React.KeyboardEvent<HTMLButtonElement>,
-          ) => void
-        )?.(event);
+        (childProps.onKeyDown as (event: React.KeyboardEvent<HTMLButtonElement>) => void)?.(event);
         onKeyDown?.(event);
       },
     } as any);
@@ -189,11 +178,7 @@ const MenuSub = (props: MenuSubProps) => {
 
   return (
     <MenuSubContext.Provider value={{ open, setOpen, triggerRef }}>
-      <div
-        className={className}
-        data-state={open ? "open" : "closed"}
-        {...rest}
-      >
+      <div className={className} data-state={open ? "open" : "closed"} {...rest}>
         {children}
       </div>
     </MenuSubContext.Provider>
@@ -276,8 +261,7 @@ export type MenuSubContentProps = React.HTMLAttributes<HTMLDivElement>;
  * adjacent to active sub-triggers.
  */
 const MenuSubContent = (props: MenuSubContentProps) => {
-  const { className, children, onPointerEnter, onPointerLeave, ...rest } =
-    props;
+  const { className, children, onPointerEnter, onPointerLeave, ...rest } = props;
   const { open, setOpen, triggerRef } = useMenuSub();
   const subRef = useRef<HTMLDivElement>(null);
 
@@ -465,9 +449,7 @@ const useMenuKeyboardNav = (
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (!contentRef.current) return;
     const items = Array.from(
-      contentRef.current.querySelectorAll(
-        '[role="menuitem"]:not([aria-disabled="true"])',
-      ),
+      contentRef.current.querySelectorAll('[role="menuitem"]:not([aria-disabled="true"])'),
     ) as HTMLElement[];
     const currentIndex = items.indexOf(document.activeElement as HTMLElement);
     if (event.key === "ArrowDown") {
@@ -574,8 +556,7 @@ const MenuContent = (
     (e: MouseEvent<HTMLDivElement>) => {
       const target = e.target as HTMLElement;
       const isSubmit =
-        target.closest('button[type="submit"]') != null ||
-        target.closest("form") != null;
+        target.closest('button[type="submit"]') != null || target.closest("form") != null;
       if (!isSubmit) {
         e.preventDefault();
       }

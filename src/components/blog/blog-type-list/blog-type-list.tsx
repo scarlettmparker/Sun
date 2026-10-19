@@ -1,7 +1,15 @@
 import { useTranslation } from "@sun/i18n";
 import { usePageData } from "@sun/ssr/react";
 import { Button } from "@sun/components";
-import { BookOpenOutline, DocumentTextOutline, InformationCircleOutline, LightBulbOutline, QuestionMarkCircleOutline, Squares2x2Outline, StarOutline } from "preact-heroicons";
+import {
+  BookOpenOutline,
+  DocumentTextOutline,
+  InformationCircleOutline,
+  LightBulbOutline,
+  QuestionMarkCircleOutline,
+  Squares2x2Outline,
+  StarOutline,
+} from "preact-heroicons";
 import type { BlogPostTypesQuery } from "~/generated/graphql";
 import styles from "./blog-type-list.module.css";
 
@@ -26,18 +34,16 @@ type BlogTypeListProps = {
 const BlogTypeList = (props: BlogTypeListProps) => {
   const { selectedType, onSelect, variant = "vertical" } = props;
   const { t } = useTranslation("blog");
-  const { data: types } = usePageData<
-    BlogPostTypesQuery["blogQueries"]["blogPostTypes"]
-  >("types", "home", {});
+  const { data: types } = usePageData<BlogPostTypesQuery["blogQueries"]["blogPostTypes"]>(
+    "types",
+    "home",
+    {},
+  );
 
   return (
     <>
       <Button
-        className={
-          variant === "horizontal"
-            ? styles.type_button_horizontal
-            : styles.type_button
-        }
+        className={variant === "horizontal" ? styles.type_button_horizontal : styles.type_button}
         variant={selectedType == null ? "default" : "secondary"}
         onClick={() => onSelect(null)}
         title={t("filter.all")}
@@ -52,9 +58,7 @@ const BlogTypeList = (props: BlogTypeListProps) => {
           <Button
             key={postType.id}
             className={
-              variant === "horizontal"
-                ? styles.type_button_horizontal
-                : styles.type_button
+              variant === "horizontal" ? styles.type_button_horizontal : styles.type_button
             }
             variant={selectedType === postType.name ? "default" : "secondary"}
             onClick={() => onSelect(postType.name)}

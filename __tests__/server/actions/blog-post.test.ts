@@ -34,10 +34,7 @@ describe("createBlogPost", () => {
       post: { __typename: "BlogPost", id: "1" },
     });
 
-    const result = (await createBlogPost(
-      "Test Title",
-      "Test Content",
-    )) as CreateBlogPostResponse;
+    const result = (await createBlogPost("Test Title", "Test Content")) as CreateBlogPostResponse;
 
     expect(result.message).toBe("Blog post created");
     expect(mockExecuteMutation).toHaveBeenCalledWith("blog/create", {
@@ -75,17 +72,15 @@ describe("createBlogPost", () => {
   });
 
   it("should throw for invalid input types", async () => {
-    await expect(
-      createBlogPost(123 as unknown as string, "Content"),
-    ).rejects.toThrow("Invalid input");
+    await expect(createBlogPost(123 as unknown as string, "Content")).rejects.toThrow(
+      "Invalid input",
+    );
 
     expect(mockExecuteMutation).not.toHaveBeenCalled();
   });
 
   it("should throw for empty title", async () => {
-    await expect(createBlogPost("", "Content")).rejects.toThrow(
-      "Invalid input",
-    );
+    await expect(createBlogPost("", "Content")).rejects.toThrow("Invalid input");
 
     expect(mockExecuteMutation).not.toHaveBeenCalled();
   });
@@ -97,17 +92,13 @@ describe("createBlogPost", () => {
   });
 
   it("should throw for whitespace-only title", async () => {
-    await expect(createBlogPost("   ", "Content")).rejects.toThrow(
-      "Invalid input",
-    );
+    await expect(createBlogPost("   ", "Content")).rejects.toThrow("Invalid input");
 
     expect(mockExecuteMutation).not.toHaveBeenCalled();
   });
 
   it("should throw for whitespace-only content", async () => {
-    await expect(createBlogPost("Title", "   ")).rejects.toThrow(
-      "Invalid input",
-    );
+    await expect(createBlogPost("Title", "   ")).rejects.toThrow("Invalid input");
 
     expect(mockExecuteMutation).not.toHaveBeenCalled();
   });

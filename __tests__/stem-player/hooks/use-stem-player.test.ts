@@ -46,9 +46,7 @@ describe("useStemPlayer", () => {
     (global.fetch as unknown as Mock).mockResolvedValue({
       arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(8)),
     });
-    (mockAudioContext.decodeAudioData as Mock).mockResolvedValue(
-      mockAudioBuffer,
-    );
+    (mockAudioContext.decodeAudioData as Mock).mockResolvedValue(mockAudioBuffer);
   });
 
   it("loads audio buffers when stems change (& loads initial values)", async () => {
@@ -221,9 +219,7 @@ describe("useStemPlayer", () => {
       renderHook(() => useStemPlayer(mockSong));
 
       await waitFor(() => expect(global.fetch).toHaveBeenCalledTimes(2));
-      await waitFor(() =>
-        expect(mockAudioContext.decodeAudioData).toHaveBeenCalledTimes(1),
-      );
+      await waitFor(() => expect(mockAudioContext.decodeAudioData).toHaveBeenCalledTimes(1));
     });
 
     it("handles decodeAudioData failure", async () => {
@@ -233,9 +229,7 @@ describe("useStemPlayer", () => {
 
       renderHook(() => useStemPlayer(mockSong));
 
-      await waitFor(() =>
-        expect(mockAudioContext.decodeAudioData).toHaveBeenCalledTimes(2),
-      );
+      await waitFor(() => expect(mockAudioContext.decodeAudioData).toHaveBeenCalledTimes(2));
     });
 
     it("updates loading progress incrementally", async () => {
@@ -292,16 +286,13 @@ describe("useStemPlayer", () => {
         result.current.play();
       });
 
-      const sourcesCreated =
-        mockAudioContext.createBufferSource.mock.calls.length;
+      const sourcesCreated = mockAudioContext.createBufferSource.mock.calls.length;
 
       act(() => {
         result.current.play(); // Try to play again
       });
 
-      expect(mockAudioContext.createBufferSource).toHaveBeenCalledTimes(
-        sourcesCreated,
-      ); // No additional sources
+      expect(mockAudioContext.createBufferSource).toHaveBeenCalledTimes(sourcesCreated); // No additional sources
     });
 
     it("restarts from beginning when ended", async () => {

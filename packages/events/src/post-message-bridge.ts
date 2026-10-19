@@ -49,11 +49,7 @@ export class PostMessageBridge<T extends EventMap> {
   private channel: string;
   private handleMessage: (event: MessageEvent) => void;
 
-  constructor(
-    localBus: EventBus<T>,
-    remoteBus: EventBus<T>,
-    options: BridgeOptions,
-  ) {
+  constructor(localBus: EventBus<T>, remoteBus: EventBus<T>, options: BridgeOptions) {
     this.localBus = localBus;
     this.remoteBus = remoteBus;
     this.target = options.target;
@@ -84,10 +80,7 @@ export class PostMessageBridge<T extends EventMap> {
    */
   send<K extends EventKey<T>>(event: K, payload: EventPayload<T, K>): void {
     this.localBus.emit(event, payload);
-    this.target.postMessage(
-      { __channel: this.channel, type: event, payload },
-      this.origin,
-    );
+    this.target.postMessage({ __channel: this.channel, type: event, payload }, this.origin);
   }
 
   /**

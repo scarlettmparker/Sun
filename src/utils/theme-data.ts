@@ -8,20 +8,15 @@ import { fetchPropertySet } from "./api";
 defineLoader({
   pattern: "themes",
   async loader(): Promise<{ themes: ResolvedTheme }> {
-    const themes = await sharedCall(
-      "shared:themes",
-      SHARED_TTL.CONFIG,
-      async () => {
-        const themesResult = await fetchPropertySet("ReactApp", "themes");
-        if (!themesResult.success) {
-          throw new Error("themes unavailable");
-        }
-        const propertySet = (
-          themesResult.data as { gaiaQueries?: { propertySet?: unknown } }
-        )?.gaiaQueries?.propertySet;
-        return parseThemes(propertySet);
-      },
-    ).catch(() => ({ current: null, all: [] }));
+    const themes = await sharedCall("shared:themes", SHARED_TTL.CONFIG, async () => {
+      const themesResult = await fetchPropertySet("ReactApp", "themes");
+      if (!themesResult.success) {
+        throw new Error("themes unavailable");
+      }
+      const propertySet = (themesResult.data as { gaiaQueries?: { propertySet?: unknown } })
+        ?.gaiaQueries?.propertySet;
+      return parseThemes(propertySet);
+    }).catch(() => ({ current: null, all: [] }));
     return { themes };
   },
 });

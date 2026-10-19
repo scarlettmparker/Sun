@@ -48,12 +48,8 @@ describe("Sidebar", () => {
         <a href="#">Link Item</a>
       </Sidebar>,
     );
-    expect(
-      screen.getByRole("button", { name: /button item/i }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: /link item/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /button item/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /link item/i })).toBeInTheDocument();
   });
 
   it("handles multiple props correctly", () => {

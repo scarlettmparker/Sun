@@ -9,12 +9,7 @@ const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 /**
  * Origin hostnames permitted to make state-changing requests.
  */
-const DEFAULT_ALLOWED_ORIGINS = [
-  "scarlettparker.co.uk",
-  "localhost",
-  "127.0.0.1",
-  "app",
-];
+const DEFAULT_ALLOWED_ORIGINS = ["scarlettparker.co.uk", "localhost", "127.0.0.1", "app"];
 /**
  * CSRF cookie lifetime in seconds (24h).
  */
@@ -54,9 +49,7 @@ export interface SecurityConfig {
  * @returns True when the host matches an allowed suffix.
  */
 function isOriginAllowed(request: SunRequest, suffixes: string[]): boolean {
-  const raw = firstHeaderValue(
-    request.headers.origin ?? request.headers.referer,
-  );
+  const raw = firstHeaderValue(request.headers.origin ?? request.headers.referer);
   if (!raw || typeof raw !== "string") return false;
   let hostname: string;
   try {
@@ -64,9 +57,7 @@ function isOriginAllowed(request: SunRequest, suffixes: string[]): boolean {
   } catch {
     return false;
   }
-  return suffixes.some(
-    (suffix) => hostname === suffix || hostname.endsWith("." + suffix),
-  );
+  return suffixes.some((suffix) => hostname === suffix || hostname.endsWith("." + suffix));
 }
 
 /**
@@ -77,10 +68,7 @@ function isOriginAllowed(request: SunRequest, suffixes: string[]): boolean {
  * @returns The signed token `${nonce}.${mac}`.
  */
 function sign(nonce: string, secret: string): string {
-  const mac = crypto
-    .createHmac("sha256", secret)
-    .update(nonce)
-    .digest("base64url");
+  const mac = crypto.createHmac("sha256", secret).update(nonce).digest("base64url");
   return `${nonce}.${mac}`;
 }
 
@@ -120,18 +108,9 @@ function verifyToken(token: string | undefined, secret: string): boolean {
  * @param secret The HMAC key.
  * @param isProduction Adds the Secure attribute when true.
  */
-function issueCsrfCookie(
-  reply: SunReply,
-  secret: string,
-  isProduction: boolean,
-): void {
+function issueCsrfCookie(reply: SunReply, secret: string, isProduction: boolean): void {
   const nonce = crypto.randomBytes(18).toString("base64url");
-  const flags = [
-    "Path=/",
-    "SameSite=Lax",
-    isProduction ? "Secure" : "",
-    `Max-Age=${CSRF_MAX_AGE}`,
-  ]
+  const flags = ["Path=/", "SameSite=Lax", isProduction ? "Secure" : "", `Max-Age=${CSRF_MAX_AGE}`]
     .filter(Boolean)
     .join("; ");
   const cookie = `${CSRF_COOKIE}=${encodeURIComponent(sign(nonce, secret))}; ${flags}`;
@@ -148,9 +127,7 @@ function issueCsrfCookie(
 function hasCsrfCookie(request: SunRequest): boolean {
   const cookie = request.headers.cookie;
   if (!cookie) return false;
-  return cookie
-    .split(/;\s*/)
-    .some((part) => part.startsWith(CSRF_COOKIE + "="));
+  return cookie.split(/;\s*/).some((part) => part.startsWith(CSRF_COOKIE + "="));
 }
 
 /**
@@ -162,9 +139,7 @@ function hasCsrfCookie(request: SunRequest): boolean {
 function submittedToken(request: SunRequest): string | undefined {
   const header = request.headers[CSRF_HEADER];
   if (typeof header === "string") return header;
-  const field = (request.body as Record<string, unknown> | undefined)?.[
-    CSRF_FIELD
-  ];
+  const field = (request.body as Record<string, unknown> | undefined)?.[CSRF_FIELD];
   return typeof field === "string" ? field : undefined;
 }
 
@@ -177,9 +152,7 @@ function submittedToken(request: SunRequest): string | undefined {
  * @param config Secret, origin allowlist, and environment flags.
  */
 export function registerSecurity(app: SunApp, config: SecurityConfig): void {
-  const suffixes = config.allowedOrigins?.length
-    ? config.allowedOrigins
-    : DEFAULT_ALLOWED_ORIGINS;
+  const suffixes = config.allowedOrigins?.length ? config.allowedOrigins : DEFAULT_ALLOWED_ORIGINS;
   const secret = config.clientSecret;
 
   app.addHook("onRequest", async (request, reply) => {
@@ -187,16 +160,10 @@ export function registerSecurity(app: SunApp, config: SecurityConfig): void {
       return;
     }
     const host = firstHeaderValue(request.headers.host);
-    if (
-      host.includes("localhost") ||
-      host.includes("127.0.0.1") ||
-      host.includes("app")
-    ) {
+    if (host.includes("localhost") || host.includes("127.0.0.1") || host.includes("app")) {
       return;
     }
-    const proto = firstHeaderValue(
-      request.headers["x-forwarded-proto"] as string | undefined,
-    );
+    const proto = firstHeaderValue(request.headers["x-forwarded-proto"] as string | undefined);
     if (proto === "https") {
       return;
     }
@@ -208,16 +175,10 @@ export function registerSecurity(app: SunApp, config: SecurityConfig): void {
 
   app.addHook("onRequest", async (request, reply) => {
     if (SAFE_METHODS.has(request.method.toUpperCase())) return;
-    const raw = firstHeaderValue(
-      request.headers.origin ?? request.headers.referer,
-    );
+    const raw = firstHeaderValue(request.headers.origin ?? request.headers.referer);
     if (!raw || typeof raw !== "string") {
       const host = firstHeaderValue(request.headers.host);
-      if (
-        host.includes("localhost") ||
-        host.includes("127.0.0.1") ||
-        host.includes("app")
-      ) {
+      if (host.includes("localhost") || host.includes("127.0.0.1") || host.includes("app")) {
         return;
       }
       reply.code(403).send({ error: "Origin not allowed" });

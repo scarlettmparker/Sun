@@ -17,10 +17,7 @@ import styles from "./index.module.css";
 const HomePage = () => {
   const [selected, setSelected] = useState<Project | null>(null);
 
-  const projects = useMemo(
-    () => [...personalProjects, ...internalProjects],
-    [],
-  );
+  const projects = useMemo(() => [...personalProjects, ...internalProjects], []);
 
   const handleOpenChange = useCallback((open: boolean) => {
     if (!open) setSelected(null);
@@ -38,10 +35,7 @@ const HomePage = () => {
           projects={projects}
           onReadMore={setSelected}
         />
-        <ProjectDetailDialog
-          project={selected}
-          onOpenChange={handleOpenChange}
-        />
+        <ProjectDetailDialog project={selected} onOpenChange={handleOpenChange} />
       </div>
     </ScrollArea>
   );

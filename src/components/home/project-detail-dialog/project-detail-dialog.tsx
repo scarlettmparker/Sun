@@ -35,10 +35,7 @@ const ProjectDetailDialog = (props: ProjectDetailDialogProps) => {
 
   const open = project != null;
   const detailKey = project?.detailKey ?? "";
-  const markdown = useMemo(
-    () => (detailKey ? t(detailKey) : ""),
-    [t, detailKey],
-  );
+  const markdown = useMemo(() => (detailKey ? t(detailKey) : ""), [t, detailKey]);
 
   const handleClose = useCallback(() => {
     onOpenChange(false);

@@ -2,6 +2,9 @@
   "name": "@sun/analytics",
   "version": "0.1.2",
   "description": "Server-side PostHog capture for Sun ecosystem apps",
+  "files": [
+    "dist"
+  ],
   "main": "./dist/client.js",
   "module": "./dist/client.mjs",
   "types": "./dist/client.d.ts",
@@ -22,9 +25,9 @@
       "require": "./dist/server.js"
     }
   },
-  "files": [
-    "dist"
-  ],
+  "publishConfig": {
+    "registry": "https://registry.int.scarlettparker.co.uk"
+  },
   "scripts": {
     "build": "tsup",
     "publish": "bun publish --registry https://registry.int.scarlettparker.co.uk"
@@ -35,8 +38,5 @@
   "devDependencies": {
     "tsup": "^8.3.5",
     "typescript": "^5.7.2"
-  },
-  "publishConfig": {
-    "registry": "https://registry.int.scarlettparker.co.uk"
   }
 }

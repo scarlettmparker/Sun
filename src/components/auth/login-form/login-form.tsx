@@ -1,14 +1,6 @@
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "@sun/i18n";
-import {
-  Form,
-  FormField,
-  FormLabel,
-  FormItem,
-  FormFooter,
-  Input,
-  Button,
-} from "@sun/components";
+import { Form, FormField, FormLabel, FormItem, FormFooter, Input, Button } from "@sun/components";
 import { CsrfField } from "@sun/ssr/react";
 import styles from "./login-form.module.css";
 

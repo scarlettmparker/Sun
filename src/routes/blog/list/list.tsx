@@ -42,11 +42,7 @@ const BlogListPage = () => {
           aria-label={t("ingest.open-label")}
           onClick={() => setIngestOpen(true)}
         >
-          <ArrowDownTrayOutline
-            className={styles.action_icon}
-            width={16}
-            height={16}
-          />
+          <ArrowDownTrayOutline className={styles.action_icon} width={16} height={16} />
           <span>{t("ingest.open-label")}</span>
         </Button>
         <Button

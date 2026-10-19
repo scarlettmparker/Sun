@@ -12,29 +12,30 @@
     },
     "./style.css": "./dist/index.css"
   },
+  "publishConfig": {
+    "registry": "https://registry.int.scarlettparker.co.uk"
+  },
   "scripts": {
     "build": "tsup",
-    "lint": "bunx eslint",
+    "lint": "bunx oxlint",
     "test": "bunx vitest run",
     "test:watch": "bunx vitest",
     "test:coverage": "bunx vitest run --coverage",
-    "publish": "bun publish --registry https://registry.int.scarlettparker.co.uk"
+    "publish": "bun publish --registry https://registry.int.scarlettparker.co.uk",
+    "lint:fix": "bunx oxlint --fix"
   },
   "dependencies": {},
   "devDependencies": {
     "@sun/components": "^0.11.35",
     "@types/react": "^19.1.2",
+    "@vitest/coverage-v8": "^3.2.4",
     "jsdom": "^27.0.0",
     "tsup": "^8.3.5",
     "typescript": "^5.7.2",
-    "vitest": "^3.2.4",
-    "@vitest/coverage-v8": "^3.2.4"
+    "vitest": "^3.2.4"
   },
   "peerDependencies": {
     "@sun/components": ">=0.11.35",
     "react": "^19.0.0"
-  },
-  "publishConfig": {
-    "registry": "https://registry.int.scarlettparker.co.uk"
   }
 }

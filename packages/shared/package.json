@@ -8,10 +8,10 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "scripts": {
-    "publish": "bun publish --registry https://registry.int.scarlettparker.co.uk"
-  },
   "publishConfig": {
     "registry": "https://registry.int.scarlettparker.co.uk"
+  },
+  "scripts": {
+    "publish": "bun publish --registry https://registry.int.scarlettparker.co.uk"
   }
 }

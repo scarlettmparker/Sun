@@ -9,9 +9,4 @@ export {
   useMenuIds,
   useMenuCloseHandlers,
 } from "./menu";
-export type {
-  MenuItemProps,
-  MenuSubProps,
-  MenuSubTriggerProps,
-  MenuSubContentProps,
-} from "./menu";
+export type { MenuItemProps, MenuSubProps, MenuSubTriggerProps, MenuSubContentProps } from "./menu";

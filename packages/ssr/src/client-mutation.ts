@@ -24,9 +24,7 @@ export async function executeMutation<T = unknown>(
       body: JSON.stringify(body),
     });
   } catch (error) {
-    throw new MutationError(
-      error instanceof Error ? error.message : "Network error",
-    );
+    throw new MutationError(error instanceof Error ? error.message : "Network error");
   }
 
   if (!response.ok) {

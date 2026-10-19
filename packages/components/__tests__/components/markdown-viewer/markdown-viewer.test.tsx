@@ -5,10 +5,7 @@
 
 import { render, screen } from "@testing-library/preact";
 import { MarkdownViewer } from "@sun/components";
-import {
-  restoreConsoleError,
-  suppressConsoleErrorsFromTests,
-} from "~/../testing/vitest/mock";
+import { restoreConsoleError, suppressConsoleErrorsFromTests } from "~/../testing/vitest/mock";
 
 beforeAll(() => {
   // Due to some issue with re-rendering that we don't care about in test env
@@ -27,16 +24,12 @@ describe("MarkdownViewer", () => {
     const viewer = screen.getByTestId("viewer");
     expect(viewer).toHaveClass("markdown_viewer");
     expect(viewer.innerHTML).toContain('<span class="md-h1">Header</span>');
-    expect(viewer.innerHTML).toContain(
-      '<span class="md-bold">Bold text</span>',
-    );
+    expect(viewer.innerHTML).toContain('<span class="md-bold">Bold text</span>');
     expect(viewer.innerHTML).toContain('<span class="md-italic">italic</span>');
   });
 
   it("throws error when children is not a string", () => {
-    const consoleSpy = vi
-      .spyOn(console, "error")
-      .mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     expect(() => {
       render(<MarkdownViewer>{123}</MarkdownViewer>);
     }).toThrow("MarkdownViewer children must be a string");
@@ -69,9 +62,7 @@ Some text with **bold**, *italic*, and \`code\`.
     expect(viewer.innerHTML).toContain('<span class="md-bold">bold</span>');
     expect(viewer.innerHTML).toContain('<span class="md-italic">italic</span>');
     expect(viewer.innerHTML).toContain('<span class="md-code">code</span>');
-    expect(viewer.innerHTML).toContain(
-      '<span class="md-quote">Blockquote</span>',
-    );
+    expect(viewer.innerHTML).toContain('<span class="md-quote">Blockquote</span>');
     expect(viewer.innerHTML).toContain("List item 1");
     expect(viewer.innerHTML).toContain("List item 2");
     expect(viewer.innerHTML).toContain(
@@ -91,11 +82,7 @@ Some text with **bold**, *italic*, and \`code\`.
 
   it("passes through other div attributes", () => {
     render(
-      <MarkdownViewer
-        data-testid="viewer"
-        id="markdown-viewer"
-        aria-label="Markdown content"
-      >
+      <MarkdownViewer data-testid="viewer" id="markdown-viewer" aria-label="Markdown content">
         Test content
       </MarkdownViewer>,
     );
@@ -137,9 +124,7 @@ Some text with **bold**, *italic*, and \`code\`.
     render(<MarkdownViewer data-testid="viewer">{markdown}</MarkdownViewer>);
     const viewer = screen.getByTestId("viewer");
 
-    expect(viewer.innerHTML).toContain(
-      "&lt;script&gt;alert('xss')&lt;/script&gt;",
-    );
+    expect(viewer.innerHTML).toContain("&lt;script&gt;alert('xss')&lt;/script&gt;");
     expect(viewer.innerHTML).not.toContain("<script>");
   });
 
@@ -149,9 +134,7 @@ Some text with **bold**, *italic*, and \`code\`.
     const viewer = screen.getByTestId("viewer");
 
     expect(viewer.innerHTML).toContain('<span class="md-h1">1. Header</span>');
-    expect(viewer.innerHTML).toContain(
-      '<span class="md-h2">Header-with-dashes</span>',
-    );
+    expect(viewer.innerHTML).toContain('<span class="md-h2">Header-with-dashes</span>');
   });
 
   it("handles multiple consecutive elements", () => {
@@ -214,9 +197,7 @@ Some text with **bold**, *italic*, and \`code\`.
     render(<MarkdownViewer data-testid="viewer">{markdown}</MarkdownViewer>);
     const viewer = screen.getByTestId("viewer");
     expect(viewer.innerHTML).toContain('<pre class="md-pre">');
-    expect(viewer.innerHTML).toContain(
-      '<code class="md-code-block" data-lang="js">',
-    );
+    expect(viewer.innerHTML).toContain('<code class="md-code-block" data-lang="js">');
     expect(viewer.innerHTML).toContain(
       '<span class="md-tk-kw">const</span> answer = <span class="md-tk-num">42</span>;',
     );
@@ -243,9 +224,7 @@ Some text with **bold**, *italic*, and \`code\`.
     const markdown = "Use `document.querySelector` here.";
     render(<MarkdownViewer data-testid="viewer">{markdown}</MarkdownViewer>);
     const viewer = screen.getByTestId("viewer");
-    expect(viewer.innerHTML).toContain(
-      '<span class="md-code">document.querySelector</span>',
-    );
+    expect(viewer.innerHTML).toContain('<span class="md-code">document.querySelector</span>');
     expect(viewer.innerHTML).not.toContain("md-pre");
   });
 
@@ -260,17 +239,12 @@ Some text with **bold**, *italic*, and \`code\`.
   });
 
   it("highlights javascript tokens in fenced code blocks", () => {
-    const markdown =
-      "```js\n// pick a node\nconst node = document.getElementById(\"id\");\n```";
+    const markdown = '```js\n// pick a node\nconst node = document.getElementById("id");\n```';
     render(<MarkdownViewer data-testid="viewer">{markdown}</MarkdownViewer>);
     const viewer = screen.getByTestId("viewer");
-    expect(viewer.innerHTML).toContain(
-      '<span class="md-tk-com">// pick a node</span>',
-    );
+    expect(viewer.innerHTML).toContain('<span class="md-tk-com">// pick a node</span>');
     expect(viewer.innerHTML).toContain('<span class="md-tk-kw">const</span>');
-    expect(viewer.innerHTML).toContain(
-      '<span class="md-tk-fn">getElementById</span>',
-    );
+    expect(viewer.innerHTML).toContain('<span class="md-tk-fn">getElementById</span>');
     expect(viewer.innerHTML).toContain('<span class="md-tk-str">"id"</span>');
   });
 

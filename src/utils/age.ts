@@ -9,8 +9,7 @@ export function getAge(birthDate: Date, now: Date = new Date()): number {
   let age = now.getFullYear() - birthDate.getFullYear();
   const hadBirthdayThisYear =
     now.getMonth() > birthDate.getMonth() ||
-    (now.getMonth() === birthDate.getMonth() &&
-      now.getDate() >= birthDate.getDate());
+    (now.getMonth() === birthDate.getMonth() && now.getDate() >= birthDate.getDate());
   if (!hadBirthdayThisYear) {
     age -= 1;
   }
@@ -29,8 +28,7 @@ export function getExperience(
   now: Date = new Date(),
 ): { years: number; months: number } {
   let totalMonths =
-    (now.getFullYear() - startDate.getFullYear()) * 12 +
-    (now.getMonth() - startDate.getMonth());
+    (now.getFullYear() - startDate.getFullYear()) * 12 + (now.getMonth() - startDate.getMonth());
   if (now.getDate() < startDate.getDate()) {
     totalMonths -= 1;
   }
@@ -49,13 +47,9 @@ export function getExperience(
  * @param now reference date, defaults to now
  * @returns years rounded to 0.5 increments (e.g. 1, 1.5)
  */
-export function getExperienceYoE(
-  startDate: Date,
-  now: Date = new Date(),
-): number {
+export function getExperienceYoE(startDate: Date, now: Date = new Date()): number {
   let totalMonths =
-    (now.getFullYear() - startDate.getFullYear()) * 12 +
-    (now.getMonth() - startDate.getMonth());
+    (now.getFullYear() - startDate.getFullYear()) * 12 + (now.getMonth() - startDate.getMonth());
   if (now.getDate() < startDate.getDate()) {
     totalMonths -= 1;
   }

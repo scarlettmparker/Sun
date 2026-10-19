@@ -47,16 +47,10 @@ export const ThemeSwitcher = ({ themes }: ThemeSwitcherProps) => {
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         {themes.map((option) => (
-          <DropdownMenuItem
-            key={option.name}
-            variant="secondary"
-            onSelect={() => select(option)}
-          >
+          <DropdownMenuItem key={option.name} variant="secondary" onSelect={() => select(option)}>
             <span
               className="theme_switcher_swatch"
-              style={
-                { "--theme-swatch": option.values.primary } as CSSProperties
-              }
+              style={{ "--theme-swatch": option.values.primary } as CSSProperties}
             />
             {option.name}
           </DropdownMenuItem>

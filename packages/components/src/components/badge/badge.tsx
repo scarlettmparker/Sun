@@ -12,9 +12,7 @@ type BadgeProps = {
  * Scarlet UI Badge.
  */
 const Badge = ({ variant = "default", className, ...rest }: BadgeProps) => {
-  return (
-    <span {...rest} className={cn(styles.badge, styles[variant], className)} />
-  );
+  return <span {...rest} className={cn(styles.badge, styles[variant], className)} />;
 };
 
 export default Badge;

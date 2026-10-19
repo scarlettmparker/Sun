@@ -1,9 +1,5 @@
 import { print, type DocumentNode } from "graphql";
-import {
-  getRequestCookie,
-  getRequestIp,
-  globalSingleton,
-} from "@sun/ssr";
+import { getRequestCookie, getRequestIp, globalSingleton } from "@sun/ssr";
 
 export type ApiResponse<T> = {
   success: boolean;
@@ -39,10 +35,7 @@ export function configureApi(config: {
 /**
  * Reads a named value from a Cookie header.
  */
-export function getCookieValue(
-  cookieHeader: string | undefined,
-  name: string,
-): string | undefined {
+export function getCookieValue(cookieHeader: string | undefined, name: string): string | undefined {
   if (!cookieHeader) return undefined;
   for (const part of cookieHeader.split(/;\s*/)) {
     const index = part.indexOf("=");
@@ -59,9 +52,7 @@ function resolveAuthToken(authToken?: string): string | undefined {
     return authToken;
   }
   const cookie = getRequestCookie();
-  return cookie && apiConfig.authCookie
-    ? getCookieValue(cookie, apiConfig.authCookie)
-    : undefined;
+  return cookie && apiConfig.authCookie ? getCookieValue(cookie, apiConfig.authCookie) : undefined;
 }
 
 /**
@@ -69,10 +60,7 @@ function resolveAuthToken(authToken?: string): string | undefined {
  * (thrown exceptions) trigger a retry; HTTP errors and GraphQL errors are
  * returned immediately as ApiResponse.
  */
-async function retryWithBackoff<T>(
-  fn: () => Promise<T>,
-  delays: number[],
-): Promise<T> {
+async function retryWithBackoff<T>(fn: () => Promise<T>, delays: number[]): Promise<T> {
   let lastError: unknown;
   for (let i = 0; i <= delays.length; i++) {
     try {
@@ -107,8 +95,7 @@ export async function executeDocument<T, V = Record<string, unknown>>(
   authToken?: string,
   options?: ExecuteOptions,
 ): Promise<ApiResponse<T>> {
-  const endpoint =
-    process.env.GRAPHQL_ENDPOINT || "http://localhost:8083/graphql";
+  const endpoint = process.env.GRAPHQL_ENDPOINT || "http://localhost:8083/graphql";
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
@@ -161,9 +148,7 @@ export async function executeDocument<T, V = Record<string, unknown>>(
         if (result.errors) {
           return {
             success: false,
-            error: result.errors
-              .map((e: { message: string }) => e.message)
-              .join(", "),
+            error: result.errors.map((e: { message: string }) => e.message).join(", "),
             statusCode: 400,
           };
         }
@@ -176,8 +161,7 @@ export async function executeDocument<T, V = Record<string, unknown>>(
       }
     }, retries);
   } catch (error) {
-    const isAbort =
-      error instanceof DOMException && error.name === "AbortError";
+    const isAbort = error instanceof DOMException && error.name === "AbortError";
     let message: string;
     if (isAbort) {
       message = `Timeout after ${timeoutMs}ms`;

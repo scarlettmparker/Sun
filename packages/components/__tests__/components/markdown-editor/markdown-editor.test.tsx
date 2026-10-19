@@ -3,19 +3,10 @@
  * Tests the MarkdownEditor component's rendering, editing, highlighting, and form integration.
  */
 
-import {
-  render,
-  screen,
-  fireEvent,
-  waitFor,
-  act,
-} from "@testing-library/preact";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/preact";
 import userEvent from "@testing-library/user-event";
 import { MarkdownEditor } from "@sun/components";
-import {
-  restoreConsoleError,
-  suppressConsoleErrorsFromTests,
-} from "~/../testing/vitest/mock";
+import { restoreConsoleError, suppressConsoleErrorsFromTests } from "~/../testing/vitest/mock";
 
 beforeAll(() => {
   // Due to some issue with re-rendering that we don't care about in test env
@@ -28,9 +19,7 @@ afterAll(() => {
 
 describe("MarkdownEditor", () => {
   it("renders contentEditable div with correct attributes", () => {
-    render(
-      <MarkdownEditor placeholder="Enter markdown" data-testid="editor" />,
-    );
+    render(<MarkdownEditor placeholder="Enter markdown" data-testid="editor" />);
     const editor = screen.getByTestId("editor");
     expect(editor.tagName).toBe("DIV");
     expect(editor).toHaveAttribute("contenteditable", "true");
@@ -64,13 +53,7 @@ describe("MarkdownEditor", () => {
 
   it("displays initial value and syncs to textarea", () => {
     const initialValue = "# Hello\n\n**Bold text**.";
-    render(
-      <MarkdownEditor
-        value={initialValue}
-        name="content"
-        data-testid="editor"
-      />,
-    );
+    render(<MarkdownEditor value={initialValue} name="content" data-testid="editor" />);
 
     const textarea = screen.getByTestId("markdown-editor-textarea");
     expect(textarea).toHaveValue(initialValue);
@@ -179,9 +162,7 @@ describe("MarkdownEditor", () => {
 
     expect(editor.textContent).toBe("Old value");
 
-    rerender(
-      <MarkdownEditor value="New value" name="content" data-testid="editor" />,
-    );
+    rerender(<MarkdownEditor value="New value" name="content" data-testid="editor" />);
     expect(editor.textContent).toBe("New value");
 
     const textarea = screen.getByTestId("markdown-editor-textarea");
@@ -189,9 +170,7 @@ describe("MarkdownEditor", () => {
   });
 
   it("handles placeholder display", () => {
-    render(
-      <MarkdownEditor placeholder="Start typing..." data-testid="editor" />,
-    );
+    render(<MarkdownEditor placeholder="Start typing..." data-testid="editor" />);
     const editor = screen.getByTestId("editor");
     expect(editor).toHaveAttribute("data-placeholder", "Start typing...");
   });
@@ -209,9 +188,7 @@ describe("MarkdownEditor", () => {
 
   it("maintains cursor position during highlighting", async () => {
     const user = userEvent.setup();
-    render(
-      <MarkdownEditor value="Some text" name="content" data-testid="editor" />,
-    );
+    render(<MarkdownEditor value="Some text" name="content" data-testid="editor" />);
 
     const editor = screen.getByTestId("editor");
     // Focus and set cursor at the end
@@ -232,13 +209,7 @@ describe("MarkdownEditor", () => {
   it("handles rapid typing", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
-    render(
-      <MarkdownEditor
-        onChange={onChange}
-        name="content"
-        data-testid="editor"
-      />,
-    );
+    render(<MarkdownEditor onChange={onChange} name="content" data-testid="editor" />);
 
     const editor = screen.getByTestId("editor");
     await user.type(editor, "Quick typing test");
@@ -268,13 +239,7 @@ describe("MarkdownEditor", () => {
 
   it("handles paste events", async () => {
     const onChange = vi.fn();
-    render(
-      <MarkdownEditor
-        onChange={onChange}
-        name="content"
-        data-testid="editor"
-      />,
-    );
+    render(<MarkdownEditor onChange={onChange} name="content" data-testid="editor" />);
 
     const editor = screen.getByTestId("editor");
     editor.focus();
@@ -338,13 +303,7 @@ describe("MarkdownEditor", () => {
   it("handles undo with Ctrl+Z", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
-    render(
-      <MarkdownEditor
-        onChange={onChange}
-        name="content"
-        data-testid="editor"
-      />,
-    );
+    render(<MarkdownEditor onChange={onChange} name="content" data-testid="editor" />);
 
     const editor = screen.getByTestId("editor");
     await user.type(editor, "Hello");
@@ -362,13 +321,7 @@ describe("MarkdownEditor", () => {
   it("handles redo with Ctrl+Y", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
-    render(
-      <MarkdownEditor
-        onChange={onChange}
-        name="content"
-        data-testid="editor"
-      />,
-    );
+    render(<MarkdownEditor onChange={onChange} name="content" data-testid="editor" />);
 
     const editor = screen.getByTestId("editor");
     await user.type(editor, "Hello");
@@ -387,13 +340,7 @@ describe("MarkdownEditor", () => {
   it("handles redo with Ctrl+Shift+Z", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
-    render(
-      <MarkdownEditor
-        onChange={onChange}
-        name="content"
-        data-testid="editor"
-      />,
-    );
+    render(<MarkdownEditor onChange={onChange} name="content" data-testid="editor" />);
 
     const editor = screen.getByTestId("editor");
     await user.type(editor, "Hello");
@@ -415,13 +362,7 @@ describe("MarkdownEditor", () => {
 
   it("handles paste without selection", async () => {
     const onChange = vi.fn();
-    render(
-      <MarkdownEditor
-        onChange={onChange}
-        name="content"
-        data-testid="editor"
-      />,
-    );
+    render(<MarkdownEditor onChange={onChange} name="content" data-testid="editor" />);
 
     const editor = screen.getByTestId("editor");
     // Clear selection to simulate no selection
@@ -442,21 +383,13 @@ describe("MarkdownEditor", () => {
 
   it("does not commit or highlight during IME composition", () => {
     const onChange = vi.fn();
-    render(
-      <MarkdownEditor
-        onChange={onChange}
-        name="content"
-        data-testid="editor"
-      />,
-    );
+    render(<MarkdownEditor onChange={onChange} name="content" data-testid="editor" />);
 
     const editor = screen.getByTestId("editor");
 
     // A dead-key / IME composition starts (e.g. Greek tonos, ´ + ε => έ)
     act(() => {
-      editor.dispatchEvent(
-        new CompositionEvent("compositionstart", { bubbles: true }),
-      );
+      editor.dispatchEvent(new CompositionEvent("compositionstart", { bubbles: true }));
     });
     // The browser inserts intermediate text and fires input mid-composition
     editor.textContent = "έ";
@@ -469,28 +402,18 @@ describe("MarkdownEditor", () => {
 
   it("commits composed text with diacritics on compositionend", () => {
     const onChange = vi.fn();
-    render(
-      <MarkdownEditor
-        onChange={onChange}
-        name="content"
-        data-testid="editor"
-      />,
-    );
+    render(<MarkdownEditor onChange={onChange} name="content" data-testid="editor" />);
 
     const editor = screen.getByTestId("editor");
 
     act(() => {
-      editor.dispatchEvent(
-        new CompositionEvent("compositionstart", { bubbles: true }),
-      );
+      editor.dispatchEvent(new CompositionEvent("compositionstart", { bubbles: true }));
     });
     editor.textContent = "έχω";
     fireEvent.input(editor);
     // The composed text is finalised only when the composition ends.
     act(() => {
-      editor.dispatchEvent(
-        new CompositionEvent("compositionend", { bubbles: true }),
-      );
+      editor.dispatchEvent(new CompositionEvent("compositionend", { bubbles: true }));
     });
 
     expect(onChange).toHaveBeenCalledTimes(1);
@@ -503,29 +426,19 @@ describe("MarkdownEditor", () => {
 
   it("keeps the diacritic combined instead of a standalone mark", () => {
     const onChange = vi.fn();
-    render(
-      <MarkdownEditor
-        onChange={onChange}
-        name="content"
-        data-testid="editor"
-      />,
-    );
+    render(<MarkdownEditor onChange={onChange} name="content" data-testid="editor" />);
 
     const editor = screen.getByTestId("editor");
 
     act(() => {
-      editor.dispatchEvent(
-        new CompositionEvent("compositionstart", { bubbles: true }),
-      );
+      editor.dispatchEvent(new CompositionEvent("compositionstart", { bubbles: true }));
     });
     editor.textContent = "έ";
     act(() => {
       editor.dispatchEvent(new InputEvent("input", { bubbles: true }));
     });
     act(() => {
-      editor.dispatchEvent(
-        new CompositionEvent("compositionend", { bubbles: true }),
-      );
+      editor.dispatchEvent(new CompositionEvent("compositionend", { bubbles: true }));
     });
 
     const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0];

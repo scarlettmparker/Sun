@@ -68,10 +68,7 @@ type ServerConfig = {
  * @param vite The Vite dev server in development, or undefined in production.
  * @returns    void, or a Promise that resolves once routes are registered.
  */
-type SetupRoutes = (
-  app: SunApp,
-  vite: ViteDevServer | undefined,
-) => void | Promise<void>;
+type SetupRoutes = (app: SunApp, vite: ViteDevServer | undefined) => void | Promise<void>;
 
 /**
  * Optional hook for app-specific middleware or custom routes. Runs before the
@@ -81,10 +78,7 @@ type SetupRoutes = (
  * @param vite The Vite dev server in development, or undefined in production.
  * @returns    void, or a Promise that resolves once configuration is done.
  */
-type ConfigureServer = (
-  app: SunApp,
-  vite: ViteDevServer | undefined,
-) => void | Promise<void>;
+type ConfigureServer = (app: SunApp, vite: ViteDevServer | undefined) => void | Promise<void>;
 
 interface CreateServerOptions {
   /**
@@ -136,46 +130,40 @@ async function registerApp(
 ): Promise<void> {
   const { config, setupRoutes, configure } = options;
 
-  app.addHook(
-    "onSend",
-    async (request: SunRequest, reply: SunReply, payload) => {
-      const contentType = String(reply.getHeader("content-type") ?? "");
-      const isHtml =
-        contentType.includes("text/html") ||
-        (typeof payload === "string" && payload.includes("<!DOCTYPE html>")) ||
-        request.url === "/" ||
-        request.url.startsWith("/?");
+  app.addHook("onSend", async (request: SunRequest, reply: SunReply, payload) => {
+    const contentType = String(reply.getHeader("content-type") ?? "");
+    const isHtml =
+      contentType.includes("text/html") ||
+      (typeof payload === "string" && payload.includes("<!DOCTYPE html>")) ||
+      request.url === "/" ||
+      request.url.startsWith("/?");
 
-      const nonce = getCspNonce();
-      if (nonce && isHtml) {
-        const headers = buildSecurityHeaders({
-          isProduction: config.isProduction,
-          nonce,
-        });
-        for (const [key, value] of Object.entries(headers)) {
-          if (key === "Content-Security-Policy" && reply.getHeader(key)) {
-            continue;
-          }
-          reply.header(key, value);
+    const nonce = getCspNonce();
+    if (nonce && isHtml) {
+      const headers = buildSecurityHeaders({
+        isProduction: config.isProduction,
+        nonce,
+      });
+      for (const [key, value] of Object.entries(headers)) {
+        if (key === "Content-Security-Policy" && reply.getHeader(key)) {
+          continue;
         }
-        return;
+        reply.header(key, value);
       }
+      return;
+    }
 
-      if (config.isProduction) {
-        reply.header("Strict-Transport-Security", buildHstsHeader());
-      }
-      reply.header("Cross-Origin-Opener-Policy", buildCoopHeader(false));
-      reply.header("Cross-Origin-Embedder-Policy", buildCoepHeader(true));
-      reply.header("Cross-Origin-Resource-Policy", buildCorpHeader("same-site"));
-      reply.header("X-Content-Type-Options", "nosniff");
-      reply.header("X-Frame-Options", "DENY");
-      reply.header("Referrer-Policy", "strict-origin-when-cross-origin");
-      reply.header(
-        "Permissions-Policy",
-        "geolocation=(), camera=(), microphone=(), payment=()",
-      );
-    },
-  );
+    if (config.isProduction) {
+      reply.header("Strict-Transport-Security", buildHstsHeader());
+    }
+    reply.header("Cross-Origin-Opener-Policy", buildCoopHeader(false));
+    reply.header("Cross-Origin-Embedder-Policy", buildCoepHeader(true));
+    reply.header("Cross-Origin-Resource-Policy", buildCorpHeader("same-site"));
+    reply.header("X-Content-Type-Options", "nosniff");
+    reply.header("X-Frame-Options", "DENY");
+    reply.header("Referrer-Policy", "strict-origin-when-cross-origin");
+    reply.header("Permissions-Policy", "geolocation=(), camera=(), microphone=(), payment=()");
+  });
 
   if (configure) {
     await configure(app, vite);
@@ -212,9 +200,7 @@ async function registerApp(
  * @param options Server config and app callbacks.
  * @returns The bound address.
  */
-async function startDevServer(
-  options: CreateServerOptions,
-): Promise<string> {
+async function startDevServer(options: CreateServerOptions): Promise<string> {
   const { config } = options;
   const { default: Fastify } = await import("fastify");
   const { default: fastifyStatic } = await import("@fastify/static");
@@ -286,9 +272,7 @@ async function startDevServer(
   };
 
   process.once("SIGUSR2", () => {
-    void gracefulShutdown("SIGUSR2", () =>
-      process.kill(process.pid, "SIGUSR2"),
-    );
+    void gracefulShutdown("SIGUSR2", () => process.kill(process.pid, "SIGUSR2"));
   });
   process.on("SIGTERM", () => void gracefulShutdown("SIGTERM"));
   process.on("SIGINT", () => void gracefulShutdown("SIGINT"));
@@ -303,9 +287,7 @@ async function startDevServer(
  * @param options Server config, the app's route setup, and an optional configure hook.
  * @returns       The bound address.
  */
-export async function createServer(
-  options: CreateServerOptions,
-): Promise<string> {
+export async function createServer(options: CreateServerOptions): Promise<string> {
   const { config } = options;
 
   if (!config.isProduction) {
@@ -393,10 +375,7 @@ function analyticsBeaconHandler(config: {
  *
  * @returns A POST route handler.
  */
-export function mutationPostHandler(): (
-  request: SunRequest,
-  reply: SunReply,
-) => Promise<void> {
+export function mutationPostHandler(): (request: SunRequest, reply: SunReply) => Promise<void> {
   /**
    * Dispatches the mutation and maps errors to their status.
    */

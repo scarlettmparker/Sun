@@ -58,10 +58,10 @@ export async function detachRemoteObject(
   postId: string,
   target: string,
 ): Promise<RemoveRemoteObjectResponse> {
-  return executeMutation<RemoveRemoteObjectResponse>(
-    "blog/remove-remote-object",
-    { postId, target },
-  );
+  return executeMutation<RemoveRemoteObjectResponse>("blog/remove-remote-object", {
+    postId,
+    target,
+  });
 }
 
 /**
@@ -85,10 +85,9 @@ export async function ingestBlogFromSource(input: {
   sourceId: string;
   parentId?: string | null;
 }): Promise<IngestBlogFromSourceResponse> {
-  const response = await executeMutation<IngestBlogFromSourceResponse>(
-    "blog/ingest-source",
-    { input },
-  );
+  const response = await executeMutation<IngestBlogFromSourceResponse>("blog/ingest-source", {
+    input,
+  });
   window.location.assign(`/blog/${response.post.id}`);
   return response;
 }

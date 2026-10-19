@@ -8,16 +8,7 @@ import { constants, gzipSync } from "node:zlib";
 import type { Plugin } from "vite";
 
 /** Extensions that get a `.gz` twin. Compressed formats are left out. */
-const DEFAULT_EXTENSIONS = [
-  ".js",
-  ".mjs",
-  ".css",
-  ".html",
-  ".svg",
-  ".json",
-  ".txt",
-  ".xml",
-];
+const DEFAULT_EXTENSIONS = [".js", ".mjs", ".css", ".html", ".svg", ".json", ".txt", ".xml"];
 
 /**
  * Options for {@link compression}.
@@ -59,9 +50,7 @@ async function* walk(dir: string): AsyncGenerator<string> {
  * @returns The Vite plugin.
  */
 export function compression(options: CompressionOptions = {}): Plugin {
-  const extensions = new Set(
-    DEFAULT_EXTENSIONS.concat(options.extensions ?? []),
-  );
+  const extensions = new Set(DEFAULT_EXTENSIONS.concat(options.extensions ?? []));
   const threshold = options.threshold ?? 0;
   let outDir = "dist";
   let ssr = false;

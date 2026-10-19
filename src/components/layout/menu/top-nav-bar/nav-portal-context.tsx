@@ -29,9 +29,7 @@ export const NavPortalProvider = ({ children }: { children: ReactNode }) => {
   const [innerSlot, setInnerSlot] = useState<HTMLElement | null>(null);
 
   return (
-    <NavPortalContext.Provider
-      value={{ outerSlot, innerSlot, setOuterSlot, setInnerSlot }}
-    >
+    <NavPortalContext.Provider value={{ outerSlot, innerSlot, setOuterSlot, setInnerSlot }}>
       {children}
     </NavPortalContext.Provider>
   );
@@ -42,7 +40,6 @@ export const NavPortalProvider = ({ children }: { children: ReactNode }) => {
  */
 export const useNavPortal = (): NavPortalContextType => {
   const ctx = useContext(NavPortalContext);
-  if (!ctx)
-    throw new Error("useNavPortal must be used within NavPortalProvider");
+  if (!ctx) throw new Error("useNavPortal must be used within NavPortalProvider");
   return ctx;
 };

@@ -50,11 +50,7 @@ const BlogTypeContainer = (props: BlogTypeContainerProps) => {
 
   return (
     <>
-      <BlogTypeList
-        selectedType={selectedType}
-        onSelect={handleSelect}
-        variant={variant}
-      />
+      <BlogTypeList selectedType={selectedType} onSelect={handleSelect} variant={variant} />
       {id ? (
         <Suspense fallback={null}>
           <BlogPostTypeFetcher postId={id} onTypeChange={setPostType} />

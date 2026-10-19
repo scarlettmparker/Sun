@@ -121,10 +121,7 @@ export type SunReply = {
 /**
  * Async route handler.
  */
-export type RouteHandler = (
-  request: SunRequest,
-  reply: SunReply,
-) => void | Promise<void>;
+export type RouteHandler = (request: SunRequest, reply: SunReply) => void | Promise<void>;
 
 /**
  * Lifecycle hook names supported by the adapters.
@@ -155,11 +152,7 @@ export interface SunApp {
   /**
    * Registers a route with an explicit method.
    */
-  route(options: {
-    method: string;
-    url: string;
-    handler: RouteHandler;
-  }): void;
+  route(options: { method: string; url: string; handler: RouteHandler }): void;
   /**
    * Registers a plugin. Handled natively by the Bun server, forwarded to
    * Fastify in development.
@@ -172,8 +165,5 @@ export interface SunApp {
   /**
    * Registers the GET not-found handler.
    */
-  setNotFoundHandler(
-    options: { method: string[] },
-    handler: RouteHandler,
-  ): void;
+  setNotFoundHandler(options: { method: string[] }, handler: RouteHandler): void;
 }

@@ -5,13 +5,7 @@
 
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import type { HTTPMethods } from "fastify";
-import type {
-  HookName,
-  RouteHandler,
-  SunApp,
-  SunReply,
-  SunRequest,
-} from "./server-types";
+import type { HookName, RouteHandler, SunApp, SunReply, SunRequest } from "./server-types";
 
 /**
  * Maps a Fastify request onto the neutral shape.
@@ -83,9 +77,8 @@ export function fastifyApp(app: FastifyInstance): SunApp {
    * @param handler The neutral handler.
    * @returns The Fastify handler.
    */
-  const wrap =
-    (handler: RouteHandler) => (request: FastifyRequest, reply: FastifyReply) =>
-      handler(toSunRequest(request), toSunReply(reply));
+  const wrap = (handler: RouteHandler) => (request: FastifyRequest, reply: FastifyReply) =>
+    handler(toSunRequest(request), toSunReply(reply));
 
   return {
     get(path, handler) {
@@ -124,10 +117,7 @@ export function fastifyApp(app: FastifyInstance): SunApp {
       }
     },
     setNotFoundHandler(options, handler) {
-      app.setNotFoundHandler(
-        { method: options.method as HTTPMethods[] },
-        wrap(handler),
-      );
+      app.setNotFoundHandler({ method: options.method as HTTPMethods[] }, wrap(handler));
     },
   };
 }

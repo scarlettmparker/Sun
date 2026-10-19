@@ -56,9 +56,7 @@ export function matchOriginToMode(origin: string): FrontendMode | null {
  */
 export function detectFrontendMode(): FrontendMode | null {
   if (typeof window !== "undefined") {
-    const injected = (window as unknown as Record<string, unknown>)[
-      FRONTEND_MODE_GLOBAL
-    ];
+    const injected = (window as unknown as Record<string, unknown>)[FRONTEND_MODE_GLOBAL];
     if (
       typeof injected === "string" &&
       Object.values(FrontendMode).includes(injected as FrontendMode)

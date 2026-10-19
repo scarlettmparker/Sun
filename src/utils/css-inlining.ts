@@ -9,10 +9,7 @@ import path from "path";
  *
  * @returns Concatenated CSS content as a string, or empty string if not in production.
  */
-export async function inlineCss(
-  isProduction: boolean,
-  clientCss: string[],
-): Promise<string> {
+export async function inlineCss(isProduction: boolean, clientCss: string[]): Promise<string> {
   if (!isProduction) {
     return "";
   }
@@ -71,9 +68,7 @@ export function generateCssTag(
     return `<style>${cssContent}</style>`;
   }
   if (clientCss && clientCss.length > 0) {
-    return clientCss
-      .map((css) => `<link rel="stylesheet" href="${css}" />`)
-      .join("");
+    return clientCss.map((css) => `<link rel="stylesheet" href="${css}" />`).join("");
   }
   return "";
 }

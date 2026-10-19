@@ -14,15 +14,11 @@ defineLoader({
   async loader(params) {
     const pagination = (params as { pagination?: PaginationInput }).pagination;
     try {
-      const result = await executeDocument<ListBlogPostsQuery>(
-        ListBlogPostsDocument,
-        {
-          pagination,
-        },
-      );
+      const result = await executeDocument<ListBlogPostsQuery>(ListBlogPostsDocument, {
+        pagination,
+      });
       const payload = result.success
-        ? (result.data as ListBlogPostsQuery | undefined)?.blogQueries
-            ?.listBlogPosts
+        ? (result.data as ListBlogPostsQuery | undefined)?.blogQueries?.listBlogPosts
         : null;
       return { blogPosts: payload?.items ?? [] };
     } catch {

@@ -13,9 +13,7 @@ function readCssVar(name: string): string | undefined {
   if (typeof window === "undefined") {
     return undefined;
   }
-  const value = getComputedStyle(document.documentElement)
-    .getPropertyValue(name)
-    .trim();
+  const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   return value || undefined;
 }
 

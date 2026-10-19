@@ -55,10 +55,7 @@ export function useStemPlayer(song: Song) {
           setBuffers(decoded);
           gainNodes.current = decoded.map(() => audioCtx.createGain());
           masterGainNode.current = audioCtx.createGain();
-          masterGainNode.current.gain.setValueAtTime(
-            masterVolume,
-            audioCtx.currentTime,
-          );
+          masterGainNode.current.gain.setValueAtTime(masterVolume, audioCtx.currentTime);
           gainNodes.current.forEach((gainNode) => {
             gainNode.connect(masterGainNode.current!);
           });
@@ -194,8 +191,7 @@ export function useStemPlayer(song: Song) {
       } else {
         setEnded(false);
       }
-      if (playing && offset.current < getDuration())
-        startPlayback(offset.current);
+      if (playing && offset.current < getDuration()) startPlayback(offset.current);
     },
     [audioCtx, buffers, playing, getDuration, stop],
   );

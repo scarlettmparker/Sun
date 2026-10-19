@@ -11,10 +11,7 @@ export class EventBus<T extends EventMap> {
    * Subscribe to a typed event.
    * Returns an unsubscribe function.
    */
-  on<K extends EventKey<T>>(
-    event: K,
-    handler: EventHandler<EventPayload<T, K>>,
-  ): () => void {
+  on<K extends EventKey<T>>(event: K, handler: EventHandler<EventPayload<T, K>>): () => void {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
     }
@@ -25,10 +22,7 @@ export class EventBus<T extends EventMap> {
   /**
    * Unsubscribe a specific handler from an event.
    */
-  off<K extends EventKey<T>>(
-    event: K,
-    handler: EventHandler<EventPayload<T, K>>,
-  ): void {
+  off<K extends EventKey<T>>(event: K, handler: EventHandler<EventPayload<T, K>>): void {
     this.listeners.get(event)?.delete(handler);
   }
 

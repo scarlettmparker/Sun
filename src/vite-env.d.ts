@@ -10,9 +10,7 @@ interface ImportMeta {
 
 export declare global {
   interface Window {
-    hydratePageDataFromPostlude?: (
-      initialData: Record<string, Record<string, unknown>>,
-    ) => void;
+    hydratePageDataFromPostlude?: (initialData: Record<string, Record<string, unknown>>) => void;
     __serverCacheData__?: Record<string, Record<string, unknown>>;
     __locale__?: string;
     /**
@@ -39,10 +37,7 @@ export declare global {
     /**
      * Idle callback for deferring non-critical work.
      */
-    requestIdleCallback?: (
-      callback: () => void,
-      options?: { timeout: number },
-    ) => number;
+    requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
     /**
      * Cancels an idle callback.
      */

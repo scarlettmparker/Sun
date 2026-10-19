@@ -1,10 +1,4 @@
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-preact";
 import { cn } from "~/utils/cn";
@@ -29,9 +23,7 @@ const DialogContext = createContext<DialogContextValue | null>(null);
 const useDialog = () => {
   const ctx = useContext(DialogContext);
   if (!ctx) {
-    throw new Error(
-      "Dialog sub-components must be used inside a Dialog component",
-    );
+    throw new Error("Dialog sub-components must be used inside a Dialog component");
   }
   return ctx;
 };
@@ -89,9 +81,7 @@ const Dialog = (props: DialogProps) => {
   const dialogRef = useRef<HTMLElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<{ w: number; h: number } | null>(null);
-  const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(
-    null,
-  );
+  const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(null);
   const [dragPos, setDragPos] = useState(position ?? { top: 100, left: 100 });
 
   useEffect(() => {
@@ -108,8 +98,7 @@ const Dialog = (props: DialogProps) => {
   useEffect(() => {
     if (
       position &&
-      (position.top !== lastPosition.current?.top ||
-        position.left !== lastPosition.current?.left)
+      (position.top !== lastPosition.current?.top || position.left !== lastPosition.current?.left)
     ) {
       setDragPos(position);
     }
@@ -208,9 +197,7 @@ const Dialog = (props: DialogProps) => {
     if (e.key === "Enter") {
       if (document.activeElement?.tagName === "TEXTAREA") return;
 
-      const submitBtn = e.currentTarget.querySelector(
-        'button[type="submit"]',
-      ) as HTMLButtonElement;
+      const submitBtn = e.currentTarget.querySelector('button[type="submit"]') as HTMLButtonElement;
 
       if (submitBtn && document.activeElement !== submitBtn) {
         e.preventDefault();
@@ -239,11 +226,7 @@ const Dialog = (props: DialogProps) => {
   const handleDragStart = (e: React.MouseEvent<HTMLElement>) => {
     if (!draggable) return;
     const target = e.target as HTMLElement | null;
-    if (
-      target?.closest(
-        "input, textarea, select, button, a, [contenteditable], [data-no-drag]",
-      )
-    ) {
+    if (target?.closest("input, textarea, select, button, a, [contenteditable], [data-no-drag]")) {
       return;
     }
     const rect = e.currentTarget.getBoundingClientRect();
@@ -254,30 +237,17 @@ const Dialog = (props: DialogProps) => {
   const isModal = modal && !draggable;
 
   const content = (
-    <DialogContext.Provider
-      value={{ open, setOpen: onOpenChange ?? (() => {}) }}
-    >
+    <DialogContext.Provider value={{ open, setOpen: onOpenChange ?? (() => {}) }}>
       <div
         ref={wrapperRef}
-        className={cn(
-          styles.dialog_wrapper,
-          isModal && styles.dialog_modal_active,
-        )}
+        className={cn(styles.dialog_wrapper, isModal && styles.dialog_modal_active)}
       >
         {isModal && (
-          <div
-            className={styles.dialog_overlay}
-            aria-hidden="true"
-            onClick={handleClose}
-          />
+          <div className={styles.dialog_overlay} aria-hidden="true" onClick={handleClose} />
         )}
         <article
           ref={dialogRef}
-          className={cn(
-            styles.dialog,
-            draggable && styles.dialog_draggable,
-            className,
-          )}
+          className={cn(styles.dialog, draggable && styles.dialog_draggable, className)}
           role="dialog"
           aria-modal={isModal}
           onKeyDown={handleKeyDown}
@@ -434,11 +404,4 @@ const DialogClose = (props: DialogCloseProps) => {
 };
 
 export default Dialog;
-export {
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogBody,
-  DialogFooter,
-  DialogClose,
-};
+export { DialogHeader, DialogTitle, DialogDescription, DialogBody, DialogFooter, DialogClose };

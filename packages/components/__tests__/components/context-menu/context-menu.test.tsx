@@ -32,9 +32,7 @@ describe("ContextMenu", () => {
 
     fireEvent.contextMenu(trigger);
     expect(screen.getByRole("menu")).toBeInTheDocument();
-    expect(
-      screen.getByRole("menuitem", { name: /action/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: /action/i })).toBeInTheDocument();
 
     fireEvent.click(trigger);
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
@@ -131,9 +129,7 @@ describe("ContextMenu", () => {
     );
 
     fireEvent.contextMenu(screen.getByText(/open/i));
-    expect(
-      screen.getByRole("menuitem", { name: /grouped/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: /grouped/i })).toBeInTheDocument();
   });
 
   it("opens and closes sub-menu", () => {
@@ -154,13 +150,9 @@ describe("ContextMenu", () => {
     fireEvent.contextMenu(screen.getByText(/open/i));
     const subTrigger = screen.getByText(/sub/i);
     fireEvent.pointerEnter(subTrigger);
-    expect(
-      screen.getByRole("menuitem", { name: /subitem/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: /subitem/i })).toBeInTheDocument();
     fireEvent.pointerLeave(subTrigger);
-    expect(
-      screen.queryByRole("menuitem", { name: /subitem/i }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: /subitem/i })).not.toBeInTheDocument();
   });
 
   it("opens menu on right-click (contextmenu)", () => {

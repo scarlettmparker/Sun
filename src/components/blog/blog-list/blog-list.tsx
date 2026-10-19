@@ -55,11 +55,7 @@ const BlogList = (props: BlogListProps) => {
   return (
     <div className={styles.groups}>
       {groupedPosts.map((group) => (
-        <BlogMonthGroup
-          key={group.monthYear}
-          monthYear={group.monthYear}
-          posts={group.posts}
-        />
+        <BlogMonthGroup key={group.monthYear} monthYear={group.monthYear} posts={group.posts} />
       ))}
     </div>
   );

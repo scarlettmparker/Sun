@@ -11,7 +11,12 @@ export default defineConfig(() => {
       .filter(Boolean) ?? [];
 
   return {
-    plugins: [preact(), stripJsxPragma("preact-heroicons"), compression(), forbidModules(["react", "react-dom"])],
+    plugins: [
+      preact(),
+      stripJsxPragma("preact-heroicons"),
+      compression(),
+      forbidModules(["react", "react-dom"]),
+    ],
     resolve: {
       alias: {
         "~": path.resolve(import.meta.dirname, "./src"),

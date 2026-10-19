@@ -18,12 +18,7 @@ export default defineConfig({
     },
     cssCodeSplit: false,
     rollupOptions: {
-      external: [
-        "preact",
-        "preact/compat",
-        "preact/hooks",
-        "preact/jsx-runtime",
-      ],
+      external: ["preact", "preact/compat", "preact/hooks", "preact/jsx-runtime"],
     },
   },
 });

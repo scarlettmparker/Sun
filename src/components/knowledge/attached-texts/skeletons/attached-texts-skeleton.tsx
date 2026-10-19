@@ -1,10 +1,4 @@
-import {
-  Card,
-  CardBody,
-  CardHeader,
-  CardTitle,
-  Skeleton,
-} from "@sun/components";
+import { Card, CardBody, CardHeader, CardTitle, Skeleton } from "@sun/components";
 import styles from "../attached-texts.module.css";
 
 /**

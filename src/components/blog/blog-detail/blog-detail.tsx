@@ -15,7 +15,12 @@ import {
   MarkdownViewer,
   ScrollArea,
 } from "@sun/components";
-import { ArrowDownTrayOutline, EllipsisVerticalOutline, PlusOutline, TrashOutline } from "preact-heroicons";
+import {
+  ArrowDownTrayOutline,
+  EllipsisVerticalOutline,
+  PlusOutline,
+  TrashOutline,
+} from "preact-heroicons";
 import type { BlogPost, LocateBlogPostQuery } from "~/generated/graphql";
 import BlogBreadcrumb from "~/components/blog/blog-breadcrumb";
 import KnowledgeGraph from "~/components/knowledge/knowledge-graph";
@@ -33,9 +38,11 @@ const BlogDetail = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { t } = useTranslation("blog");
-  const { data } = usePageData<
-    LocateBlogPostQuery["blogQueries"]["locateBlogPost"]
-  >("blogPost", "blog/:id", { id });
+  const { data } = usePageData<LocateBlogPostQuery["blogQueries"]["locateBlogPost"]>(
+    "blogPost",
+    "blog/:id",
+    { id },
+  );
   const [ingestOpen, setIngestOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const { setInnerSlot } = useNavPortal();
@@ -47,10 +54,7 @@ const BlogDetail = () => {
   }
 
   const handleCreateChild = () => {
-    const typeParam =
-      data.type?.name == null
-        ? ""
-        : `&type=${encodeURIComponent(data.type.name)}`;
+    const typeParam = data.type?.name == null ? "" : `&type=${encodeURIComponent(data.type.name)}`;
     navigate(
       `/blog/create?parentId=${id}&from=${encodeURIComponent(location.pathname)}${typeParam}`,
     );
@@ -89,22 +93,11 @@ const BlogDetail = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                   <DropdownMenuItem onClick={() => setIngestOpen(true)}>
-                    <ArrowDownTrayOutline
-                      className={styles.menu_icon}
-                      width={16}
-                      height={16}
-                    />
+                    <ArrowDownTrayOutline className={styles.menu_icon} width={16} height={16} />
                     {t("ingest.open-label")}
                   </DropdownMenuItem>
-                  <DropdownMenuItem
-                    variant="destructive"
-                    onClick={() => setDeleteOpen(true)}
-                  >
-                    <TrashOutline
-                      className={styles.menu_icon}
-                      width={16}
-                      height={16}
-                    />
+                  <DropdownMenuItem variant="destructive" onClick={() => setDeleteOpen(true)}>
+                    <TrashOutline className={styles.menu_icon} width={16} height={16} />
                     {t("detail.delete-submit")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -112,9 +105,7 @@ const BlogDetail = () => {
             </CardHeader>
             <CardBody>
               <ScrollArea maxHeight="36rem">
-                <MarkdownViewer className={styles.blog_body}>
-                  {data.content}
-                </MarkdownViewer>
+                <MarkdownViewer className={styles.blog_body}>{data.content}</MarkdownViewer>
               </ScrollArea>
             </CardBody>
           </Card>

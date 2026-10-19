@@ -25,9 +25,7 @@ const Select = (props: SelectProps) => {
     ...rest
   } = props;
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedValue, setSelectedValue] = useState(
-    value || defaultValue || "",
-  );
+  const [selectedValue, setSelectedValue] = useState(value || defaultValue || "");
   const selectRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -82,10 +80,7 @@ const Select = (props: SelectProps) => {
    * Closes the dropdown when clicking outside the component.
    */
   const handleClickOutside = (event: MouseEvent) => {
-    if (
-      selectRef.current &&
-      !selectRef.current.contains(event.target as Node)
-    ) {
+    if (selectRef.current && !selectRef.current.contains(event.target as Node)) {
       setIsOpen(false);
     }
   };
@@ -108,19 +103,16 @@ const Select = (props: SelectProps) => {
   /**
    * Handles option key down for selection.
    */
-  const handleOptionKeyDown =
-    (optionValue: string) => (event: React.KeyboardEvent) => {
-      if (event.key === "Enter") {
-        handleSelect(optionValue);
-      }
-    };
+  const handleOptionKeyDown = (optionValue: string) => (event: React.KeyboardEvent) => {
+    if (event.key === "Enter") {
+      handleSelect(optionValue);
+    }
+  };
 
   /**
    * Handles change events from the hidden select element.
    */
-  const handleHiddenSelectChange = (
-    e: React.ChangeEvent<HTMLSelectElement>,
-  ) => {
+  const handleHiddenSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedValue(e.target.value);
     onChange?.(e);
   };
@@ -167,10 +159,7 @@ const Select = (props: SelectProps) => {
           {options?.map((option) => (
             <div
               key={option.value}
-              className={cn(
-                styles.option,
-                option.value === selectedValue && styles.selected,
-              )}
+              className={cn(styles.option, option.value === selectedValue && styles.selected)}
               onClick={() => handleOptionClick(option.value)}
               role="option"
               aria-selected={option.value === selectedValue}

@@ -9,9 +9,11 @@ import styles from "./stem-player-details.module.css";
  */
 const StemPlayerDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
-  const { data: song } = usePageData<
-    LocateSongQuery["stemPlayerQueries"]["locate"]
-  >("song", "stem-player/:id", { id });
+  const { data: song } = usePageData<LocateSongQuery["stemPlayerQueries"]["locate"]>(
+    "song",
+    "stem-player/:id",
+    { id },
+  );
 
   if (!song?.path) {
     return null;

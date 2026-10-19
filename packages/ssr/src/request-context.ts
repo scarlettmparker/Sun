@@ -35,10 +35,7 @@ setRequestIpProvider(() => requestIpAls.getStore() ?? undefined);
  *
  * @param context Cookie header and client IP for the request.
  */
-export function enterRequestContext(context: {
-  cookie?: string;
-  ip?: string;
-}): void {
+export function enterRequestContext(context: { cookie?: string; ip?: string }): void {
   requestCacheAls.enterWith(new Map());
   requestCookieAls.enterWith(context.cookie);
   requestIpAls.enterWith(context.ip);
@@ -66,10 +63,7 @@ export function runWithRequestContext<T>(
  * @param key Cache key.
  * @param result Merged result object.
  */
-export function seedRequestCache(
-  key: string,
-  result: Record<string, unknown>,
-): void {
+export function seedRequestCache(key: string, result: Record<string, unknown>): void {
   requestCacheAls.getStore()?.set(key, {
     status: "resolved",
     result,

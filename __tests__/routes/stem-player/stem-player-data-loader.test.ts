@@ -11,9 +11,7 @@ vi.mock("@sun/api", () => ({
   executeDocument: vi.fn(),
 }));
 
-const mockExecuteDocument = executeDocument as MockedFunction<
-  typeof executeDocument
->;
+const mockExecuteDocument = executeDocument as MockedFunction<typeof executeDocument>;
 
 /**
  * Runs the registered stem-player loader and merges its slices.

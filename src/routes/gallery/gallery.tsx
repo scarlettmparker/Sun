@@ -12,9 +12,10 @@ import { usePageData } from "@sun/ssr/react";
 import { ListGalleryItemsQuery } from "~/generated/graphql";
 
 const Gallery = () => {
-  const { data: galleryItems } = usePageData<
-    ListGalleryItemsQuery["galleryQueries"]["list"]
-  >("galleryItems", "gallery");
+  const { data: galleryItems } = usePageData<ListGalleryItemsQuery["galleryQueries"]["list"]>(
+    "galleryItems",
+    "gallery",
+  );
 
   if (!galleryItems) {
     return null;
