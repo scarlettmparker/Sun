@@ -206,7 +206,7 @@ bootstrap_db() {
   sudo incus file push -q -p --mode 0600 --uid 0 --gid 0 \
     "$BASE_SCHEMA" "$NAME/tmp/base-schema.sql"
   sudo incus file push -q -p --mode 0600 --uid 0 --gid 0 "$pgpass" "$NAME/root/.pgpass"
-  ic bash -c 'PGPASSFILE=/root/.pgpass psql -q -v ON_ERROR_STOP=1 -h 127.0.0.1 -U sun -d sun -f /tmp/base-schema.sql'
+  ic bash -c 'PGPASSFILE=/root/.pgpass psql -q -v ON_ERROR_STOP=1 -h 127.0.0.1 -U sun -d sun -f /tmp/base-schema.sql >/dev/null'
   sudo incus exec "$NAME" -- rm -f /tmp/base-schema.sql /root/.pgpass
   rm -f "$pgpass"
 
