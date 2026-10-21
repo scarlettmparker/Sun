@@ -23,9 +23,9 @@ import com.sun.dionysus.graphql.mappers.FileMapper;
 import com.sun.dionysus.graphql.mappers.KeyDetailMapper;
 import com.sun.dionysus.graphql.mappers.KeyEntryMapper;
 import com.sun.dionysus.model.KeyDetailEntity;
-import com.sun.dionysus.model.TorrentJobEntity;
 import com.sun.dionysus.service.KeyDetailService;
 import com.sun.dionysus.service.torrent.TorrentJobService;
+import com.sun.dionysus.torrent.TorrentJobViewService;
 import jakarta.annotation.PostConstruct;
 import java.net.HttpURLConnection;
 import java.time.Duration;
@@ -70,13 +70,14 @@ public class FilestoreDataFetcher {
   private final RestClient.Builder restClientBuilder;
   private final KeyDetailService keyDetailService;
   private final TorrentJobService torrentJobService;
+  private final TorrentJobViewService torrentJobViewService;
 
   private RestClient restClient;
 
   public FilestoreDataFetcher(S3Client s3Client, @Qualifier("s3Presigner") S3Presigner s3Presigner,
       FileMapper fileMapper, KeyEntryMapper keyEntryMapper, KeyDetailMapper keyDetailMapper,
       RestClient.Builder restClientBuilder, KeyDetailService keyDetailService,
-      TorrentJobService torrentJobService) {
+      TorrentJobService torrentJobService, TorrentJobViewService torrentJobViewService) {
     this.s3Client = s3Client;
     this.s3Presigner = s3Presigner;
     this.fileMapper = fileMapper;
@@ -85,6 +86,7 @@ public class FilestoreDataFetcher {
     this.restClientBuilder = restClientBuilder;
     this.keyDetailService = keyDetailService;
     this.torrentJobService = torrentJobService;
+    this.torrentJobViewService = torrentJobViewService;
   }
 
   @PostConstruct
@@ -561,16 +563,7 @@ public class FilestoreDataFetcher {
     Map<String, KeyEntry> byKey =
         entries.stream().collect(Collectors.toMap(KeyEntry::getKey, e -> e, (a, b) -> a));
 
-    for (TorrentJobEntity job : torrentJobService.findVisibleInBucketUnderPrefix(bucket, prefix)) {
-      KeyEntry existing = byKey.get(job.getTargetKeyPath());
-      if (existing != null) {
-        keyEntryMapper.mergeTorrentJob(existing, job);
-      } else {
-        KeyEntry synthetic = keyEntryMapper.mapTorrentJob(job);
-        entries.add(synthetic);
-        byKey.put(synthetic.getKey(), synthetic);
-      }
-    }
+    entries.addAll(torrentJobViewService.mergeInProgressJobs(bucket, prefix, byKey));
   }
 
   /**

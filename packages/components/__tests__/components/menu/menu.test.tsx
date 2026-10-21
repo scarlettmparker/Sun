@@ -6,7 +6,7 @@
  */
 
 import React, { useRef, useState } from "react";
-import { fireEvent, render, screen } from "@testing-library/preact";
+import { act, fireEvent, render, screen } from "@testing-library/preact";
 import {
   MenuItem,
   MenuSub,
@@ -130,6 +130,7 @@ describe("Menu primitives", () => {
   });
 
   it("MenuSub + SubTrigger + SubContent toggles on pointer enter/leave and renders in portal", () => {
+    vi.useFakeTimers();
     render(
       <MenuSub data-testid="sub-root" resetNonce={0}>
         <MenuSubTrigger>SubTrigger</MenuSubTrigger>
@@ -145,11 +146,18 @@ describe("Menu primitives", () => {
     fireEvent.pointerEnter(trig);
     expect(screen.getByTestId("sub-item")).toBeInTheDocument();
 
+    // Close is delayed so the pointer can travel to the submenu content
     fireEvent.pointerLeave(trig);
+    expect(screen.getByTestId("sub-item")).toBeInTheDocument();
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
     expect(screen.queryByTestId("sub-item")).not.toBeInTheDocument();
+    vi.useRealTimers();
   });
 
   it("MenuSubContent pointer enter/leave keeps/closes sub", () => {
+    vi.useFakeTimers();
     render(
       <MenuSub resetNonce={0}>
         <MenuSubTrigger>Trigger2</MenuSubTrigger>
@@ -163,8 +171,44 @@ describe("Menu primitives", () => {
     const content = screen.getByRole("menu");
     fireEvent.pointerEnter(content);
     expect(content).toBeInTheDocument();
+
+    // Entering the content cancels the pending close
+    fireEvent.pointerLeave(trig);
+    fireEvent.pointerEnter(content);
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
+    expect(screen.getByText("Item")).toBeInTheDocument();
+
     fireEvent.pointerLeave(content);
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
     expect(screen.queryByText("Item")).not.toBeInTheDocument();
+    vi.useRealTimers();
+  });
+
+  it("leaving trigger then entering content keeps submenu open", () => {
+    vi.useFakeTimers();
+    render(
+      <MenuSub resetNonce={0}>
+        <MenuSubTrigger>Trigger3</MenuSubTrigger>
+        <MenuSubContent>
+          <div data-testid="sub-item-3">Sub Content</div>
+        </MenuSubContent>
+      </MenuSub>,
+    );
+    const trig = screen.getByText(/trigger3/i);
+    fireEvent.pointerEnter(trig);
+    expect(screen.getByTestId("sub-item-3")).toBeInTheDocument();
+
+    fireEvent.pointerLeave(trig);
+    fireEvent.pointerEnter(screen.getByRole("menu"));
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
+    expect(screen.getByTestId("sub-item-3")).toBeInTheDocument();
+    vi.useRealTimers();
   });
 
   it("MenuTrigger renders div or clones asChild", () => {

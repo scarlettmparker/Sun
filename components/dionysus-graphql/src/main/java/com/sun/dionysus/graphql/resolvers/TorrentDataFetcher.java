@@ -15,6 +15,7 @@ import com.sun.dionysus.model.enums.TorrentStatus;
 import com.sun.dionysus.service.torrent.TorrentJobService;
 import com.sun.dionysus.torrent.MagnetUri;
 import com.sun.dionysus.torrent.TorrentClientService;
+import com.sun.dionysus.torrent.TorrentJobViewService;
 import com.sun.dionysus.torrent.search.TorrentSearchResult;
 import com.sun.dionysus.torrent.search.TorrentSearchService;
 import java.net.HttpURLConnection;
@@ -27,15 +28,14 @@ import org.springframework.security.access.prepost.PreAuthorize;
 @DgsComponent
 public class TorrentDataFetcher {
 
-  private final TorrentJobService torrentJobService;
-  private final TorrentJobMapper torrentJobMapper;
+  private final TorrentJobViewService torrentJobView;
   private final TorrentClientService torrentClient;
   private final TorrentSearchService torrentSearchService;
 
-  public TorrentDataFetcher(TorrentJobService torrentJobService, TorrentJobMapper torrentJobMapper,
-      TorrentClientService torrentClient, TorrentSearchService torrentSearchService) {
-    this.torrentJobService = torrentJobService;
-    this.torrentJobMapper = torrentJobMapper;
+  public TorrentDataFetcher(
+      TorrentJobViewService torrentJobView, TorrentClientService torrentClient,
+      TorrentSearchService torrentSearchService) {
+    this.torrentJobView = torrentJobView;
     this.torrentClient = torrentClient;
     this.torrentSearchService = torrentSearchService;
   }
@@ -47,10 +47,7 @@ public class TorrentDataFetcher {
   @DgsData(parentType = "FilestoreQueries", field = "torrentJob")
   @PreAuthorize("@permissions.has('graphql.dionysus.torrentJob')")
   public TorrentJob torrentJob(String jobId) {
-    return torrentJobService
-        .findById(UUID.fromString(jobId))
-        .map(torrentJobMapper::map)
-        .orElse(null);
+    return torrentJobView.byId(UUID.fromString(jobId)).orElse(null);
   }
 
   /**
@@ -61,11 +58,7 @@ public class TorrentDataFetcher {
   @PreAuthorize("@permissions.has('graphql.dionysus.torrentJobs')")
   public List<TorrentJob> torrentJobs(String bucket, String status) {
     TorrentStatus statusFilter = status == null ? null : TorrentStatus.valueOf(status);
-    return torrentJobService.findAll().stream()
-        .filter(job -> bucket == null || bucket.equals(job.getBucket()))
-        .filter(job -> statusFilter == null || statusFilter.equals(job.getStatus()))
-        .map(torrentJobMapper::map)
-        .toList();
+    return torrentJobView.list(bucket, statusFilter);
   }
 
   @Audited(event = "SEARCHTORRENTS", entity = "Torrent")
@@ -107,7 +100,10 @@ public class TorrentDataFetcher {
     }
     return AddTorrentResponse.newBuilder()
         .message("addTorrent succeeded")
-        .job(torrentJobMapper.map(job))
+        .job(torrentJobView
+            .byId(job.getId())
+            .orElseThrow(
+                () -> new MutationException("addTorrent failed: job not found after save")))
         .build();
   }
 
@@ -120,9 +116,10 @@ public class TorrentDataFetcher {
   public PauseTorrentResponse pauseTorrent(String jobId) {
     UUID id = UUID.fromString(jobId);
     torrentClient.pauseJob(id);
-    TorrentJob job = torrentJobService.findById(id)
-        .map(torrentJobMapper::map)
-        .orElseThrow(() -> new MutationException("pauseTorrent failed: torrent job not found: " + jobId));
+    TorrentJob job = torrentJobView
+        .byId(id)
+        .orElseThrow(
+            () -> new MutationException("pauseTorrent failed: torrent job not found: " + jobId));
     return PauseTorrentResponse.newBuilder()
         .message("pauseTorrent succeeded")
         .job(job)
@@ -138,9 +135,10 @@ public class TorrentDataFetcher {
   public ResumeTorrentResponse resumeTorrent(String jobId) {
     UUID id = UUID.fromString(jobId);
     torrentClient.resumeJob(id);
-    TorrentJob job = torrentJobService.findById(id)
-        .map(torrentJobMapper::map)
-        .orElseThrow(() -> new MutationException("resumeTorrent failed: torrent job not found: " + jobId));
+    TorrentJob job = torrentJobView
+        .byId(id)
+        .orElseThrow(
+            () -> new MutationException("resumeTorrent failed: torrent job not found: " + jobId));
     return ResumeTorrentResponse.newBuilder()
         .message("resumeTorrent succeeded")
         .job(job)
@@ -156,9 +154,10 @@ public class TorrentDataFetcher {
   public CancelTorrentResponse cancelTorrent(String jobId) {
     UUID id = UUID.fromString(jobId);
     torrentClient.cancelJob(id);
-    TorrentJob job = torrentJobService.findById(id)
-        .map(torrentJobMapper::map)
-        .orElseThrow(() -> new MutationException("cancelTorrent failed: torrent job not found: " + jobId));
+    TorrentJob job = torrentJobView
+        .byId(id)
+        .orElseThrow(
+            () -> new MutationException("cancelTorrent failed: torrent job not found: " + jobId));
     return CancelTorrentResponse.newBuilder()
         .message("cancelTorrent succeeded")
         .job(job)

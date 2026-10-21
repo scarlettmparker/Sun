@@ -26,6 +26,7 @@ import com.sun.dionysus.graphql.mappers.KeyDetailMapper;
 import com.sun.dionysus.graphql.mappers.KeyEntryMapper;
 import com.sun.dionysus.model.KeyDetailEntity;
 import com.sun.dionysus.service.torrent.TorrentJobService;
+import com.sun.dionysus.torrent.TorrentJobViewService;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CommonPrefix;
 import software.amazon.awssdk.services.s3.model.S3Object;
@@ -88,6 +89,9 @@ class FilestoreDataFetcherTest {
   @Mock
   private TorrentJobService torrentJobService;
 
+  @Mock
+  private TorrentJobViewService torrentJobView;
+
   @InjectMocks
   private FilestoreDataFetcher fetcher;
 
@@ -111,7 +115,7 @@ class FilestoreDataFetcherTest {
     httpServer.start();
     putKeyUploadUrl = new URL("http://localhost:" + httpServer.getAddress().getPort() + "/upload");
 
-    when(torrentJobService.findVisibleInBucketUnderPrefix(anyString(), nullable(String.class)))
+    when(torrentJobView.mergeInProgressJobs(anyString(), nullable(String.class), any()))
         .thenReturn(List.of());
     when(keyDetailService.listActiveForBucketAndPath(anyString(), anyString())).thenReturn(List.of());
     when(keyDetailService.createOrUpdateDetail(anyString(), anyString(), any(), any())).thenAnswer(invocation -> {

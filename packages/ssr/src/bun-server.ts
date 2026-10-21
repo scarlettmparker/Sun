@@ -256,7 +256,7 @@ async function parseBody(request: Request): Promise<unknown> {
  *
  * @returns The response state.
  */
-function createResponseState(): ResponseState {
+export function createResponseState(): ResponseState {
   const encoder = new TextEncoder();
   const headers = new Headers();
   let statusCode = 200;
@@ -264,6 +264,7 @@ function createResponseState(): ResponseState {
   let stream: ReadableStream<Uint8Array> | null = null;
   let controller: ReadableStreamDefaultController<Uint8Array> | null = null;
   let ended = false;
+  let cancelled = false;
 
   /**
    * Lazily creates the body stream.
@@ -275,6 +276,9 @@ function createResponseState(): ResponseState {
       stream = new ReadableStream<Uint8Array>({
         start(c) {
           controller = c;
+        },
+        cancel() {
+          cancelled = true;
         },
       });
     }
@@ -298,15 +302,23 @@ function createResponseState(): ResponseState {
       headers.delete(name);
     },
     write(chunk) {
-      if (ended) return true;
-      ensureStream().enqueue(typeof chunk === "string" ? encoder.encode(chunk) : chunk);
+      if (ended || cancelled) return true;
+      try {
+        ensureStream().enqueue(typeof chunk === "string" ? encoder.encode(chunk) : chunk);
+      } catch {
+        cancelled = true;
+      }
       return true;
     },
     end(chunk) {
-      if (ended) return;
+      if (ended || cancelled) return;
       if (chunk !== undefined) sink.write(chunk);
       ended = true;
-      controller?.close();
+      try {
+        controller?.close();
+      } catch {
+        cancelled = true;
+      }
     },
   };
 

@@ -144,9 +144,22 @@ type MenuSubContextValue = {
    * Ref to the sub menu trigger element for positioning the sub content
    */
   triggerRef: React.MutableRefObject<HTMLButtonElement | null>;
+  /**
+   * Cancels a pending delayed close.
+   */
+  cancelClose: () => void;
+  /**
+   * Schedules a delayed close so the pointer can reach the submenu.
+   */
+  scheduleClose: () => void;
 };
 
 const MenuSubContext = createContext<MenuSubContextValue | null>(null);
+
+/**
+ * Grace period before a submenu closes after pointer leave.
+ */
+const SUB_MENU_CLOSE_DELAY_MS = 120;
 
 /**
  * Internal hook for MenuSub descendants.
@@ -170,14 +183,38 @@ const MenuSub = (props: MenuSubProps) => {
   const { className, children, resetNonce, ...rest } = props;
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  const cancelClose = useCallback(() => {
+    if (closeTimerRef.current !== undefined) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = undefined;
+    }
+  }, []);
+
+  const scheduleClose = useCallback(() => {
+    cancelClose();
+    closeTimerRef.current = setTimeout(() => {
+      closeTimerRef.current = undefined;
+      setOpen(false);
+    }, SUB_MENU_CLOSE_DELAY_MS);
+  }, [cancelClose]);
+
+  // Clear pending close on unmount
+  useEffect(() => {
+    return () => cancelClose();
+  }, [cancelClose]);
 
   // Auto-close open submenu when the parent menu's resetNonce changes
   useEffect(() => {
+    cancelClose();
     setOpen(false);
-  }, [resetNonce]);
+  }, [resetNonce, cancelClose]);
 
   return (
-    <MenuSubContext.Provider value={{ open, setOpen, triggerRef }}>
+    <MenuSubContext.Provider
+      value={{ open, setOpen, triggerRef, cancelClose, scheduleClose }}
+    >
       <div className={className} data-state={open ? "open" : "closed"} {...rest}>
         {children}
       </div>
@@ -205,10 +242,11 @@ const MenuSubTrigger = (props: MenuSubTriggerProps) => {
     variant,
     ...rest
   } = props;
-  const { open, setOpen, triggerRef } = useMenuSub();
+  const { open, setOpen, triggerRef, cancelClose, scheduleClose } = useMenuSub();
 
   const handlePointerEnter = (event: React.PointerEvent<HTMLButtonElement>) => {
     if (disabled || event.pointerType === "touch") return;
+    cancelClose();
     triggerRef.current = event.currentTarget;
     setOpen(true);
     onPointerEnter?.(event);
@@ -218,7 +256,7 @@ const MenuSubTrigger = (props: MenuSubTriggerProps) => {
     if (disabled || event.pointerType === "touch") {
       return;
     }
-    setOpen(false);
+    scheduleClose();
     onPointerLeave?.(event);
   };
 
@@ -262,7 +300,7 @@ export type MenuSubContentProps = React.HTMLAttributes<HTMLDivElement>;
  */
 const MenuSubContent = (props: MenuSubContentProps) => {
   const { className, children, onPointerEnter, onPointerLeave, ...rest } = props;
-  const { open, setOpen, triggerRef } = useMenuSub();
+  const { open, setOpen, triggerRef, cancelClose, scheduleClose } = useMenuSub();
   const subRef = useRef<HTMLDivElement>(null);
 
   // Isomorphic layout effect to avoid SSR warnings
@@ -309,6 +347,7 @@ const MenuSubContent = (props: MenuSubContentProps) => {
     if (event.pointerType === "touch") {
       return;
     }
+    cancelClose();
     setOpen(true);
     onPointerEnter?.(event);
   };
@@ -320,7 +359,7 @@ const MenuSubContent = (props: MenuSubContentProps) => {
     if (event.pointerType === "touch") {
       return;
     }
-    setOpen(false);
+    scheduleClose();
     onPointerLeave?.(event);
   };
 

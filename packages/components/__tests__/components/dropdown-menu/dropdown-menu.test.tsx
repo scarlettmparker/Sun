@@ -3,7 +3,7 @@
  * Tests the open/close behavior, item activation, asChild support, submenus, keyboard navigation.
  */
 
-import { fireEvent, render, screen } from "@testing-library/preact";
+import { act, fireEvent, render, screen } from "@testing-library/preact";
 import {
   Button,
   DropdownMenu,
@@ -133,6 +133,7 @@ describe("DropdownMenu", () => {
   });
 
   it("opens and closes sub-menu using pointer events", () => {
+    vi.useFakeTimers();
     render(
       <DropdownMenu>
         <DropdownMenuTrigger>Open</DropdownMenuTrigger>
@@ -151,8 +152,14 @@ describe("DropdownMenu", () => {
     const subTrigger = screen.getByText(/sub/i);
     fireEvent.pointerEnter(subTrigger);
     expect(screen.getByRole("menuitem", { name: /subitem/i })).toBeInTheDocument();
+    // Close is delayed so the pointer can travel to the submenu content
     fireEvent.pointerLeave(subTrigger);
+    expect(screen.getByRole("menuitem", { name: /subitem/i })).toBeInTheDocument();
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
     expect(screen.queryByRole("menuitem", { name: /subitem/i })).not.toBeInTheDocument();
+    vi.useRealTimers();
   });
 
   it("closes on Escape key", () => {

@@ -29,7 +29,7 @@
     "@fastify/static": "^9.1.3",
     "@sun/analytics": "^0.1.2",
     "@sun/api": "^0.2.9",
-    "@sun/components": "^0.12.13",
+    "@sun/components": "^0.12.14",
     "@sun/events": "^0.1.1",
     "@sun/i18n": "^0.1.1",
     "@sun/security": "^0.1.9",

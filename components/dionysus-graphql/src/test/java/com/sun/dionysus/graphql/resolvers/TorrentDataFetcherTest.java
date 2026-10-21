@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -14,11 +15,10 @@ import com.sun.dionysus.codegen.types.PauseTorrentResponse;
 import com.sun.dionysus.codegen.types.ResumeTorrentResponse;
 import com.sun.dionysus.codegen.types.TorrentJob;
 import com.sun.dionysus.codegen.types.TorrentJobStatus;
-import com.sun.dionysus.graphql.mappers.TorrentJobMapper;
 import com.sun.dionysus.model.TorrentJobEntity;
 import com.sun.dionysus.model.enums.TorrentStatus;
-import com.sun.dionysus.service.torrent.TorrentJobService;
 import com.sun.dionysus.torrent.TorrentClientService;
+import com.sun.dionysus.torrent.TorrentJobViewService;
 import com.sun.dionysus.torrent.search.TorrentSearchResult;
 import com.sun.dionysus.torrent.search.TorrentSearchService;
 import java.util.Base64;
@@ -34,8 +34,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class TorrentDataFetcherTest {
 
-  @Mock private TorrentJobService torrentJobService;
-  @Mock private TorrentJobMapper torrentJobMapper;
+  @Mock private TorrentJobViewService torrentJobView;
   @Mock private TorrentClientService torrentClient;
   @Mock private TorrentSearchService torrentSearchService;
 
@@ -44,13 +43,10 @@ class TorrentDataFetcherTest {
   @Test
   void torrentJob_shouldReturnMappedJob() {
     UUID id = UUID.randomUUID();
-    TorrentJobEntity entity = new TorrentJobEntity();
-    entity.setId(id);
     TorrentJob mapped = TorrentJob.newBuilder().id(id.toString()).bucket("b").targetKeyPath("k")
         .sourceType("MAGNET").status(TorrentJobStatus.DOWNLOADING).infoHash("h")
         .totalBytes(100L).downloadedBytes(0L).uploadedBytes(0L).progress(0.0).build();
-    when(torrentJobService.findById(id)).thenReturn(Optional.of(entity));
-    when(torrentJobMapper.map(entity)).thenReturn(mapped);
+    when(torrentJobView.byId(id)).thenReturn(Optional.of(mapped));
 
     TorrentJob result = fetcher.torrentJob(id.toString());
 
@@ -60,7 +56,7 @@ class TorrentDataFetcherTest {
   @Test
   void torrentJob_shouldReturnNullWhenNotFound() {
     UUID id = UUID.randomUUID();
-    when(torrentJobService.findById(id)).thenReturn(Optional.empty());
+    when(torrentJobView.byId(id)).thenReturn(Optional.empty());
 
     TorrentJob result = fetcher.torrentJob(id.toString());
 
@@ -69,16 +65,10 @@ class TorrentDataFetcherTest {
 
   @Test
   void torrentJobs_shouldReturnAllWhenNoFilter() {
-    TorrentJobEntity e1 = job("b1", TorrentStatus.DOWNLOADING);
-    TorrentJobEntity e2 = job("b2", TorrentStatus.PAUSED);
-    when(torrentJobService.findAll()).thenReturn(List.of(e1, e2));
-    when(torrentJobMapper.map(any(TorrentJobEntity.class))).thenAnswer(inv -> {
-      TorrentJobEntity e = inv.getArgument(0);
-      return TorrentJob.newBuilder().id(e.getId().toString()).bucket(e.getBucket())
-          .targetKeyPath(e.getTargetKeyPath()).sourceType("MAGNET")
-          .status(TorrentJobStatus.valueOf(e.getStatus().name())).infoHash("h")
-          .totalBytes(0L).downloadedBytes(0L).uploadedBytes(0L).progress(0.0).build();
-    });
+    TorrentJob mapped = TorrentJob.newBuilder().id(UUID.randomUUID().toString()).bucket("b")
+        .targetKeyPath("k").sourceType("MAGNET").status(TorrentJobStatus.DOWNLOADING).infoHash("h")
+        .totalBytes(0L).downloadedBytes(0L).uploadedBytes(0L).progress(0.0).build();
+    when(torrentJobView.list(isNull(), isNull())).thenReturn(List.of(mapped, mapped));
 
     List<TorrentJob> result = fetcher.torrentJobs(null, null);
 
@@ -87,14 +77,10 @@ class TorrentDataFetcherTest {
 
   @Test
   void torrentJobs_shouldFilterByBucketAndStatus() {
-    TorrentJobEntity match = job("bucket", TorrentStatus.DOWNLOADING);
-    TorrentJobEntity otherBucket = job("other", TorrentStatus.DOWNLOADING);
-    TorrentJobEntity otherStatus = job("bucket", TorrentStatus.PAUSED);
-    when(torrentJobService.findAll()).thenReturn(List.of(match, otherBucket, otherStatus));
-    when(torrentJobMapper.map(match)).thenReturn(TorrentJob.newBuilder().id(match.getId().toString())
-        .bucket("bucket").targetKeyPath("k").sourceType("MAGNET")
-        .status(TorrentJobStatus.DOWNLOADING).infoHash("h").totalBytes(0L).downloadedBytes(0L)
-        .uploadedBytes(0L).progress(0.0).build());
+    TorrentJob mapped = TorrentJob.newBuilder().id(UUID.randomUUID().toString()).bucket("bucket")
+        .targetKeyPath("k").sourceType("MAGNET").status(TorrentJobStatus.DOWNLOADING).infoHash("h")
+        .totalBytes(0L).downloadedBytes(0L).uploadedBytes(0L).progress(0.0).build();
+    when(torrentJobView.list("bucket", TorrentStatus.DOWNLOADING)).thenReturn(List.of(mapped));
 
     List<TorrentJob> result = fetcher.torrentJobs("bucket", "DOWNLOADING");
 
@@ -123,7 +109,7 @@ class TorrentDataFetcherTest {
         .infoHash("h").totalBytes(0L).downloadedBytes(0L).uploadedBytes(0L).progress(0.0).build();
     String magnet = "magnet:?xt=urn:btih:abc123&dn=ubuntu.iso";
     when(torrentClient.addFromMagnet("b", "path/", magnet)).thenReturn(entity);
-    when(torrentJobMapper.map(entity)).thenReturn(mapped);
+    when(torrentJobView.byId(entity.getId())).thenReturn(Optional.of(mapped));
 
     AddTorrentResponse result = fetcher.addTorrent(AddTorrentInput.newBuilder()
         .bucket("b").path("path/").magnet(magnet).build());
@@ -141,7 +127,7 @@ class TorrentDataFetcherTest {
     byte[] bytes = "fake torrent bytes".getBytes();
     String base64 = Base64.getEncoder().encodeToString(bytes);
     when(torrentClient.addFromTorrentFile(eq("b"), eq("p"), any(byte[].class))).thenReturn(entity);
-    when(torrentJobMapper.map(entity)).thenReturn(mapped);
+    when(torrentJobView.byId(entity.getId())).thenReturn(Optional.of(mapped));
 
     AddTorrentResponse result = fetcher.addTorrent(AddTorrentInput.newBuilder()
         .bucket("b").path("p").torrentFileBase64(base64).build());
@@ -169,13 +155,10 @@ class TorrentDataFetcherTest {
   @Test
   void pauseTorrent_shouldDelegateAndReturnMapped() {
     UUID id = UUID.randomUUID();
-    TorrentJobEntity entity = job("b", TorrentStatus.PAUSED);
-    entity.setId(id);
     TorrentJob mapped = TorrentJob.newBuilder().id(id.toString()).bucket("b")
         .targetKeyPath("k").sourceType("MAGNET").status(TorrentJobStatus.PAUSED)
         .infoHash("h").totalBytes(0L).downloadedBytes(0L).uploadedBytes(0L).progress(0.0).build();
-    when(torrentJobService.findById(id)).thenReturn(Optional.of(entity));
-    when(torrentJobMapper.map(entity)).thenReturn(mapped);
+    when(torrentJobView.byId(id)).thenReturn(Optional.of(mapped));
 
     PauseTorrentResponse result = fetcher.pauseTorrent(id.toString());
 
@@ -186,13 +169,10 @@ class TorrentDataFetcherTest {
   @Test
   void resumeTorrent_shouldDelegateAndReturnMapped() {
     UUID id = UUID.randomUUID();
-    TorrentJobEntity entity = job("b", TorrentStatus.DOWNLOADING);
-    entity.setId(id);
     TorrentJob mapped = TorrentJob.newBuilder().id(id.toString()).bucket("b")
         .targetKeyPath("k").sourceType("MAGNET").status(TorrentJobStatus.DOWNLOADING)
         .infoHash("h").totalBytes(0L).downloadedBytes(0L).uploadedBytes(0L).progress(0.0).build();
-    when(torrentJobService.findById(id)).thenReturn(Optional.of(entity));
-    when(torrentJobMapper.map(entity)).thenReturn(mapped);
+    when(torrentJobView.byId(id)).thenReturn(Optional.of(mapped));
 
     ResumeTorrentResponse result = fetcher.resumeTorrent(id.toString());
 
@@ -203,13 +183,10 @@ class TorrentDataFetcherTest {
   @Test
   void cancelTorrent_shouldDelegateAndReturnMapped() {
     UUID id = UUID.randomUUID();
-    TorrentJobEntity entity = job("b", TorrentStatus.CANCELLED);
-    entity.setId(id);
     TorrentJob mapped = TorrentJob.newBuilder().id(id.toString()).bucket("b")
         .targetKeyPath("k").sourceType("MAGNET").status(TorrentJobStatus.CANCELLED)
         .infoHash("h").totalBytes(0L).downloadedBytes(0L).uploadedBytes(0L).progress(0.0).build();
-    when(torrentJobService.findById(id)).thenReturn(Optional.of(entity));
-    when(torrentJobMapper.map(entity)).thenReturn(mapped);
+    when(torrentJobView.byId(id)).thenReturn(Optional.of(mapped));
 
     CancelTorrentResponse result = fetcher.cancelTorrent(id.toString());
 

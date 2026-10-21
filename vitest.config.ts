@@ -21,6 +21,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "~": path.resolve(rootDir, "src"),
+      "@ssr": path.resolve(rootDir, "packages/ssr/src"),
       testing: path.resolve(rootDir, "testing"),
       "react-dom/test-utils": "preact/test-utils",
       "react-dom": "preact/compat",
