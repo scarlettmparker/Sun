@@ -1,12 +1,14 @@
 package com.sun.dionysus.rest;
 import com.sun.base.audit.annotation.Audited;
+import com.sun.dionysus.transcode.TranscodeResult;
+import com.sun.dionysus.transcode.TranscodeService;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +51,9 @@ public class FileViewController {
   @Autowired
   @Qualifier("internalS3Presigner")
   private S3Presigner s3Presigner;
+
+  @Autowired
+  private TranscodeService transcodeService;
 
   /**
    * Streams the object for inline viewing. Supports HTTP Range for seeking.
@@ -163,33 +168,18 @@ public class FileViewController {
       var head = headObject(bucket, key);
       if (head == null) return ResponseEntity.notFound().build();
 
-      input = Files.createTempFile("transcode-input-", ".mkv");
+      input = transcodeService.createWorkFile("transcode-input-", ".mkv");
       try (var in = s3Client.getObject(
           GetObjectRequest.builder().bucket(bucket).key(key).build())) {
-        Files.copy(in, input);
+        Files.copy(in, input, StandardCopyOption.REPLACE_EXISTING);
       }
 
-      output = Files.createTempFile("transcode-output-", ".mp4");
-      var pb = new ProcessBuilder(
-          "ffmpeg", "-i", input.toAbsolutePath().toString(),
-          "-c:v", "libx264", "-preset", "fast",
-          "-c:a", "aac",
-          "-movflags", "+faststart",
-          "-y", output.toAbsolutePath().toString());
-      pb.redirectErrorStream(true);
-      Process p = pb.start();
-      try (var is = p.getInputStream()) {
-        is.transferTo(OutputStream.nullOutputStream());
-      }
-      int exit = p.waitFor();
-      if (exit != 0) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body("ffmpeg exited with code " + exit);
-      }
+      TranscodeResult result = transcodeService.transcode(input, null);
+      output = result.output();
 
       String mp4Key = key + ".mp4";
       uploadViaPresign(bucket, mp4Key, output);
-      log.info("Transcoded {} to {}", key, mp4Key);
+      log.info("Transcoded {} to {} using {}", key, mp4Key, result.encoder());
       return ResponseEntity.ok(mp4Key);
     } catch (Exception e) {
       log.error("Transcoding failed for {} in bucket {}", key, bucket, e);
@@ -204,7 +194,7 @@ public class FileViewController {
   /**
    * Uploads a local file to S3 via a presigned PUT URL.
    */
-  private void uploadViaPresign(String bucket, String key, Path file) throws IOException {
+  void uploadViaPresign(String bucket, String key, Path file) throws IOException {
     var presignReq = PutObjectPresignRequest.builder()
         .putObjectRequest(PutObjectRequest.builder()
             .bucket(bucket).key(key).contentType("video/mp4").build())

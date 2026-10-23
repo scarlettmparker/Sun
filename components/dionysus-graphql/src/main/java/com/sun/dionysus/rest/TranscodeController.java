@@ -1,12 +1,17 @@
 package com.sun.dionysus.rest;
 import com.sun.base.audit.annotation.Audited;
+import com.sun.dionysus.transcode.TranscodeResult;
+import com.sun.dionysus.transcode.TranscodeService;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,6 +20,8 @@ import org.springframework.web.bind.annotation.RestController;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
 /**
  * Transcodes MKV/AVI files to MP4 for browser streaming.
@@ -28,13 +35,20 @@ public class TranscodeController {
   @Autowired
   private S3Client s3Client;
 
+  @Autowired
+  private TranscodeService transcodeService;
+
+  @Autowired
+  @Qualifier("internalS3Presigner")
+  private S3Presigner s3Presigner;
+
   /**
    * Request body for a transcode request.
    *
    * @param bucket the bucket containing the file.
    * @param key the key of the file to transcode.
    */
-  private record TranscodeRequest(String bucket, String key) {}
+  record TranscodeRequest(String bucket, String key) {}
 
   /**
    * Transcodes an MKV/AVI file to MP4. Downloads the original from S3,
@@ -55,33 +69,20 @@ public class TranscodeController {
     Path input = null;
     Path output = null;
     try {
-      input = Files.createTempFile("transcode-in-", ".mkv");
-      output = Files.createTempFile("transcode-out-", ".mp4");
+      input = transcodeService.createWorkFile("transcode-in-", ".mkv");
 
-      s3Client.getObject(GetObjectRequest.builder().bucket(req.bucket()).key(key).build(), input);
+      try (var in = s3Client.getObject(
+          GetObjectRequest.builder().bucket(req.bucket()).key(key).build())) {
+        Files.copy(in, input, StandardCopyOption.REPLACE_EXISTING);
+      }
 
-      ProcessBuilder pb = new ProcessBuilder(
-          "ffmpeg", "-i", input.toAbsolutePath().toString(),
-          "-c:v", "libx264", "-preset", "fast",
-          "-c:a", "aac",
-          "-movflags", "+faststart",
-          "-y", output.toAbsolutePath().toString());
-      pb.redirectErrorStream(true);
-      Process p = pb.start();
-      try (var is = p.getInputStream()) {
-        is.transferTo(OutputStream.nullOutputStream());
-      }
-      int exit = p.waitFor();
-      if (exit != 0) {
-        throw new IOException("ffmpeg exited with code " + exit);
-      }
+      TranscodeResult result = transcodeService.transcode(input, null);
+      output = result.output();
 
       String mp4Key = key + ".mp4";
-      s3Client.putObject(
-          PutObjectRequest.builder().bucket(req.bucket()).key(mp4Key).contentType("video/mp4").build(),
-          software.amazon.awssdk.core.sync.RequestBody.fromFile(output));
+      uploadViaPresign(req.bucket(), mp4Key, output);
 
-      log.info("Transcoded {} to {}", key, mp4Key);
+      log.info("Transcoded {} to {} using {}", key, mp4Key, result.encoder());
       return ResponseEntity.ok(mp4Key);
     } catch (Exception e) {
       log.error("Failed to transcode {}", key, e);
@@ -92,14 +93,47 @@ public class TranscodeController {
           Files.deleteIfExists(input);
         }
       } catch (IOException ignored) {
-        // do nothing
       }
       try {
         if (output != null) {
           Files.deleteIfExists(output);
         }
       } catch (IOException ignored) {
-        // do nothing
+      }
+    }
+  }
+
+  /**
+   * Uploads a local file to S3 via a presigned PUT URL.
+   *
+   * @param bucket the target bucket.
+   * @param key the target key.
+   * @param file the local file.
+   * @throws IOException when the upload fails.
+   */
+  void uploadViaPresign(String bucket, String key, Path file) throws IOException {
+    var presignReq = PutObjectPresignRequest.builder()
+        .putObjectRequest(PutObjectRequest.builder()
+            .bucket(bucket).key(key).contentType("video/mp4").build())
+        .signatureDuration(Duration.ofHours(1))
+        .build();
+    var url = s3Presigner.presignPutObject(presignReq).url();
+    var conn = (HttpURLConnection) url.openConnection();
+    conn.setDoOutput(true);
+    conn.setRequestMethod("PUT");
+    conn.setRequestProperty("Content-Type", "video/mp4");
+    conn.setRequestProperty("x-amz-content-sha256", "UNSIGNED-PAYLOAD");
+    conn.setConnectTimeout(30000);
+    conn.setReadTimeout(600000);
+    conn.setFixedLengthStreamingMode(Files.size(file));
+    try (var out = conn.getOutputStream(); var in = Files.newInputStream(file)) {
+      in.transferTo(out);
+    }
+    int status = conn.getResponseCode();
+    if (status < 200 || status > 299) {
+      try (var err = conn.getErrorStream()) {
+        String body = err == null ? "" : new String(err.readAllBytes());
+        throw new IOException("Upload failed (" + status + "): " + body);
       }
     }
   }

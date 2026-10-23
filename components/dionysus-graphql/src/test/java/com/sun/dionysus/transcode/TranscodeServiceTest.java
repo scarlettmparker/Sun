@@ -2,14 +2,18 @@ package com.sun.dionysus.transcode;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /**
  * Unit tests for TranscodeService command construction.
  */
 class TranscodeServiceTest {
+
+  @TempDir Path tempDir;
 
   @Test
   void buildCommand_usesFullGpuPathFor4kHevc() {
@@ -109,6 +113,18 @@ class TranscodeServiceTest {
     assertThat(service.canCopyAudio("eac3")).isTrue();
     assertThat(service.canCopyAudio("dts")).isFalse();
     assertThat(service.canCopyAudio(null)).isFalse();
+  }
+
+  @Test
+  void createWorkFile_usesConfiguredTempDir() throws IOException {
+    TranscodeProperties properties = new TranscodeProperties();
+    properties.setTempDir(tempDir.toString());
+    TranscodeService service = new TranscodeService(properties);
+
+    Path file = service.createWorkFile("test-", ".tmp");
+
+    assertThat(file).exists();
+    assertThat(file.getParent()).isEqualTo(tempDir);
   }
 
   @Test

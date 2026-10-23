@@ -87,6 +87,20 @@ public class TranscodeService {
   }
 
   /**
+   * Creates a temporary work file in the configured directory.
+   *
+   * @param prefix the file name prefix.
+   * @param suffix the file name suffix.
+   * @return the temporary file.
+   * @throws IOException when the directory or file cannot be created.
+   */
+  public Path createWorkFile(String prefix, String suffix) throws IOException {
+    Path directory = Path.of(properties.getTempDir());
+    Files.createDirectories(directory);
+    return Files.createTempFile(directory, prefix, suffix);
+  }
+
+  /**
    * Reports whether a file is an MKV or AVI video.
    *
    * @param file the candidate file.
@@ -486,9 +500,7 @@ public class TranscodeService {
    * @throws IOException when the directory or file cannot be created.
    */
   private Path createOutputFile() throws IOException {
-    Path directory = Path.of(properties.getTempDir());
-    Files.createDirectories(directory);
-    return Files.createTempFile(directory, "transcode-", ".mp4");
+    return createWorkFile("transcode-", ".mp4");
   }
 
   /**
