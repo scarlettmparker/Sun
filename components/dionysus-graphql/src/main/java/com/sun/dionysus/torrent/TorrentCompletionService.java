@@ -1,14 +1,14 @@
 package com.sun.dionysus.torrent;
 
-import com.sun.dionysus.model.KeyDetailEntity;
 import com.sun.dionysus.model.TorrentJobEntity;
 import com.sun.dionysus.model.enums.TorrentStatus;
 import com.sun.dionysus.service.KeyDetailService;
 import com.sun.dionysus.service.torrent.TorrentJobService;
-import java.io.BufferedReader;
+import com.sun.dionysus.transcode.TranscodeProperties;
+import com.sun.dionysus.transcode.TranscodeResult;
+import com.sun.dionysus.transcode.TranscodeService;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URLConnection;
 import java.nio.file.Files;
@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +49,8 @@ public class TorrentCompletionService {
   @Autowired private TorrentJobRegistry registry;
   @Autowired @Lazy private TransmissionGateway transmissionGateway;
   @Autowired private TorrentClientProperties properties;
+  @Autowired private TranscodeService transcodeService;
+  @Autowired private TranscodeProperties transcodeProperties;
 
   /**
    * Uploads the completed download into S3 and finalises the job.
@@ -88,7 +89,8 @@ public class TorrentCompletionService {
 
       boolean transcodeStarted = false;
       try (Stream<Path> allFiles = Files.walk(scratch)) {
-        var videoFiles = allFiles.filter(Files::isRegularFile).filter(this::isVideoFile).toList();
+        var videoFiles =
+            allFiles.filter(Files::isRegularFile).filter(transcodeService::isVideoFile).toList();
         for (Path localFile : videoFiles) {
           String fileName = localFile.getFileName().toString();
           String matchedKey = null;
@@ -109,15 +111,24 @@ public class TorrentCompletionService {
             transcodeStarted = true;
           }
           try {
-            Path mp4 = transcodeWithProgress(job, localFile, matchedKey);
-            String mp4Key = matchedKey + ".mp4";
-            putFile(job.getBucket(), mp4Key, mp4);
-            uploadedKeys.remove(matchedKey);
-            uploadedKeys.add(mp4Key);
-            Files.deleteIfExists(mp4);
-            s3Client.deleteObject(DeleteObjectRequest.builder()
-                .bucket(job.getBucket()).key(matchedKey).build());
-            logger.info("Transcoded and cleaned up: {}", matchedKey);
+            TranscodeResult result = transcodeService.transcode(localFile, progress -> {
+              job.setProgress(progress);
+              jobService.save(job);
+            });
+            Path mp4 = result.output();
+            try {
+              String mp4Key = matchedKey + ".mp4";
+              putFile(job.getBucket(), mp4Key, mp4);
+              uploadedKeys.add(mp4Key);
+              if (!transcodeProperties.isKeepOriginal()) {
+                s3Client.deleteObject(DeleteObjectRequest.builder()
+                    .bucket(job.getBucket()).key(matchedKey).build());
+                uploadedKeys.remove(matchedKey);
+              }
+              logger.info("Transcoded {} to {} using {}", matchedKey, mp4Key, result.encoder());
+            } finally {
+              Files.deleteIfExists(mp4);
+            }
           } catch (Exception e) {
             logger.warn("Failed to transcode {} to MP4: {}", matchedKey, e.getMessage());
           }
@@ -169,7 +180,7 @@ public class TorrentCompletionService {
    * @return the uploaded S3 keys.
    * @throws IOException when an upload fails.
    */
-  private List<String> upload(TorrentJobEntity job, Path scratch) throws IOException {
+  List<String> upload(TorrentJobEntity job, Path scratch) throws IOException {
     boolean targetIsFolder = job.getTargetKeyPath().endsWith("/");
     HashSet<String> dirs = new HashSet<>();
     ArrayList<String> uploadedKeys = new ArrayList<>();
@@ -209,7 +220,7 @@ public class TorrentCompletionService {
    * @param file the local file.
    * @throws IOException when the upload fails.
    */
-  private void putFile(String bucket, String key, Path file) throws IOException {
+  void putFile(String bucket, String key, Path file) throws IOException {
     String contentType = contentTypeFor(key);
     if (contentType.equals("application/octet-stream")) {
       String detected = probeContentType(file);
@@ -291,21 +302,6 @@ public class TorrentCompletionService {
         && !name.endsWith(".!ut")
         && !name.startsWith(".")
         && !name.contains(".pad");
-  }
-
-  /**
-   * Reports whether a file should be transcoded to MP4.
-   *
-   * @param file the candidate file.
-   * @return true for MKV and AVI files.
-   */
-  private boolean isVideoFile(Path file) {
-    String name = file.getFileName().toString().toLowerCase();
-    String mime = null;
-    try { mime = Files.probeContentType(file); } catch (IOException ignored) {}
-    return name.endsWith(".mkv") || name.endsWith(".avi")
-        || (mime != null && (mime.equals("video/x-matroska")
-            || mime.equals("application/x-matroska") || mime.equals("video/avi")));
   }
 
   /**
@@ -394,69 +390,5 @@ public class TorrentCompletionService {
     } catch (IOException e) {
       return null;
     }
-  }
-
-  /**
-   * Transcodes an MKV or AVI file to MP4 and records progress.
-   *
-   * @param job the torrent job.
-   * @param input the source file.
-   * @param key the uploaded key.
-   * @return the temporary MP4 file.
-   * @throws IOException when ffmpeg cannot run.
-   * @throws InterruptedException when the thread is interrupted.
-   */
-  private Path transcodeWithProgress(TorrentJobEntity job, Path input, String key) throws IOException, InterruptedException {
-    Path output = Files.createTempFile("transcode-", ".mp4");
-
-    double totalDuration = 0;
-    try {
-      Process probe = new ProcessBuilder(
-          "ffprobe", "-v", "error", "-show_entries", "format=duration",
-          "-of", "default=noprint_wrappers=1:nokey=1",
-          input.toAbsolutePath().toString())
-          .redirectErrorStream(true).start();
-      String durStr = new String(probe.getInputStream().readAllBytes()).trim();
-      probe.waitFor();
-      totalDuration = Double.parseDouble(durStr);
-    } catch (Exception e) {
-      logger.warn("Could not determine duration for {}: {}", key, e.getMessage());
-    }
-
-    var pb = new ProcessBuilder(
-        "ffmpeg", "-i", input.toAbsolutePath().toString(),
-        "-c:v", "libx264", "-preset", "fast",
-        "-c:a", "aac",
-        "-movflags", "+faststart",
-        "-y", output.toAbsolutePath().toString());
-    pb.redirectErrorStream(true);
-    Process p = pb.start();
-
-    var timePattern = Pattern.compile("time=(\\d+):(\\d+):(\\d+)\\.(\\d+)");
-    int lineCount = 0;
-    try (var reader = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
-      String line;
-      while ((line = reader.readLine()) != null) {
-        var m = timePattern.matcher(line);
-        if (m.find() && totalDuration > 0) {
-          double currentSec = Integer.parseInt(m.group(1)) * 3600
-              + Integer.parseInt(m.group(2)) * 60
-              + Integer.parseInt(m.group(3))
-              + Integer.parseInt(m.group(4)) / 100.0;
-          double prog = Math.min(currentSec / totalDuration, 1.0);
-          if (++lineCount % 20 == 0) {
-            job.setProgress(prog);
-            jobService.save(job);
-          }
-        }
-      }
-    }
-
-    int exit = p.waitFor();
-    if (exit != 0) {
-      Files.deleteIfExists(output);
-      throw new IOException("ffmpeg exited with code " + exit);
-    }
-    return output;
   }
 }
