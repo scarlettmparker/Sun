@@ -136,7 +136,7 @@ public class TorrentCompletionService {
       jobService.save(job);
 
       registry.forget(job.getId(), job.getScratchPath());
-      transmissionGateway.removeTransmission(jobId);
+      transmissionGateway.removeTransmission(jobId, true);
       TorrentScratch.delete(new File(properties.getScratchDir()), scratch.toFile());
       logger.info("Torrent job {} completed into {}/{}", jobId, job.getBucket(), job.getTargetKeyPath());
     } catch (Exception e) {

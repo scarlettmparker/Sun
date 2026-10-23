@@ -112,15 +112,35 @@ public class TransmissionGateway {
   }
 
   /**
+   * Removes the torrent owned by a job, optionally deleting its files.
+   *
+   * @param jobId the torrent job id.
+   * @param deleteLocalData whether transmission should delete the downloaded files.
+   */
+  public void removeTransmission(UUID jobId, boolean deleteLocalData) {
+    removeTorrentByInfoHash(infoHashFor(jobId), deleteLocalData);
+  }
+
+  /**
    * Removes every transmission torrent with the given info hash.
    *
    * @param infoHash the torrent info hash.
    */
   public void removeTorrentByInfoHash(String infoHash) {
+    removeTorrentByInfoHash(infoHash, false);
+  }
+
+  /**
+   * Removes every transmission torrent with the given info hash.
+   *
+   * @param infoHash the torrent info hash.
+   * @param deleteLocalData whether transmission should delete the downloaded files.
+   */
+  public void removeTorrentByInfoHash(String infoHash, boolean deleteLocalData) {
     if (infoHash == null || infoHash.isBlank()) {
       return;
     }
-    removeTorrentsByInfoHash(List.of(infoHash));
+    removeTorrentsByInfoHash(List.of(infoHash), deleteLocalData);
   }
 
   /**
@@ -129,6 +149,16 @@ public class TransmissionGateway {
    * @param infoHashes the torrent info hashes.
    */
   public void removeTorrentsByInfoHash(Collection<String> infoHashes) {
+    removeTorrentsByInfoHash(infoHashes, false);
+  }
+
+  /**
+   * Removes every transmission torrent matching the given info hashes.
+   *
+   * @param infoHashes the torrent info hashes.
+   * @param deleteLocalData whether transmission should delete the downloaded files.
+   */
+  public void removeTorrentsByInfoHash(Collection<String> infoHashes, boolean deleteLocalData) {
     Set<String> normalized =
         infoHashes.stream()
             .filter(hash -> hash != null && !hash.isBlank())
@@ -150,21 +180,22 @@ public class TransmissionGateway {
         ids.add(torrent.path("id").asInt());
       }
     }
-    removeTorrentIds(ids);
+    removeTorrentIds(ids, deleteLocalData);
   }
 
   /**
    * Removes transmission torrents by id.
    *
    * @param ids the transmission torrent ids.
+   * @param deleteLocalData whether transmission should delete the downloaded files.
    */
-  private void removeTorrentIds(ArrayNode ids) {
+  private void removeTorrentIds(ArrayNode ids, boolean deleteLocalData) {
     if (ids == null || ids.isEmpty()) {
       return;
     }
     ObjectNode arguments = mapper.createObjectNode();
     arguments.set("ids", ids);
-    arguments.put("delete-local-data", false);
+    arguments.put("delete-local-data", deleteLocalData);
     rpc.call("torrent-remove", arguments);
     log.info("Removed transmission torrents {}", ids);
   }
@@ -243,7 +274,14 @@ public class TransmissionGateway {
         return PollOutcome.CANCELLED;
       }
 
-      JsonNode torrent = findTorrent(infoHash);
+      JsonNode torrents = getTorrents();
+      if (torrents == null) {
+        if (!sleep(2000L)) {
+          return PollOutcome.CANCELLED;
+        }
+        continue;
+      }
+      JsonNode torrent = findTorrent(torrents, infoHash);
       if (torrent == null) {
         return PollOutcome.LOST;
       }
@@ -266,9 +304,13 @@ public class TransmissionGateway {
         if (!sleep(1000L)) {
           return PollOutcome.CANCELLED;
         }
-        torrent = findTorrent(infoHash);
-        if (torrent == null) {
-          return PollOutcome.LOST;
+        JsonNode refreshed = getTorrents();
+        if (refreshed != null) {
+          JsonNode found = findTorrent(refreshed, infoHash);
+          if (found == null) {
+            return PollOutcome.LOST;
+          }
+          torrent = found;
         }
       }
 
@@ -437,7 +479,17 @@ public class TransmissionGateway {
    * @return the torrent, or null when it is not present.
    */
   private JsonNode findTorrent(String infoHash) {
-    JsonNode torrents = getTorrents();
+    return findTorrent(getTorrents(), infoHash);
+  }
+
+  /**
+   * Finds a torrent in a torrent list.
+   *
+   * @param torrents the torrent array.
+   * @param infoHash the torrent info hash.
+   * @return the torrent, or null when it is not present.
+   */
+  private JsonNode findTorrent(JsonNode torrents, String infoHash) {
     if (torrents == null) {
       return null;
     }

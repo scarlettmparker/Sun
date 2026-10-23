@@ -52,7 +52,7 @@ public class TorrentResumeRunner implements ApplicationRunner {
 
     if (!stale.isEmpty()) {
       logger.info("Removing {} stale transmission torrent(s)", stale.size());
-      transmissionGateway.removeTorrentsByInfoHash(stale);
+      transmissionGateway.removeTorrentsByInfoHash(stale, true);
     }
 
     if (resumable.isEmpty()) {

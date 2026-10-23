@@ -12,12 +12,10 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Stream;
 import org.libtorrent4j.FileStorage;
 import org.libtorrent4j.SessionManager;
 import org.libtorrent4j.TorrentInfo;
@@ -262,92 +260,12 @@ public class TorrentClientService implements SmartLifecycle {
     File root = scratchRoot == null ? new File(properties.getScratchDir()) : scratchRoot;
     File canonical = new File(root, job.getId().toString());
     File stored = scratchFile(job);
-
-    if (stored != null && stored.isDirectory() && TorrentScratch.hasData(stored)) {
-      if (needsMigration(stored, root)) {
-        transmissionGateway.removeTorrentByInfoHash(job.getInfoHash());
-        prepareDir(canonical);
-        if (moveTree(stored.toPath(), canonical.toPath())) {
-          TorrentScratch.deleteRecursively(stored.toPath());
-          logger.info("Moved torrent data for job {} into {}", job.getId(), canonical);
-          return canonical;
-        }
-        logger.warn("Could not fully move torrent data for job {}", job.getId());
-        return stored;
-      }
-      prepareDir(stored);
-      return stored;
-    }
-
-    prepareDir(canonical);
-    return canonical;
-  }
-
-  /**
-   * Reports whether a stored scratch directory sits under the old /tmp root.
-   *
-   * @param stored the stored scratch directory.
-   * @param root the configured scratch root.
-   * @return true when the data should move into the configured root.
-   */
-  private boolean needsMigration(File stored, File root) {
-    try {
-      Path storedPath = stored.getCanonicalFile().toPath();
-      Path rootPath = root.getCanonicalFile().toPath();
-      Path legacyPath = new File("/tmp/dionysus/torrent").getCanonicalFile().toPath();
-      return !storedPath.startsWith(rootPath) && storedPath.startsWith(legacyPath);
-    } catch (IOException e) {
-      return false;
-    }
-  }
-
-  /**
-   * Moves a scratch directory tree to a new location.
-   *
-   * @param from the source directory.
-   * @param to the destination directory.
-   * @return true when every file reached the destination.
-   */
-  private boolean moveTree(Path from, Path to) {
-    boolean complete = true;
-    try (Stream<Path> paths = Files.walk(from)) {
-      for (Path source : paths.toList()) {
-        Path destination = to.resolve(from.relativize(source).toString());
-        if (Files.isDirectory(source)) {
-          Files.createDirectories(destination);
-        } else {
-          Files.createDirectories(destination.getParent());
-          complete = moveFile(source, destination) && complete;
-        }
-      }
-    } catch (IOException e) {
-      logger.warn("Could not move scratch data from {} to {}: {}", from, to, e.getMessage());
-      return false;
-    }
-    return complete;
-  }
-
-  /**
-   * Moves one file, falling back to copy and delete across filesystems.
-   *
-   * @param source the source file.
-   * @param destination the destination file.
-   * @return true when the file reached the destination.
-   */
-  private boolean moveFile(Path source, Path destination) {
-    try {
-      Files.move(source, destination, StandardCopyOption.REPLACE_EXISTING);
-      return true;
-    } catch (IOException moveFailure) {
-      try {
-        Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
-        Files.delete(source);
-        return true;
-      } catch (IOException copyFailure) {
-        logger.warn("Could not move file {}: {}", source, copyFailure.getMessage());
-        return false;
-      }
-    }
+    File chosen =
+        stored != null && stored.isDirectory() && TorrentScratch.hasData(stored)
+            ? stored
+            : canonical;
+    prepareDir(chosen);
+    return chosen;
   }
 
   /**
@@ -447,7 +365,7 @@ public class TorrentClientService implements SmartLifecycle {
                         });
               }
               if (!jobService.hasOtherResumableInfoHash(jobId, job.getInfoHash())) {
-                transmissionGateway.removeTransmission(jobId);
+                transmissionGateway.removeTransmission(jobId, true);
               }
               if (!jobService.hasOtherResumableScratchPath(jobId, job.getScratchPath())) {
                 TorrentScratch.delete(scratchRoot, scratchFile(job));
