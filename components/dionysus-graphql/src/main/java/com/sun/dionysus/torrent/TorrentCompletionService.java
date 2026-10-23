@@ -5,21 +5,21 @@ import com.sun.dionysus.model.TorrentJobEntity;
 import com.sun.dionysus.model.enums.TorrentStatus;
 import com.sun.dionysus.service.KeyDetailService;
 import com.sun.dionysus.service.torrent.TorrentJobService;
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.URI;
 import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,9 +33,6 @@ import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.util.regex.Pattern;
 
 /**
  * Uploads a finished torrent's files into the bucket, activates the matching
@@ -52,9 +49,12 @@ public class TorrentCompletionService {
   @Autowired @Qualifier("internalS3Presigner") private S3Presigner s3Presigner;
   @Autowired private TorrentJobRegistry registry;
   @Autowired @Lazy private TransmissionGateway transmissionGateway;
+  @Autowired private TorrentClientProperties properties;
 
   /**
    * Uploads the completed download into S3 and finalises the job.
+   *
+   * @param jobId the torrent job id.
    */
   @Async("torrentTaskExecutor")
   public void complete(UUID jobId) {
@@ -64,7 +64,17 @@ public class TorrentCompletionService {
       return;
     }
 
+    if (job.getScratchPath() == null || job.getScratchPath().isBlank()) {
+      failMissing(jobId, job, "Download has no scratch directory");
+      return;
+    }
+
     Path scratch = Path.of(job.getScratchPath());
+    if (!Files.isDirectory(scratch)) {
+      failMissing(jobId, job, "Download files are missing from " + scratch);
+      return;
+    }
+
     try {
       List<String> uploadedKeys = upload(job, scratch);
 
@@ -76,13 +86,11 @@ public class TorrentCompletionService {
         return;
       }
 
-      // Transcode MKV/AVI files to MP4 with progress reporting
       boolean transcodeStarted = false;
       try (Stream<Path> allFiles = Files.walk(scratch)) {
         var videoFiles = allFiles.filter(Files::isRegularFile).filter(this::isVideoFile).toList();
         for (Path localFile : videoFiles) {
           String fileName = localFile.getFileName().toString();
-          // Match by checking if any uploaded key ends with or starts with the filename
           String matchedKey = null;
           for (String uk : uploadedKeys) {
             String ukName = uk.contains("/") ? uk.substring(uk.lastIndexOf('/') + 1) : uk;
@@ -129,6 +137,7 @@ public class TorrentCompletionService {
 
       registry.forget(job.getId(), job.getScratchPath());
       transmissionGateway.removeTransmission(jobId);
+      TorrentScratch.delete(new File(properties.getScratchDir()), scratch.toFile());
       logger.info("Torrent job {} completed into {}/{}", jobId, job.getBucket(), job.getTargetKeyPath());
     } catch (Exception e) {
       logger.error("Completion failed for job {}", jobId, e);
@@ -139,7 +148,26 @@ public class TorrentCompletionService {
   }
 
   /**
-   * Walks the scratch directory and uploads each downloaded file into the bucket.
+   * Fails a job whose downloaded data is no longer on disk.
+   *
+   * @param jobId the torrent job id.
+   * @param job the torrent job.
+   * @param reason the missing-data reason.
+   */
+  private void failMissing(UUID jobId, TorrentJobEntity job, String reason) {
+    logger.warn("Completion blocked for job {}: {}", jobId, reason);
+    job.setStatus(TorrentStatus.FAILED);
+    job.setErrorMessage(reason + "; restart the torrent");
+    jobService.save(job);
+  }
+
+  /**
+   * Uploads every downloaded file into the bucket.
+   *
+   * @param job the torrent job.
+   * @param scratch the job scratch directory.
+   * @return the uploaded S3 keys.
+   * @throws IOException when an upload fails.
    */
   private List<String> upload(TorrentJobEntity job, Path scratch) throws IOException {
     boolean targetIsFolder = job.getTargetKeyPath().endsWith("/");
@@ -174,8 +202,12 @@ public class TorrentCompletionService {
   }
 
   /**
-   * Uploads a file to S3 via a presigned PUT URL, bypassing the SDK's
-   * content-SHA256 signing (Garage doesn't handle it correctly).
+   * Uploads a file through a presigned PUT URL.
+   *
+   * @param bucket the target bucket.
+   * @param key the target key.
+   * @param file the local file.
+   * @throws IOException when the upload fails.
    */
   private void putFile(String bucket, String key, Path file) throws IOException {
     String contentType = contentTypeFor(key);
@@ -215,6 +247,10 @@ public class TorrentCompletionService {
 
   /**
    * Creates an empty directory marker in S3.
+   *
+   * @param bucket the target bucket.
+   * @param key the target key.
+   * @throws IOException when the upload fails.
    */
   private void putEmpty(String bucket, String key) throws IOException {
     var putReq = PutObjectRequest.builder().bucket(bucket).key(key).build();
@@ -242,7 +278,10 @@ public class TorrentCompletionService {
   }
 
   /**
-   * Skips in-progress downloads, piece files, and client-internal artefacts.
+   * Reports whether a file is downloaded payload.
+   *
+   * @param file the candidate file.
+   * @return true when the file is not a client artefact.
    */
   private boolean isRealFile(Path file) {
     String name = file.getFileName().toString();
@@ -255,7 +294,10 @@ public class TorrentCompletionService {
   }
 
   /**
-   * True when the file is an MKV or AVI that should be transcoded to MP4.
+   * Reports whether a file should be transcoded to MP4.
+   *
+   * @param file the candidate file.
+   * @return true for MKV and AVI files.
    */
   private boolean isVideoFile(Path file) {
     String name = file.getFileName().toString().toLowerCase();
@@ -267,7 +309,10 @@ public class TorrentCompletionService {
   }
 
   /**
-   * Probes the MIME type of a file, returning null on failure.
+   * Probes the MIME type of a file.
+   *
+   * @param file the candidate file.
+   * @return the MIME type, or null when it cannot be probed.
    */
   private String probeContentType(Path file) {
     try { return Files.probeContentType(file); } catch (IOException e) { return null; }
@@ -275,6 +320,12 @@ public class TorrentCompletionService {
 
   /**
    * Maps a scratch file to its destination S3 key.
+   *
+   * @param job the torrent job.
+   * @param scratch the job scratch directory.
+   * @param file the local file.
+   * @param targetIsFolder whether the job targets a folder.
+   * @return the destination key.
    */
   private String targetKeyFor(TorrentJobEntity job, Path scratch, Path file, boolean targetIsFolder) {
     String relative = scratch.relativize(file).toString().replace('\\', '/');
@@ -284,8 +335,6 @@ public class TorrentCompletionService {
     if (relative.contains("/")) {
       return job.getTargetKeyPath() + "/" + relative;
     }
-    // If the local file has an extension but the target key path doesn't, use
-    // the local file name to preserve the extension (e.g. .mkv for transcoding).
     if (relative.contains(".")) {
       String prefix = job.getTargetKeyPath().contains("/")
           ? job.getTargetKeyPath().substring(0, job.getTargetKeyPath().lastIndexOf('/') + 1)
@@ -297,6 +346,9 @@ public class TorrentCompletionService {
 
   /**
    * Extracts the file name from a key path.
+   *
+   * @param keyPath the key path.
+   * @return the final path segment.
    */
   private String extractName(String keyPath) {
     String trimmed = keyPath.endsWith("/") ? keyPath.substring(0, keyPath.length() - 1) : keyPath;
@@ -306,6 +358,9 @@ public class TorrentCompletionService {
 
   /**
    * Guesses the MIME type from a key path.
+   *
+   * @param keyPath the key path.
+   * @return the guessed MIME type.
    */
   private String contentTypeFor(String keyPath) {
     String guess = URLConnection.guessContentTypeFromName(keyPath);
@@ -313,14 +368,22 @@ public class TorrentCompletionService {
   }
 
   /**
-   * Truncates a string to a max length.
+   * Truncates a string to a maximum length.
+   *
+   * @param value the source string.
+   * @param max the maximum length.
+   * @return the truncated string.
    */
   private String truncate(String value, int max) {
     return value.length() <= max ? value : value.substring(0, max);
   }
 
   /**
-   * Finds the local file in the scratch directory that matches an uploaded key.
+   * Finds a local file that matches an uploaded key.
+   *
+   * @param scratch the job scratch directory.
+   * @param key the uploaded key.
+   * @return the matching file, or null.
    */
   private Path findFileByKey(Path scratch, String key) {
     String fileName = key.contains("/") ? key.substring(key.lastIndexOf('/') + 1) : key;
@@ -334,13 +397,18 @@ public class TorrentCompletionService {
   }
 
   /**
-   * Transcodes an MKV/AVI file to MP4 with progress reporting. Updates the
-   * job's status to TRANSCODING and reports progress via the job entity.
+   * Transcodes an MKV or AVI file to MP4 and records progress.
+   *
+   * @param job the torrent job.
+   * @param input the source file.
+   * @param key the uploaded key.
+   * @return the temporary MP4 file.
+   * @throws IOException when ffmpeg cannot run.
+   * @throws InterruptedException when the thread is interrupted.
    */
   private Path transcodeWithProgress(TorrentJobEntity job, Path input, String key) throws IOException, InterruptedException {
     Path output = Files.createTempFile("transcode-", ".mp4");
 
-    // Get total duration from ffprobe
     double totalDuration = 0;
     try {
       Process probe = new ProcessBuilder(

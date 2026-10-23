@@ -57,6 +57,7 @@ public class TorrentJobService extends BaseService<TorrentJobEntity> {
           TorrentStatus.DOWNLOADING,
           TorrentStatus.PAUSED,
           TorrentStatus.UPLOADING,
+          TorrentStatus.TRANSCODING,
           TorrentStatus.FAILED);
 
   private final TorrentJobEntityRepository jobRepository;
@@ -71,6 +72,50 @@ public class TorrentJobService extends BaseService<TorrentJobEntity> {
    */
   public Optional<TorrentJobEntity> findByInfoHash(String infoHash) {
     return jobRepository.findByInfoHash(infoHash);
+  }
+
+  /**
+   * Finds every job that shares an info hash.
+   *
+   * @param infoHash the torrent info hash.
+   * @return the matching jobs.
+   */
+  public List<TorrentJobEntity> findAllByInfoHash(String infoHash) {
+    return jobRepository.findAllByInfoHash(infoHash);
+  }
+
+  /**
+   * Reports whether another resumable job owns the same info hash.
+   *
+   * @param jobId the job being cancelled or cleaned up.
+   * @param infoHash the torrent info hash.
+   * @return true when another resumable job shares the hash.
+   */
+  public boolean hasOtherResumableInfoHash(UUID jobId, String infoHash) {
+    if (infoHash == null || infoHash.isBlank()) {
+      return false;
+    }
+    return jobRepository.findAllByInfoHash(infoHash).stream()
+        .anyMatch(job -> !job.getId().equals(jobId) && RESUMABLE_STATUSES.contains(job.getStatus()));
+  }
+
+  /**
+   * Reports whether another resumable job owns the same scratch path.
+   *
+   * @param jobId the job being cancelled or cleaned up.
+   * @param scratchPath the scratch directory path.
+   * @return true when another resumable job shares the path.
+   */
+  public boolean hasOtherResumableScratchPath(UUID jobId, String scratchPath) {
+    if (scratchPath == null || scratchPath.isBlank()) {
+      return false;
+    }
+    return jobRepository.findAll().stream()
+        .anyMatch(
+            job ->
+                !job.getId().equals(jobId)
+                    && RESUMABLE_STATUSES.contains(job.getStatus())
+                    && scratchPath.equals(job.getScratchPath()));
   }
 
   /**

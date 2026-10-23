@@ -59,6 +59,62 @@ class TorrentJobServiceTest {
   }
 
   @Test
+  void findAllByInfoHash_delegates() {
+    TorrentJobEntity job = newJob("abc123", "bucket", "movie.mp4");
+    when(repository.findAllByInfoHash("abc123")).thenReturn(List.of(job));
+
+    assertThat(service.findAllByInfoHash("abc123")).containsExactly(job);
+  }
+
+  @Test
+  void hasOtherResumableInfoHash_returnsTrueForAnotherResumableJob() {
+    UUID jobId = UUID.randomUUID();
+    TorrentJobEntity other = newJob("hash", "bucket", "other");
+    other.setId(UUID.randomUUID());
+    other.setStatus(TorrentStatus.DOWNLOADING);
+    when(repository.findAllByInfoHash("hash")).thenReturn(List.of(other));
+
+    assertThat(service.hasOtherResumableInfoHash(jobId, "hash")).isTrue();
+  }
+
+  @Test
+  void hasOtherResumableInfoHash_ignoresTerminalJobs() {
+    UUID jobId = UUID.randomUUID();
+    TorrentJobEntity other = newJob("hash", "bucket", "other");
+    other.setId(UUID.randomUUID());
+    other.setStatus(TorrentStatus.CANCELLED);
+    when(repository.findAllByInfoHash("hash")).thenReturn(List.of(other));
+
+    assertThat(service.hasOtherResumableInfoHash(jobId, "hash")).isFalse();
+  }
+
+  @Test
+  void hasOtherResumableScratchPath_returnsTrueForAnotherResumableJob() {
+    UUID jobId = UUID.randomUUID();
+    TorrentJobEntity other = newJob("hash", "bucket", "other");
+    other.setId(UUID.randomUUID());
+    other.setStatus(TorrentStatus.PAUSED);
+    other.setScratchPath("/tmp/dionysus/torrent/shared");
+    when(repository.findAll()).thenReturn(List.of(other));
+
+    assertThat(service.hasOtherResumableScratchPath(jobId, "/tmp/dionysus/torrent/shared"))
+        .isTrue();
+  }
+
+  @Test
+  void hasOtherResumableScratchPath_ignoresTerminalJobs() {
+    UUID jobId = UUID.randomUUID();
+    TorrentJobEntity other = newJob("hash", "bucket", "other");
+    other.setId(UUID.randomUUID());
+    other.setStatus(TorrentStatus.COMPLETED);
+    other.setScratchPath("/tmp/dionysus/torrent/shared");
+    when(repository.findAll()).thenReturn(List.of(other));
+
+    assertThat(service.hasOtherResumableScratchPath(jobId, "/tmp/dionysus/torrent/shared"))
+        .isFalse();
+  }
+
+  @Test
   void findResumable_delegatesWithResumableStatuses() {
     TorrentJobEntity job = newJob("h", "bucket", "k");
     job.setStatus(TorrentStatus.DOWNLOADING);

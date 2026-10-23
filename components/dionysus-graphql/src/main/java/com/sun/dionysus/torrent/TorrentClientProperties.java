@@ -9,9 +9,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class TorrentClientProperties {
 
   /**
-   * Local directory holding the per-job scratch folders where pieces download.
+   * Persistent directory holding the per-job scratch folders.
    */
-  private String scratchDir = "/tmp/dionysus/torrent";
+  private String scratchDir =
+      System.getProperty("user.home") + "/.local/share/dionysus/torrent";
 
   /**
    * How many torrents may download concurrently; extras stay queued.

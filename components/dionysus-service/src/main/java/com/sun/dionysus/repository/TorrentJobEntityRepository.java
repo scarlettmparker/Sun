@@ -23,6 +23,8 @@ public interface TorrentJobEntityRepository extends BaseRepository<TorrentJobEnt
 
   Optional<TorrentJobEntity> findByInfoHash(String infoHash);
 
+  List<TorrentJobEntity> findAllByInfoHash(String infoHash);
+
   Optional<TorrentJobEntity> findByScratchPath(String scratchPath);
 
   List<TorrentJobEntity> findByBucketAndTargetKeyPath(String bucket, String targetKeyPath);
