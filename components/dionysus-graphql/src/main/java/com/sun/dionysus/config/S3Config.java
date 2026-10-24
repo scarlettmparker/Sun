@@ -39,7 +39,7 @@ public class S3Config {
         .serviceConfiguration(
             S3Configuration.builder()
                 .pathStyleAccessEnabled(true)
-                .chunkedEncodingEnabled(true)
+                .chunkedEncodingEnabled(false)
                 .build())
         .build();
   }

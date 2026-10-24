@@ -176,12 +176,17 @@ public class SubtitleDataFetcher {
 
     String subtitleKey = null;
     if (Boolean.TRUE.equals(input.getPersist())) {
-      String stem = stemOf(keyPath);
-      String parent = parentPrefix(keyPath);
-      subtitleKey = parent + stem + "." + language + ".srt";
-      putObject(bucket, subtitleKey, data);
-      subtitleService.attach(bucket, keyPath, subtitleKey, language,
-          com.sun.dionysus.model.enums.SubtitleSource.OPENSUBTITLES, fileId);
+      try {
+        String stem = stemOf(keyPath);
+        String parent = parentPrefix(keyPath);
+        String targetKey = parent + stem + "." + language + ".srt";
+        putObject(bucket, targetKey, data);
+        subtitleService.attach(bucket, keyPath, targetKey, language,
+            com.sun.dionysus.model.enums.SubtitleSource.OPENSUBTITLES, fileId);
+        subtitleKey = targetKey;
+      } catch (Exception e) {
+        logger.warn("Failed to persist subtitle for {}: {}", keyPath, e.getMessage());
+      }
     }
 
     return FetchSubtitleResponse.newBuilder()
