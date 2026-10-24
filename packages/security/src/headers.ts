@@ -35,6 +35,10 @@ export type SecurityHeadersOptions = {
    * Alias for additionalConnectSrc.
    */
   connectSrc?: string | string[];
+  /**
+   * Allows spreading an options object.
+   */
+  [key: string]: unknown;
 };
 
 /**
@@ -42,8 +46,11 @@ export type SecurityHeadersOptions = {
  *
  * @param options - Production flag, nonce, and COOP/COEP toggles.
  */
-export function buildSecurityHeaders(options: SecurityHeadersOptions): Record<string, string> {
-  const { isProduction, nonce, allowCoopPopups, useCredentiallessCoep } = options;
+export function buildSecurityHeaders(
+  options: SecurityHeadersOptions,
+): Record<string, string> {
+  const { isProduction, nonce, allowCoopPopups, useCredentiallessCoep } =
+    options;
 
   // In dev, allow Vite HMR (unsafe-inline/eval, ws) - strict CSP would break it.
   const csp = isProduction
@@ -77,7 +84,8 @@ export function buildSecurityHeaders(options: SecurityHeadersOptions): Record<st
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "DENY",
     "Referrer-Policy": "strict-origin-when-cross-origin",
-    "Permissions-Policy": "geolocation=(), camera=(), microphone=(), payment=()",
+    "Permissions-Policy":
+      "geolocation=(), camera=(), microphone=(), payment=()",
   };
 
   if (isProduction) {
@@ -92,7 +100,9 @@ export function buildSecurityHeaders(options: SecurityHeadersOptions): Record<st
  *
  * @param isProduction - Whether the app is running in production.
  */
-export function buildStaticAssetHeaders(isProduction: boolean): Record<string, string> {
+export function buildStaticAssetHeaders(
+  isProduction: boolean,
+): Record<string, string> {
   const headers: Record<string, string> = {
     "X-Content-Type-Options": "nosniff",
     "Cross-Origin-Resource-Policy": "same-site",

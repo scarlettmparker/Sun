@@ -110,6 +110,22 @@ interface CreateServerOptions {
      */
     consentCookie?: string;
   };
+  /**
+   * Additional origins to append to the CSP connect-src directive.
+   */
+  additionalConnectSrc?: string | string[];
+  /**
+   * Alias for additionalConnectSrc.
+   */
+  extraConnectSrc?: string | string[];
+  /**
+   * Alias for additionalConnectSrc.
+   */
+  connectSrcExtras?: string | string[];
+  /**
+   * Alias for additionalConnectSrc.
+   */
+  connectSrc?: string | string[];
 }
 
 type MiddieHandler = (req: IncomingMessage, res: ServerResponse) => void;
@@ -143,6 +159,7 @@ async function registerApp(
       const headers = buildSecurityHeaders({
         isProduction: config.isProduction,
         nonce,
+        ...options,
       });
       for (const [key, value] of Object.entries(headers)) {
         if (key === "Content-Security-Policy" && reply.getHeader(key)) {
