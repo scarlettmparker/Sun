@@ -19,87 +19,50 @@ export type CspHeaderOptions = {
    * Additional origins to append to connect-src.
    */
   additionalConnectSrc?: string | string[];
-  /**
-   * Alias for additionalConnectSrc.
-   */
-  extraConnectSrc?: string | string[];
-  /**
-   * Alias for additionalConnectSrc.
-   */
-  connectSrcExtras?: string | string[];
-  /**
-   * Alias for additionalConnectSrc.
-   */
-  connectSrc?: string | string[];
 };
 
 /**
- * Collapses supported spellings of extra connect-src origins into one list.
+ * Normalizes extra connect-src origins into one de-duplicated list.
  *
- * @param inputs - Candidate origin lists in any supported shape.
+ * @param extras Additional origins, or a single origin.
  */
-function normalizeConnectSrcExtras(...inputs: unknown[]): string[] {
-  const values: string[] = [];
-  for (const input of inputs) {
-    if (input == null) continue;
-    if (Array.isArray(input)) {
-      values.push(...input.map((value) => String(value)));
-      continue;
-    }
-    if (typeof input === "string") {
-      values.push(input);
-      continue;
-    }
-    if (typeof input === "object") {
-      const record = input as Record<string, unknown>;
-      for (const key of [
-        "additionalConnectSrc",
-        "extraConnectSrc",
-        "connectSrcExtras",
-        "connectSrc",
-      ]) {
-        const value = record[key];
-        if (value == null) continue;
-        if (Array.isArray(value)) {
-          values.push(...value.map((entry) => String(entry)));
-        } else {
-          values.push(String(value));
-        }
-      }
-    }
-  }
+function normalizeConnectSrc(extras?: string | string[]): string[] {
+  if (!extras) return [];
   return Array.from(
-    new Set(values.map((value) => value.trim()).filter(Boolean)),
+    new Set(
+      (Array.isArray(extras) ? extras : [extras])
+        .map((value) => value.trim())
+        .filter(Boolean),
+    ),
   );
 }
 
 /**
  * Builds a strict Content-Security-Policy header value using a nonce.
  *
- * @param nonce - Per-request base64 nonce to allow inline scripts.
- * @param additionalConnectSrc - Extra origins to append to connect-src.
+ * @param nonce Per-request base64 nonce to allow inline scripts.
+ * @param additionalConnectSrc Extra origins to append to connect-src.
  */
 export function buildCspHeader(
   nonce: string,
   additionalConnectSrc?: string | string[],
 ): string;
-
 /**
  * Builds a strict Content-Security-Policy header value using a nonce.
  *
- * @param options - Nonce plus any extra connect-src origins.
+ * @param options Nonce plus any extra connect-src origins.
  */
 export function buildCspHeader(options: CspHeaderOptions): string;
-
 export function buildCspHeader(
   nonceOrOptions: string | CspHeaderOptions,
   additionalConnectSrc?: string | string[],
 ): string {
   const nonce =
     typeof nonceOrOptions === "string" ? nonceOrOptions : nonceOrOptions.nonce;
-  const extras = normalizeConnectSrcExtras(
-    typeof nonceOrOptions === "string" ? additionalConnectSrc : nonceOrOptions,
-    typeof nonceOrOptions === "string" ? undefined : additionalConnectSrc,
+  const extras = normalizeConnectSrc(
+    typeof nonceOrOptions === "string"
+      ? additionalConnectSrc
+      : nonceOrOptions.additionalConnectSrc,
   );
   const connectSrc = [
     "'self'",

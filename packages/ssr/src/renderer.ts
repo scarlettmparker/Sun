@@ -14,6 +14,24 @@ const LOCALE_FALLBACK = ["en-GB", "en"];
 /** Memoised production CSS bundle for the process. */
 let cssPromise: Promise<string> | null = null;
 
+/** Extra connect-src origins configured by the server at startup. */
+let cspConnectSrcExtras: string[] = [];
+
+/**
+ * Sets the extra connect-src origins used by rendered documents.
+ *
+ * @param extras Additional origins, or a single origin.
+ */
+export function setCspConnectSrcExtras(extras?: string | string[]): void {
+  if (!extras) {
+    cspConnectSrcExtras = [];
+    return;
+  }
+  cspConnectSrcExtras = (Array.isArray(extras) ? extras : [extras])
+    .map((value) => value.trim())
+    .filter(Boolean);
+}
+
 /** Memoised head metadata, keyed by its inputs. */
 const metaCache = new Map<string, string>();
 
@@ -396,6 +414,7 @@ async function renderApp(config: AppRenderConfig, options: RenderOptions): Promi
         const securityHeaders = buildSecurityHeaders({
           isProduction,
           nonce,
+          additionalConnectSrc: cspConnectSrcExtras,
         });
         const headers: Record<string, string> = {
           "Content-Type": "text/html; charset=utf-8",

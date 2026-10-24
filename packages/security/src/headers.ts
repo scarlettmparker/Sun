@@ -24,18 +24,6 @@ export type SecurityHeadersOptions = {
    */
   additionalConnectSrc?: string | string[];
   /**
-   * Alias for additionalConnectSrc.
-   */
-  extraConnectSrc?: string | string[];
-  /**
-   * Alias for additionalConnectSrc.
-   */
-  connectSrcExtras?: string | string[];
-  /**
-   * Alias for additionalConnectSrc.
-   */
-  connectSrc?: string | string[];
-  /**
    * Allows spreading an options object.
    */
   [key: string]: unknown;
@@ -57,9 +45,6 @@ export function buildSecurityHeaders(
     ? `${buildCspHeader({
         nonce,
         additionalConnectSrc: options.additionalConnectSrc,
-        extraConnectSrc: options.extraConnectSrc,
-        connectSrcExtras: options.connectSrcExtras,
-        connectSrc: options.connectSrc,
       })}; ${buildTrustedTypesDirective()}`
     : [
         "default-src 'self'",

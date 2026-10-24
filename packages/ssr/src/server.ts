@@ -19,6 +19,7 @@ import { enterCspNonce, getCspNonce } from "./csp-nonce";
 import { enterRequestContext } from "./request-context";
 import { fastifyApp } from "./fastify-adapter";
 import { startBunServer } from "./bun-server";
+import { setCspConnectSrcExtras } from "./renderer";
 import type { SunApp, SunReply, SunRequest } from "./server-types";
 export type { SunApp, SunReply, SunRequest } from "./server-types";
 
@@ -114,18 +115,6 @@ interface CreateServerOptions {
    * Additional origins to append to the CSP connect-src directive.
    */
   additionalConnectSrc?: string | string[];
-  /**
-   * Alias for additionalConnectSrc.
-   */
-  extraConnectSrc?: string | string[];
-  /**
-   * Alias for additionalConnectSrc.
-   */
-  connectSrcExtras?: string | string[];
-  /**
-   * Alias for additionalConnectSrc.
-   */
-  connectSrc?: string | string[];
 }
 
 type MiddieHandler = (req: IncomingMessage, res: ServerResponse) => void;
@@ -145,6 +134,8 @@ async function registerApp(
   vite: ViteDevServer | undefined,
 ): Promise<void> {
   const { config, setupRoutes, configure } = options;
+
+  setCspConnectSrcExtras(options.additionalConnectSrc);
 
   app.addHook("onSend", async (request: SunRequest, reply: SunReply, payload) => {
     const contentType = String(reply.getHeader("content-type") ?? "");
