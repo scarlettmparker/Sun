@@ -97,7 +97,7 @@ public class OpenSubtitlesService {
       Duration cacheTtl,
       long cacheMaxSize) {
     this(apiKey, username, password, userAgent, cacheTtl, cacheMaxSize,
-        HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build());
+        HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).followRedirects(HttpClient.Redirect.NORMAL).build());
   }
 
   /**
@@ -225,6 +225,7 @@ public class OpenSubtitlesService {
       throws IOException, InterruptedException {
     String currentToken = ensureToken();
     HttpRequest request = buildSearchRequest(query, year, language, movieHash, movieBytes, currentToken);
+    logger.debug("OpenSubtitles search request: {}", request.uri());
     HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
     if (response.statusCode() == 401) {
