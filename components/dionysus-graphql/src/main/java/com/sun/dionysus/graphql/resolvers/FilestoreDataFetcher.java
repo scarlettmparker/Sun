@@ -62,6 +62,9 @@ public class FilestoreDataFetcher {
   @Value("${filestore.api.url:http://localhost:3903}")
   private String filestoreApiUrl;
 
+  @Value("${filestore.presign.download-ttl:24h}")
+  private Duration downloadPresignTtl = Duration.ofHours(24);
+
   private final S3Client s3Client;
   private final S3Presigner s3Presigner;
   private final FileMapper fileMapper;
@@ -541,14 +544,8 @@ public class FilestoreDataFetcher {
     String key = input.getKey();
     logger.info("Generating presigned download URL for {} / {}", bucket, key);
 
-    GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
-        .signatureDuration(Duration.ofMinutes(15))
-        .getObjectRequest(b -> b.bucket(bucket).key(key))
-        .build();
-
-    PresignedGetObjectRequest presigned = s3Presigner.presignGetObject(presignRequest);
-    String url = presigned.url().toString();
-    logger.info("Presigned download URL generated");
+    String url = presignDownload(bucket, key);
+    logger.info("Presigned download URL generated (valid for {})", downloadPresignTtl);
     return GetPresignedDownloadUrlResponse.newBuilder()
         .message("getPresignedDownloadUrl succeeded")
         .url(url)
@@ -629,6 +626,23 @@ public class FilestoreDataFetcher {
     batch.clear();
 
     return deletedCount;
+  }
+
+  /**
+   * Generates a presigned GET URL using the configured download TTL.
+   *
+   * @param bucket the bucket holding the object
+   * @param key the object key
+   * @return the presigned URL
+   */
+  private String presignDownload(String bucket, String key) {
+    GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+        .signatureDuration(downloadPresignTtl)
+        .getObjectRequest(b -> b.bucket(bucket).key(key))
+        .build();
+
+    PresignedGetObjectRequest presigned = s3Presigner.presignGetObject(presignRequest);
+    return presigned.url().toString();
   }
 
   /**

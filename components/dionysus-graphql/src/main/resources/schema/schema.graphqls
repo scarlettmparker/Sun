@@ -97,6 +97,25 @@ type KeyDetail {
   archivedAt: String
 }
 
+# Where a subtitle object came from.
+enum SubtitleSource {
+  LOCAL
+  OPENSUBTITLES
+}
+
+# A subtitle object attached to a video key.
+type Subtitle {
+  id: ID
+  bucket: String!
+  keyPath: String!
+  subtitleKey: String!
+  language: String!
+  source: SubtitleSource!
+  openSubtitlesFileId: Int
+  createdAt: String
+  lastUpdatedAt: String
+}
+
 # Response payload for the putKey mutation.
 type PutKeyResponse {
   message: String!

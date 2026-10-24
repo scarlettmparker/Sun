@@ -15,6 +15,7 @@ import com.sun.dionysus.codegen.types.Bucket;
 import com.sun.dionysus.codegen.types.BucketKeyInput;
 import com.sun.dionysus.codegen.types.DeleteFileResponse;
 import com.sun.dionysus.codegen.types.DeleteKeyResponse;
+import com.sun.dionysus.codegen.types.GetPresignedDownloadUrlResponse;
 import com.sun.dionysus.codegen.types.KeyEntry;
 import com.sun.dionysus.codegen.types.KeyDetail;
 import com.sun.dionysus.codegen.types.PutKeyInput;
@@ -43,11 +44,14 @@ import software.amazon.awssdk.services.s3.paginators.ListObjectsV2Iterable;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 import com.sun.dionysus.service.KeyDetailService;
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URL;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -145,8 +149,24 @@ class FilestoreDataFetcherTest {
   }
 
   @Test
-  void listBuckets_returnsBucketsFromRestApi() {
-    Bucket bucket = new Bucket();
+  void getPresignedDownloadUrl_usesConfiguredTtl() throws Exception {
+    PresignedGetObjectRequest presigned = mock(PresignedGetObjectRequest.class);
+    when(presigned.url()).thenReturn(new URL("https://s3.example/video.mp4"));
+    when(s3Presigner.presignGetObject(any(GetObjectPresignRequest.class))).thenReturn(presigned);
+
+    GetPresignedDownloadUrlResponse response = fetcher.getPresignedDownloadUrl(
+        BucketKeyInput.newBuilder().bucket("default-bucket").key("movie.mp4").build());
+
+    assertThat(response.getUrl()).isEqualTo("https://s3.example/video.mp4");
+
+    ArgumentCaptor<GetObjectPresignRequest> captor =
+        ArgumentCaptor.forClass(GetObjectPresignRequest.class);
+    verify(s3Presigner).presignGetObject(captor.capture());
+    assertThat(captor.getValue().signatureDuration()).isEqualTo(Duration.ofHours(24));
+  }
+
+  @Test
+  void listBuckets_returnsBucketsFromRestApi() {    Bucket bucket = new Bucket();
     bucket.setId("b1");
     stubRestGet(new Bucket[] { bucket }, Bucket[].class);
 
