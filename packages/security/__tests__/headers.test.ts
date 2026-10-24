@@ -50,4 +50,18 @@ describe("buildSecurityHeaders", () => {
     expect(connect).not.toContain("posthog");
     expect(connect).not.toMatch(/(^|\s)https:(\s|;|$)/);
   });
+
+  it("appends additional connect-src origins", () => {
+    const headers = buildSecurityHeaders({
+      isProduction: true,
+      nonce: NONCE,
+      additionalConnectSrc: ["https://cdn.jsdelivr.net"],
+    });
+    const connect =
+      headers["Content-Security-Policy"]
+        .split(";")
+        .find((directive) => directive.trim().startsWith("connect-src")) ?? "";
+
+    expect(connect).toContain("https://cdn.jsdelivr.net");
+  });
 });

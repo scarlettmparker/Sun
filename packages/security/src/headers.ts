@@ -19,6 +19,22 @@ export type SecurityHeadersOptions = {
    * Whether to use credentialless COEP.
    */
   useCredentiallessCoep?: boolean;
+  /**
+   * Additional origins to append to connect-src.
+   */
+  additionalConnectSrc?: string | string[];
+  /**
+   * Alias for additionalConnectSrc.
+   */
+  extraConnectSrc?: string | string[];
+  /**
+   * Alias for additionalConnectSrc.
+   */
+  connectSrcExtras?: string | string[];
+  /**
+   * Alias for additionalConnectSrc.
+   */
+  connectSrc?: string | string[];
 };
 
 /**
@@ -31,7 +47,13 @@ export function buildSecurityHeaders(options: SecurityHeadersOptions): Record<st
 
   // In dev, allow Vite HMR (unsafe-inline/eval, ws) - strict CSP would break it.
   const csp = isProduction
-    ? `${buildCspHeader(nonce)}; ${buildTrustedTypesDirective()}`
+    ? `${buildCspHeader({
+        nonce,
+        additionalConnectSrc: options.additionalConnectSrc,
+        extraConnectSrc: options.extraConnectSrc,
+        connectSrcExtras: options.connectSrcExtras,
+        connectSrc: options.connectSrc,
+      })}; ${buildTrustedTypesDirective()}`
     : [
         "default-src 'self'",
         "script-src 'self' 'unsafe-inline' 'unsafe-eval' https: http: ws: wss:",
