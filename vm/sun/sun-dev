@@ -12,14 +12,23 @@ self="$(readlink -f "${BASH_SOURCE[0]}")"
 sun_root="$(cd "$(dirname "$self")/../.." && pwd)"
 bun_bin="${BUN:-$HOME/.bun/bin/bun}"
 
-read -r port host < <("$bun_bin" -e "
+read -r port host unit env_name < <("$bun_bin" -e "
 import { getManifest } from '$sun_root/vm/sun/apps.ts';
-const app = getManifest().apps.find((candidate) => candidate.key === '$key');
-if (!app) { console.error('unknown app: $key'); process.exit(1); }
-console.log(app.port, app.host);
+const manifest = getManifest();
+const app = manifest.apps.find((candidate) => candidate.key === '$key');
+if (app) {
+  console.log(app.port, app.host, app.unit, 'SERVER_PORT');
+  process.exit(0);
+}
+const worker = manifest.workers.find((candidate) => candidate.key === '$key');
+if (worker) {
+  console.log(worker.port, 'localhost', worker.unit, 'PORT');
+  process.exit(0);
+}
+console.error('unknown app or worker: $key');
+process.exit(1);
 ")
 
-unit="sun-app@$key.service"
 state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/sun"
 mkdir -p "$state_dir"
 marker="$state_dir/dev-$key"
@@ -41,7 +50,7 @@ trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-export SERVER_PORT="$port"
+export "$env_name=$port"
 export VITE_SERVER_BASE="https://$host"
 export ALLOWED_HOSTS=".int.scarlettparker.co.uk,host.docker.internal,localhost"
 unset NODE_ENV

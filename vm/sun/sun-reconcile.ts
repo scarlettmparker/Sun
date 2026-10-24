@@ -70,7 +70,8 @@ async function main(): Promise<void> {
     return;
   }
   const started: string[] = [];
-  for (const app of getManifest().apps) {
+  const manifest = getManifest();
+  for (const app of manifest.apps) {
     if (!app.enabled || devActive(app.key)) {
       continue;
     }
@@ -79,6 +80,17 @@ async function main(): Promise<void> {
     }
     if (startUnit(app.unit)) {
       started.push(app.key);
+    }
+  }
+  for (const worker of manifest.workers) {
+    if (!worker.enabled || devActive(worker.key)) {
+      continue;
+    }
+    if (await isPortOpen(worker.port)) {
+      continue;
+    }
+    if (startUnit(worker.unit)) {
+      started.push(worker.key);
     }
   }
   if (started.length > 0) {

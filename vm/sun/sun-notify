@@ -9,6 +9,7 @@ fi
 
 case "$target" in
   *.*) unit="$target" ;;
+  worker:*) unit="sun-worker@${target#worker:}.service" ;;
   *) unit="sun-app@$target.service" ;;
 esac
 

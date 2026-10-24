@@ -67,6 +67,44 @@ export type BackendEntry = {
 };
 
 /**
+ * A supervised background process that belongs to a frontend app.
+ */
+export type WorkerEntry = {
+  /**
+   * Stable identifier used in unit names and dev markers.
+   */
+  key: string;
+  /**
+   * Frontend app key this worker belongs to.
+   */
+  app: string;
+  /**
+   * Human-readable name.
+   */
+  name: string;
+  /**
+   * Repo path relative to the Sun repo root.
+   */
+  dir: string;
+  /**
+   * Port the worker listens on.
+   */
+  port: number;
+  /**
+   * systemd user unit that supervises the worker.
+   */
+  unit: string;
+  /**
+   * Bun entrypoint, relative to the worker directory.
+   */
+  entry: string;
+  /**
+   * Whether the environment supervises the worker.
+   */
+  enabled: boolean;
+};
+
+/**
  * Everything the tooling and status page need for one environment.
  */
 export type EnvironmentManifest = {
@@ -78,6 +116,10 @@ export type EnvironmentManifest = {
    * Supervised frontend apps.
    */
   apps: AppEntry[];
+  /**
+   * Supervised background processes owned by frontend apps.
+   */
+  workers: WorkerEntry[];
 };
 
 const JAR = "components/sun-graphql/build/libs/sun-graphql-0.0.1-SNAPSHOT.jar";
@@ -158,6 +200,27 @@ export const MANIFESTS: Record<string, EnvironmentManifest> = {
         unit: "sun-app@guided-reader.service",
         enabled: true,
       },
+      {
+        key: "free-chess",
+        name: "Free Chess",
+        host: "chess.int.scarlettparker.co.uk",
+        dir: "../Free-Chess",
+        port: 5179,
+        unit: "sun-app@free-chess.service",
+        enabled: true,
+      },
+    ],
+    workers: [
+      {
+        key: "free-chess-matchmaking",
+        app: "free-chess",
+        name: "Free Chess matchmaking",
+        dir: "../Free-Chess",
+        port: 4001,
+        unit: "sun-worker@free-chess-matchmaking.service",
+        entry: "server/src/index.ts",
+        enabled: true,
+      },
     ],
   },
   prod: {
@@ -189,6 +252,7 @@ export const MANIFESTS: Record<string, EnvironmentManifest> = {
         enabled: true,
       },
     ],
+    workers: [],
   },
 };
 

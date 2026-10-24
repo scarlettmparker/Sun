@@ -5,7 +5,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { getManifest, type AppEntry, type BackendEntry } from "./apps";
+import { getManifest, type AppEntry, type BackendEntry, type WorkerEntry } from "./apps";
 
 const SUN_ROOT = path.resolve(import.meta.dir, "../..");
 const UNIT_DIR = path.join(os.homedir(), ".config/systemd/user");
@@ -38,6 +38,37 @@ function renderApp(app: AppEntry): string {
     `Environment=VITE_SERVER_BASE=https://${app.host}`,
     `Environment=ALLOWED_HOSTS=${ALLOWED_HOSTS}`,
     `ExecStart=${BUN} --preload ./css-plugin.ts server.js`,
+    "Restart=always",
+    "RestartSec=3",
+    "",
+    "[Install]",
+    "WantedBy=default.target",
+    "",
+  ].join("\n");
+}
+
+/**
+ * Builds the unit file body for a supervised worker.
+ */
+function renderWorker(worker: WorkerEntry): string {
+  const dir = path.resolve(SUN_ROOT, worker.dir);
+  const owner = getManifest().apps.find((candidate) => candidate.key === worker.app);
+  return [
+    "[Unit]",
+    `Description=Sun worker: ${worker.name}`,
+    "After=network-online.target",
+    "Wants=network-online.target",
+    "StartLimitIntervalSec=60",
+    "StartLimitBurst=5",
+    "",
+    "[Service]",
+    "Type=simple",
+    `WorkingDirectory=${dir}`,
+    "Environment=NODE_ENV=production",
+    `Environment=PORT=${worker.port}`,
+    "Environment=HOST=0.0.0.0",
+    ...(owner ? [`Environment=ALLOWED_WS_ORIGINS=${owner.host}`] : []),
+    `ExecStart=${BUN} ${worker.entry}`,
     "Restart=always",
     "RestartSec=3",
     "",
@@ -135,6 +166,11 @@ function main(): void {
   for (const app of manifest.apps) {
     if (app.enabled) {
       units.push(writeUnit(app.unit, renderApp(app)));
+    }
+  }
+  for (const worker of manifest.workers) {
+    if (worker.enabled) {
+      units.push(writeUnit(worker.unit, renderWorker(worker)));
     }
   }
   writeUnit("sun-reconcile.service", renderReconcile());
