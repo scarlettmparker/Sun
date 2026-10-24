@@ -1,6 +1,6 @@
 {
   "name": "@sun/ssr",
-  "version": "0.10.1",
+  "version": "0.10.2",
   "description": "Sun ecosystem SSR framework: suspense page-data cache, mutation registry, and the /__page-data RPC",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -36,7 +36,7 @@
   },
   "dependencies": {
     "@sun/analytics": "^0.1.2",
-    "@sun/security": "^0.1.5",
+    "@sun/security": "^0.1.10",
     "@sun/utils": "^0.1.6",
     "preact-render-to-string": "^6.8.1"
   },
