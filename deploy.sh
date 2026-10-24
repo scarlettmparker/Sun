@@ -251,7 +251,7 @@ if [ "$HEALTHY" != "true" ]; then
   exit 1
 fi
 
-# Step 3: Swap nginx to new instance (old is still running — no gap)
+# Step 3: Swap nginx to new instance (old is still running - no gap)
 echo "    Swapping nginx to port $NEW_PORT..."
 sudo ln -sf "/etc/nginx/sites-available/$DOMAIN.$SWAP_TO" "/etc/nginx/sites-enabled/$DOMAIN"
 sudo nginx -t 2>&1 && sudo nginx -s reload 2>&1

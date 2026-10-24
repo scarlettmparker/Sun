@@ -47,6 +47,7 @@ import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignReques
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 import com.sun.dionysus.service.KeyDetailService;
+import com.sun.dionysus.service.SubtitleService;
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -89,6 +90,9 @@ class FilestoreDataFetcherTest {
 
   @Mock
   private KeyDetailService keyDetailService;
+
+  @Mock
+  private SubtitleService subtitleService;
 
   @Mock
   private TorrentJobService torrentJobService;

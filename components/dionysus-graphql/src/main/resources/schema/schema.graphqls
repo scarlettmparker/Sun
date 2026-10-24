@@ -55,6 +55,8 @@ type FilestoreQueries {
   torrentJobs(bucket: String, status: TorrentJobStatus): [TorrentJob!]
   # Searches Prowlarr for torrents matching the query.
   searchTorrents(query: String!): [TorrentSearchResult!]!
+  # Lists subtitles for a video key.
+  subtitles(bucket: String!, keyPath: String!): [Subtitle!]!
 }
 
 # Directory-like entry for a bucket key.
@@ -114,6 +116,30 @@ type Subtitle {
   openSubtitlesFileId: Int
   createdAt: String
   lastUpdatedAt: String
+}
+
+# A subtitle returned by an OpenSubtitles search.
+type SubtitleSearchResult {
+  source: SubtitleSource!
+  subtitleKey: String
+  fileId: Int
+  language: String!
+  label: String!
+  hearingImpaired: Boolean
+  downloads: Int
+  rating: Float
+}
+
+# Response payload for fetchSubtitle.
+type FetchSubtitleResponse {
+  vtt: String!
+  subtitleKey: String
+}
+
+# Response payload for deleteSubtitle.
+type DeleteSubtitleResponse {
+  message: String!
+  key: String!
 }
 
 # Response payload for the putKey mutation.
@@ -194,6 +220,28 @@ input BucketKeyInput {
   key: String!
 }
 
+input SearchSubtitlesInput {
+  bucket: String!
+  keyPath: String!
+  query: String
+  language: String
+}
+
+input FetchSubtitleInput {
+  bucket: String!
+  keyPath: String!
+  subtitleKey: String
+  source: SubtitleSource!
+  fileId: Int
+  language: String
+  persist: Boolean
+}
+
+input DeleteSubtitleInput {
+  bucket: String!
+  subtitleKey: String!
+}
+
 input RenameKeyInput {
   bucket: String!
   sourceKey: String!
@@ -239,6 +287,12 @@ type FilestoreMutations {
   resumeTorrent(jobId: String!): ResumeTorrentResponse!
   # Cancels a torrent download and clears its scratch files.
   cancelTorrent(jobId: String!): CancelTorrentResponse!
+  # Searches OpenSubtitles for a video.
+  searchSubtitles(input: SearchSubtitlesInput!): [SubtitleSearchResult!]!
+  # Fetches a subtitle and optionally persists it.
+  fetchSubtitle(input: FetchSubtitleInput!): FetchSubtitleResponse!
+  # Deletes a subtitle object.
+  deleteSubtitle(input: DeleteSubtitleInput!): DeleteSubtitleResponse!
 }
 
 extend type Query {

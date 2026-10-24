@@ -23,7 +23,9 @@ import com.sun.dionysus.graphql.mappers.FileMapper;
 import com.sun.dionysus.graphql.mappers.KeyDetailMapper;
 import com.sun.dionysus.graphql.mappers.KeyEntryMapper;
 import com.sun.dionysus.model.KeyDetailEntity;
+import com.sun.dionysus.model.SubtitleEntity;
 import com.sun.dionysus.service.KeyDetailService;
+import com.sun.dionysus.service.SubtitleService;
 import com.sun.dionysus.service.torrent.TorrentJobService;
 import com.sun.dionysus.torrent.TorrentJobViewService;
 import jakarta.annotation.PostConstruct;
@@ -72,6 +74,7 @@ public class FilestoreDataFetcher {
   private final KeyDetailMapper keyDetailMapper;
   private final RestClient.Builder restClientBuilder;
   private final KeyDetailService keyDetailService;
+  private final SubtitleService subtitleService;
   private final TorrentJobService torrentJobService;
   private final TorrentJobViewService torrentJobViewService;
 
@@ -80,6 +83,7 @@ public class FilestoreDataFetcher {
   public FilestoreDataFetcher(S3Client s3Client, @Qualifier("s3Presigner") S3Presigner s3Presigner,
       FileMapper fileMapper, KeyEntryMapper keyEntryMapper, KeyDetailMapper keyDetailMapper,
       RestClient.Builder restClientBuilder, KeyDetailService keyDetailService,
+      SubtitleService subtitleService,
       TorrentJobService torrentJobService, TorrentJobViewService torrentJobViewService) {
     this.s3Client = s3Client;
     this.s3Presigner = s3Presigner;
@@ -88,6 +92,7 @@ public class FilestoreDataFetcher {
     this.keyDetailMapper = keyDetailMapper;
     this.restClientBuilder = restClientBuilder;
     this.keyDetailService = keyDetailService;
+    this.subtitleService = subtitleService;
     this.torrentJobService = torrentJobService;
     this.torrentJobViewService = torrentJobViewService;
   }
@@ -299,6 +304,8 @@ public class FilestoreDataFetcher {
           .key(key)
           .build());
       keyDetailService.archiveDetail(bucket, key);
+      subtitleService.deleteForVideo(bucket, key);
+      deleteSubtitleSiblings(bucket, key);
     } catch (Exception e) {
       throw new MutationException("deleteFile failed: " + e.getMessage(), e);
     }
@@ -365,6 +372,7 @@ public class FilestoreDataFetcher {
     }
 
     keyDetailService.archiveRecursive(bucket, key);
+    subtitleService.deleteUnderPrefix(bucket, key);
 
     logger.info("Successfully deleted {} key(s) under '{}' in bucket: {}", totalDeleted, key, bucket);
     return DeleteKeyResponse.newBuilder()
@@ -466,6 +474,73 @@ public class FilestoreDataFetcher {
     }
 
     List<ObjectIdentifier> sourceIdsToDelete = new ArrayList<>();
+
+    // Move sibling subtitle files for a single renamed video.
+    if (!isSourceDir) {
+      String parent = parentPrefix(sourceKey);
+      String listPrefix = parent + stemOf(sourceKey);
+      ListObjectsV2Request siblingReq = ListObjectsV2Request.builder()
+          .bucket(bucket)
+          .prefix(listPrefix)
+          .build();
+      var siblingPaginator = s3Client.listObjectsV2Paginator(siblingReq);
+      if (siblingPaginator != null) {
+        for (S3Object sibling : siblingPaginator.contents()) {
+        String siblingName = basename(sibling.key());
+        String ext = extension(siblingName);
+        if (!isSubtitleExtension(ext)) {
+          continue;
+        }
+        String base = siblingName.substring(0, siblingName.length() - ext.length() - 1);
+        String sourceStem = stemOf(sourceKey);
+        if (!base.equals(sourceStem) && !base.startsWith(sourceStem + ".")) {
+          continue;
+        }
+        if (moves.stream().anyMatch(e -> e.getKey().equals(sibling.key()))) {
+          continue;
+        }
+        String targetName = stemOf(targetKey) + base.substring(sourceStem.length()) + "." + ext;
+        String dest = parent + targetName;
+        s3Client.copyObject(CopyObjectRequest.builder()
+            .copySource(bucket + "/" + sibling.key())
+            .destinationBucket(bucket)
+            .destinationKey(dest)
+            .build());
+        sourceIdsToDelete.add(ObjectIdentifier.builder().key(sibling.key()).build());
+      }
+      }
+
+      for (SubtitleEntity subtitle : subtitleService.listForVideo(bucket, sourceKey)) {
+        String oldKey = subtitle.getSubtitleKey();
+        String oldName = basename(oldKey);
+        String ext = extension(oldName);
+        String oldBase = ext.isBlank()
+            ? oldName
+            : oldName.substring(0, oldName.length() - ext.length() - 1);
+        String sourceStem = stemOf(sourceKey);
+        String newBase = stemOf(targetKey) + (oldBase.startsWith(sourceStem)
+            ? oldBase.substring(sourceStem.length())
+            : "");
+        String newKey = parentPrefix(oldKey) + newBase + (ext.isBlank() ? "" : "." + ext);
+        if (sourceIdsToDelete.stream().noneMatch(id -> id.key().equals(oldKey))) {
+          try {
+            s3Client.copyObject(CopyObjectRequest.builder()
+                .copySource(bucket + "/" + oldKey)
+                .destinationBucket(bucket)
+                .destinationKey(newKey)
+                .build());
+            sourceIdsToDelete.add(ObjectIdentifier.builder().key(oldKey).build());
+          } catch (Exception e) {
+            logger.warn("Failed to move subtitle {}: {}", oldKey, e.getMessage());
+          }
+        }
+        subtitleService.deleteBySubtitleKey(bucket, oldKey);
+        subtitleService.attach(bucket, targetKey, newKey, subtitle.getLanguage(),
+            subtitle.getSource(), subtitle.getOpenSubtitlesFileId());
+      }
+    }
+
+    // Batch clear out the old source files
     for (Map.Entry<String, String> move : moves) {
       String src = move.getKey();
       String dest = move.getValue();
@@ -483,6 +558,7 @@ public class FilestoreDataFetcher {
     }
 
     keyDetailService.updatePath(bucket, sourceKey, targetKey);
+    subtitleService.updatePath(bucket, sourceKey, targetKey);
 
     // Batch clear out the old source files
     if (!sourceIdsToDelete.isEmpty()) {
@@ -674,4 +750,61 @@ public class FilestoreDataFetcher {
   private boolean hasActiveAtOrChild(String bucket, String key) {
     return torrentJobService.hasActiveAtOrUnder(bucket, key);
   }
+
+  private void deleteSubtitleSiblings(String bucket, String key) {
+    String parent = parentPrefix(key);
+    String stem = stemOf(key);
+    ListObjectsV2Request request = ListObjectsV2Request.builder()
+        .bucket(bucket)
+        .prefix(parent + stem)
+        .build();
+    List<ObjectIdentifier> ids = new ArrayList<>();
+    var deletePaginator = s3Client.listObjectsV2Paginator(request);
+    if (deletePaginator != null) {
+      for (S3Object object : deletePaginator.contents()) {
+      String name = basename(object.key());
+      String ext = extension(name);
+      if (!isSubtitleExtension(ext)) {
+        continue;
+      }
+      String base = name.substring(0, name.length() - ext.length() - 1);
+      if (!base.equals(stem) && !base.startsWith(stem + ".")) {
+        continue;
+      }
+      ids.add(ObjectIdentifier.builder().key(object.key()).build());
+    }
+    }
+    if (!ids.isEmpty()) {
+      flushDeleteBatch(bucket, ids);
+    }
+  }
+
+  private static String parentPrefix(String key) {
+    int slash = key.lastIndexOf('/');
+    return slash >= 0 ? key.substring(0, slash + 1) : "";
+  }
+
+  private static String stemOf(String key) {
+    String name = basename(key);
+    int dot = name.lastIndexOf('.');
+    return dot > 0 ? name.substring(0, dot) : name;
+  }
+
+  private static String basename(String key) {
+    int slash = key.lastIndexOf('/');
+    return slash >= 0 ? key.substring(slash + 1) : key;
+  }
+
+  private static String extension(String name) {
+    int dot = name.lastIndexOf('.');
+    if (dot < 0 || dot == name.length() - 1) {
+      return "";
+    }
+    return name.substring(dot + 1).toLowerCase(java.util.Locale.ROOT);
+  }
+
+  private static boolean isSubtitleExtension(String ext) {
+    return ext.equals("srt") || ext.equals("vtt") || ext.equals("ass") || ext.equals("ssa");
+  }
+
 }
