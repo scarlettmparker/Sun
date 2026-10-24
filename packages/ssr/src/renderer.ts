@@ -6,6 +6,7 @@ import { renderToPipeableStream } from "preact-render-to-string/stream-node";
 import { inlineCss, generateCssTag } from "@sun/utils/css-inlining";
 import { getRequestCache } from "./page-data";
 import { getCspNonce } from "./csp-nonce";
+import { globalSingleton } from "./global-state";
 import { buildSecurityHeaders } from "@sun/security";
 
 /** Locale candidates tried, in order, when loading the consolidated messages file. */
@@ -15,7 +16,10 @@ const LOCALE_FALLBACK = ["en-GB", "en"];
 let cssPromise: Promise<string> | null = null;
 
 /** Extra connect-src origins configured by the server at startup. */
-let cspConnectSrcExtras: string[] = [];
+const cspConnectSrcExtras = globalSingleton<string[]>(
+  "ssr.cspConnectSrcExtras",
+  () => [],
+);
 
 /**
  * Sets the extra connect-src origins used by rendered documents.
@@ -23,13 +27,13 @@ let cspConnectSrcExtras: string[] = [];
  * @param extras Additional origins, or a single origin.
  */
 export function setCspConnectSrcExtras(extras?: string | string[]): void {
-  if (!extras) {
-    cspConnectSrcExtras = [];
-    return;
-  }
-  cspConnectSrcExtras = (Array.isArray(extras) ? extras : [extras])
-    .map((value) => value.trim())
-    .filter(Boolean);
+  cspConnectSrcExtras.length = 0;
+  if (!extras) return;
+  cspConnectSrcExtras.push(
+    ...(Array.isArray(extras) ? extras : [extras])
+      .map((value) => value.trim())
+      .filter(Boolean),
+  );
 }
 
 /** Memoised head metadata, keyed by its inputs. */

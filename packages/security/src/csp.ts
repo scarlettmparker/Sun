@@ -72,7 +72,7 @@ export function buildCspHeader(
 
   const directives = [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https: 'unsafe-inline'`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https: 'unsafe-inline' 'wasm-unsafe-eval'`,
     "style-src 'self' https: 'unsafe-inline'",
     "font-src 'self' data: https:",
     "img-src 'self' data: https: blob:",
@@ -83,7 +83,7 @@ export function buildCspHeader(
     "base-uri 'none'",
     "form-action 'self'",
     "object-src 'none'",
-    "worker-src 'self' blob:",
+    "worker-src 'self' blob: data:",
   ];
   return directives.join("; ");
 }

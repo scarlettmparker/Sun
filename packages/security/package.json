@@ -1,6 +1,6 @@
 {
   "name": "@sun/security",
-  "version": "0.1.11",
+  "version": "0.1.14",
   "description": "Shared security headers for Sun ecosystem (CSP/HSTS/COOP/Trusted Types)",
   "files": [
     "dist"

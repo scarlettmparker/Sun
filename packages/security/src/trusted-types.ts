@@ -24,7 +24,10 @@ export function ensureDefaultTrustedPolicy(
     return;
   }
   try {
-    window.trustedTypes.createPolicy("default", { createHTML });
+    window.trustedTypes.createPolicy("default", {
+      createHTML,
+      createScriptURL: (url: string) => url,
+    } as never);
   } catch {
     // Policy already exists (strict mode remount, HMR).
   }
