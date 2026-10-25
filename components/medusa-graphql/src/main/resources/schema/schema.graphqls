@@ -10,6 +10,8 @@ type Piece {
   stateTransition: String!
   edgeReset: Boolean!
   isSystem: Boolean!
+  createdBy: ID
+  ownerName: String
   createdAt: DateTime
   updatedAt: DateTime
   sprite: PieceSprite
