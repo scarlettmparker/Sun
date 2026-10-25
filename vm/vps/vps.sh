@@ -148,9 +148,18 @@ REMOTE
 # @param $1 Container name.
 # @param $2 Space-separated package list.
 install_packages() {
-  local name="$1" packages="$2"
+  local name="$1" packages="$2" attempt
+  if remote "sudo lxc exec '$name' -- bash -c 'for p in $packages; do dpkg -s \"\$p\" >/dev/null 2>&1 || exit 1; done'"; then
+    return 0
+  fi
   log "guest: $name packages"
-  remote "sudo lxc exec '$name' -- env DEBIAN_FRONTEND=noninteractive apt-get update -qq"
+  for attempt in 1 2 3; do
+    if remote "sudo lxc exec '$name' -- env DEBIAN_FRONTEND=noninteractive apt-get update -qq"; then
+      break
+    fi
+    [ "$attempt" = "3" ] && return 1
+    sleep 2
+  done
   remote "sudo lxc exec '$name' -- env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq -o Dpkg::Options::=--force-confold $packages"
 }
 
