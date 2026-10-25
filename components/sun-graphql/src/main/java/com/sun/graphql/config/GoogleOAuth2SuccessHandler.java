@@ -21,6 +21,13 @@ public class GoogleOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
   private final JwtService jwtService;
   private final String appBaseUrl;
 
+  /**
+   * Creates the handler.
+   *
+   * @param accountService account service
+   * @param jwtService jwt service
+   * @param appBaseUrl application base url
+   */
   public GoogleOAuth2SuccessHandler(AccountService accountService, JwtService jwtService,
       @Value("${app.base-url:http://localhost:5178}") String appBaseUrl) {
     this.accountService = accountService;

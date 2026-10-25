@@ -204,6 +204,14 @@ type ChangePasswordResponse {
   message: String!
 }
 
+type SetAccountPasswordResponse {
+  message: String!
+}
+
+type DeleteAccountResponse {
+  message: String!
+}
+
 type UpsertPropertyEntryResponse {
   message: String!
   entry: PropertySetEntry!
@@ -304,6 +312,8 @@ type GaiaMutations {
   verifyMagicLink(token: String!): AuthResult!
   loginWithGoogle(code: String!, redirectUri: String!): AuthResult!
   changePassword(currentPassword: String!, newPassword: String!): ChangePasswordResponse!
+  setAccountPassword(accountId: ID!, newPassword: String!): SetAccountPasswordResponse!
+  deleteAccount(id: ID!): DeleteAccountResponse!
   upsertPropertyEntry(
     ownerKey: String!
     name: String!

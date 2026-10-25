@@ -23,8 +23,17 @@ public class BoardLayoutService {
    *
    * @return the layouts
    */
-  public List<BoardLayoutEntity> list() {
-    return repository.findAll();
+  /**
+   * Lists layouts visible to the caller (system or owned).
+   *
+   * @param ownerId the caller id, or null for all
+   * @return the layouts
+   */
+  public List<BoardLayoutEntity> list(UUID ownerId) {
+    if (ownerId == null) {
+      return repository.findAll();
+    }
+    return repository.findBySystemTrueOrCreatedBy(ownerId);
   }
 
   /**

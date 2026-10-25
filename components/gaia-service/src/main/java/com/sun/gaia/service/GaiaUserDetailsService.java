@@ -18,6 +18,12 @@ public class GaiaUserDetailsService implements UserDetailsService {
   private final AccountService accountService;
   private final AccountRepository accountRepository;
 
+  /**
+   * Creates the service.
+   *
+   * @param accountService account service
+   * @param accountRepository account repository
+   */
   public GaiaUserDetailsService(AccountService accountService, AccountRepository accountRepository) {
     this.accountService = accountService;
     this.accountRepository = accountRepository;

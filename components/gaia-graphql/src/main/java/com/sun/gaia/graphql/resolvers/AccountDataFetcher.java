@@ -13,6 +13,8 @@ import com.sun.fates.service.PersonService;
 import com.sun.gaia.codegen.types.Account;
 import com.sun.gaia.codegen.types.AuthResult;
 import com.sun.gaia.codegen.types.ChangePasswordResponse;
+import com.sun.gaia.codegen.types.DeleteAccountResponse;
+import com.sun.gaia.codegen.types.SetAccountPasswordResponse;
 import com.sun.gaia.codegen.types.ConfirmAccountReactivationResponse;
 import com.sun.gaia.codegen.types.DeactivateAccountResponse;
 import com.sun.gaia.codegen.types.LoginInput;
@@ -503,6 +505,39 @@ public class AccountDataFetcher {
     accountService.changePassword(userId, newPassword);
     return ChangePasswordResponse.newBuilder()
         .message("Password changed")
+        .build();
+  }
+
+  /**
+   * Sets an account's password (admin).
+   */
+  @Audited(event = "ACCOUNT_SET_PASSWORD", entity = "Account")
+  @DgsData(parentType = "GaiaMutations", field = "setAccountPassword")
+  @PreAuthorize("@permissions.has('graphql.gaia.setAccountPassword')")
+  @Transactional
+  public SetAccountPasswordResponse setAccountPassword(String accountId, String newPassword) {
+    accountService.changePassword(UUID.fromString(accountId), newPassword);
+    return SetAccountPasswordResponse.newBuilder()
+        .message("Password updated")
+        .build();
+  }
+
+  /**
+   * Deactivates an account (admin).
+   */
+  @Audited(event = "ACCOUNT_DELETE", entity = "Account")
+  @DgsData(parentType = "GaiaMutations", field = "deleteAccount")
+  @PreAuthorize("@permissions.has('graphql.gaia.deleteAccount')")
+  @Transactional
+  public DeleteAccountResponse deleteAccount(String id) {
+    accountService.deactivateAccount(UUID.fromString(id));
+    try {
+      jwtService.revokeAllForAccount(UUID.fromString(id));
+    } catch (Exception e) {
+      // best-effort
+    }
+    return DeleteAccountResponse.newBuilder()
+        .message("Account deactivated")
         .build();
   }
 

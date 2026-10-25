@@ -29,8 +29,17 @@ public class PieceSetService {
    *
    * @return the piece sets
    */
-  public List<PieceSetEntity> list() {
-    return setRepository.findAll();
+  /**
+   * Lists sets visible to the caller (system or owned).
+   *
+   * @param ownerId the caller id, or null for all
+   * @return the sets
+   */
+  public List<PieceSetEntity> list(UUID ownerId) {
+    if (ownerId == null) {
+      return setRepository.findAll();
+    }
+    return setRepository.findBySystemTrueOrCreatedBy(ownerId);
   }
 
   /**

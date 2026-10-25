@@ -27,6 +27,7 @@ import com.sun.medusa.model.PieceSetEntity;
 import com.sun.medusa.service.AuditService;
 import com.sun.medusa.service.BoardLayoutService;
 import com.sun.medusa.service.PieceService;
+import com.sun.gaia.service.UserContextHolder;
 import com.sun.medusa.service.PieceSetService;
 import java.util.List;
 import java.util.UUID;
@@ -73,7 +74,7 @@ public class MedusaDataFetcher {
   @PreAuthorize("@permissions.has('graphql.medusa.listPieces')")
   @Transactional(readOnly = true)
   public List<Piece> pieces() {
-    return pieceService.list().stream()
+    return pieceService.list(UserContextHolder.getUserId()).stream()
         .map(e -> pieceMapper.map(e, pieceService.findSprite(e.getId())))
         .collect(Collectors.toList());
   }
@@ -93,7 +94,7 @@ public class MedusaDataFetcher {
   @PreAuthorize("@permissions.has('graphql.medusa.listPieceSets')")
   @Transactional(readOnly = true)
   public List<PieceSet> pieceSets() {
-    return pieceSetService.list().stream()
+    return pieceSetService.list(UserContextHolder.getUserId()).stream()
         .map(e -> pieceSetMapper.map(e, pieceSetService))
         .collect(Collectors.toList());
   }
@@ -113,7 +114,7 @@ public class MedusaDataFetcher {
   @PreAuthorize("@permissions.has('graphql.medusa.listBoardLayouts')")
   @Transactional(readOnly = true)
   public List<BoardLayout> boardLayouts() {
-    return boardLayoutService.list().stream()
+    return boardLayoutService.list(UserContextHolder.getUserId()).stream()
         .map(boardLayoutMapper::map)
         .collect(Collectors.toList());
   }
@@ -164,6 +165,9 @@ public class MedusaDataFetcher {
   @Transactional
   public PieceResponse savePiece(PieceInput input) {
     PieceDefinitionEntity entity = pieceMapper.mapInput(input);
+    if (entity.getCreatedBy() == null) {
+      entity.setCreatedBy(UserContextHolder.getUserId());
+    }
     PieceDefinitionEntity saved = pieceService.save(entity,
         input.getSprite().getHeadKey(), input.getSprite().getBodyKey(),
         input.getSprite().getFootKey());
@@ -188,8 +192,10 @@ public class MedusaDataFetcher {
   @Transactional
   public PieceSetResponse savePieceSet(PieceSetInput input) {
     PieceSetEntity entity = pieceSetMapper.mapInput(input);
+    if (entity.getCreatedBy() == null) {
+      entity.setCreatedBy(UserContextHolder.getUserId());
+    }
     var members = pieceSetMapper.mapMembers(input, entity.getId() == null ? null : entity.getId());
-    // ensure setId assigned after save; mapMembers needs id, so re-map after save not possible; handle below
     PieceSetEntity saved = pieceSetService.save(entity, members);
     return PieceSetResponse.newBuilder()
         .message("Piece set saved")
@@ -212,6 +218,9 @@ public class MedusaDataFetcher {
   @Transactional
   public BoardLayoutResponse saveBoardLayout(BoardLayoutInput input) {
     BoardLayoutEntity entity = boardLayoutMapper.mapInput(input);
+    if (entity.getCreatedBy() == null) {
+      entity.setCreatedBy(UserContextHolder.getUserId());
+    }
     BoardLayoutEntity saved = boardLayoutService.save(entity);
     return BoardLayoutResponse.newBuilder()
         .message("Board layout saved")

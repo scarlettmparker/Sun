@@ -29,8 +29,17 @@ public class PieceService {
    *
    * @return the piece definitions
    */
-  public List<PieceDefinitionEntity> list() {
-    return definitionRepository.findAll();
+  /**
+   * Lists pieces visible to the caller (system or owned).
+   *
+   * @param ownerId the caller id, or null for all
+   * @return the pieces
+   */
+  public List<PieceDefinitionEntity> list(UUID ownerId) {
+    if (ownerId == null) {
+      return definitionRepository.findAll();
+    }
+    return definitionRepository.findBySystemTrueOrCreatedBy(ownerId);
   }
 
   /**
