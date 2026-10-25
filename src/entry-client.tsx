@@ -16,8 +16,7 @@ import styles from "./suspense-fallback.module.css";
 
 ensureDefaultTrustedPolicy();
 
-// Apply the server-rendered theme before mount so there is no flash; a
-// persisted user choice takes precedence.
+// Apply the server-rendered theme before mount
 if (window.localStorage.getItem("sun:theme")) {
   loadPersistedTheme();
 } else if (window.__theme__) {

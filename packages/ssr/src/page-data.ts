@@ -88,7 +88,10 @@ export type CacheRecord = {
  * each postlude contains only the keys the current render resolved. On the
  * client there is one session-level map (hydrated from the SSR postlude).
  */
-const clientCache = globalSingleton<Map<string, CacheRecord>>("ssr.clientCache", () => new Map());
+const clientCache = globalSingleton<Map<string, CacheRecord>>(
+  "ssr.clientCache",
+  () => new Map(),
+);
 type RequestCacheProvider = () => Map<string, CacheRecord> | null;
 type RequestCookieProvider = () => string | undefined;
 type RequestIpProvider = () => string | undefined;
@@ -105,7 +108,9 @@ export function setRequestCacheProvider(provider: RequestCacheProvider): void {
 }
 
 /** server.ts calls this at boot to plug in the request's Cookie header. */
-export function setRequestCookieProvider(provider: RequestCookieProvider): void {
+export function setRequestCookieProvider(
+  provider: RequestCookieProvider,
+): void {
   requestProviders.cookie = provider;
 }
 
@@ -187,7 +192,10 @@ function getCacheTTL(pattern: string): number {
 /**
  * Checks if a cache entry has expired.
  */
-function isCacheExpired(record: { timestamp?: number }, pattern: string): boolean {
+function isCacheExpired(
+  record: { timestamp?: number },
+  pattern: string,
+): boolean {
   if (!record.timestamp) return false;
   const ttl = getCacheTTL(pattern);
   if (ttl <= 0) return false;
@@ -198,7 +206,9 @@ function isCacheExpired(record: { timestamp?: number }, pattern: string): boolea
 /**
  * Hydrates the page data cache with initial data from the server.
  */
-export function hydratePageData(initialData: Record<string, Record<string, unknown>>) {
+export function hydratePageData(
+  initialData: Record<string, Record<string, unknown>>,
+) {
   if (!initialData) {
     return;
   }
@@ -215,7 +225,9 @@ export function hydratePageData(initialData: Record<string, Record<string, unkno
     if (colonIndex !== -1) {
       const patternPart = key.slice(0, colonIndex);
       const rest = key.slice(colonIndex);
-      const normalizedPattern = patternPart.startsWith("/") ? patternPart : "/" + patternPart;
+      const normalizedPattern = patternPart.startsWith("/")
+        ? patternPart
+        : "/" + patternPart;
       const normalizedKey = `${normalizedPattern}${rest}`;
       if (!activeCache().has(normalizedKey)) {
         activeCache().set(normalizedKey, {
@@ -234,17 +246,22 @@ export function hydratePageData(initialData: Record<string, Record<string, unkno
  * Registry of page data loaders.
  * Maps route patterns to their data-loading functions (multiple allowed).
  */
-export const pageDataLoaders = globalSingleton<Record<string, PageDataLoader[]>>(
-  "ssr.pageDataLoaders",
-  () => ({}),
-);
+export const pageDataLoaders = globalSingleton<
+  Record<string, PageDataLoader[]>
+>("ssr.pageDataLoaders", () => ({}));
 
-type PageDataCache = Record<string, { data: Record<string, unknown> | null; timestamp: number }>;
+type PageDataCache = Record<
+  string,
+  { data: Record<string, unknown> | null; timestamp: number }
+>;
 
 /**
  * Cache for page data to avoid re-fetching on every request (production only).
  */
-const pageDataCache = globalSingleton<PageDataCache>("ssr.pageDataCache", () => ({}));
+const pageDataCache = globalSingleton<PageDataCache>(
+  "ssr.pageDataCache",
+  () => ({}),
+);
 
 function registerPageDataLoader(pattern: string, loader: PageDataLoader): void {
   const list = pageDataLoaders[pattern] || [];
@@ -279,7 +296,10 @@ function getRegisteredPageNames(): string[] {
 /**
  * Creates a normalized cache key for the given pattern and params.
  */
-export function makeCacheKey(pattern: string, params?: Record<string, unknown>) {
+export function makeCacheKey(
+  pattern: string,
+  params?: Record<string, unknown>,
+) {
   const normalized = pattern.startsWith("/") ? pattern : "/" + pattern;
   return `${normalized}:${JSON.stringify(params || {})}`;
 }
@@ -329,7 +349,11 @@ function readPageData<T>(
   const cacheKey = makeCacheKey(pattern, params);
   let record = activeCache().get(cacheKey);
 
-  if (record && record.status === "resolved" && isCacheExpired(record, pattern)) {
+  if (
+    record &&
+    record.status === "resolved" &&
+    isCacheExpired(record, pattern)
+  ) {
     activeCache().delete(cacheKey);
     record = undefined;
   }
@@ -363,15 +387,17 @@ function readPageData<T>(
 
     const loadPromise: Promise<Record<string, unknown> | null> =
       typeof window === "undefined"
-        ? Promise.all(relevantLoaders.map((l) => l(params, context))).then((results) => {
-            const merged: Record<string, unknown> = {};
-            for (const r of results) {
-              if (r && typeof r === "object") {
-                Object.assign(merged, r);
+        ? Promise.all(relevantLoaders.map((l) => l(params, context))).then(
+            (results) => {
+              const merged: Record<string, unknown> = {};
+              for (const r of results) {
+                if (r && typeof r === "object") {
+                  Object.assign(merged, r);
+                }
               }
-            }
-            return merged;
-          })
+              return merged;
+            },
+          )
         : fetchPageDataRpc(pattern, params);
 
     const promise = loadPromise
@@ -423,7 +449,11 @@ export function getPageData<T>(
   const cacheKey = makeCacheKey(pattern, params);
   let record = activeCache().get(cacheKey);
 
-  if (record && record.status === "resolved" && isCacheExpired(record, pattern)) {
+  if (
+    record &&
+    record.status === "resolved" &&
+    isCacheExpired(record, pattern)
+  ) {
     activeCache().delete(cacheKey);
     record = undefined;
   }
@@ -442,7 +472,11 @@ export function getPageData<T>(
   if (!record) {
     const keyedHydrationKey = makeCacheKey(`${pattern}:${key}`, params);
     record = activeCache().get(keyedHydrationKey);
-    if (record && record.status === "resolved" && isCacheExpired(record, pattern)) {
+    if (
+      record &&
+      record.status === "resolved" &&
+      isCacheExpired(record, pattern)
+    ) {
       activeCache().delete(keyedHydrationKey);
       record = undefined;
     }
@@ -473,7 +507,11 @@ export function peekPageData<T>(
   const cacheKey = makeCacheKey(pattern, params);
   let record = activeCache().get(cacheKey);
 
-  if (record && record.status === "resolved" && isCacheExpired(record, pattern)) {
+  if (
+    record &&
+    record.status === "resolved" &&
+    isCacheExpired(record, pattern)
+  ) {
     const stale = record.result?.[key] as T | undefined;
     refetchEntry(key, pattern, params, () => {});
     return stale ?? null;
@@ -492,7 +530,11 @@ export function peekPageData<T>(
   if (!record) {
     const keyedKey = makeCacheKey(`${pattern}:${key}`, params);
     record = activeCache().get(keyedKey);
-    if (record && record.status === "resolved" && isCacheExpired(record, pattern)) {
+    if (
+      record &&
+      record.status === "resolved" &&
+      isCacheExpired(record, pattern)
+    ) {
       activeCache().delete(keyedKey);
       record = undefined;
     }
@@ -505,7 +547,10 @@ export function peekPageData<T>(
   return ((record.result as Record<string, unknown>)?.[key] as T) ?? null;
 }
 
-function matchesParameter(expectedValue: unknown, actualValue: unknown): boolean {
+function matchesParameter(
+  expectedValue: unknown,
+  actualValue: unknown,
+): boolean {
   if (typeof expectedValue === "string" && expectedValue.endsWith("*")) {
     const prefix = expectedValue.slice(0, -1);
     return typeof actualValue === "string" && actualValue.startsWith(prefix);
@@ -513,7 +558,10 @@ function matchesParameter(expectedValue: unknown, actualValue: unknown): boolean
   return actualValue === expectedValue;
 }
 
-function sweepCacheByPattern(patternBase: string, patternParams: Record<string, unknown>): void {
+function sweepCacheByPattern(
+  patternBase: string,
+  patternParams: Record<string, unknown>,
+): void {
   for (const cacheKey of activeCache().keys()) {
     if (!cacheKey.startsWith(patternBase)) continue;
 
@@ -587,7 +635,9 @@ const invalidationSubscribers = globalSingleton<Set<InvalidationListener>>(
   () => new Set(),
 );
 
-export function subscribeDataInvalidation(fn: InvalidationListener): () => void {
+export function subscribeDataInvalidation(
+  fn: InvalidationListener,
+): () => void {
   invalidationSubscribers.add(fn);
   return () => {
     invalidationSubscribers.delete(fn);
@@ -611,8 +661,7 @@ export function invalidatePageData(patterns?: string[]): void {
 
 /**
  * Notifies usePageData consumers to background-refetch the given cache keys in
- * place - stale data stays visible until fresh data arrives, so there is no
- * suspense flash. Use this after mutations.
+ * place - stale data stays visible until fresh data arrives.
  */
 export function revalidatePageData(cacheKeys?: string[]): void {
   emitDataInvalidation(cacheKeys);
@@ -742,7 +791,10 @@ export function defineLoader<TData>(opts: {
   /**
    * Loader returning the page's data slice, or null when absent.
    */
-  loader: (params: Record<string, unknown>, context: PageDataContext) => Promise<TData | null>;
+  loader: (
+    params: Record<string, unknown>,
+    context: PageDataContext,
+  ) => Promise<TData | null>;
 }): void {
   registerPageDataLoader(opts.pattern, async (params, context) => {
     const data = await opts.loader(params ?? {}, context ?? {});
