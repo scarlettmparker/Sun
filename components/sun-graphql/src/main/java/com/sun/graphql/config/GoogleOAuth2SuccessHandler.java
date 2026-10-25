@@ -28,6 +28,9 @@ public class GoogleOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
     this.appBaseUrl = appBaseUrl;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
       Authentication authentication) throws IOException {
