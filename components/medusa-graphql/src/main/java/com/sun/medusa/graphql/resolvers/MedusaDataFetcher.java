@@ -4,6 +4,7 @@ import com.sun.base.audit.annotation.Audited;
 import com.sun.base.audit.annotation.NotAudited;
 import com.sun.medusa.codegen.types.AuditLog;
 import com.sun.medusa.codegen.types.AuditLogPage;
+import com.sun.medusa.codegen.types.PaginationInput;
 import com.sun.medusa.codegen.types.BoardLayout;
 import com.sun.medusa.codegen.types.BoardLayoutInput;
 import com.sun.medusa.codegen.types.BoardLayoutResponse;
@@ -141,9 +142,9 @@ public class MedusaDataFetcher {
   @DgsData(parentType = "MedusaQueries", field = "auditLogs")
   @PreAuthorize("@permissions.has('graphql.medusa.auditLogs')")
   @Transactional(readOnly = true)
-  public AuditLogPage auditLogs(Integer page, Integer size) {
-    int p = page == null ? 0 : page;
-    int s = size == null ? 50 : size;
+  public AuditLogPage auditLogs(PaginationInput pagination) {
+    int p = (pagination == null || pagination.getPage() == null) ? 0 : pagination.getPage();
+    int s = (pagination == null || pagination.getSize() == null) ? 50 : pagination.getSize();
     var result = auditService.list(p, s);
     return AuditLogPage.newBuilder()
         .items(result.getContent().stream().map(auditLogMapper::map).collect(Collectors.toList()))

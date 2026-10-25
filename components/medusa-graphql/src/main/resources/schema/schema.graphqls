@@ -133,7 +133,7 @@ type MedusaQueries {
   boardLayouts: [BoardLayout!]!
   boardLayout(id: ID!): BoardLayout
   boardLayoutBySlug(slug: String!): BoardLayout
-  auditLogs(page: Int, size: Int): AuditLogPage!
+  auditLogs(pagination: PaginationInput): AuditLogPage!
 }
 
 type MedusaMutations {
