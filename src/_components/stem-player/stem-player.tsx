@@ -16,7 +16,12 @@ type StemPlayerProps = {
    * The song to play stems for.
    */
   song: Song;
-} & React.HTMLAttributes<HTMLDivElement>;
+} & Omit<React.HTMLAttributes<HTMLDivElement>, "className"> & {
+  /**
+   * Additional class names.
+   */
+  className?: string;
+};
 
 /**
  * Stem player. Plays music from a list of audio files (stems),
@@ -58,7 +63,7 @@ const StemPlayer = (props: StemPlayerProps) => {
    * @param e Input change event.
    */
   const handleSeek = (e: ChangeEvent<HTMLInputElement>) => {
-    const newTime = parseFloat(e.target.value);
+    const newTime = parseFloat(e.currentTarget.value);
     seek(Math.max(0, Math.min(newTime, duration)));
   };
 
@@ -116,7 +121,7 @@ const StemPlayer = (props: StemPlayerProps) => {
           max={2}
           step={0.01}
           value={masterVolume}
-          onChange={(e) => setMasterVolume(Math.max(0, Math.min(2, parseFloat(e.target.value))))}
+          onChange={(e) => setMasterVolume(Math.max(0, Math.min(2, parseFloat(e.currentTarget.value))))}
           onMouseMove={handleMasterVolumeMouseMove}
           className={styles.seeker}
           aria-label={t("controls.aria.master-volume")}

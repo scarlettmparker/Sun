@@ -333,7 +333,7 @@ export function createResponseState(): ResponseState {
     },
     seal() {
       if (body !== null) {
-        return new Response(body, { status: statusCode, headers });
+        return new Response(body as BodyInit, { status: statusCode, headers });
       }
       return new Response(stream, { status: statusCode, headers });
     },

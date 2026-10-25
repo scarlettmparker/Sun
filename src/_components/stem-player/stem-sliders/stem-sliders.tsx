@@ -80,10 +80,9 @@ function valueFromPointerY(y: number, rect: DOMRect): number {
 /**
  * An individual slider.
  */
-const Slider = memo(
-  (props: SliderProps) => {
-    const { stem, value, i, onPointerDown, onPointerEnter, onPointerLeave, setOverlayRef } = props;
-    return (
+const SliderComponent: React.FunctionComponent<SliderProps> = (props) => {
+  const { stem, value, i, onPointerDown, onPointerEnter, onPointerLeave, setOverlayRef } = props;
+  return (
       <div className={styles.slider}>
         <Input
           type="range"
@@ -106,11 +105,17 @@ const Slider = memo(
         <Label>{stem.name}</Label>
       </div>
     );
-  },
+};
+
+SliderComponent.displayName = "Slider";
+
+/**
+ * An individual slider, memoised on value and stem.
+ */
+const Slider = memo(
+  SliderComponent,
   (prev, next) => prev.value === next.value && prev.stem === next.stem,
 );
-
-Slider.displayName = "Slider";
 
 /**
  * Rendering stem controls (labels and volume sliders).

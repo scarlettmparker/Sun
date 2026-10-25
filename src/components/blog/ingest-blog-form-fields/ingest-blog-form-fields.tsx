@@ -59,7 +59,7 @@ const IngestBlogFormFields = (props: IngestBlogFormFieldsProps) => {
           <Select
             value={sourceKind}
             onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
-              onSourceKindChange(event.target.value as "WIKIPEDIA" | "WIKTIONARY")
+              onSourceKindChange(event.currentTarget.value as "WIKIPEDIA" | "WIKTIONARY")
             }
           >
             <SelectOption value="WIKIPEDIA">Wikipedia</SelectOption>

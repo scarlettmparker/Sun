@@ -4,7 +4,12 @@ import { Card, CardBody, CardDescription, CardHeader, CardTitle } from "@sun/com
 import { cn } from "~/utils/cn";
 import styles from "./spotify-card.module.css";
 
-type SpotifyCardProps = React.HTMLAttributes<HTMLDivElement>;
+type SpotifyCardProps = Omit<React.HTMLAttributes<HTMLDivElement>, "className"> & {
+  /**
+   * Additional class names.
+   */
+  className?: string;
+};
 
 /**
  * Square card with cute art and Spotify link, styled like the hero card.
