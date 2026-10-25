@@ -27,18 +27,14 @@ public class PieceService {
   }
 
   /**
-   * Lists all piece definitions.
-   *
-   * @return the piece definitions
-   */
-  /**
-   * Lists pieces visible to the caller (system, unowned, or owned).
+   * Lists piece definitions.
    *
    * @param ownerId the caller id, or null for all
+   * @param all whether to ignore ownership filtering
    * @return the pieces
    */
-  public List<PieceDefinitionEntity> list(UUID ownerId) {
-    if (ownerId == null) {
+  public List<PieceDefinitionEntity> list(UUID ownerId, boolean all) {
+    if (all || ownerId == null) {
       return definitionRepository.findAll(Sort.by(Sort.Direction.ASC, "name"));
     }
     List<PieceDefinitionEntity> pieces =
@@ -61,19 +57,23 @@ public class PieceService {
   /**
    * Saves a piece definition and its sprite.
    *
+   * @param callerId the caller id, used to enforce ownership
    * @param definition the piece definition
    * @param headKey the head sprite key
    * @param bodyKey the body sprite key
    * @param footKey the foot sprite key
    * @return the saved piece
    */
-  public PieceDefinitionEntity save(PieceDefinitionEntity definition, String headKey,
+  public PieceDefinitionEntity save(UUID callerId, PieceDefinitionEntity definition, String headKey,
       String bodyKey, String footKey) {
     if (definition.getId() != null) {
       PieceDefinitionEntity existing = definitionRepository.findById(definition.getId())
           .orElseThrow(() -> new EntityNotFoundException("Piece not found"));
       if (existing.isSystem()) {
         throw new IllegalStateException("System pieces cannot be edited");
+      }
+      if (existing.getCreatedBy() == null || !existing.getCreatedBy().equals(callerId)) {
+        throw new IllegalStateException("Pieces can only be edited by their owner");
       }
       definition.setCreatedBy(existing.getCreatedBy());
     }
@@ -91,14 +91,18 @@ public class PieceService {
   }
 
   /**
-   * Deletes a non-system piece.
+   * Deletes a non-system piece owned by the caller.
    *
+   * @param callerId the caller id, used to enforce ownership
    * @param id the piece id
    * @return true when deleted
    */
-  public boolean delete(UUID id) {
+  public boolean delete(UUID callerId, UUID id) {
     PieceDefinitionEntity existing = definitionRepository.findById(id).orElse(null);
     if (existing == null || existing.isSystem()) {
+      return false;
+    }
+    if (existing.getCreatedBy() == null || !existing.getCreatedBy().equals(callerId)) {
       return false;
     }
     definitionRepository.deleteById(id);

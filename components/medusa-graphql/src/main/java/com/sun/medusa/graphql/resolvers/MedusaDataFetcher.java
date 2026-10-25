@@ -73,8 +73,8 @@ public class MedusaDataFetcher {
   @DgsData(parentType = "MedusaQueries", field = "pieces")
   @PreAuthorize("@permissions.has('graphql.medusa.listPieces')")
   @Transactional(readOnly = true)
-  public List<Piece> pieces() {
-    return pieceService.list(UserContextHolder.getUserId()).stream()
+  public List<Piece> pieces(Boolean all) {
+    return pieceService.list(UserContextHolder.getUserId(), Boolean.TRUE.equals(all)).stream()
         .map(e -> pieceMapper.map(e, pieceService.findSprite(e.getId())))
         .collect(Collectors.toList());
   }
@@ -165,10 +165,11 @@ public class MedusaDataFetcher {
   @Transactional
   public PieceResponse savePiece(PieceInput input) {
     PieceDefinitionEntity entity = pieceMapper.mapInput(input);
+    UUID caller = UserContextHolder.getUserId();
     if (entity.getId() == null) {
       entity.setCreatedBy(requireCaller("piece"));
     }
-    PieceDefinitionEntity saved = pieceService.save(entity,
+    PieceDefinitionEntity saved = pieceService.save(caller, entity,
         input.getSprite().getHeadKey(), input.getSprite().getBodyKey(),
         input.getSprite().getFootKey());
     return PieceResponse.newBuilder()
@@ -182,7 +183,7 @@ public class MedusaDataFetcher {
   @PreAuthorize("@permissions.has('graphql.medusa.deletePiece')")
   @Transactional
   public DeleteResponse deletePiece(String id) {
-    boolean ok = pieceService.delete(UUID.fromString(id));
+    boolean ok = pieceService.delete(UserContextHolder.getUserId(), UUID.fromString(id));
     return DeleteResponse.newBuilder().ok(ok).build();
   }
 

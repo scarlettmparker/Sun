@@ -140,7 +140,7 @@ type AuditLogPage {
 }
 
 type MedusaQueries {
-  pieces: [Piece!]!
+  pieces(all: Boolean): [Piece!]!
   piece(id: ID!): Piece
   pieceSets: [PieceSet!]!
   pieceSet(id: ID!): PieceSet
