@@ -51,5 +51,7 @@ export type { DefinedAction, FormFieldSchema, FormValues } from "./server-action
 export { initClientBootstrap } from "./client-bootstrap";
 export type { BootstrapI18n } from "./client-bootstrap";
 
+export { preloadableLazy, preloadLazyComponents } from "./lazy";
+
 export { RoleCheck, useMutation, usePageViewTracking } from "./react";
 export type { UseMutationOptions } from "./react";

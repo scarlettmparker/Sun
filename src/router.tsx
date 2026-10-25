@@ -1,5 +1,6 @@
 import { RouteObject, useRoutes } from "react-router-dom";
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
+import { preloadableLazy as lazy } from "@sun/ssr";
 import type { RouteMeta } from "@sun/ssr/server";
 import BlogSkeleton from "./_components/blog/skeleton/blog-skeleton";
 import { BlogDetailSkeleton } from "./components/blog/blog-detail/skeletons";

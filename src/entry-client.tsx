@@ -6,7 +6,7 @@ import { Suspense } from "react";
 import ErrorBoundary from "./components/error-boundary";
 import Layout from "./components/layout";
 import { setI18n } from "@sun/i18n";
-import { initClientBootstrap } from "@sun/ssr";
+import { initClientBootstrap, preloadLazyComponents } from "@sun/ssr";
 import { ensureDefaultTrustedPolicy } from "@sun/security/trusted-types";
 import { loadPersistedTheme, applyTheme } from "@sun/themes";
 import "./utils/configure-framework";
@@ -25,7 +25,7 @@ if (window.localStorage.getItem("sun:theme")) {
 
 setI18n(i18n);
 
-initClientBootstrap({ i18n }).then(() => {
+initClientBootstrap({ i18n, preload: preloadLazyComponents }).then(() => {
   ReactDOM.hydrateRoot(
     document.getElementById("app") as HTMLElement,
     <BrowserRouter>

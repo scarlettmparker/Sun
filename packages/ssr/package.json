@@ -1,6 +1,6 @@
 {
   "name": "@sun/ssr",
-  "version": "0.10.4",
+  "version": "0.10.5",
   "description": "Sun ecosystem SSR framework",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",

@@ -52,10 +52,15 @@ export async function initClientBootstrap(opts: {
    * Override translations; defaults to window.__translations__.
    */
   translations?: Record<string, unknown>;
+  /**
+   * Loads modules required by the client's first render.
+   */
+  preload?: () => Promise<unknown>;
 }): Promise<void> {
   if (typeof performance !== "undefined" && performance.mark) {
     performance.mark("ssr:hydrateStart");
   }
+  const preloading = opts.preload ? opts.preload() : undefined;
   window.hydratePageDataFromPostlude = hydratePageData;
   const serverCacheData = window.__serverCacheData__ ?? {};
   if (Object.keys(serverCacheData).length > 0) {
@@ -65,14 +70,15 @@ export async function initClientBootstrap(opts: {
   const locale = opts.locale ?? window.__locale__ ?? "en";
   const translations = opts.translations ?? window.__translations__ ?? {};
 
-  await Promise.resolve(
+  await Promise.all([
     opts.i18n.init({
       lng: locale,
       resources: { [locale]: translations },
       interpolation: { escapeValue: false },
       react: { useSuspense: true },
     }),
-  );
+    preloading,
+  ]);
   if (typeof performance !== "undefined" && performance.mark) {
     performance.mark("ssr:bootstrapReady");
   }
