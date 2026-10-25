@@ -10,8 +10,11 @@ import com.sun.gaia.repository.AccountRoleRepository;
 import com.sun.gaia.repository.RolePermissionRepository;
 import com.sun.gaia.repository.RoleRepository;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -112,6 +115,30 @@ public class RoleAdminService {
     }
     names.sort(String::compareTo);
     return names;
+  }
+
+  /**
+   * Resolves direct role names for several accounts in one query.
+   *
+   * @param accountIds account ids to resolve
+   * @return role names keyed by account id; every requested account is present
+   */
+  @Transactional(readOnly = true)
+  public Map<UUID, List<String>> accountRoleNamesBatch(Collection<UUID> accountIds) {
+    Map<UUID, List<String>> byAccount = new HashMap<>();
+    if (accountIds == null || accountIds.isEmpty()) {
+      return byAccount;
+    }
+    for (UUID accountId : accountIds) {
+      byAccount.put(accountId, new ArrayList<>());
+    }
+    for (AccountRoleRepository.AccountRoleName row :
+        accountRoleRepository.findRoleNamesByAccountIds(accountIds)) {
+      byAccount.computeIfAbsent(row.getAccountId(), key -> new ArrayList<>())
+          .add(row.getRoleName());
+    }
+    byAccount.values().forEach(names -> names.sort(String::compareTo));
+    return byAccount;
   }
 
   /**

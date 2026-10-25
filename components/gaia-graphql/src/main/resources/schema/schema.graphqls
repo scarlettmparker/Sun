@@ -5,6 +5,7 @@ type Account {
   status: AccountStatus!
   provider: String
   remoteUsers: [RemoteUser!]
+  roles: [String!]!
   createdAt: DateTime
   updatedAt: DateTime
 }
