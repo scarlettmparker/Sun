@@ -76,23 +76,19 @@ fi
 REMOTE
 }
 
-# Creates a container and applies its resource limits.
+# Creates a container and removes any compute limits.
 #
 # @param $1 Container name.
 # @param $2 Image alias.
-# @param $3 CPU allowance.
-# @param $4 Memory limit.
 ensure_container() {
-  local name="$1" image="$2" allowance="$3" memory="$4"
+  local name="$1" image="$2"
   if ! remote "sudo lxc info '$name' >/dev/null 2>&1"; then
     log "container: create $name"
     remote "sudo lxc init '$image' '$name' --storage default"
   fi
-  remote "sudo lxc config set '$name' limits.cpu 1"
-  remote "sudo lxc config set '$name' limits.cpu.allowance '$allowance'"
-  remote "sudo lxc config set '$name' limits.memory '$memory'"
-  remote "sudo lxc config set '$name' limits.memory.enforce hard"
-  remote "sudo lxc config set '$name' limits.memory.swap true"
+  for key in limits.cpu limits.cpu.allowance limits.memory limits.memory.enforce limits.memory.swap; do
+    remote "sudo lxc config unset '$name' $key >/dev/null 2>&1 || true"
+  done
   remote "sudo lxc config set '$name' boot.autostart true"
 }
 
@@ -246,13 +242,11 @@ ssh_host_keys() {
 # @param $1 Container name.
 # @param $2 Reserved IPv4 address.
 # @param $3 Host SSH port.
-# @param $4 CPU allowance.
-# @param $5 Memory limit.
-# @param $6 Image alias.
+# @param $4 Image alias.
 provision_one() {
-  local name="$1" ip="$2" port="$3" allowance="$4" memory="$5" image="$6"
+  local name="$1" ip="$2" port="$3" image="$4"
   log "container: $name"
-  ensure_container "$name" "$image" "$allowance" "$memory"
+  ensure_container "$name" "$image"
   start_container "$name" "$ip"
   configure_network "$name" "$ip"
   install_packages "$name" "openssh-server ca-certificates curl jq rsync unzip"
@@ -286,12 +280,12 @@ provision() {
   ensure_swap
   ensure_host_network
   for row in "${rows[@]}"; do
-    read -r name ip port allowance memory image <<<"$row"
-    ensure_container "$name" "$image" "$allowance" "$memory"
+    read -r name ip port image <<<"$row"
+    ensure_container "$name" "$image"
   done
   for row in "${rows[@]}"; do
-    read -r name ip port allowance memory image <<<"$row"
-    provision_one "$name" "$ip" "$port" "$allowance" "$memory" "$image"
+    read -r name ip port image <<<"$row"
+    provision_one "$name" "$ip" "$port" "$image"
   done
   remote 'sudo bash -s' <<'REMOTE'
 set -euo pipefail

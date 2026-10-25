@@ -43,6 +43,11 @@ steps:
       - printf 'Host *\n  BatchMode yes\n  IdentitiesOnly yes\n' > ~/.ssh/config
       - ./vm/vps/vps.sh provision
     when:
-      - event: [push, manual]
+      - event: push
         branch: main
-        path: vm/vps/**
+        path:
+          - vm/vps/vps.sh
+          - vm/vps/containers.conf
+          - vm/vps/files/**
+      - event: manual
+        branch: main
