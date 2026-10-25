@@ -114,6 +114,7 @@ render_frontend_env() {
 # @param $2 Container path.
 push_file() {
   local local_path="$1" remote_path="$2"
+  remote "mkdir -p $REMOTE_TMP"
   rsync -az -e "ssh -i $SSH_KEY" "$local_path" "$VPS:$REMOTE_TMP/"
   remote "sudo lxc exec '$ARTEMIS' -- rm -f '$remote_path'"
   remote "sudo lxc file push -q -p --mode 0644 '$REMOTE_TMP/$(basename "$local_path")' '$ARTEMIS$remote_path'"
@@ -197,6 +198,7 @@ deploy_frontend() {
 
   remote "sudo lxc exec '$ARTEMIS' -- mkdir -p /opt/sun/web"
   remote "sudo lxc exec '$ARTEMIS' -- bash -c 'find /opt/sun/web -mindepth 1 -maxdepth 1 ! -name node_modules -exec rm -rf {} +'"
+  remote "mkdir -p $REMOTE_TMP"
   rsync -az -e "ssh -i $SSH_KEY" "$app_tar" "$VPS:$REMOTE_TMP/sun-web.tgz"
   remote "sudo lxc exec '$ARTEMIS' -- rm -f /tmp/sun-web.tgz"
   remote "sudo lxc file push -q -p --mode 0644 '$REMOTE_TMP/sun-web.tgz' '$ARTEMIS/tmp/sun-web.tgz'"
