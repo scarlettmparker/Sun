@@ -197,7 +197,7 @@ deploy_frontend() {
     routes messages src utils vm/sun
 
   remote "sudo lxc exec '$ARTEMIS' -- mkdir -p /opt/sun/web"
-  remote "sudo lxc exec '$ARTEMIS' -- bash -c 'find /opt/sun/web -mindepth 1 -maxdepth 1 ! -name node_modules -exec rm -rf {} +'"
+  remote "sudo lxc exec '$ARTEMIS' -- bash -c 'find /opt/sun/web -mindepth 1 -maxdepth 1 ! -name node_modules ! -name .env.production -exec rm -rf {} +'"
   remote "mkdir -p $REMOTE_TMP"
   rsync -az -e "ssh -i $SSH_KEY" "$app_tar" "$VPS:$REMOTE_TMP/sun-web.tgz"
   remote "sudo lxc exec '$ARTEMIS' -- rm -f /tmp/sun-web.tgz"
@@ -215,7 +215,7 @@ deploy_frontend() {
     push_file "$tmp" "/opt/sun/web/.env.production"
     rm -f "$tmp"
   fi
-  remote "sudo lxc exec '$ARTEMIS' -- chmod 0600 /opt/sun/web/.env.production"
+  remote "sudo lxc exec '$ARTEMIS' -- bash -c 'test ! -f /opt/sun/web/.env.production || chmod 0600 /opt/sun/web/.env.production'"
   push_file "$HERE/files/sun-frontend.service" "/etc/systemd/system/sun-frontend.service"
   remote "sudo lxc exec '$ARTEMIS' -- systemctl daemon-reload"
   remote "sudo lxc exec '$ARTEMIS' -- systemctl enable sun-frontend"
