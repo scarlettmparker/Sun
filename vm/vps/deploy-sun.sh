@@ -87,6 +87,11 @@ render_backend_env() {
   else
     printf 'FREE_CHESS_CLIENT_SECRET=%s\n' "$secret" >>"$out"
   fi
+  if grep -q '^IP_WHITELIST_ENABLED=' "$out"; then
+    sed -i 's|^IP_WHITELIST_ENABLED=.*|IP_WHITELIST_ENABLED=false|' "$out"
+  else
+    printf 'IP_WHITELIST_ENABLED=false\n' >>"$out"
+  fi
 }
 # Renders the frontend env.
 #
@@ -109,6 +114,10 @@ push_file() {
 # Installs Permify, its config, unit, and schema.
 deploy_permify() {
   local arch=arm64 version=v1.7.3 tmp schema_json
+  if [ ! -f "$BACKEND_ENV" ]; then
+    log "permify: no local env, keeping remote config"
+    return 0
+  fi
   log "permify: binary and config"
   remote "sudo mkdir -p /tmp/sun-vps"
   if ! remote "test -x /tmp/sun-vps/permify"; then
@@ -148,10 +157,12 @@ deploy_backend() {
   log "backend: jar, env, unit"
   remote "sudo lxc exec '$ARTEMIS' -- mkdir -p /opt/sun/backend"
   push_file "$JAR" "/opt/sun/backend/sun-graphql.jar"
-  tmp="$(mktemp)"
-  render_backend_env "$tmp"
-  push_file "$tmp" "/opt/sun/backend/.env"
-  rm -f "$tmp"
+  if [ -f "$BACKEND_ENV" ]; then
+    tmp="$(mktemp)"
+    render_backend_env "$tmp"
+    push_file "$tmp" "/opt/sun/backend/.env"
+    rm -f "$tmp"
+  fi
   push_file "$HERE/files/sun-backend.service" "/etc/systemd/system/sun-backend.service"
   remote "sudo lxc exec '$ARTEMIS' -- chmod 0600 /opt/sun/backend/.env"
   remote "sudo lxc exec '$ARTEMIS' -- systemctl daemon-reload"
@@ -175,7 +186,7 @@ deploy_frontend() {
   tar -czf "$app_tar" -C "$SUN_ROOT" \
     dist/client dist/server server.js config.js config.d.ts css-plugin.ts \
     package.json tsconfig.json bunfig.toml bun.lock .bun-version \
-    routes messages src utils
+    routes messages src utils vm/sun
 
   remote "sudo lxc exec '$ARTEMIS' -- mkdir -p /opt/sun/web"
   remote "sudo lxc exec '$ARTEMIS' -- bash -c 'find /opt/sun/web -mindepth 1 -maxdepth 1 ! -name node_modules -exec rm -rf {} +'"
@@ -185,13 +196,16 @@ deploy_frontend() {
   remote "sudo lxc exec '$ARTEMIS' -- tar -xzf /tmp/sun-web.tgz -C /opt/sun/web"
 
   remote "sudo lxc exec '$ARTEMIS' -- bash -c 'rm -rf /opt/sun/web/node_modules'"
+  remote "sudo lxc exec '$ARTEMIS' -- rm -f /tmp/sun-web-deps.tgz"
   remote "sudo lxc file push -q -p --mode 0644 /tmp/sun-web-deps.tgz '$ARTEMIS/tmp/sun-web-deps.tgz'"
   remote "sudo lxc exec '$ARTEMIS' -- tar -xzf /tmp/sun-web-deps.tgz -C /opt/sun/web"
 
-  tmp="$(mktemp)"
-  render_frontend_env "$tmp"
-  push_file "$tmp" "/opt/sun/web/.env.production"
-  rm -f "$tmp"
+  if [ -f "$FRONTEND_ENV" ]; then
+    tmp="$(mktemp)"
+    render_frontend_env "$tmp"
+    push_file "$tmp" "/opt/sun/web/.env.production"
+    rm -f "$tmp"
+  fi
   remote "sudo lxc exec '$ARTEMIS' -- chmod 0600 /opt/sun/web/.env.production"
   push_file "$HERE/files/sun-frontend.service" "/etc/systemd/system/sun-frontend.service"
   remote "sudo lxc exec '$ARTEMIS' -- systemctl daemon-reload"

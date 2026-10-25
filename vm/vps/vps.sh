@@ -287,6 +287,11 @@ set -euo pipefail
 for entry in "10.89.20.201 cassini" "10.89.20.202 artemis" "10.89.20.203 medusa"; do
   grep -q " ${entry#* }$" /etc/hosts || echo "$entry" >>/etc/hosts
 done
+install -m 0755 /tmp/sun-vps/files/backup-daily.sh /usr/local/bin/sun-vps-backup
+install -m 0644 /tmp/sun-vps/files/sun-vps-backup.service /etc/systemd/system/sun-vps-backup.service
+install -m 0644 /tmp/sun-vps/files/sun-vps-backup.timer /etc/systemd/system/sun-vps-backup.timer
+systemctl daemon-reload
+systemctl enable --now sun-vps-backup.timer
 REMOTE
   status
 }

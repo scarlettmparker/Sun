@@ -1,6 +1,14 @@
 # Sun VPS containers
 
-LXD containers on `vps.scarlettparker.co.uk`.
+Three LXD containers on `vps.scarlettparker.co.uk`:
+
+| Name | IP | App |
+| --- | --- | --- |
+| `cassini` | `10.89.20.201` | Guided Reader |
+| `artemis` | `10.89.20.202` | Sun backend, frontend, Postgres, Redis, Permify |
+| `medusa` | `10.89.20.203` | Free Chess web and matchmaking |
+
+## Commands
 
 ```sh
 ./vm/vps/vps.sh provision
@@ -8,20 +16,23 @@ LXD containers on `vps.scarlettparker.co.uk`.
 ./vm/vps/vps.sh backup
 ./vm/vps/vps.sh db-import
 ./vm/vps/vps.sh ssh-config
-./vm/vps/vps.sh shell cassini
+./vm/vps/vps.sh shell artemis
+
+./vm/vps/deploy-sun.sh all
+./vm/vps/deploy-sun.sh all --skip-build
 ```
 
-Containers are defined in `containers.conf`. The provision command is idempotent
-and is run by Woodpecker when `vm/vps/**` changes.
+`provision` is idempotent and is run by Woodpecker when `vm/vps/**` changes.
+`deploy-sun.sh` deploys the Sun backend, frontend, and Permify config.
 
 ## SSH
 
 `ssh-config` prints jump-host aliases:
 
 ```sh
-ssh cassini   # 10.89.20.201 via vps
-ssh artemis   # 10.89.20.202 via vps
-ssh medusa    # 10.89.20.203 via vps
+ssh cassini
+ssh artemis
+ssh medusa
 ```
 
 LXD also publishes host ports 2201-2203 as `cassini-port`, `artemis-port`, and
@@ -34,11 +45,10 @@ before they are reachable from outside.
 database and resets the `hi@scarlettparker.co.uk` password. The new password is
 written to `~/.local/share/sun-vps/hi-password`.
 
+Daily backups run at 03:00 via `sun-vps-backup.timer` and land in
+`/var/backups/sun-vps/daily`.
+
 ## Networking
 
-- `cassini`: `10.89.20.201`
-- `artemis`: `10.89.20.202`
-- `medusa`: `10.89.20.203`
-
 `chess.scarlettparker.co.uk` is the Free Chess frontend. The matchmaking
-websocket is published separately on `chess-server.scarlettparker.co.uk`.
+websocket is published on `chess-server.scarlettparker.co.uk`.

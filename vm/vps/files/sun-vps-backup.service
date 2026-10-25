@@ -1,0 +1,6 @@
+[Unit]
+Description=Sun VPS daily backups
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/sun-vps-backup

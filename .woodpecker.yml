@@ -26,9 +26,10 @@ steps:
     environment:
       SSH_KEY: /root/.ssh/ci-deploy
     commands:
-      - apk add --no-cache openssh-client rsync bash curl file
+      - apk add --no-cache openssh-client rsync bash curl file gettext python3
       - printf 'Host *\n  BatchMode yes\n  IdentitiesOnly yes\n' > ~/.ssh/config
-      - ./deploy.sh all --skip-build
+      - ./vm/vps/deploy-sun.sh all --skip-build
+      - ./vm/nginx/install.sh
 
   provision-vms:
     image: alpine:3.21
