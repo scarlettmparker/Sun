@@ -49,5 +49,7 @@ vm/*
 !vm/nginx/*
 !vm/sisyphus/
 !vm/sisyphus/*
+!vm/vps/
+!vm/vps/**
 deploy.sh
 !deploy.sh

@@ -29,3 +29,19 @@ steps:
       - apk add --no-cache openssh-client rsync bash curl file
       - printf 'Host *\n  BatchMode yes\n  IdentitiesOnly yes\n' > ~/.ssh/config
       - ./deploy.sh all --skip-build
+
+  provision-vms:
+    image: alpine:3.21
+    volumes:
+      - /opt/woodpecker/keys/ci-deploy:/root/.ssh/ci-deploy:ro
+      - /opt/woodpecker/keys/known_hosts:/root/.ssh/known_hosts:ro
+    environment:
+      SSH_KEY: /root/.ssh/ci-deploy
+    commands:
+      - apk add --no-cache openssh-client rsync bash curl
+      - printf 'Host *\n  BatchMode yes\n  IdentitiesOnly yes\n' > ~/.ssh/config
+      - ./vm/vps/vps.sh provision
+    when:
+      - event: [push, manual]
+        branch: main
+        path: vm/vps/**
