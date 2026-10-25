@@ -146,7 +146,7 @@ public class AccountDataFetcher {
   @PreAuthorize("@permissions.has('graphql.gaia.listAccounts')")
   @Transactional(readOnly = true)
   public List<Account> listAccounts() {
-    return accountService.findAll().stream()
+    return accountRepository.findAll(Sort.by(Sort.Direction.ASC, "username")).stream()
         .map(accountMapper::map)
         .collect(Collectors.toList());
   }

@@ -5,9 +5,11 @@ import com.sun.medusa.model.PieceSpriteEntity;
 import com.sun.medusa.repository.PieceDefinitionRepository;
 import com.sun.medusa.repository.PieceSpriteRepository;
 import jakarta.persistence.EntityNotFoundException;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,9 +39,12 @@ public class PieceService {
    */
   public List<PieceDefinitionEntity> list(UUID ownerId) {
     if (ownerId == null) {
-      return definitionRepository.findAll();
+      return definitionRepository.findAll(Sort.by(Sort.Direction.ASC, "name"));
     }
-    return definitionRepository.findBySystemTrueOrCreatedBy(ownerId);
+    List<PieceDefinitionEntity> pieces = definitionRepository.findBySystemTrueOrCreatedBy(ownerId);
+    pieces.sort(Comparator.comparing(PieceDefinitionEntity::getName,
+        Comparator.nullsLast(String::compareToIgnoreCase)));
+    return pieces;
   }
 
   /**
