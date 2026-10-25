@@ -1,0 +1,17 @@
+[Unit]
+Description=Sun Frontend
+After=network-online.target sun-backend.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/sun/web
+Environment=NODE_ENV=production
+Environment=SERVER_PORT=5173
+Environment=SUN_ENV=prod
+ExecStart=/usr/local/bin/bun --preload ./css-plugin.ts server.js
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

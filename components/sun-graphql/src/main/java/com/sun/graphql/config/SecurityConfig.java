@@ -2,7 +2,6 @@ package com.sun.graphql.config;
 
 import com.sun.gaia.service.AccountService;
 import com.sun.gaia.service.EmailService;
-import com.sun.gaia.service.GaiaUserDetailsService;
 import com.sun.gaia.service.JwtService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -12,7 +11,6 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetailsService;
 
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -71,11 +69,6 @@ public class SecurityConfig {
             })
             .authenticationSuccessHandler(oneTimeSuccess));
     return http.build();
-  }
-
-  @Bean
-  public UserDetailsService userDetailsService(GaiaUserDetailsService gaiaUserDetailsService) {
-    return gaiaUserDetailsService;
   }
 
   @Bean

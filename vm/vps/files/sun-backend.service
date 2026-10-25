@@ -1,0 +1,17 @@
+[Unit]
+Description=Sun GraphQL Backend
+After=network-online.target postgresql.service
+Wants=network-online.target
+Requires=postgresql.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/sun/backend
+EnvironmentFile=/opt/sun/backend/.env
+ExecStart=/usr/local/bin/java -Xms64m -Xmx128m -XX:MaxMetaspaceSize=192m -XX:ReservedCodeCacheSize=48m -XX:ActiveProcessorCount=1 -XX:+UseSerialGC -XX:+ExitOnOutOfMemoryError -Xss512k -jar sun-graphql.jar
+Restart=always
+RestartSec=5
+TimeoutStopSec=35
+
+[Install]
+WantedBy=multi-user.target
