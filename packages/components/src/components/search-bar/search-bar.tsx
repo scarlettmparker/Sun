@@ -7,7 +7,7 @@ import styles from "./search-bar.module.css";
 
 type SearchBarProps = Omit<
   React.InputHTMLAttributes<HTMLInputElement>,
-  "onChange" | "value" | "type"
+  "onChange" | "onSearch" | "value" | "type"
 > & {
   /**
    * Current search value.

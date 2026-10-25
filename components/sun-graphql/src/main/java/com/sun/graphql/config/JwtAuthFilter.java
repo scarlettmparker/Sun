@@ -11,7 +11,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.UUID;
 import org.springframework.context.annotation.Profile;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -23,7 +22,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
  */
 @Component
 @Profile("!test")
-@ConditionalOnProperty(name = "app.bypass-permissions", havingValue = "false", matchIfMissing = true)
 @Order(Ordered.HIGHEST_PRECEDENCE + 50)
 public class JwtAuthFilter extends OncePerRequestFilter {
 

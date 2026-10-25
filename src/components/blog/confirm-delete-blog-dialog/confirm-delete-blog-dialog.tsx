@@ -1,4 +1,4 @@
-import { TFunction } from "i18next";
+import type { Translator } from "@sun/i18n";
 import {
   Button,
   Dialog,
@@ -26,7 +26,7 @@ type ConfirmDeleteBlogDialogProps = {
   /**
    * i18n translation function for the blog namespace.
    */
-  t: TFunction<"blog">;
+  t: Translator;
 };
 
 /**

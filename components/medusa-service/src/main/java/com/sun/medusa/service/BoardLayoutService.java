@@ -24,7 +24,7 @@ public class BoardLayoutService {
    * @return the layouts
    */
   /**
-   * Lists layouts visible to the caller (system or owned).
+   * Lists layouts visible to the caller (system, unowned, or owned).
    *
    * @param ownerId the caller id, or null for all
    * @return the layouts
@@ -33,7 +33,7 @@ public class BoardLayoutService {
     if (ownerId == null) {
       return repository.findAll();
     }
-    return repository.findBySystemTrueOrCreatedBy(ownerId);
+    return repository.findBySystemTrueOrCreatedByIsNullOrCreatedBy(ownerId);
   }
 
   /**
@@ -67,6 +67,9 @@ public class BoardLayoutService {
       BoardLayoutEntity existing = repository.findById(layout.getId()).orElse(null);
       if (existing != null && existing.isSystem()) {
         throw new IllegalStateException("System layouts cannot be edited");
+      }
+      if (existing != null) {
+        layout.setCreatedBy(existing.getCreatedBy());
       }
     }
     return repository.save(layout);

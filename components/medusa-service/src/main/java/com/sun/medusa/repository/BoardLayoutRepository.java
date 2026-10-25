@@ -9,5 +9,5 @@ import java.util.UUID;
 public interface BoardLayoutRepository extends BaseRepository<BoardLayoutEntity> {
   Optional<BoardLayoutEntity> findBySlug(String slug);
 
-  List<BoardLayoutEntity> findBySystemTrueOrCreatedBy(UUID createdBy);
+  List<BoardLayoutEntity> findBySystemTrueOrCreatedByIsNullOrCreatedBy(UUID createdBy);
 }

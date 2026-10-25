@@ -165,8 +165,8 @@ public class MedusaDataFetcher {
   @Transactional
   public PieceResponse savePiece(PieceInput input) {
     PieceDefinitionEntity entity = pieceMapper.mapInput(input);
-    if (entity.getCreatedBy() == null) {
-      entity.setCreatedBy(UserContextHolder.getUserId());
+    if (entity.getId() == null) {
+      entity.setCreatedBy(requireCaller("piece"));
     }
     PieceDefinitionEntity saved = pieceService.save(entity,
         input.getSprite().getHeadKey(), input.getSprite().getBodyKey(),
@@ -192,8 +192,8 @@ public class MedusaDataFetcher {
   @Transactional
   public PieceSetResponse savePieceSet(PieceSetInput input) {
     PieceSetEntity entity = pieceSetMapper.mapInput(input);
-    if (entity.getCreatedBy() == null) {
-      entity.setCreatedBy(UserContextHolder.getUserId());
+    if (entity.getId() == null) {
+      entity.setCreatedBy(requireCaller("piece set"));
     }
     var members = pieceSetMapper.mapMembers(input, entity.getId() == null ? null : entity.getId());
     PieceSetEntity saved = pieceSetService.save(entity, members);
@@ -218,8 +218,8 @@ public class MedusaDataFetcher {
   @Transactional
   public BoardLayoutResponse saveBoardLayout(BoardLayoutInput input) {
     BoardLayoutEntity entity = boardLayoutMapper.mapInput(input);
-    if (entity.getCreatedBy() == null) {
-      entity.setCreatedBy(UserContextHolder.getUserId());
+    if (entity.getId() == null) {
+      entity.setCreatedBy(requireCaller("board layout"));
     }
     BoardLayoutEntity saved = boardLayoutService.save(entity);
     return BoardLayoutResponse.newBuilder()
@@ -235,5 +235,19 @@ public class MedusaDataFetcher {
   public DeleteResponse deleteBoardLayout(String id) {
     boolean ok = boardLayoutService.delete(UUID.fromString(id));
     return DeleteResponse.newBuilder().ok(ok).build();
+  }
+
+  /**
+   * Resolves the signed-in caller for a create, so new records always have an owner.
+   *
+   * @param kind Record kind, used in the error message.
+   * @return the caller's account id
+   */
+  private UUID requireCaller(String kind) {
+    UUID caller = UserContextHolder.getUserId();
+    if (caller == null) {
+      throw new IllegalStateException("An authenticated owner is required to create a " + kind);
+    }
+    return caller;
   }
 }

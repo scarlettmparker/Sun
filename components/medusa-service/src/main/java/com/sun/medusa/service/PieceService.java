@@ -32,7 +32,7 @@ public class PieceService {
    * @return the piece definitions
    */
   /**
-   * Lists pieces visible to the caller (system or owned).
+   * Lists pieces visible to the caller (system, unowned, or owned).
    *
    * @param ownerId the caller id, or null for all
    * @return the pieces
@@ -41,7 +41,8 @@ public class PieceService {
     if (ownerId == null) {
       return definitionRepository.findAll(Sort.by(Sort.Direction.ASC, "name"));
     }
-    List<PieceDefinitionEntity> pieces = definitionRepository.findBySystemTrueOrCreatedBy(ownerId);
+    List<PieceDefinitionEntity> pieces =
+        definitionRepository.findBySystemTrueOrCreatedByIsNullOrCreatedBy(ownerId);
     pieces.sort(Comparator.comparing(PieceDefinitionEntity::getName,
         Comparator.nullsLast(String::compareToIgnoreCase)));
     return pieces;
@@ -74,6 +75,7 @@ public class PieceService {
       if (existing.isSystem()) {
         throw new IllegalStateException("System pieces cannot be edited");
       }
+      definition.setCreatedBy(existing.getCreatedBy());
     }
     PieceDefinitionEntity saved = definitionRepository.save(definition);
 

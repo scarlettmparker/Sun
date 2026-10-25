@@ -39,7 +39,7 @@ public class PieceSetService {
     if (ownerId == null) {
       return setRepository.findAll();
     }
-    return setRepository.findBySystemTrueOrCreatedBy(ownerId);
+    return setRepository.findBySystemTrueOrCreatedByIsNullOrCreatedBy(ownerId);
   }
 
   /**
@@ -64,6 +64,9 @@ public class PieceSetService {
       PieceSetEntity existing = setRepository.findById(set.getId()).orElse(null);
       if (existing != null && existing.isSystem()) {
         throw new IllegalStateException("System sets cannot be edited");
+      }
+      if (existing != null) {
+        set.setCreatedBy(existing.getCreatedBy());
       }
     }
     PieceSetEntity saved = setRepository.save(set);

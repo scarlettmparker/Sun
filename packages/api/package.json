@@ -23,7 +23,7 @@
     "publish": "bun publish --registry https://registry.int.scarlettparker.co.uk"
   },
   "devDependencies": {
-    "@sun/ssr": "^0.5.19",
+    "@sun/ssr": "^0.10.5",
     "graphql": "^16.0.0",
     "tsup": "^8.3.5",
     "typescript": "~5.7.2"

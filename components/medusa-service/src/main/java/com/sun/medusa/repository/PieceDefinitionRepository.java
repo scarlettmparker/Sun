@@ -9,5 +9,5 @@ import java.util.UUID;
 public interface PieceDefinitionRepository extends BaseRepository<PieceDefinitionEntity> {
   Optional<PieceDefinitionEntity> findBySlug(String slug);
 
-  List<PieceDefinitionEntity> findBySystemTrueOrCreatedBy(UUID createdBy);
+  List<PieceDefinitionEntity> findBySystemTrueOrCreatedByIsNullOrCreatedBy(UUID createdBy);
 }

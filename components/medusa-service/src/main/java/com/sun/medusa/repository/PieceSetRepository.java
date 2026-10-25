@@ -6,5 +6,5 @@ import java.util.List;
 import java.util.UUID;
 
 public interface PieceSetRepository extends BaseRepository<PieceSetEntity> {
-  List<PieceSetEntity> findBySystemTrueOrCreatedBy(UUID createdBy);
+  List<PieceSetEntity> findBySystemTrueOrCreatedByIsNullOrCreatedBy(UUID createdBy);
 }
