@@ -195,6 +195,7 @@ install_temurin() {
 setup_user() {
   local name="$1" user="$2" keys_b64
   keys_b64="$(base64 -w0 "$FILES/authorized_keys")"
+  remote "sudo lxc exec '$name' -- rm -f /tmp/setup-container.sh"
   remote "sudo lxc file push -q -p --mode 0755 $REMOTE_TMP/files/setup-container.sh '$name/tmp/setup-container.sh'"
   remote "sudo lxc exec '$name' -- bash /tmp/setup-container.sh '$user' '$keys_b64'"
 }
@@ -207,6 +208,7 @@ configure_postgres() {
   log "guest: $name postgres tuning"
   pgdir="$(remote "sudo lxc exec '$name' -- bash -c 'ls -d /etc/postgresql/*/main | head -n1'" | tr -d '\r')"
   remote "sudo lxc exec '$name' -- mkdir -p '$pgdir/conf.d'"
+  remote "sudo lxc exec '$name' -- rm -f '$pgdir/conf.d/99-sun-vps.conf'"
   remote "sudo lxc file push -q -p --mode 0644 $REMOTE_TMP/files/postgres-tuning.conf '$name$pgdir/conf.d/99-sun-vps.conf'"
   remote "sudo lxc exec '$name' -- systemctl restart postgresql"
 }
