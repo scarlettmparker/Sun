@@ -206,6 +206,16 @@ configure_postgres() {
   remote "sudo lxc exec '$name' -- systemctl restart postgresql"
 }
 
+# Applies the journal disk limits.
+#
+# @param $1 Container name.
+configure_journald() {
+  local name="$1"
+  remote "sudo lxc exec '$name' -- mkdir -p /etc/systemd/journald.conf.d"
+  remote "sudo lxc file push -q -p --mode 0644 $REMOTE_TMP/files/journald-sun.conf '$name/etc/systemd/journald.conf.d/99-sun.conf'"
+  remote "sudo lxc exec '$name' -- systemctl restart systemd-journald"
+}
+
 # Applies the Redis memory limit.
 #
 # @param $1 Container name.
@@ -247,6 +257,7 @@ provision_one() {
   configure_network "$name" "$ip"
   install_packages "$name" "openssh-server ca-certificates curl jq rsync unzip"
   setup_user "$name" "$name"
+  configure_journald "$name"
   install_bun "$name"
 
   case "$name" in
@@ -287,6 +298,9 @@ set -euo pipefail
 for entry in "10.89.20.201 cassini" "10.89.20.202 artemis" "10.89.20.203 medusa"; do
   grep -q " ${entry#* }$" /etc/hosts || echo "$entry" >>/etc/hosts
 done
+install -d /etc/systemd/journald.conf.d
+install -m 0644 /tmp/sun-vps/files/journald-sun.conf /etc/systemd/journald.conf.d/99-sun.conf
+systemctl restart systemd-journald
 install -m 0755 /tmp/sun-vps/files/backup-daily.sh /usr/local/bin/sun-vps-backup
 install -m 0644 /tmp/sun-vps/files/sun-vps-backup.service /etc/systemd/system/sun-vps-backup.service
 install -m 0644 /tmp/sun-vps/files/sun-vps-backup.timer /etc/systemd/system/sun-vps-backup.timer

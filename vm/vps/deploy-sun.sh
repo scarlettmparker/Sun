@@ -35,8 +35,15 @@ remote() { ssh -i "$SSH_KEY" -o BatchMode=yes "$VPS" "$@"; }
 envval() { grep -E "^$1=" "$2" 2>/dev/null | head -n1 | cut -d= -f2- || true; }
 # Builds the Sun frontend and backend JAR.
 build() {
+  local log
+  log="$(mktemp "${TMPDIR:-/tmp}/sun-build.XXXXXX.log")"
   log "build: Sun frontend"
-  (cd "$SUN_ROOT" && "$BUN" run build >/tmp/opencode/sun-build.log 2>&1)
+  if ! (cd "$SUN_ROOT" && "$BUN" run build >"$log" 2>&1); then
+    cat "$log" >&2
+    rm -f "$log"
+    return 1
+  fi
+  rm -f "$log"
   log "build: sun-graphql"
   "$SUN_ROOT/components/sun-graphql/gradlew" -p "$SUN_ROOT/components" :sun-graphql:bootJar --quiet
 }
@@ -66,7 +73,7 @@ render_env() {
     -e 's|^SERVER_PORT=.*|SERVER_PORT=5173|' \
     -e 's|^VITE_SERVER_BASE=.*|VITE_SERVER_BASE=https://sun.scarlettparker.co.uk|' \
     -e 's|^ALLOWED_HOSTS=.*|ALLOWED_HOSTS=sun.scarlettparker.co.uk,localhost|' \
-    -e 's|^DISCORD_REDIRECT_URI=.*|DISCORD_REDIRECT_URI=https://sun.scarlettparker.co.uk/auth/discord/callback|' \
+    -e 's|^DISCORD_REDIRECT_URI=.*|DISCORD_REDIRECT_URI=https://reader.scarlettparker.co.uk/auth/discord/callback|' \
     -e 's|^APP_BASE_URL=.*|APP_BASE_URL=https://sun.scarlettparker.co.uk|' \
     -e 's|^PERMIFY_ENABLED=.*|PERMIFY_ENABLED=true|' \
     -e 's|^AUDIT_ENABLED=.*|AUDIT_ENABLED=true|' \
