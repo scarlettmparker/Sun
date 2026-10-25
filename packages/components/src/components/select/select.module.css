@@ -56,3 +56,10 @@
   background-color: var(--primary-active);
   color: white;
 }
+.disabled {
+  opacity: 0.5;
+}
+
+.disabled .select {
+  cursor: not-allowed;
+}

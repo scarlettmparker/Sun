@@ -4,7 +4,7 @@ type Piece {
   name: String!
   description: String
   isKing: Boolean!
-  promotionTargets: [Int!]
+  promotionTargets: [ID!]
   promotionRanks: [Int!]
   moveStates: JSON
   stateTransition: String!
@@ -29,7 +29,7 @@ input PieceInput {
   name: String!
   description: String
   isKing: Boolean!
-  promotionTargets: [Int!]
+  promotionTargets: [ID!]
   promotionRanks: [Int!]
   moveStates: JSON
   stateTransition: String!
@@ -72,15 +72,27 @@ input PieceSetInput {
   members: [PieceSetMemberInput!]
 }
 
+type BoardPlacement {
+  definitionId: ID!
+  color: Int!
+  square: Int!
+}
+
 type BoardLayout {
   id: ID!
   slug: String!
   name: String!
   description: String
-  placements: JSON
+  placements: [BoardPlacement!]!
   isSystem: Boolean!
   createdAt: DateTime
   updatedAt: DateTime
+}
+
+input BoardPlacementInput {
+  definitionId: ID!
+  color: Int!
+  square: Int!
 }
 
 input BoardLayoutInput {
@@ -88,7 +100,7 @@ input BoardLayoutInput {
   slug: String!
   name: String!
   description: String
-  placements: JSON
+  placements: [BoardPlacementInput!]!
 }
 
 type AuditLog {

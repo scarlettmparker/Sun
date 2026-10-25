@@ -71,6 +71,13 @@ public class PieceMapper {
     return input.getSprite();
   }
 
+  /**
+   * Resolves the display name for a piece owner.
+   *
+   * @param createdBy Owner account id.
+   * @param system Whether the piece is system owned.
+   * @return Owner username, id fallback, or system label.
+   */
   private String resolveOwnerName(UUID createdBy, boolean system) {
     if (system || createdBy == null) {
       return "System";

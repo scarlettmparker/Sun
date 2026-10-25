@@ -27,7 +27,7 @@ public class PieceDefinitionEntity extends BaseEntity {
 
   @Type(JsonBinaryType.class)
   @Column(name = "promotion_targets", columnDefinition = "jsonb", nullable = false)
-  private List<Integer> promotionTargets;
+  private List<String> promotionTargets;
 
   @Type(JsonBinaryType.class)
   @Column(name = "promotion_ranks", columnDefinition = "jsonb", nullable = false)
@@ -81,11 +81,11 @@ public class PieceDefinitionEntity extends BaseEntity {
     this.king = king;
   }
 
-  public List<Integer> getPromotionTargets() {
+  public List<String> getPromotionTargets() {
     return promotionTargets;
   }
 
-  public void setPromotionTargets(List<Integer> promotionTargets) {
+  public void setPromotionTargets(List<String> promotionTargets) {
     this.promotionTargets = promotionTargets;
   }
 

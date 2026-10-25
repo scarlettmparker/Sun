@@ -2,9 +2,12 @@ package com.sun.medusa.graphql.mappers;
 
 import com.sun.medusa.codegen.types.BoardLayout;
 import com.sun.medusa.codegen.types.BoardLayoutInput;
+import com.sun.medusa.codegen.types.BoardPlacement;
+import com.sun.medusa.codegen.types.BoardPlacementInput;
 import com.sun.medusa.model.BoardLayoutEntity;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 
@@ -17,7 +20,7 @@ public class BoardLayoutMapper {
         .slug(entity.getSlug())
         .name(entity.getName())
         .description(entity.getDescription())
-        .placements(entity.getPlacements())
+        .placements(entity.getPlacements().stream().map(this::mapPlacement).toList())
         .isSystem(entity.isSystem())
         .createdAt(entity.getCreatedAt() == null ? null : entity.getCreatedAt().atOffset(ZoneOffset.UTC))
         .updatedAt(entity.getLastUpdatedAt() == null ? null : entity.getLastUpdatedAt().atOffset(ZoneOffset.UTC))
@@ -32,8 +35,36 @@ public class BoardLayoutMapper {
     entity.setSlug(input.getSlug());
     entity.setName(input.getName());
     entity.setDescription(input.getDescription());
-    entity.setPlacements((List<Object>) input.getPlacements());
+    entity.setPlacements(input.getPlacements().stream().map(this::mapPlacementInput).toList());
     entity.setSystem(false);
     return entity;
+  }
+
+  /**
+   * Maps a stored placement map to a GraphQL board placement.
+   *
+   * @param value Stored placement value.
+   * @return GraphQL board placement.
+   */
+  private BoardPlacement mapPlacement(Object value) {
+    Map<?, ?> placement = (Map<?, ?>) value;
+    return BoardPlacement.newBuilder()
+        .definitionId(String.valueOf(placement.get("definitionId")))
+        .color(((Number) placement.get("color")).intValue())
+        .square(((Number) placement.get("square")).intValue())
+        .build();
+  }
+
+  /**
+   * Maps a GraphQL board placement input to storage JSON.
+   *
+   * @param value GraphQL placement input.
+   * @return Stored placement map.
+   */
+  private Object mapPlacementInput(BoardPlacementInput value) {
+    return Map.of(
+        "definitionId", value.getDefinitionId(),
+        "color", value.getColor(),
+        "square", value.getSquare());
   }
 }

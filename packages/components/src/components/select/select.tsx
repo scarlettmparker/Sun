@@ -20,6 +20,7 @@ const Select = (props: SelectProps) => {
     className,
     id,
     style,
+    disabled,
     "data-testid": testId,
     defaultValue,
     ...rest
@@ -46,12 +47,16 @@ const Select = (props: SelectProps) => {
   /**
    * Toggles the dropdown open/close state.
    */
-  const handleToggle = () => setIsOpen(!isOpen);
+  const handleToggle = () => {
+    if (disabled) return;
+    setIsOpen(!isOpen);
+  };
 
   /**
    * Selects an option and closes the dropdown.
    */
   const handleSelect = (optionValue: string) => {
+    if (disabled) return;
     setSelectedValue(optionValue);
     const event = {
       target: { value: optionValue },
@@ -119,7 +124,7 @@ const Select = (props: SelectProps) => {
 
   return (
     <div
-      className={cn(styles.selectContainer, className)}
+      className={cn(styles.selectContainer, disabled && styles.disabled, className)}
       id={id}
       style={style}
       data-testid={testId}
@@ -128,6 +133,7 @@ const Select = (props: SelectProps) => {
       <select
         {...rest}
         id={id}
+        disabled={disabled}
         value={selectedValue}
         onChange={handleHiddenSelectChange}
         data-testid="hidden-select"
@@ -146,6 +152,7 @@ const Select = (props: SelectProps) => {
       <button
         type="button"
         className={styles.select}
+        disabled={disabled}
         onClick={handleButtonClick}
         onKeyDown={handleKeyDown}
         aria-expanded={isOpen}
