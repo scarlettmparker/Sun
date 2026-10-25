@@ -1,0 +1,154 @@
+type Piece {
+  id: ID!
+  slug: String!
+  name: String!
+  description: String
+  isKing: Boolean!
+  promotionTargets: [Int!]
+  promotionRanks: [Int!]
+  moveStates: JSON
+  stateTransition: String!
+  edgeReset: Boolean!
+  isSystem: Boolean!
+  createdAt: DateTime
+  updatedAt: DateTime
+  sprite: PieceSprite
+}
+
+type PieceSprite {
+  headKey: String!
+  bodyKey: String!
+  footKey: String!
+}
+
+input PieceInput {
+  id: ID
+  slug: String!
+  name: String!
+  description: String
+  isKing: Boolean!
+  promotionTargets: [Int!]
+  promotionRanks: [Int!]
+  moveStates: JSON
+  stateTransition: String!
+  edgeReset: Boolean!
+  sprite: PieceSpriteInput!
+}
+
+input PieceSpriteInput {
+  headKey: String!
+  bodyKey: String!
+  footKey: String!
+}
+
+type PieceSet {
+  id: ID!
+  name: String!
+  description: String
+  startingFen: String!
+  isSystem: Boolean!
+  createdAt: DateTime
+  updatedAt: DateTime
+  members: [PieceSetMember!]!
+}
+
+type PieceSetMember {
+  slot: String!
+  pieceDefinitionId: ID!
+}
+
+input PieceSetMemberInput {
+  slot: String!
+  pieceDefinitionId: ID!
+}
+
+input PieceSetInput {
+  id: ID
+  name: String!
+  description: String
+  startingFen: String!
+  members: [PieceSetMemberInput!]
+}
+
+type BoardLayout {
+  id: ID!
+  slug: String!
+  name: String!
+  description: String
+  placements: JSON
+  isSystem: Boolean!
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input BoardLayoutInput {
+  id: ID
+  slug: String!
+  name: String!
+  description: String
+  placements: JSON
+}
+
+type AuditLog {
+  id: ID!
+  createdAt: DateTime
+  actorId: ID
+  actorEmail: String
+  action: String!
+  target: String
+  outcome: String!
+  detail: String
+  ip: String
+}
+
+type PieceResponse {
+  message: String!
+  piece: Piece!
+}
+
+type PieceSetResponse {
+  message: String!
+  pieceSet: PieceSet!
+}
+
+type BoardLayoutResponse {
+  message: String!
+  boardLayout: BoardLayout!
+}
+
+type DeleteResponse {
+  ok: Boolean!
+}
+
+type AuditLogPage {
+  items: [AuditLog!]!
+  total: Int!
+}
+
+type MedusaQueries {
+  pieces: [Piece!]!
+  piece(id: ID!): Piece
+  pieceSets: [PieceSet!]!
+  pieceSet(id: ID!): PieceSet
+  boardLayouts: [BoardLayout!]!
+  boardLayout(id: ID!): BoardLayout
+  boardLayoutBySlug(slug: String!): BoardLayout
+  auditLogs(page: Int, size: Int): AuditLogPage!
+}
+
+type MedusaMutations {
+  savePiece(input: PieceInput!): PieceResponse!
+  deletePiece(id: ID!): DeleteResponse!
+  savePieceSet(input: PieceSetInput!): PieceSetResponse!
+  deletePieceSet(id: ID!): DeleteResponse!
+  saveBoardLayout(input: BoardLayoutInput!): BoardLayoutResponse!
+  deleteBoardLayout(id: ID!): DeleteResponse!
+}
+
+extend type Query {
+  medusaQueries: MedusaQueries!
+}
+
+extend type Mutation {
+  medusaMutations: MedusaMutations!
+}

@@ -1,0 +1,101 @@
+package com.sun.medusa.service;
+
+import com.sun.medusa.model.PieceDefinitionEntity;
+import com.sun.medusa.model.PieceSpriteEntity;
+import com.sun.medusa.repository.PieceDefinitionRepository;
+import com.sun.medusa.repository.PieceSpriteRepository;
+import jakarta.persistence.EntityNotFoundException;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@Transactional
+public class PieceService {
+
+  private final PieceDefinitionRepository definitionRepository;
+  private final PieceSpriteRepository spriteRepository;
+
+  public PieceService(PieceDefinitionRepository definitionRepository,
+      PieceSpriteRepository spriteRepository) {
+    this.definitionRepository = definitionRepository;
+    this.spriteRepository = spriteRepository;
+  }
+
+  /**
+   * Lists all piece definitions.
+   *
+   * @return the piece definitions
+   */
+  public List<PieceDefinitionEntity> list() {
+    return definitionRepository.findAll();
+  }
+
+  /**
+   * Finds a piece definition by id.
+   *
+   * @param id the piece id
+   * @return the piece, if found
+   */
+  public Optional<PieceDefinitionEntity> findById(UUID id) {
+    return definitionRepository.findById(id);
+  }
+
+  /**
+   * Saves a piece definition and its sprite.
+   *
+   * @param definition the piece definition
+   * @param headKey the head sprite key
+   * @param bodyKey the body sprite key
+   * @param footKey the foot sprite key
+   * @return the saved piece
+   */
+  public PieceDefinitionEntity save(PieceDefinitionEntity definition, String headKey,
+      String bodyKey, String footKey) {
+    if (definition.getId() != null) {
+      PieceDefinitionEntity existing = definitionRepository.findById(definition.getId())
+          .orElseThrow(() -> new EntityNotFoundException("Piece not found"));
+      if (existing.isSystem()) {
+        throw new IllegalStateException("System pieces cannot be edited");
+      }
+    }
+    PieceDefinitionEntity saved = definitionRepository.save(definition);
+
+    PieceSpriteEntity sprite = spriteRepository.findByPieceDefinitionId(saved.getId())
+        .orElseGet(PieceSpriteEntity::new);
+    sprite.setPieceDefinitionId(saved.getId());
+    sprite.setHeadKey(headKey);
+    sprite.setBodyKey(bodyKey);
+    sprite.setFootKey(footKey);
+    spriteRepository.save(sprite);
+
+    return saved;
+  }
+
+  /**
+   * Deletes a non-system piece.
+   *
+   * @param id the piece id
+   * @return true when deleted
+   */
+  public boolean delete(UUID id) {
+    PieceDefinitionEntity existing = definitionRepository.findById(id).orElse(null);
+    if (existing == null || existing.isSystem()) {
+      return false;
+    }
+    definitionRepository.deleteById(id);
+    return true;
+  }
+
+  /**
+   * Finds the sprite for a piece definition.
+   *
+   * @param definitionId the piece definition id
+   * @return the sprite, or null
+   */
+  public PieceSpriteEntity findSprite(UUID definitionId) {
+    return spriteRepository.findByPieceDefinitionId(definitionId).orElse(null);
+  }
+}

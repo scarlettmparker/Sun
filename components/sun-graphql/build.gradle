@@ -7,7 +7,7 @@ plugins {
 
 ext {
     set('netflixDgsVersion', "10.2.1")
-    dbModules = ['apollo', 'briareus', 'cerberus', 'dionysus', 'echo', 'fates', 'gaia', 'hades', 'icarus', 'jocasta']
+    dbModules = ['apollo', 'briareus', 'cerberus', 'dionysus', 'echo', 'fates', 'gaia', 'hades', 'icarus', 'jocasta', 'medusa']
     statelessModules = ['narcissus']
     enabledModules = dbModules + statelessModules
 }
