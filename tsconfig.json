@@ -6,7 +6,7 @@
     "module": "ESNext",
     "skipLibCheck": true,
     "esModuleInterop": true,
-    "types": ["bun-types", "node", "vitest/globals"],
+    "types": ["bun-types", "node", "vite/client", "vitest/globals"],
 
     /* Bundler mode */
     "moduleResolution": "Bundler",
@@ -20,7 +20,8 @@
     "baseUrl": ".",
     "paths": {
       "~/*": ["./src/*"],
-      "@ssr/*": ["./packages/ssr/src/*"]
+      "@ssr/*": ["./packages/ssr/src/*"],
+      "@sun/api": ["./packages/api/src/index.ts"]
     },
 
     /* Linting */
