@@ -9,9 +9,9 @@ const execFileAsync = promisify(execFile);
 /**
  * Whether a TCP port is accepting connections.
  */
-function isPortOpen(port: number): Promise<boolean> {
+function isPortOpen(port: number, host = "127.0.0.1"): Promise<boolean> {
   return new Promise((resolve) => {
-    const socket = net.connect({ port, host: "127.0.0.1" });
+    const socket = net.connect({ port, host });
     const done = (open: boolean): void => {
       socket.destroy();
       resolve(open);
@@ -140,7 +140,10 @@ export async function buildReport(): Promise<StatusReport> {
   const apps = await Promise.all(
     manifest.apps.map(async (app): Promise<AppStatus> => {
       const { unit, port } = await resolveUnit(app);
-      const [open, state] = await Promise.all([isPortOpen(port), unitState(unit)]);
+      const [open, state] = await Promise.all([
+        isPortOpen(port, app.checkHost),
+        unitState(unit),
+      ]);
       return {
         key: app.key,
         name: app.name,

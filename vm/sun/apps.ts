@@ -35,6 +35,10 @@ export type AppEntry = {
    */
   unitPattern?: string;
   /**
+   * Host used for the local status probe, defaulting to 127.0.0.1.
+   */
+  checkHost?: string;
+  /**
    * Whether the environment supervises the app.
    */
   enabled: boolean;
@@ -247,6 +251,7 @@ export const MANIFESTS: Record<string, EnvironmentManifest> = {
         host: "reader.scarlettparker.co.uk",
         dir: ".",
         port: 5178,
+        checkHost: "10.89.20.201",
         unit: "guided-reader@5178.service",
         unitPattern: "guided-reader@*.service",
         enabled: true,
