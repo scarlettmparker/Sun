@@ -19,27 +19,25 @@ steps:
       - ./components/sun-graphql/gradlew -p components :sun-graphql:bootJar --no-daemon --build-cache
 
   deploy:
-    image: alpine:3.21
+    image: sun-ci:1
     volumes:
       - /opt/woodpecker/keys/ci-deploy:/root/.ssh/ci-deploy:ro
       - /opt/woodpecker/keys/known_hosts:/root/.ssh/known_hosts:ro
     environment:
       SSH_KEY: /root/.ssh/ci-deploy
     commands:
-      - apk add --no-cache openssh-client rsync bash curl file gettext python3
       - printf 'Host *\n  BatchMode yes\n  IdentitiesOnly yes\n' > ~/.ssh/config
       - ./vm/vps/deploy-sun.sh all --skip-build
       - ./vm/nginx/install.sh
 
   provision-vms:
-    image: alpine:3.21
+    image: sun-ci:1
     volumes:
       - /opt/woodpecker/keys/ci-deploy:/root/.ssh/ci-deploy:ro
       - /opt/woodpecker/keys/known_hosts:/root/.ssh/known_hosts:ro
     environment:
       SSH_KEY: /root/.ssh/ci-deploy
     commands:
-      - apk add --no-cache openssh-client rsync bash curl
       - printf 'Host *\n  BatchMode yes\n  IdentitiesOnly yes\n' > ~/.ssh/config
       - ./vm/vps/vps.sh provision
     when:
