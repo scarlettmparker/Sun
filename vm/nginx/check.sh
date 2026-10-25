@@ -44,12 +44,13 @@ fi
 cp "$DHPARAM" "$LE/ssl-dhparams.pem"
 : >"$LE/options-ssl-nginx.conf"
 
-while read -r domain live _standby; do
+while read -r domain live _standby host; do
+  host="${host:-127.0.0.1}"
   mkdir -p "$LE/live/$domain"
   openssl req -x509 -newkey rsa:2048 -sha256 -days 1 -nodes \
     -keyout "$LE/live/$domain/privkey.pem" -out "$LE/live/$domain/fullchain.pem" \
     -subj "/CN=$domain" 2>/dev/null
-  sed "s/@PORT@/$live/g" "$HERE/sites/$domain.conf" > "$NGX/sites-enabled/$domain"
+  sed "s/@HOST@/$host/g; s/@PORT@/$live/g" "$HERE/sites/$domain.conf" > "$NGX/sites-enabled/$domain"
 done < <(grep -vE '^[[:space:]]*(#|$)' "$HERE/sites.conf")
 
 docker run --rm \

@@ -22,9 +22,10 @@ mkdir -p "$STAGE/snippets" "$STAGE/sites"
 
 cp "$HERE/snippets/"*.conf "$STAGE/snippets/"
 
-while read -r domain live standby; do
-  sed "s/@PORT@/$live/g" "$HERE/sites/$domain.conf" > "$STAGE/sites/$domain.live"
-  sed "s/@PORT@/$standby/g" "$HERE/sites/$domain.conf" > "$STAGE/sites/$domain.standby"
+while read -r domain live standby host; do
+  host="${host:-127.0.0.1}"
+  sed "s/@HOST@/$host/g; s/@PORT@/$live/g" "$HERE/sites/$domain.conf" > "$STAGE/sites/$domain.live"
+  sed "s/@HOST@/$host/g; s/@PORT@/$standby/g" "$HERE/sites/$domain.conf" > "$STAGE/sites/$domain.standby"
 done < <(grep -vE '^[[:space:]]*(#|$)' "$HERE/sites.conf")
 
 rsync -az --delete -e "ssh -i $SSH_KEY" "$STAGE/" "$VM:$REMOTE/"
