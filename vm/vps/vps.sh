@@ -320,37 +320,37 @@ ssh_config() {
   cat <<EOF
 Host cassini
   HostName 10.89.20.201
-  User cassini
+  User root
   ProxyJump vps
   IdentityFile $SSH_KEY
 
 Host artemis
   HostName 10.89.20.202
-  User artemis
+  User root
   ProxyJump vps
   IdentityFile $SSH_KEY
 
 Host medusa
   HostName 10.89.20.203
-  User medusa
+  User root
   ProxyJump vps
   IdentityFile $SSH_KEY
 
 Host cassini-port
   HostName vps.scarlettparker.co.uk
-  User cassini
+  User root
   Port 2201
   IdentityFile $SSH_KEY
 
 Host artemis-port
   HostName vps.scarlettparker.co.uk
-  User artemis
+  User root
   Port 2202
   IdentityFile $SSH_KEY
 
 Host medusa-port
   HostName vps.scarlettparker.co.uk
-  User medusa
+  User root
   Port 2203
   IdentityFile $SSH_KEY
 EOF
