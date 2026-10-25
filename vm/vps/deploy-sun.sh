@@ -47,15 +47,28 @@ build() {
   log "build: sun-graphql"
   "$SUN_ROOT/components/sun-graphql/gradlew" -p "$SUN_ROOT/components" :sun-graphql:bootJar --quiet
 }
-# Builds production node_modules on the ARM64 VPS.
+# Hashes the production dependency inputs.
+#
+# @return The combined digest on stdout.
+deps_hash() {
+  sha256sum "$SUN_ROOT/package.json" "$SUN_ROOT/bun.lock" | sha256sum | cut -d' ' -f1
+}
+
+# Builds production node_modules on the ARM64 VPS, reusing a cached tree.
 build_deps() {
+  local hash dir
+  hash="$(deps_hash)"
+  dir="/home/ubuntu/sun-vps-deps/$hash"
+  if remote "test -d '$dir/node_modules'"; then
+    log "deps: cached ($hash)"
+    return 0
+  fi
   log "deps: ARM64 node_modules on the VPS"
-  remote "rm -rf /tmp/sun-web-deps && mkdir -p /tmp/sun-web-deps"
+  remote "rm -rf '$dir' && mkdir -p '$dir'"
   rsync -az -e "ssh -i $SSH_KEY" \
     "$SUN_ROOT/package.json" "$SUN_ROOT/bun.lock" "$SUN_ROOT/bunfig.toml" \
-    "$VPS:/tmp/sun-web-deps/"
-  remote "cd /tmp/sun-web-deps && /home/ubuntu/.bun/bin/bun install --production --frozen-lockfile --no-progress"
-  remote "cd /tmp/sun-web-deps && tar -czf /tmp/sun-web-deps.tgz node_modules"
+    "$VPS:$dir/"
+  remote "cd '$dir' && /home/ubuntu/.bun/bin/bun install --production --frozen-lockfile --no-progress"
 }
 # Copies an env file and applies VPS overrides.
 #
@@ -204,10 +217,8 @@ deploy_frontend() {
   remote "sudo lxc file push -q -p --mode 0644 '$REMOTE_TMP/sun-web.tgz' '$ARTEMIS/tmp/sun-web.tgz'"
   remote "sudo lxc exec '$ARTEMIS' -- tar -xzf /tmp/sun-web.tgz -C /opt/sun/web"
 
-  remote "sudo lxc exec '$ARTEMIS' -- bash -c 'rm -rf /opt/sun/web/node_modules'"
-  remote "sudo lxc exec '$ARTEMIS' -- rm -f /tmp/sun-web-deps.tgz"
-  remote "sudo lxc file push -q -p --mode 0644 /tmp/sun-web-deps.tgz '$ARTEMIS/tmp/sun-web-deps.tgz'"
-  remote "sudo lxc exec '$ARTEMIS' -- tar -xzf /tmp/sun-web-deps.tgz -C /opt/sun/web"
+  remote "sudo mkdir -p /opt/sun/web/node_modules"
+  remote "sudo rsync -az --delete -e 'ssh -i /opt/woodpecker/keys/ci-deploy -p 2202 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null' /home/ubuntu/sun-vps-deps/$(deps_hash)/node_modules/ root@127.0.0.1:/opt/sun/web/node_modules/"
 
   if [ -f "$FRONTEND_ENV" ]; then
     tmp="$(mktemp)"
