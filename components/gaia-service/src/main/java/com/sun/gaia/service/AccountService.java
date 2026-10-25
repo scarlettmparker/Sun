@@ -34,6 +34,22 @@ public class AccountService extends BaseService<AccountEntity> {
     return accountRepository.findByUsername(username);
   }
 
+  /**
+   * Resolves an account by either its username or its person's email address.
+   * Used by login so callers can sign in with an email.
+   */
+  public Optional<AccountEntity> findByLoginIdentifier(String identifier) {
+    if (identifier == null || identifier.isBlank()) {
+      return Optional.empty();
+    }
+    Optional<AccountEntity> byUsername = accountRepository.findByUsername(identifier);
+    if (byUsername.isPresent()) {
+      return byUsername;
+    }
+    return personService.findByEmail(identifier)
+        .flatMap(person -> accountRepository.findAllByPersonId(person.getId()).stream().findFirst());
+  }
+
   public Optional<AccountEntity> findById(UUID id) {
     return accountRepository.findById(id);
   }

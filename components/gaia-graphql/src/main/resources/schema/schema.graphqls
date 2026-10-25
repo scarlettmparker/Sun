@@ -192,6 +192,10 @@ type RequestPasswordResetResponse {
   message: String!
 }
 
+type RequestMagicLinkResponse {
+  message: String!
+}
+
 type ResetPasswordResponse {
   message: String!
 }
@@ -296,6 +300,9 @@ type GaiaMutations {
   confirmAccountReactivation(token: String!): ConfirmAccountReactivationResponse!
   requestPasswordReset(email: String!): RequestPasswordResetResponse!
   resetPassword(token: String!, newPassword: String!): ResetPasswordResponse!
+  requestMagicLink(email: String!): RequestMagicLinkResponse!
+  verifyMagicLink(token: String!): AuthResult!
+  loginWithGoogle(code: String!, redirectUri: String!): AuthResult!
   changePassword(currentPassword: String!, newPassword: String!): ChangePasswordResponse!
   upsertPropertyEntry(
     ownerKey: String!

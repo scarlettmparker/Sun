@@ -86,6 +86,19 @@ public class EmailService {
   }
 
   /**
+   * Sends a magic-link sign-in email.
+   *
+   * @param toEmail the recipient address
+   * @param magicLink the sign-in link
+   */
+  public void sendMagicLinkEmail(String toEmail, String magicLink) {
+    String body =
+        "Click the link below to sign in:\n\n" + magicLink +
+        "\n\nThis link expires in 15 minutes and can only be used once.";
+    sendEmail(toEmail, "Sign in to Free Chess", body);
+  }
+
+  /**
    * Sends a notification that private notes were shared.
    *
    * @param toEmail the recipient address

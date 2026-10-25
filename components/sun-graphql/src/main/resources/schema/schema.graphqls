@@ -84,6 +84,7 @@ type RemoteUser {
 
 enum RemoteUserType {
   DISCORD
+  FREE_CHESS
 }
 
 input RemoteUserInput {

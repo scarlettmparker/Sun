@@ -51,6 +51,12 @@ public class AccountMapper {
           .id(providerId)
           .build());
     }
+    if ("free-chess".equals(provider)) {
+      return List.of(RemoteUser.newBuilder()
+          .type(RemoteUserType.FREE_CHESS)
+          .id(providerId)
+          .build());
+    }
     return List.of();
   }
 }

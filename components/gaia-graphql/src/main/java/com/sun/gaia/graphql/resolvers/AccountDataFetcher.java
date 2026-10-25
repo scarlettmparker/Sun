@@ -21,6 +21,7 @@ import com.sun.gaia.codegen.types.PagedAccounts;
 import com.sun.gaia.codegen.types.PaginationInput;
 import com.sun.gaia.codegen.types.RegisterInput;
 import com.sun.gaia.codegen.types.RequestAccountReactivationResponse;
+import com.sun.gaia.codegen.types.RequestMagicLinkResponse;
 import com.sun.gaia.codegen.types.RequestPasswordResetResponse;
 import com.sun.gaia.codegen.types.ResetPasswordResponse;
 import com.sun.gaia.codegen.types.SuspendAccountResponse;
@@ -32,7 +33,9 @@ import com.sun.gaia.model.enums.AccountStatus;
 import com.sun.gaia.repository.AccountRepository;
 import com.sun.gaia.service.AccountService;
 import com.sun.gaia.service.EmailService;
+import com.sun.gaia.service.GoogleOAuthService;
 import com.sun.gaia.service.JwtService;
+import com.sun.gaia.service.MagicLinkService;
 import com.sun.gaia.service.PasswordResetService;
 import com.sun.gaia.service.ReactivationService;
 import com.sun.gaia.service.UserContextHolder;
@@ -66,6 +69,8 @@ public class AccountDataFetcher {
   private final EmailService emailService;
   private final PasswordResetService passwordResetService;
   private final ReactivationService reactivationService;
+  private final MagicLinkService magicLinkService;
+  private final GoogleOAuthService googleOAuthService;
   private final AccountMapper accountMapper;
   private final String appBaseUrl;
 
@@ -77,6 +82,8 @@ public class AccountDataFetcher {
       EmailService emailService,
       PasswordResetService passwordResetService,
       ReactivationService reactivationService,
+      MagicLinkService magicLinkService,
+      GoogleOAuthService googleOAuthService,
       AccountMapper accountMapper,
       @Value("${app.base-url}") String appBaseUrl) {
     this.accountService = accountService;
@@ -86,6 +93,8 @@ public class AccountDataFetcher {
     this.emailService = emailService;
     this.passwordResetService = passwordResetService;
     this.reactivationService = reactivationService;
+    this.magicLinkService = magicLinkService;
+    this.googleOAuthService = googleOAuthService;
     this.accountMapper = accountMapper;
     this.appBaseUrl = appBaseUrl;
   }
@@ -288,8 +297,12 @@ public class AccountDataFetcher {
   @PreAuthorize("permitAll()")
   @DgsEnableDataFetcherInstrumentation(false)
   public AuthResult login(LoginInput input) {
-    AccountEntity account = accountService.findByUsername(input.getUsername())
+    AccountEntity account = accountService.findByLoginIdentifier(input.getUsername())
         .orElseThrow(() -> new IllegalArgumentException("Invalid username or password"));
+
+    if (account.getStatus() != AccountStatus.ACTIVE) {
+      throw new IllegalArgumentException("Invalid username or password");
+    }
 
     if (!accountService.verifyPassword(account, input.getPassword())) {
       throw new IllegalArgumentException("Invalid username or password");
@@ -361,6 +374,86 @@ public class AccountDataFetcher {
               .message("Password reset email sent")
               .build();
         });
+  }
+
+  /**
+   * Requests a magic-link sign-in email. Always reports success to avoid account enumeration.
+   */
+  @Audited(event = "ACCOUNT_REQUESTMAGICLINK", entity = "Account")
+  @DgsData(parentType = "GaiaMutations", field = "requestMagicLink")
+  @PreAuthorize("permitAll()")
+  @DgsEnableDataFetcherInstrumentation(false)
+  @Transactional
+  public RequestMagicLinkResponse requestMagicLink(String email) {
+    accountService.findByPersonEmail(email).stream()
+        .filter(a -> a.getStatus() == AccountStatus.ACTIVE)
+        .findFirst()
+        .ifPresent(account -> {
+          var token = magicLinkService.createToken(account.getId());
+          String link = GaiaGraphQLSupport.resolveBaseUrl(appBaseUrl)
+              + "/__magic-link/verify?token=" + token.getToken();
+          emailService.sendMagicLinkEmail(email, link);
+        });
+    return RequestMagicLinkResponse.newBuilder()
+        .message("Check your inbox")
+        .build();
+  }
+
+  /**
+   * Consumes a magic-link token and returns a JWT.
+   */
+  @Audited(event = "ACCOUNT_VERIFYMAGICLINK", entity = "Account")
+  @DgsData(parentType = "GaiaMutations", field = "verifyMagicLink")
+  @PreAuthorize("permitAll()")
+  @DgsEnableDataFetcherInstrumentation(false)
+  @Transactional
+  public AuthResult verifyMagicLink(String token) {
+    UUID accountId = magicLinkService.useToken(token);
+    AccountEntity account = accountService.findById(accountId)
+        .orElseThrow(() -> new IllegalArgumentException("Invalid magic link token"));
+    if (account.getStatus() != AccountStatus.ACTIVE) {
+      throw new IllegalArgumentException("Account not active");
+    }
+    String jwt = jwtService.generateToken(account.getId(), account.getPersonId());
+    logger.info("Magic link login succeeded for account {}", account.getId());
+    return AuthResult.newBuilder()
+        .accountId(account.getId().toString())
+        .personId(account.getPersonId().toString())
+        .token(jwt)
+        .build();
+  }
+
+  /**
+   * Signs in with Google using an authorization code.
+   */
+  @Audited(event = "ACCOUNT_GOOGLELOGIN", entity = "Account")
+  @DgsData(parentType = "GaiaMutations", field = "loginWithGoogle")
+  @PreAuthorize("permitAll()")
+  @DgsEnableDataFetcherInstrumentation(false)
+  @Transactional
+  public AuthResult loginWithGoogle(String code, String redirectUri) {
+    var googleUser = googleOAuthService.exchangeCode(code, redirectUri)
+        .orElseThrow(() -> new IllegalArgumentException("Google sign-in failed"));
+
+    AccountEntity account = accountService.findByPersonEmail(googleUser.email()).stream()
+        .filter(a -> a.getStatus() == AccountStatus.ACTIVE)
+        .findFirst()
+        .orElseThrow(() -> new IllegalArgumentException("No account for this email"));
+
+    // Link provider id if missing.
+    if (account.getProvider() == null || account.getProvider().isBlank()) {
+      account.setProvider("google");
+      account.setProviderId(googleUser.sub());
+      accountService.save(account);
+    }
+
+    String jwt = jwtService.generateToken(account.getId(), account.getPersonId());
+    logger.info("Google login succeeded for account {}", account.getId());
+    return AuthResult.newBuilder()
+        .accountId(account.getId().toString())
+        .personId(account.getPersonId().toString())
+        .token(jwt)
+        .build();
   }
 
   /**

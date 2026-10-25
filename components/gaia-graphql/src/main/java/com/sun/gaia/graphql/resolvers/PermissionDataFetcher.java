@@ -57,11 +57,17 @@ public class PermissionDataFetcher {
   @Transactional(readOnly = true)
   public List<String> effectivePermissions(
       RemoteUserType remoteUserType, String remoteUserId) {
-    if (remoteUserType != RemoteUserType.DISCORD || remoteUserId == null || remoteUserId.isBlank()) {
+    String provider = null;
+    if (remoteUserType == RemoteUserType.DISCORD) {
+      provider = "discord";
+    } else if (remoteUserType == RemoteUserType.FREE_CHESS) {
+      provider = "free-chess";
+    }
+    if (provider == null || remoteUserId == null || remoteUserId.isBlank()) {
       return List.of();
     }
     return accountRepository
-        .findByProviderStatus("discord", remoteUserId, AccountStatus.ACTIVE)
+        .findByProviderStatus(provider, remoteUserId, AccountStatus.ACTIVE)
         .map(account -> accountRepository.findEffectivePermissions(account.getId()))
         .orElseGet(List::of);
   }
