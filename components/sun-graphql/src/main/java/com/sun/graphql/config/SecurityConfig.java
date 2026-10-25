@@ -22,11 +22,13 @@ public class SecurityConfig {
    * {@code @PreAuthorize}.
    */
   @Bean
-  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+  public SecurityFilterChain filterChain(HttpSecurity http,
+      GoogleOAuth2SuccessHandler successHandler) throws Exception {
     http.csrf(csrf -> csrf.disable())
         .sessionManagement(
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .authorizeHttpRequests(requests -> requests.anyRequest().permitAll());
+        .authorizeHttpRequests(requests -> requests.anyRequest().permitAll())
+        .oauth2Login(oauth -> oauth.successHandler(successHandler));
     return http.build();
   }
 }
