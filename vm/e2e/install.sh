@@ -34,6 +34,7 @@ Wants=network-online.target
 Type=simple
 WorkingDirectory=$SUN_ROOT
 EnvironmentFile=$ENV_FILE
+Environment=PATH=$HOME/.bun/bin:/usr/local/bin:/usr/bin:/bin
 ExecStart=$BUN $SUN_ROOT/vm/e2e/runner.ts
 Restart=always
 RestartSec=5

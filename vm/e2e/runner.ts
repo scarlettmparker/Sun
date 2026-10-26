@@ -5,6 +5,7 @@ import {
   existsSync,
   mkdirSync,
   openSync,
+  readFileSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
@@ -78,6 +79,7 @@ const JWT_SECRET =
 const DATABASE_URL = "postgres://sun:sun@127.0.0.1:5436/sun_e2e";
 const BACKEND_URL = "http://127.0.0.1:8085";
 const BUN = process.env.BUN ?? join(homedir(), ".bun/bin/bun");
+const PATH = `${join(homedir(), ".bun/bin")}:/usr/local/bin:/usr/bin:/bin`;
 const COMPOSE = join(SUN_ROOT, "vm/e2e/compose.e2e.yml");
 
 const REPOS: Record<RepoKey, RepoConfig> = {
@@ -177,7 +179,7 @@ async function runCommand(
   return await new Promise((resolveExit) => {
     const child = spawn(command, args, {
       cwd,
-      env: { ...process.env, ...env },
+      env: { ...process.env, PATH, ...env },
       stdio: ["ignore", fd, fd],
     });
     child.on("exit", (code) => {
@@ -316,7 +318,7 @@ function startApp(appDir: string, port: number, logPath: string): ChildProcess {
     cwd: appDir,
     env: {
       ...process.env,
-      PATH: `${join(homedir(), ".bun/bin")}:/usr/local/bin:/usr/bin:/bin`,
+      PATH,
       NODE_ENV: "production",
       SERVER_HOST: "127.0.0.1",
       SERVER_PORT: String(port),
@@ -521,6 +523,27 @@ const server = Bun.serve({
       queue.push(run);
       void drain();
       return Response.json(run, { status: 202 });
+    }
+
+    if (
+      request.method === "GET" &&
+      url.pathname.startsWith("/runs/") &&
+      url.pathname.endsWith("/log")
+    ) {
+      const id = url.pathname.slice("/runs/".length, -"/log".length);
+      const run = runs.get(id);
+      if (!run) return errorResponse("Run not found", 404);
+
+      const name = url.searchParams.get("name") ?? "test";
+      if (!["test", "build", "app", "backend"].includes(name)) {
+        return errorResponse("Unknown log", 400);
+      }
+
+      const file = run.reportPath ? join(run.reportPath, `${name}.log`) : "";
+      const text = file && existsSync(file) ? readFileSync(file, "utf8") : "";
+      return new Response(text, {
+        headers: { "content-type": "text/plain; charset=utf-8" },
+      });
     }
 
     if (request.method === "GET" && url.pathname.startsWith("/runs/")) {

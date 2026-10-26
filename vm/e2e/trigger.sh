@@ -3,24 +3,16 @@
 # Queues a commit on the local E2E runner and waits for the result.
 #
 # Usage:
-#   ./vm/e2e/trigger.sh Guided-Reader <sha>
+#   ./trigger.sh <repo> <sha>
 
 set -euo pipefail
 
 REPO="${1:-}"
 SHA="${2:-}"
-ENV_FILE="${E2E_ENV_FILE:-$HOME/.config/sun-e2e.env}"
 
 if [[ -z "$REPO" || -z "$SHA" ]]; then
   echo "usage: trigger.sh <repo> <sha>" >&2
   exit 2
-fi
-
-if [[ -f "$ENV_FILE" ]]; then
-  set -a
-  # shellcheck disable=SC1090
-  source "$ENV_FILE"
-  set +a
 fi
 
 : "${E2E_RUNNER_URL:?E2E_RUNNER_URL is required}"
@@ -40,10 +32,26 @@ fi
 
 echo "Queued $RUN_ID"
 
+LOG_FILE=$(mktemp)
+trap 'rm -f "$LOG_FILE"' EXIT
+OFFSET=0
+
 while true; do
   STATUS_JSON=$(curl -fsS "$E2E_RUNNER_URL/runs/$RUN_ID" \
     -H "Authorization: Bearer $E2E_RUNNER_TOKEN")
   STATUS=$(printf '%s' "$STATUS_JSON" | sed -n 's/.*"status":"\([^"]*\)".*/\1/p')
+
+  curl -fsS "$E2E_RUNNER_URL/runs/$RUN_ID/log" \
+    -H "Authorization: Bearer $E2E_RUNNER_TOKEN" \
+    -o "$LOG_FILE" || true
+
+  if [[ -f "$LOG_FILE" ]]; then
+    LEN=$(wc -c < "$LOG_FILE")
+    if (( LEN > OFFSET )); then
+      tail -c +$((OFFSET + 1)) "$LOG_FILE"
+      OFFSET=$LEN
+    fi
+  fi
 
   case "$STATUS" in
     passed)
@@ -53,6 +61,10 @@ while true; do
     failed)
       REPORT=$(printf '%s' "$STATUS_JSON" | sed -n 's/.*"reportPath":"\([^"]*\)".*/\1/p')
       ERROR=$(printf '%s' "$STATUS_JSON" | sed -n 's/.*"error":"\([^"]*\)".*/\1/p')
+      if (( OFFSET == 0 )); then
+        curl -fsS "$E2E_RUNNER_URL/runs/$RUN_ID/log?name=build" \
+          -H "Authorization: Bearer $E2E_RUNNER_TOKEN" || true
+      fi
       echo "Failed $RUN_ID: ${ERROR:-unknown error}" >&2
       [[ -n "$REPORT" ]] && echo "Report: $REPORT" >&2
       exit 1
