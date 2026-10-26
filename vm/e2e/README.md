@@ -84,3 +84,18 @@ Every endpoint except `/health` requires
 
 Reports contain `build.log`, `app.log`, `test.log`, `backend.log`, the
 Playwright HTML report, and `run.json`.
+
+## NPM proxy
+
+Create a proxy host in Nginx Proxy Manager:
+
+- Domain: `e2e-runner.scarlettparker.co.uk`
+- Forward hostname: `192.168.0.106`
+- Forward port: `8090`
+- Websockets support: off
+- TLS: the usual certificate
+
+Add the same two values as Woodpecker secrets:
+
+- `e2e_runner_url` = `https://e2e-runner.scarlettparker.co.uk`
+- `e2e_runner_token` = the token from `~/.config/sun-e2e.env`
