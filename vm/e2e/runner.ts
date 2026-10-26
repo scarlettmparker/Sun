@@ -121,6 +121,9 @@ const BUN = process.env.BUN ?? join(homedir(), ".bun/bin/bun");
 const PATH = `${join(homedir(), ".bun/bin")}:/usr/local/bin:/usr/bin:/bin`;
 const COMPOSE = join(SUN_ROOT, "vm/e2e/compose.e2e.yml");
 const RETENTION_MS = 14 * 24 * 60 * 60 * 1000;
+const BACKEND_IDLE_MS = Number(
+  process.env.E2E_BACKEND_IDLE_MS ?? 10 * 60 * 1000,
+);
 
 const REPOS: Record<RepoKey, RepoConfig> = {
   "Guided-Reader": {
@@ -144,6 +147,8 @@ const APP_REPOS: AppRepoKey[] = ["Guided-Reader", "Checklist"];
 const runs = new Map<string, Run>();
 const queue: Run[] = [];
 let activeRun: Run | null = null;
+let backendState: { sha: string; process: ChildProcess } | null = null;
+let backendIdle: ReturnType<typeof setTimeout> | null = null;
 
 /**
  * Writes a line to the runner log.
@@ -329,6 +334,13 @@ function resetDatabase(): void {
 }
 
 /**
+ * Truncates the E2E tables for a reused backend.
+ */
+function truncateDatabase(): void {
+  runSync(join(SUN_ROOT, "vm/e2e/truncate-db.sh"), [], SUN_ROOT);
+}
+
+/**
  * Starts the GraphQL backend and waits for health.
  *
  * @param logPath backend log file
@@ -347,6 +359,9 @@ async function startBackend(logPath: string, jar?: string): Promise<ChildProcess
     },
     stdio: ["ignore", fd, fd],
   });
+  if (child.pid) {
+    writeFileSync(join(ROOT, "backend.pid"), String(child.pid));
+  }
 
   await waitFor(async () => {
     try {
@@ -374,6 +389,79 @@ async function stopProcess(child: ChildProcess | null): Promise<void> {
   child.kill("SIGTERM");
   await Bun.sleep(1000);
   if (child.exitCode === null) child.kill("SIGKILL");
+}
+
+/**
+ * Clears the pending idle stop.
+ */
+function clearIdleStop(): void {
+  if (!backendIdle) return;
+  clearTimeout(backendIdle);
+  backendIdle = null;
+}
+
+/**
+ * Stops the backend after the idle window.
+ */
+async function stopBackend(): Promise<void> {
+  clearIdleStop();
+  if (!backendState) return;
+  await stopProcess(backendState.process);
+  backendState = null;
+  rmSync(join(ROOT, "backend.pid"), { force: true });
+  log("backend stopped after idle");
+}
+
+/**
+ * Schedule the backend to stop after the idle window.
+ */
+function scheduleIdleStop(): void {
+  clearIdleStop();
+  backendIdle = setTimeout(() => {
+    void stopBackend();
+  }, BACKEND_IDLE_MS);
+}
+
+/**
+ * Kills a backend left behind by a crashed runner.
+ */
+function killOrphanBackend(): void {
+  const pidFile = join(ROOT, "backend.pid");
+  if (!existsSync(pidFile)) return;
+
+  const pid = Number(readFileSync(pidFile, "utf8").trim());
+  if (pid > 0) {
+    try {
+      process.kill(pid, "SIGKILL");
+    } catch {}
+  }
+  rmSync(pidFile, { force: true });
+}
+
+/**
+ * Reuses the backend for a SHA or starts a fresh one.
+ *
+ * @param sha the Sun commit
+ * @param logPath the build log file
+ */
+async function ensureBackend(sha: string, logPath: string): Promise<void> {
+  clearIdleStop();
+
+  if (backendState?.sha === sha && backendState.process.exitCode === null) {
+    truncateDatabase();
+    return;
+  }
+
+  const jar = await ensureBackendJar(sha, logPath);
+  if (backendState) {
+    await stopProcess(backendState.process);
+    backendState = null;
+  }
+
+  startDatabase();
+  resetDatabase();
+  const child = await startBackend(join(ROOT, "backend.log"), jar);
+  backendState = { sha, process: child };
 }
 
 /**
@@ -630,35 +718,27 @@ async function executeRun(run: Run): Promise<void> {
   mkdirSync(reportPath, { recursive: true });
   run.reportPath = reportPath;
 
-  let backend: ChildProcess | null = null;
   let app: ChildProcess | null = null;
   let repoDir = "";
   let worktree = "";
 
   try {
     log(`start ${run.repo} ${run.sha} (${run.id})`);
-    startDatabase();
 
     run.backendSha ??=
       REPOS[run.repo].kind === "backend"
         ? run.sha
         : resolveMainSha(REPOS.Sun.url);
 
-    const jar = await ensureBackendJar(
-      run.backendSha,
-      join(reportPath, "build.log"),
-    );
+    await ensureBackend(run.backendSha, join(reportPath, "build.log"));
 
     if (REPOS[run.repo].kind === "backend") {
       run.suites = [];
 
-      for (const repo of APP_REPOS) {
-        resetDatabase();
-        backend = await startBackend(join(reportPath, "backend.log"), jar);
+      for (const [index, repo] of APP_REPOS.entries()) {
+        if (index > 0) truncateDatabase();
         const sha = resolveMainSha(REPOS[repo].url);
         run.suites.push(await runAppSuite(repo, sha, reportPath));
-        await stopProcess(backend);
-        backend = null;
       }
 
       const failures = run.suites.filter((suite) => suite.status === "failed");
@@ -669,9 +749,6 @@ async function executeRun(run: Run): Promise<void> {
       }
       return;
     }
-
-    resetDatabase();
-    backend = await startBackend(join(reportPath, "backend.log"), jar);
 
     repoDir = syncRepository(run.repo);
     worktree = createWorktree(repoDir, run.repo, run.sha);
@@ -734,7 +811,7 @@ async function executeRun(run: Run): Promise<void> {
   } finally {
     run.finishedAt = new Date().toISOString();
     await stopProcess(app);
-    await stopProcess(backend);
+    scheduleIdleStop();
 
     if (repoDir && worktree) {
       try {
@@ -782,6 +859,8 @@ function errorResponse(message: string, status: number): Response {
   return Response.json({ error: message }, { status });
 }
 
+mkdirSync(ROOT, { recursive: true });
+killOrphanBackend();
 pruneWorktrees();
 pruneOld(join(ROOT, "reports"), RETENTION_MS);
 pruneOld(join(ROOT, "backends"), RETENTION_MS);
@@ -858,7 +937,10 @@ const server = Bun.serve({
         return errorResponse("Unknown log", 400);
       }
 
-      const file = run.reportPath ? join(run.reportPath, `${name}.log`) : "";
+      const file =
+        name === "backend"
+          ? join(ROOT, "backend.log")
+          : join(run.reportPath ?? "", `${name}.log`);
       const text = file && existsSync(file) ? readFileSync(file, "utf8") : "";
       return new Response(text, {
         headers: { "content-type": "text/plain; charset=utf-8" },
@@ -880,3 +962,10 @@ const server = Bun.serve({
 });
 
 log(`listening on http://127.0.0.1:${server.port}`);
+
+process.on("SIGTERM", () => {
+  void stopBackend().finally(() => process.exit(0));
+});
+process.on("SIGINT", () => {
+  void stopBackend().finally(() => process.exit(0));
+});

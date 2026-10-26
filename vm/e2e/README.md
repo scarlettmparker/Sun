@@ -57,9 +57,11 @@ Add `-v` to delete the E2E database volume as well.
 and writes the report under `~/.local/share/sun-e2e/reports`. App repos build
 the backend from Sun `main`, then build and run their Playwright suite. A `Sun`
 run builds the jar from the requested commit and runs both apps at their `main`.
-Jars are cached per SHA. Each Sun app suite gets a fresh database and backend
-start, with reports under `reports/<run>/<repo>`. Worktrees are removed after
-each run. Reports and cached jars older than 14 days are pruned at startup.
+Jars are cached per SHA. The backend stays up between runs and stops after 10
+minutes idle. Each app suite starts with a truncated database, so the backend is
+not restarted unless the Sun commit changes. Reports go under
+`reports/<run>/<repo>`. Worktrees are removed after each run. Reports and cached
+jars older than 14 days are pruned at startup.
 
 Install the systemd user service:
 
@@ -86,8 +88,9 @@ The runner API:
 Every endpoint except `/health` requires
 `Authorization: Bearer $E2E_RUNNER_TOKEN`.
 
-Reports contain `build.log`, `app.log`, `test.log`, `backend.log`, the
-Playwright HTML report, and `run.json`.
+Reports contain `build.log`, `app.log`, `test.log`, the Playwright HTML report,
+and `run.json`. The long-lived backend log is at
+`~/.local/share/sun-e2e/backend.log`.
 
 ## Public endpoint
 
