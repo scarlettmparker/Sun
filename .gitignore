@@ -49,6 +49,8 @@ vm/*
 !vm/nginx/*
 !vm/ci/
 !vm/ci/**
+!vm/e2e/
+!vm/e2e/**
 !vm/sisyphus/
 !vm/sisyphus/*
 !vm/vps/

@@ -1,0 +1,22 @@
+name: sun-e2e
+
+services:
+  db:
+    image: postgres:16
+    container_name: sun-e2e-db
+    environment:
+      POSTGRES_DB: sun_e2e
+      POSTGRES_USER: sun
+      POSTGRES_PASSWORD: sun
+    ports:
+      - "127.0.0.1:5436:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sun -d sun_e2e"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    volumes:
+      - sun-e2e-db:/var/lib/postgresql/data
+
+volumes:
+  sun-e2e-db:
