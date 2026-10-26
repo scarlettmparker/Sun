@@ -1,6 +1,7 @@
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import {
+  appendFileSync,
   cpSync,
   existsSync,
   mkdirSync,
@@ -12,8 +13,32 @@ import {
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 
-type RepoKey = "Guided-Reader" | "Checklist" | "Sun";
+type AppRepoKey = "Guided-Reader" | "Checklist";
+type RepoKey = AppRepoKey | "Sun";
 type RunStatus = "queued" | "running" | "passed" | "failed";
+
+type SuiteResult = {
+  /**
+   * App repository.
+   */
+  repo: AppRepoKey;
+  /**
+   * App commit.
+   */
+  sha: string;
+  /**
+   * Suite state.
+   */
+  status: "passed" | "failed";
+  /**
+   * Playwright exit code.
+   */
+  exitCode?: number;
+  /**
+   * Failure summary.
+   */
+  error?: string;
+};
 
 type RepoConfig = {
   /**
@@ -75,6 +100,10 @@ type Run = {
    * Report directory.
    */
   reportPath?: string;
+  /**
+   * App suites run against the backend.
+   */
+  suites?: SuiteResult[];
 };
 
 const SUN_ROOT = resolve(import.meta.dir, "../..");
@@ -106,6 +135,8 @@ const REPOS: Record<RepoKey, RepoConfig> = {
     kind: "backend",
   },
 };
+
+const APP_REPOS: AppRepoKey[] = ["Guided-Reader", "Checklist"];
 
 const runs = new Map<string, Run>();
 const queue: Run[] = [];
@@ -433,6 +464,107 @@ function copyReports(worktree: string, reportPath: string): void {
 }
 
 /**
+ * Appends a titled section to a log.
+ *
+ * @param logPath the log file
+ * @param title the section title
+ */
+function logSection(logPath: string, title: string): void {
+  mkdirSync(resolve(logPath, ".."), { recursive: true });
+  appendFileSync(logPath, `\n== ${title} ==\n`);
+}
+
+/**
+ * Builds and tests an app against the running backend.
+ *
+ * @param repo the app repository
+ * @param sha the app commit
+ * @param reportPath the run report directory
+ * @returns the suite result
+ */
+async function runAppSuite(
+  repo: AppRepoKey,
+  sha: string,
+  reportPath: string,
+): Promise<SuiteResult> {
+  const repoDir = syncRepository(repo);
+  const worktree = createWorktree(repoDir, repo, sha);
+  let app: ChildProcess | null = null;
+
+  try {
+    logSection(join(reportPath, "build.log"), `${repo} ${sha.slice(0, 8)}`);
+    const installCode = await runCommand(
+      BUN,
+      ["install", "--frozen-lockfile", "--no-progress"],
+      worktree,
+      join(reportPath, "build.log"),
+    );
+    if (installCode !== 0) {
+      return { repo, sha, status: "failed", error: "Dependency install failed" };
+    }
+
+    const compileCode = await runCommand(
+      BUN,
+      ["run", "build"],
+      worktree,
+      join(reportPath, "build.log"),
+    );
+    if (compileCode !== 0) {
+      return { repo, sha, status: "failed", error: "App build failed" };
+    }
+
+    const port = await findPort(REPOS[repo].port ?? 5200);
+    logSection(join(reportPath, "app.log"), `${repo} ${sha.slice(0, 8)}`);
+    app = startApp(worktree, port, join(reportPath, "app.log"));
+    await waitFor(async () => {
+      try {
+        const response = await fetch(`http://127.0.0.1:${port}/login`);
+        return response.status < 500;
+      } catch {
+        return false;
+      }
+    }, 60_000);
+
+    logSection(join(reportPath, "test.log"), `${repo} ${sha.slice(0, 8)}`);
+    const testCode = await runCommand(
+      "./e2e/run.sh",
+      [],
+      worktree,
+      join(reportPath, "test.log"),
+      {
+        APP_URL: `http://127.0.0.1:${port}`,
+        BACKEND_URL,
+        DATABASE_URL,
+        E2E_ENV_FILE: "/dev/null",
+      },
+    );
+
+    copyReports(worktree, join(reportPath, repo));
+    return {
+      repo,
+      sha,
+      status: testCode === 0 ? "passed" : "failed",
+      exitCode: testCode,
+      error: testCode === 0 ? undefined : "Playwright tests failed",
+    };
+  } catch (error) {
+    return {
+      repo,
+      sha,
+      status: "failed",
+      error: error instanceof Error ? error.message : String(error),
+    };
+  } finally {
+    await stopProcess(app);
+    try {
+      runSync("git", ["worktree", "remove", "--force", worktree], repoDir);
+    } catch {
+      rmSync(worktree, { recursive: true, force: true });
+    }
+  }
+}
+
+/**
  * Executes one run.
  *
  * @param run the queued run
@@ -463,13 +595,30 @@ async function executeRun(run: Run): Promise<void> {
       run.backendSha,
       join(reportPath, "build.log"),
     );
-    resetDatabase();
-    backend = await startBackend(join(reportPath, "backend.log"), jar);
 
     if (REPOS[run.repo].kind === "backend") {
-      run.status = "passed";
+      run.suites = [];
+
+      for (const repo of APP_REPOS) {
+        resetDatabase();
+        backend = await startBackend(join(reportPath, "backend.log"), jar);
+        const sha = resolveMainSha(REPOS[repo].url);
+        run.suites.push(await runAppSuite(repo, sha, reportPath));
+        await stopProcess(backend);
+        backend = null;
+      }
+
+      const failures = run.suites.filter((suite) => suite.status === "failed");
+      run.status = failures.length > 0 ? "failed" : "passed";
+      if (failures.length > 0) {
+        run.error = `${failures.map((suite) => suite.repo).join(", ")} e2e failed`;
+        run.exitCode = failures[0].exitCode;
+      }
       return;
     }
+
+    resetDatabase();
+    backend = await startBackend(join(reportPath, "backend.log"), jar);
 
     repoDir = syncRepository(run.repo);
     worktree = createWorktree(repoDir, run.repo, run.sha);
@@ -516,6 +665,7 @@ async function executeRun(run: Run): Promise<void> {
     run.exitCode = testCode;
     run.status = testCode === 0 ? "passed" : "failed";
     if (testCode !== 0) run.error = "Playwright tests failed";
+    copyReports(worktree, reportPath);
   } catch (error) {
     run.status = "failed";
     run.error = error instanceof Error ? error.message : String(error);
@@ -524,8 +674,6 @@ async function executeRun(run: Run): Promise<void> {
     run.finishedAt = new Date().toISOString();
     await stopProcess(app);
     await stopProcess(backend);
-
-    copyReports(worktree, reportPath);
 
     if (repoDir && worktree) {
       try {

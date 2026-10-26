@@ -55,8 +55,9 @@ Add `-v` to delete the E2E database volume as well.
 
 `runner.ts` accepts a repo and commit, checks it out in an isolated worktree,
 and writes the report under `~/.local/share/sun-e2e/reports`. App repos build
-the backend from Sun `main`, then build and run their Playwright suite. `Sun`
-builds the backend jar from the requested commit. Jars are cached per SHA.
+the backend from Sun `main`, then build and run their Playwright suite. A `Sun`
+run builds the jar from the requested commit and runs both apps at their `main`.
+Jars are cached per SHA.
 
 Install the systemd user service:
 
