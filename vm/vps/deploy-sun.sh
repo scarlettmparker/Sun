@@ -198,8 +198,8 @@ deploy_backend() {
   hash="$(
     {
       backend_inputs_hash
-      sha256sum "$HERE/files/sun-backend.service"
-      sha256sum "$tmp"
+      sha256sum < "$HERE/files/sun-backend.service"
+      sha256sum < "$tmp"
     } | sha256sum | cut -d' ' -f1
   )"
   remote_hash="$(remote "sudo lxc exec '$ARTEMIS' -- cat '$marker' 2>/dev/null" || true)"
