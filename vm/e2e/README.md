@@ -50,3 +50,37 @@ docker compose -f vm/e2e/compose.e2e.yml down
 ```
 
 Add `-v` to delete the E2E database volume as well.
+
+## Local runner
+
+`runner.ts` accepts a repo and commit, checks it out in an isolated worktree,
+builds it, starts it against the disposable backend, runs its Playwright suite,
+and writes the report under `~/.local/share/sun-e2e/reports`.
+
+Install the systemd user service:
+
+```bash
+./vm/e2e/install.sh
+```
+
+The installer writes `~/.config/sun-e2e.env` with a runner token. Copy that
+token into the Woodpecker secret named `E2E_RUNNER_TOKEN`.
+
+Trigger a run:
+
+```bash
+./vm/e2e/trigger.sh Guided-Reader <sha>
+```
+
+The runner API:
+
+- `POST /runs` with `{ "repo": "Guided-Reader", "sha": "<sha>" }`
+- `GET /runs/:id`
+- `GET /runs`
+- `GET /health`
+
+Every endpoint except `/health` requires
+`Authorization: Bearer $E2E_RUNNER_TOKEN`.
+
+Reports contain `build.log`, `app.log`, `test.log`, `backend.log`, the
+Playwright HTML report, and `run.json`.
