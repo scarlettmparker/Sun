@@ -30,17 +30,6 @@ steps:
       - ./vm/vps/deploy-sun.sh all --skip-build
       - ./vm/nginx/install.sh
 
-  e2e:
-    image: alpine:3.21
-    environment:
-      E2E_RUNNER_URL:
-        from_secret: e2e_runner_url
-      E2E_RUNNER_TOKEN:
-        from_secret: e2e_runner_token
-    commands:
-      - apk add --no-cache curl bash
-      - bash ./vm/e2e/trigger.sh Sun "$CI_COMMIT_SHA"
-
   provision-vms:
     image: sun-ci:1
     volumes:
