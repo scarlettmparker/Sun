@@ -7,7 +7,9 @@ import {
   mkdirSync,
   openSync,
   readFileSync,
+  readdirSync,
   rmSync,
+  statSync,
   writeFileSync,
 } from "node:fs";
 import { homedir } from "node:os";
@@ -118,6 +120,7 @@ const BACKEND_URL = "http://127.0.0.1:8085";
 const BUN = process.env.BUN ?? join(homedir(), ".bun/bin/bun");
 const PATH = `${join(homedir(), ".bun/bin")}:/usr/local/bin:/usr/bin:/bin`;
 const COMPOSE = join(SUN_ROOT, "vm/e2e/compose.e2e.yml");
+const RETENTION_MS = 14 * 24 * 60 * 60 * 1000;
 
 const REPOS: Record<RepoKey, RepoConfig> = {
   "Guided-Reader": {
@@ -149,6 +152,43 @@ let activeRun: Run | null = null;
  */
 function log(message: string): void {
   console.log(`[sun-e2e] ${message}`);
+}
+
+/**
+ * Deletes entries older than the retention window.
+ *
+ * @param dir the directory to prune
+ * @param maxAgeMs maximum age
+ */
+function pruneOld(dir: string, maxAgeMs: number): void {
+  if (!existsSync(dir)) return;
+
+  for (const name of readdirSync(dir)) {
+    const path = join(dir, name);
+    try {
+      if (Date.now() - statSync(path).mtimeMs > maxAgeMs) {
+        rmSync(path, { recursive: true, force: true });
+      }
+    } catch {}
+  }
+}
+
+/**
+ * Removes worktrees left behind by a crashed run.
+ */
+function pruneWorktrees(): void {
+  const root = join(ROOT, "worktrees");
+  if (!existsSync(root)) return;
+
+  for (const repo of readdirSync(root)) {
+    const dir = join(root, repo);
+    try {
+      runSync("git", ["worktree", "prune"], join(ROOT, "repos", repo));
+    } catch {}
+    for (const name of readdirSync(dir)) {
+      rmSync(join(dir, name), { recursive: true, force: true });
+    }
+  }
 }
 
 /**
@@ -397,13 +437,17 @@ async function ensureBackendJar(sha: string, logPath: string): Promise<string> {
       worktree,
       logPath,
     );
-    if (buildCode !== 0) throw new Error("Backend build failed");
+    if (buildCode !== 0) {
+      throw new Error(`Backend build failed for ${sha.slice(0, 8)}`);
+    }
 
     const built = join(
       worktree,
       "components/sun-graphql/build/libs/sun-graphql-0.0.1-SNAPSHOT.jar",
     );
-    if (!existsSync(built)) throw new Error("Backend jar missing");
+    if (!existsSync(built)) {
+      throw new Error(`Backend jar missing for ${sha.slice(0, 8)}`);
+    }
 
     mkdirSync(resolve(jar, ".."), { recursive: true });
     cpSync(built, jar);
@@ -500,7 +544,12 @@ async function runAppSuite(
       join(reportPath, "build.log"),
     );
     if (installCode !== 0) {
-      return { repo, sha, status: "failed", error: "Dependency install failed" };
+      return {
+        repo,
+        sha,
+        status: "failed",
+        error: "Dependency install failed",
+      };
     }
 
     const compileCode = await runCommand(
@@ -516,14 +565,18 @@ async function runAppSuite(
     const port = await findPort(REPOS[repo].port ?? 5200);
     logSection(join(reportPath, "app.log"), `${repo} ${sha.slice(0, 8)}`);
     app = startApp(worktree, port, join(reportPath, "app.log"));
-    await waitFor(async () => {
-      try {
-        const response = await fetch(`http://127.0.0.1:${port}/login`);
-        return response.status < 500;
-      } catch {
-        return false;
-      }
-    }, 60_000);
+    try {
+      await waitFor(async () => {
+        try {
+          const response = await fetch(`http://127.0.0.1:${port}/login`);
+          return response.status < 500;
+        } catch {
+          return false;
+        }
+      }, 60_000);
+    } catch {
+      return { repo, sha, status: "failed", error: "App did not start" };
+    }
 
     logSection(join(reportPath, "test.log"), `${repo} ${sha.slice(0, 8)}`);
     const testCode = await runCommand(
@@ -629,7 +682,9 @@ async function executeRun(run: Run): Promise<void> {
       worktree,
       join(reportPath, "build.log"),
     );
-    if (buildCode !== 0) throw new Error("Dependency install failed");
+    if (buildCode !== 0) {
+      throw new Error(`${run.repo} dependency install failed`);
+    }
 
     const compileCode = await runCommand(
       BUN,
@@ -637,18 +692,24 @@ async function executeRun(run: Run): Promise<void> {
       worktree,
       join(reportPath, "build.log"),
     );
-    if (compileCode !== 0) throw new Error("App build failed");
+    if (compileCode !== 0) {
+      throw new Error(`${run.repo} build failed`);
+    }
 
     const port = await findPort(REPOS[run.repo].port ?? 5200);
     app = startApp(worktree, port, join(reportPath, "app.log"));
-    await waitFor(async () => {
-      try {
-        const response = await fetch(`http://127.0.0.1:${port}/login`);
-        return response.status < 500;
-      } catch {
-        return false;
-      }
-    }, 60_000);
+    try {
+      await waitFor(async () => {
+        try {
+          const response = await fetch(`http://127.0.0.1:${port}/login`);
+          return response.status < 500;
+        } catch {
+          return false;
+        }
+      }, 60_000);
+    } catch {
+      throw new Error(`${run.repo} did not start`);
+    }
 
     const testCode = await runCommand(
       "./e2e/run.sh",
@@ -720,6 +781,10 @@ function authorized(request: Request): boolean {
 function errorResponse(message: string, status: number): Response {
   return Response.json({ error: message }, { status });
 }
+
+pruneWorktrees();
+pruneOld(join(ROOT, "reports"), RETENTION_MS);
+pruneOld(join(ROOT, "backends"), RETENTION_MS);
 
 const server = Bun.serve({
   hostname: "127.0.0.1",

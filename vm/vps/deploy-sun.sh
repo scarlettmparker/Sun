@@ -53,6 +53,21 @@ build() {
 deps_hash() {
   sha256sum "$SUN_ROOT/package.json" "$SUN_ROOT/bun.lock" | sha256sum | cut -d' ' -f1
 }
+# Hashes the backend source and build inputs.
+#
+# @return The combined digest on stdout.
+backend_inputs_hash() {
+  (
+    cd "$SUN_ROOT" || return 1
+    find components -type f \
+      \( -path '*/src/main/*' -o -name 'build.gradle' -o -name 'settings.gradle' \
+         -o -name 'gradle.properties' -o -name 'package.json' -o -name 'package-lock.json' \
+         -o -name '*.mjs' \) \
+      -not -path '*/build/*' -not -path '*/node_modules/*' -print0 \
+      | sort -z \
+      | xargs -0 sha256sum
+  ) | sha256sum | cut -d' ' -f1
+}
 
 # Builds production node_modules on the ARM64 VPS, reusing a cached tree.
 build_deps() {
@@ -174,35 +189,59 @@ deploy_permify() {
 }
 # Deploys the backend JAR, env, unit, and waits for health.
 deploy_backend() {
-  local tmp
+  local tmp hash marker remote_hash
+  tmp="$(mktemp)"
+  marker="/opt/sun/backend/.deploy-hash"
+  if [ -f "$BACKEND_ENV" ]; then
+    render_backend_env "$tmp"
+  fi
+  hash="$(
+    {
+      backend_inputs_hash
+      sha256sum "$HERE/files/sun-backend.service"
+      sha256sum "$tmp"
+    } | sha256sum | cut -d' ' -f1
+  )"
+  remote_hash="$(remote "sudo lxc exec '$ARTEMIS' -- cat '$marker' 2>/dev/null" || true)"
+
+  if [ "$remote_hash" = "$hash" ] \
+    && remote "sudo lxc exec '$ARTEMIS' -- systemctl is-active --quiet sun-backend" \
+    && remote "sudo lxc exec '$ARTEMIS' -- curl -sf http://127.0.0.1:8083/graphql/schema >/dev/null"; then
+    log "backend: unchanged"
+    rm -f "$tmp"
+    return 0
+  fi
+
   log "backend: jar, env, unit"
   remote "sudo lxc exec '$ARTEMIS' -- mkdir -p /opt/sun/backend"
   push_file "$JAR" "/opt/sun/backend/sun-graphql.jar"
   if [ -f "$BACKEND_ENV" ]; then
-    tmp="$(mktemp)"
-    render_backend_env "$tmp"
     push_file "$tmp" "/opt/sun/backend/.env"
-    rm -f "$tmp"
+    remote "sudo lxc exec '$ARTEMIS' -- chmod 0600 /opt/sun/backend/.env"
   fi
   push_file "$HERE/files/sun-backend.service" "/etc/systemd/system/sun-backend.service"
-  remote "sudo lxc exec '$ARTEMIS' -- chmod 0600 /opt/sun/backend/.env"
   remote "sudo lxc exec '$ARTEMIS' -- systemctl daemon-reload"
   remote "sudo lxc exec '$ARTEMIS' -- systemctl enable sun-backend"
   remote "sudo lxc exec '$ARTEMIS' -- systemctl restart sun-backend"
   for _ in $(seq 1 120); do
     if remote "sudo lxc exec '$ARTEMIS' -- curl -sf http://127.0.0.1:8083/graphql/schema >/dev/null"; then
       log "backend: healthy"
+      printf '%s\n' "$hash" > "$tmp"
+      push_file "$tmp" "$marker"
+      rm -f "$tmp"
       return 0
     fi
     sleep 1
   done
+  rm -f "$tmp"
   remote "sudo lxc exec '$ARTEMIS' -- journalctl -u sun-backend -n 80 --no-pager" || true
   return 1
 }
 # Deploys the frontend bundle, dependencies, env, unit, and waits for health.
 deploy_frontend() {
-  local tmp app_tar
+  local tmp app_tar deps remote_deps
   log "frontend: bundle and dependencies"
+  deps="$(deps_hash)"
   app_tar="$(mktemp -d)/sun-web.tgz"
   tar -czf "$app_tar" -C "$SUN_ROOT" \
     dist/client dist/server server.js config.js config.d.ts css-plugin.ts \
@@ -210,7 +249,7 @@ deploy_frontend() {
     routes messages src utils vm/sun
 
   remote "sudo lxc exec '$ARTEMIS' -- mkdir -p /opt/sun/web"
-  remote "sudo lxc exec '$ARTEMIS' -- bash -c 'find /opt/sun/web -mindepth 1 -maxdepth 1 ! -name node_modules ! -name .env.production -exec rm -rf {} +'"
+  remote "sudo lxc exec '$ARTEMIS' -- bash -c 'find /opt/sun/web -mindepth 1 -maxdepth 1 ! -name node_modules ! -name .env.production ! -name .deps-hash -exec rm -rf {} +'"
   remote "mkdir -p $REMOTE_TMP"
   rsync -az -e "ssh -i $SSH_KEY" "$app_tar" "$VPS:$REMOTE_TMP/sun-web.tgz"
   remote "sudo lxc exec '$ARTEMIS' -- rm -f /tmp/sun-web.tgz"
@@ -218,7 +257,14 @@ deploy_frontend() {
   remote "sudo lxc exec '$ARTEMIS' -- tar -xzf /tmp/sun-web.tgz -C /opt/sun/web"
 
   remote "sudo mkdir -p /opt/sun/web/node_modules"
-  remote "sudo rsync -az --delete -e 'ssh -i /opt/woodpecker/keys/ci-deploy -p 2202 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null' /home/ubuntu/sun-vps-deps/$(deps_hash)/node_modules/ root@127.0.0.1:/opt/sun/web/node_modules/"
+  remote_deps="$(remote "sudo lxc exec '$ARTEMIS' -- cat /opt/sun/web/.deps-hash 2>/dev/null" || true)"
+  if [ "$remote_deps" = "$deps" ] \
+    && remote "sudo lxc exec '$ARTEMIS' -- test -d /opt/sun/web/node_modules"; then
+    log "frontend: deps cached"
+  else
+    remote "sudo rsync -az --delete -e 'ssh -i /opt/woodpecker/keys/ci-deploy -p 2202 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null' /home/ubuntu/sun-vps-deps/$deps/node_modules/ root@127.0.0.1:/opt/sun/web/node_modules/"
+    printf '%s\n' "$deps" | remote "sudo lxc exec '$ARTEMIS' -- tee /opt/sun/web/.deps-hash >/dev/null"
+  fi
 
   if [ -f "$FRONTEND_ENV" ]; then
     tmp="$(mktemp)"

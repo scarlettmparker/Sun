@@ -57,7 +57,9 @@ Add `-v` to delete the E2E database volume as well.
 and writes the report under `~/.local/share/sun-e2e/reports`. App repos build
 the backend from Sun `main`, then build and run their Playwright suite. A `Sun`
 run builds the jar from the requested commit and runs both apps at their `main`.
-Jars are cached per SHA.
+Jars are cached per SHA. Each Sun app suite gets a fresh database and backend
+start, with reports under `reports/<run>/<repo>`. Worktrees are removed after
+each run. Reports and cached jars older than 14 days are pruned at startup.
 
 Install the systemd user service:
 
