@@ -417,7 +417,16 @@ public class IcarusDataFetcher {
     ForumPostEntity entity = postService.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("Post not found: " + id));
     VoteValue myVote = voteService.myVote(id).orElse(null);
-    return postMapper.map(entity, null, myVote);
+
+    RemoteUser author = null;
+    if (entity.getCreatedBy() != null) {
+      author = accountService.findById(entity.getCreatedBy())
+          .filter(acc -> "discord".equals(acc.getProvider()) && acc.getProviderId() != null)
+          .map(acc -> remoteUser(acc.getProviderId()))
+          .orElse(null);
+    }
+
+    return postMapper.map(entity, author, myVote);
   }
 
   /**
