@@ -454,7 +454,7 @@ async function executeRun(run: Run): Promise<void> {
     log(`start ${run.repo} ${run.sha} (${run.id})`);
     startDatabase();
 
-    run.backendSha =
+    run.backendSha ??=
       REPOS[run.repo].kind === "backend"
         ? run.sha
         : resolveMainSha(REPOS.Sun.url);
@@ -603,9 +603,15 @@ const server = Bun.serve({
         return errorResponse("Invalid sha", 400);
       }
 
+      const backendSha =
+        REPOS[repo].kind === "backend" ? sha : resolveMainSha(REPOS.Sun.url);
+
       const existing = [...runs.values()].find(
         (candidate) =>
-          candidate.repo === repo && candidate.sha === sha && candidate.status !== "failed",
+          candidate.repo === repo &&
+          candidate.sha === sha &&
+          candidate.backendSha === backendSha &&
+          candidate.status !== "failed",
       );
       if (existing) {
         return Response.json(existing, { status: 200 });
@@ -615,6 +621,7 @@ const server = Bun.serve({
         id: randomUUID(),
         repo,
         sha,
+        backendSha,
         status: "queued",
         createdAt: new Date().toISOString(),
       };
