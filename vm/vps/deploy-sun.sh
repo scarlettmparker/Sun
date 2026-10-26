@@ -59,13 +59,9 @@ deps_hash() {
 backend_inputs_hash() {
   (
     cd "$SUN_ROOT" || return 1
-    find components -type f \
-      \( -path '*/src/main/*' -o -name 'build.gradle' -o -name 'settings.gradle' \
-         -o -name 'gradle.properties' -o -name 'package.json' -o -name 'package-lock.json' \
-         -o -name '*.mjs' \) \
-      -not -path '*/build/*' -not -path '*/node_modules/*' -print0 \
-      | sort -z \
-      | xargs -0 sha256sum
+    git ls-files -s components \
+      | awk '$4 ~ /(^|\/)src\/main\// || $4 ~ /(^|\/)(build|settings)\.gradle$/ || $4 ~ /(^|\/)gradle\.properties$/ || $4 ~ /(^|\/)(package|package-lock)\.json$/ || $4 ~ /\.mjs$/' \
+      | sort
   ) | sha256sum | cut -d' ' -f1
 }
 
