@@ -44,6 +44,10 @@ type Run = {
    */
   sha: string;
   /**
+   * Sun commit used for the backend.
+   */
+  backendSha?: string;
+  /**
    * Current run state.
    */
   status: RunStatus;
@@ -196,6 +200,23 @@ async function runCommand(
       resolveExit(code ?? 1);
     });
   });
+}
+
+/**
+ * Resolves the main branch commit for a repository.
+ *
+ * @param url the clone URL
+ * @returns the commit SHA
+ */
+function resolveMainSha(url: string): string {
+  const result = spawnSync("git", ["ls-remote", url, "refs/heads/main"], {
+    encoding: "utf8",
+  });
+  if (result.status !== 0) throw new Error("Failed to resolve main branch");
+
+  const sha = result.stdout.trim().split(/\s+/)[0] ?? "";
+  if (!/^[0-9a-f]{40}$/.test(sha)) throw new Error("Invalid main branch sha");
+  return sha;
 }
 
 /**
@@ -433,16 +454,22 @@ async function executeRun(run: Run): Promise<void> {
     log(`start ${run.repo} ${run.sha} (${run.id})`);
     startDatabase();
 
+    run.backendSha =
+      REPOS[run.repo].kind === "backend"
+        ? run.sha
+        : resolveMainSha(REPOS.Sun.url);
+
+    const jar = await ensureBackendJar(
+      run.backendSha,
+      join(reportPath, "build.log"),
+    );
+    resetDatabase();
+    backend = await startBackend(join(reportPath, "backend.log"), jar);
+
     if (REPOS[run.repo].kind === "backend") {
-      const jar = await ensureBackendJar(run.sha, join(reportPath, "build.log"));
-      resetDatabase();
-      backend = await startBackend(join(reportPath, "backend.log"), jar);
       run.status = "passed";
       return;
     }
-
-    resetDatabase();
-    backend = await startBackend(join(reportPath, "backend.log"));
 
     repoDir = syncRepository(run.repo);
     worktree = createWorktree(repoDir, run.repo, run.sha);
