@@ -102,7 +102,7 @@ public class PrivateNoteDataFetcher {
         .orElseThrow(() -> new IllegalArgumentException("Private note not found: " + id));
     return CreatePrivateNoteResponse.newBuilder()
         .message("Private note created successfully")
-        .note(privateNoteMapper.map(note, null))
+        .note(toPrivateNote(note))
         .build();
   }
 
@@ -154,5 +154,22 @@ public class PrivateNoteDataFetcher {
         .message("Notes shared successfully")
         .id(id.toString())
         .build();
+  }
+
+  /**
+   * Maps a private note with its author resolved.
+   *
+   * @param entity the note entity
+   * @return the GraphQL note
+   */
+  private PrivateNote toPrivateNote(PrivateNoteEntity entity) {
+    RemoteUser author = null;
+    if (entity.getOwnerId() != null) {
+      author = accountService.findByGaiaAccountId(entity.getOwnerId())
+          .map(account -> remoteUserMapper.discord(account.getDiscordId()))
+          .orElse(null);
+    }
+
+    return privateNoteMapper.map(entity, author);
   }
 }

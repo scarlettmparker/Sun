@@ -114,7 +114,7 @@ public class ReaderCommentDataFetcher {
         .orElseThrow(() -> new IllegalArgumentException("Comment not found: " + id));
     return AddCommentResponse.newBuilder()
         .message("Comment added successfully")
-        .comment(commentMapper.map(comment, null, null))
+        .comment(toReaderComment(comment, null))
         .build();
   }
 
@@ -136,7 +136,7 @@ public class ReaderCommentDataFetcher {
         .orElseThrow(() -> new IllegalArgumentException("Comment not found: " + commentId));
     return EditCommentResponse.newBuilder()
         .message("Comment updated successfully")
-        .comment(commentMapper.map(comment, null, null))
+        .comment(toReaderComment(comment, null))
         .build();
   }
 
@@ -157,5 +157,23 @@ public class ReaderCommentDataFetcher {
         .message("Comment deleted successfully")
         .id(id)
         .build();
+  }
+
+  /**
+   * Maps a comment with its author resolved.
+   *
+   * @param entity the comment entity
+   * @param myVote the caller's vote
+   * @return the GraphQL comment
+   */
+  private ReaderComment toReaderComment(ReaderCommentEntity entity, VoteValue myVote) {
+    RemoteUser author = null;
+    if (entity.getCreatedBy() != null) {
+      author = accountService.findByGaiaAccountId(entity.getCreatedBy())
+          .map(account -> remoteUserMapper.discord(account.getDiscordId()))
+          .orElse(null);
+    }
+
+    return commentMapper.map(entity, author, myVote);
   }
 }

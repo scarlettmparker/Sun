@@ -137,7 +137,7 @@ public class ReaderAnnotationDataFetcher {
               .countByAnnotationIds(List.of(annotationId))
               .getOrDefault(annotationId, 0L)
               .intValue();
-          return annotationMapper.map(a, null, null, replyCount, null);
+          return toReaderAnnotation(a, replyCount, null);
         })
         .orElse(null);
   }
@@ -161,7 +161,7 @@ public class ReaderAnnotationDataFetcher {
         .orElseThrow(() -> new IllegalArgumentException("Annotation not found: " + id));
     return CreateAnnotationResponse.newBuilder()
         .message("Annotation created successfully")
-        .annotation(annotationMapper.map(annotation, null, null, 0, null))
+        .annotation(toReaderAnnotation(annotation, 0, null))
         .build();
   }
 
@@ -183,7 +183,7 @@ public class ReaderAnnotationDataFetcher {
         .orElseThrow(() -> new IllegalArgumentException("Annotation not found: " + annotationId));
     return EditAnnotationResponse.newBuilder()
         .message("Annotation updated successfully")
-        .annotation(annotationMapper.map(annotation, null, null, 0, null))
+        .annotation(toReaderAnnotation(annotation, 0, null))
         .build();
   }
 
@@ -224,5 +224,32 @@ public class ReaderAnnotationDataFetcher {
         .message("Object attached successfully")
         .id(id.toString())
         .build();
+  }
+
+  /**
+   * Maps an annotation with its position and author resolved.
+   *
+   * @param entity the annotation entity
+   * @param replyCount the number of active replies
+   * @param myVote the caller's vote
+   * @return the GraphQL annotation
+   */
+  private ReaderAnnotation toReaderAnnotation(
+      ReaderAnnotationEntity entity, int replyCount, VoteValue myVote) {
+    ReaderPosition position = null;
+    if (entity.getPositionId() != null) {
+      position = positionService.findById(entity.getPositionId())
+          .map(positionMapper::map)
+          .orElse(null);
+    }
+
+    RemoteUser author = null;
+    if (entity.getCreatedBy() != null) {
+      author = accountService.findByGaiaAccountId(entity.getCreatedBy())
+          .map(account -> remoteUserMapper.discord(account.getDiscordId()))
+          .orElse(null);
+    }
+
+    return annotationMapper.map(entity, position, author, replyCount, myVote);
   }
 }
