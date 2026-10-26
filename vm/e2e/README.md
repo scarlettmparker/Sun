@@ -54,8 +54,8 @@ Add `-v` to delete the E2E database volume as well.
 ## Local runner
 
 `runner.ts` accepts a repo and commit, checks it out in an isolated worktree,
-builds it, starts it against the disposable backend, runs its Playwright suite,
-and writes the report under `~/.local/share/sun-e2e/reports`.
+and writes the report under `~/.local/share/sun-e2e/reports`. App repos build
+and run their Playwright suite. `Sun` builds the backend jar and starts it.
 
 Install the systemd user service:
 
@@ -69,7 +69,7 @@ token into the Woodpecker secret named `E2E_RUNNER_TOKEN`.
 Trigger a run:
 
 ```bash
-./vm/e2e/trigger.sh Guided-Reader <sha>
+./vm/e2e/trigger.sh <repo> <sha>
 ```
 
 The runner API:
@@ -85,17 +85,15 @@ Every endpoint except `/health` requires
 Reports contain `build.log`, `app.log`, `test.log`, `backend.log`, the
 Playwright HTML report, and `run.json`.
 
-## NPM proxy
+## Public endpoint
 
-Create a proxy host in Nginx Proxy Manager:
+The PC does not accept inbound traffic, so the runner is exposed through the VPS.
 
-- Domain: `e2e-runner.scarlettparker.co.uk`
-- Forward hostname: `192.168.0.106`
-- Forward port: `8090`
-- Websockets support: off
-- TLS: the usual certificate
+- `sun-e2e-tunnel.service` keeps an SSH reverse tunnel to `127.0.0.1:8090` on the VPS.
+- The VPS nginx site `e2e-runner.scarlettparker.co.uk` proxies to `127.0.0.1:8090`.
+- The Cloudflare A record points at the VPS.
 
-Add the same two values as Woodpecker secrets:
+Woodpecker secrets:
 
 - `e2e_runner_url` = `https://e2e-runner.scarlettparker.co.uk`
 - `e2e_runner_token` = the token from `~/.config/sun-e2e.env`

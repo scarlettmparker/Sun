@@ -12,7 +12,7 @@ import {
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 
-type RepoKey = "Guided-Reader" | "Checklist";
+type RepoKey = "Guided-Reader" | "Checklist" | "Sun";
 type RunStatus = "queued" | "running" | "passed" | "failed";
 
 type RepoConfig = {
@@ -21,9 +21,13 @@ type RepoConfig = {
    */
   url: string;
   /**
+   * Repository role.
+   */
+  kind: "app" | "backend";
+  /**
    * Port search start.
    */
-  port: number;
+  port?: number;
 };
 
 type Run = {
@@ -85,11 +89,17 @@ const COMPOSE = join(SUN_ROOT, "vm/e2e/compose.e2e.yml");
 const REPOS: Record<RepoKey, RepoConfig> = {
   "Guided-Reader": {
     url: "https://github.com/scarlettmparker/Guided-Reader.git",
+    kind: "app",
     port: 5200,
   },
   Checklist: {
     url: "https://github.com/scarlettmparker/Checklist.git",
+    kind: "app",
     port: 5210,
+  },
+  Sun: {
+    url: "https://github.com/scarlettmparker/Sun.git",
+    kind: "backend",
   },
 };
 
@@ -230,14 +240,19 @@ function resetDatabase(): void {
  * Starts the GraphQL backend and waits for health.
  *
  * @param logPath backend log file
+ * @param jar optional backend jar
  * @returns the backend process
  */
-async function startBackend(logPath: string): Promise<ChildProcess> {
+async function startBackend(logPath: string, jar?: string): Promise<ChildProcess> {
   mkdirSync(resolve(logPath, ".."), { recursive: true });
   const fd = openSync(logPath, "a");
   const child = spawn(join(SUN_ROOT, "vm/e2e/start-backend.sh"), [], {
     cwd: SUN_ROOT,
-    env: { ...process.env, E2E_JWT_SECRET: JWT_SECRET },
+    env: {
+      ...process.env,
+      E2E_JWT_SECRET: JWT_SECRET,
+      ...(jar ? { E2E_BACKEND_JAR: jar } : {}),
+    },
     stdio: ["ignore", fd, fd],
   });
 
@@ -301,6 +316,54 @@ function createWorktree(repoDir: string, repo: RepoKey, sha: string): string {
   runSync("git", ["worktree", "prune"], repoDir);
   runSync("git", ["worktree", "add", "--detach", worktree, sha], repoDir);
   return worktree;
+}
+
+/**
+ * Builds and caches the backend jar for a commit.
+ *
+ * @param sha the Sun commit
+ * @param logPath the build log file
+ * @returns the jar path
+ */
+async function ensureBackendJar(sha: string, logPath: string): Promise<string> {
+  const jar = join(ROOT, "backends", sha, "sun-graphql.jar");
+  if (existsSync(jar)) return jar;
+
+  const repoDir = syncRepository("Sun");
+  const worktree = createWorktree(repoDir, "Sun", sha);
+  try {
+    const buildCode = await runCommand(
+      "bash",
+      [
+        join(worktree, "components/sun-graphql/gradlew"),
+        "-p",
+        "components",
+        ":sun-graphql:bootJar",
+        "--no-daemon",
+        "--build-cache",
+      ],
+      worktree,
+      logPath,
+    );
+    if (buildCode !== 0) throw new Error("Backend build failed");
+
+    const built = join(
+      worktree,
+      "components/sun-graphql/build/libs/sun-graphql-0.0.1-SNAPSHOT.jar",
+    );
+    if (!existsSync(built)) throw new Error("Backend jar missing");
+
+    mkdirSync(resolve(jar, ".."), { recursive: true });
+    cpSync(built, jar);
+  } finally {
+    try {
+      runSync("git", ["worktree", "remove", "--force", worktree], repoDir);
+    } catch {
+      rmSync(worktree, { recursive: true, force: true });
+    }
+  }
+
+  return jar;
 }
 
 /**
@@ -369,6 +432,15 @@ async function executeRun(run: Run): Promise<void> {
   try {
     log(`start ${run.repo} ${run.sha} (${run.id})`);
     startDatabase();
+
+    if (REPOS[run.repo].kind === "backend") {
+      const jar = await ensureBackendJar(run.sha, join(reportPath, "build.log"));
+      resetDatabase();
+      backend = await startBackend(join(reportPath, "backend.log"), jar);
+      run.status = "passed";
+      return;
+    }
+
     resetDatabase();
     backend = await startBackend(join(reportPath, "backend.log"));
 
@@ -391,7 +463,7 @@ async function executeRun(run: Run): Promise<void> {
     );
     if (compileCode !== 0) throw new Error("App build failed");
 
-    const port = await findPort(REPOS[run.repo].port);
+    const port = await findPort(REPOS[run.repo].port ?? 5200);
     app = startApp(worktree, port, join(reportPath, "app.log"));
     await waitFor(async () => {
       try {

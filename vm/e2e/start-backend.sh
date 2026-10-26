@@ -6,13 +6,14 @@
 #   ./vm/e2e/start-backend.sh
 #
 # Environment:
+#   E2E_BACKEND_JAR    Backend jar, default the local bootJar output.
 #   E2E_BACKEND_PORT   Backend port, default 8085.
 #   E2E_JWT_SECRET     JWT signing secret shared by the E2E apps.
 
 set -euo pipefail
 
 SUN_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-JAR="$SUN_ROOT/components/sun-graphql/build/libs/sun-graphql-0.0.1-SNAPSHOT.jar"
+JAR="${E2E_BACKEND_JAR:-$SUN_ROOT/components/sun-graphql/build/libs/sun-graphql-0.0.1-SNAPSHOT.jar}"
 BACKEND_PORT="${E2E_BACKEND_PORT:-8085}"
 JWT_SECRET="${E2E_JWT_SECRET:-test-secret-key-for-functional-tests-only-very-long-secure-key-1234567890ABCDEF}"
 
