@@ -139,6 +139,66 @@ type AuditLogPage {
   total: Int!
 }
 
+type GameMove {
+  ply: Int!
+  move: Long!
+  playedAt: DateTime!
+}
+
+type Game {
+  id: ID!
+  code: String!
+  boardLayoutId: ID
+  boardLayoutName: String!
+  status: String!
+  initialState: JSON!
+  finalState: JSON!
+  creatorAccountId: ID!
+  whiteAccountId: ID
+  blackAccountId: ID
+  result: String
+  winnerAccountId: ID
+  moveCount: Int!
+  createdAt: DateTime!
+  startedAt: DateTime
+  finishedAt: DateTime!
+  archivedAt: DateTime!
+  moves: [GameMove!]!
+}
+
+type GamePage {
+  items: [Game!]!
+  pageInfo: PageInfo!
+}
+
+type GameResponse {
+  message: String!
+  game: Game!
+}
+
+input GameMoveInput {
+  ply: Int!
+  move: Long!
+  playedAt: DateTime!
+}
+
+input GameArchiveInput {
+  code: String!
+  boardLayoutId: ID
+  boardLayoutName: String!
+  initialState: JSON!
+  finalState: JSON!
+  creatorAccountId: ID!
+  whiteAccountId: ID
+  blackAccountId: ID
+  result: String
+  winnerAccountId: ID
+  createdAt: DateTime!
+  startedAt: DateTime
+  finishedAt: DateTime!
+  moves: [GameMoveInput!]!
+}
+
 type MedusaQueries {
   pieces(all: Boolean): [Piece!]!
   piece(id: ID!): Piece
@@ -148,6 +208,8 @@ type MedusaQueries {
   boardLayout(id: ID!): BoardLayout
   boardLayoutBySlug(slug: String!): BoardLayout
   auditLogs(pagination: PaginationInput): AuditLogPage!
+  game(code: String!): Game
+  myGames(pagination: PaginationInput): GamePage!
 }
 
 type MedusaMutations {
@@ -157,6 +219,7 @@ type MedusaMutations {
   deletePieceSet(id: ID!): DeleteResponse!
   saveBoardLayout(input: BoardLayoutInput!): BoardLayoutResponse!
   deleteBoardLayout(id: ID!): DeleteResponse!
+  archiveGame(input: GameArchiveInput!): GameResponse!
 }
 
 extend type Query {
