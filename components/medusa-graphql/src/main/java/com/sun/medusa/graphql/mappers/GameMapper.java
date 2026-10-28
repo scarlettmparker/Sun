@@ -165,7 +165,7 @@ public class GameMapper {
     }
     return GamePlayer.newBuilder()
         .id(accountId.toString())
-        .username(usernames.getOrDefault(accountId, accountId.toString()))
+        .username(usernames.getOrDefault(accountId, "Guest"))
         .build();
   }
 

@@ -84,11 +84,13 @@ class GameGraphQLServiceTest {
     account.setUsername("black-player");
     when(accountService.findAllByIds(List.of(first, second))).thenReturn(List.of(account));
 
-    var players = service.players(List.of(first.toString(), second.toString()));
+    var players = service.players(
+        List.of(first.toString(), second.toString(), "creator-guest-test"));
 
-    assertThat(players).hasSize(2);
-    assertThat(players.get(0).getUsername()).isEqualTo(first.toString());
+    assertThat(players).hasSize(3);
+    assertThat(players.get(0).getUsername()).isEqualTo("Guest");
     assertThat(players.get(1).getUsername()).isEqualTo("black-player");
+    assertThat(players.get(2).getUsername()).isEqualTo("Guest");
   }
 
   @Test

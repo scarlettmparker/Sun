@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.springframework.data.domain.Page;
@@ -29,6 +30,9 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class GameGraphQLService {
+
+  private static final Pattern UUID_PATTERN = Pattern.compile(
+      "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
 
   private final GameService gameService;
   private final GameMapper gameMapper;
@@ -61,15 +65,30 @@ public class GameGraphQLService {
    * @return the players
    */
   public List<GamePlayer> players(List<String> ids) {
-    List<UUID> accountIds = ids.stream().map(UUID::fromString).toList();
-    Map<UUID, String> usernames = accountService.findAllByIds(accountIds).stream()
-        .collect(Collectors.toMap(AccountEntity::getId, AccountEntity::getUsername));
-    return accountIds.stream()
+    List<UUID> accountIds = ids.stream()
+        .filter(GameGraphQLService::isUuid)
+        .map(UUID::fromString)
+        .toList();
+    Map<String, String> usernames = accountService.findAllByIds(accountIds).stream()
+        .collect(Collectors.toMap(
+            account -> account.getId().toString(),
+            AccountEntity::getUsername));
+    return ids.stream()
         .map(id -> GamePlayer.newBuilder()
-            .id(id.toString())
-            .username(usernames.getOrDefault(id, id.toString()))
+            .id(id)
+            .username(usernames.getOrDefault(id, "Guest"))
             .build())
         .toList();
+  }
+
+  /**
+   * Checks whether a string is a UUID.
+   *
+   * @param value the value to check
+   * @return true when the value is a UUID
+   */
+  private static boolean isUuid(String value) {
+    return UUID_PATTERN.matcher(value).matches();
   }
 
   /**
