@@ -145,6 +145,18 @@ type GameMove {
   playedAt: DateTime!
 }
 
+type GamePlayer {
+  id: ID!
+  username: String!
+}
+
+type GameRecord {
+  wins: Int!
+  losses: Int!
+  draws: Int!
+  played: Int!
+}
+
 type Game {
   id: ID!
   code: String!
@@ -156,6 +168,9 @@ type Game {
   creatorAccountId: ID!
   whiteAccountId: ID
   blackAccountId: ID
+  whitePlayer: GamePlayer
+  blackPlayer: GamePlayer
+  viewerSeat: String!
   result: String
   winnerAccountId: ID
   moveCount: Int!
@@ -169,6 +184,7 @@ type Game {
 type GamePage {
   items: [Game!]!
   pageInfo: PageInfo!
+  record: GameRecord!
 }
 
 type GameResponse {
@@ -210,6 +226,7 @@ type MedusaQueries {
   auditLogs(pagination: PaginationInput): AuditLogPage!
   game(code: String!): Game
   myGames(pagination: PaginationInput): GamePage!
+  players(ids: [ID!]!): [GamePlayer!]!
 }
 
 type MedusaMutations {

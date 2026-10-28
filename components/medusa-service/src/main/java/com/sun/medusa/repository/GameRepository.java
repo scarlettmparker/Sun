@@ -19,4 +19,15 @@ public interface GameRepository extends BaseRepository<GameEntity> {
          OR g.blackAccountId = :accountId
       """)
   Page<GameEntity> findForAccount(@Param("accountId") UUID accountId, Pageable pageable);
+
+  @Query("""
+      SELECT
+        COALESCE(SUM(CASE WHEN g.winnerAccountId = :accountId THEN 1 ELSE 0 END), 0) AS wins,
+        COALESCE(SUM(CASE WHEN g.winnerAccountId IS NOT NULL
+          AND g.winnerAccountId <> :accountId THEN 1 ELSE 0 END), 0) AS losses,
+        COALESCE(SUM(CASE WHEN g.winnerAccountId IS NULL THEN 1 ELSE 0 END), 0) AS draws
+      FROM GameEntity g
+      WHERE g.whiteAccountId = :accountId OR g.blackAccountId = :accountId
+      """)
+  GameRecordProjection recordForAccount(@Param("accountId") UUID accountId);
 }

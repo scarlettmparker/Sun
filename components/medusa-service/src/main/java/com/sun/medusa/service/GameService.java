@@ -4,6 +4,7 @@ import com.sun.medusa.model.GameEntity;
 import com.sun.medusa.model.GameMoveEntity;
 import com.sun.medusa.model.GameMoveId;
 import com.sun.medusa.repository.GameMoveRepository;
+import com.sun.medusa.repository.GameRecordProjection;
 import com.sun.medusa.repository.GameRepository;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -64,6 +65,18 @@ public class GameService {
   }
 
   /**
+   * Counts wins losses and draws for an account.
+   *
+   * @param accountId the account id
+   * @return the game totals
+   */
+  public GameTotals recordForAccount(UUID accountId) {
+    GameRecordProjection record = gameRepository.recordForAccount(accountId);
+    return new GameTotals((int) record.getWins(), (int) record.getLosses(),
+        (int) record.getDraws());
+  }
+
+  /**
    * Archives a finished game and its moves.
    *
    * @param game the game to archive
@@ -89,5 +102,23 @@ public class GameService {
     }
     moveRepository.saveAll(moves);
     return saved;
+  }
+
+  /**
+   * Win loss and draw totals for an account.
+   *
+   * @param wins the games won
+   * @param losses the games lost
+   * @param draws the games drawn
+   */
+  public record GameTotals(int wins, int losses, int draws) {
+    /**
+     * Total finished games.
+     *
+     * @return the played count
+     */
+    public int played() {
+      return wins + losses + draws;
+    }
   }
 }

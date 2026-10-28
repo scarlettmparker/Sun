@@ -4,6 +4,7 @@ import com.sun.medusa.codegen.types.Game;
 import com.sun.medusa.codegen.types.GameArchiveInput;
 import com.sun.medusa.codegen.types.GameMove;
 import com.sun.medusa.codegen.types.GameMoveInput;
+import com.sun.medusa.codegen.types.GamePlayer;
 import com.sun.medusa.model.GameEntity;
 import com.sun.medusa.model.GameMoveEntity;
 import com.sun.medusa.model.GameMoveId;
@@ -26,6 +27,20 @@ public class GameMapper {
    * @return the GraphQL game
    */
   public Game map(GameEntity entity, List<GameMoveEntity> moves) {
+    return map(entity, moves, Map.of(), null);
+  }
+
+  /**
+   * Maps an archived game with player names and viewer seat.
+   *
+   * @param entity the stored game
+   * @param moves the ordered moves
+   * @param usernames usernames keyed by account id
+   * @param viewerId the viewer account id
+   * @return the GraphQL game
+   */
+  public Game map(GameEntity entity, List<GameMoveEntity> moves,
+      Map<UUID, String> usernames, UUID viewerId) {
     return Game.newBuilder()
         .id(entity.getId().toString())
         .code(entity.getCode())
@@ -37,6 +52,9 @@ public class GameMapper {
         .creatorAccountId(entity.getCreatorAccountId().toString())
         .whiteAccountId(mapString(entity.getWhiteAccountId()))
         .blackAccountId(mapString(entity.getBlackAccountId()))
+        .whitePlayer(mapPlayer(entity.getWhiteAccountId(), usernames))
+        .blackPlayer(mapPlayer(entity.getBlackAccountId(), usernames))
+        .viewerSeat(viewerSeat(entity, viewerId))
         .result(entity.getResult())
         .winnerAccountId(mapString(entity.getWinnerAccountId()))
         .moveCount(entity.getMoveCount())
@@ -132,6 +150,49 @@ public class GameMapper {
       throw new IllegalArgumentException("Game state must be an object");
     }
     return (Map<String, Object>) value;
+  }
+
+  /**
+   * Maps a player account.
+   *
+   * @param accountId the account id
+   * @param usernames usernames keyed by account id
+   * @return the player, or null
+   */
+  private GamePlayer mapPlayer(UUID accountId, Map<UUID, String> usernames) {
+    if (accountId == null) {
+      return null;
+    }
+    return GamePlayer.newBuilder()
+        .id(accountId.toString())
+        .username(usernames.getOrDefault(accountId, accountId.toString()))
+        .build();
+  }
+
+  /**
+   * Resolves the viewer seat.
+   *
+   * @param entity the stored game
+   * @param viewerId the viewer account id
+   * @return the seat name
+   */
+  private String viewerSeat(GameEntity entity, UUID viewerId) {
+    if (viewerId == null) {
+      return "spectator";
+    }
+    if (viewerId.equals(entity.getWhiteAccountId())) {
+      return "white";
+    }
+    if (viewerId.equals(entity.getBlackAccountId())) {
+      return "black";
+    }
+    if ("waiting".equals(entity.getStatus())
+        && viewerId.equals(entity.getCreatorAccountId())
+        && entity.getWhiteAccountId() == null
+        && entity.getBlackAccountId() == null) {
+      return "creator";
+    }
+    return "spectator";
   }
 
   /**

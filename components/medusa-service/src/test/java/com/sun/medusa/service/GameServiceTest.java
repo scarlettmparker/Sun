@@ -12,6 +12,7 @@ import com.sun.medusa.model.GameEntity;
 import com.sun.medusa.model.GameMoveEntity;
 import com.sun.medusa.model.GameMoveId;
 import com.sun.medusa.repository.GameMoveRepository;
+import com.sun.medusa.repository.GameRecordProjection;
 import com.sun.medusa.repository.GameRepository;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -119,6 +120,35 @@ class GameServiceTest {
     when(gameRepository.findByCode("ARCHIVE")).thenReturn(Optional.of(game));
 
     assertThat(service.findByCode("ARCHIVE")).contains(game);
+  }
+
+  @Test
+  void recordForAccountMapsTotals() {
+    UUID accountId = UUID.randomUUID();
+    GameRecordProjection record = new GameRecordProjection() {
+      @Override
+      public long getWins() {
+        return 3;
+      }
+
+      @Override
+      public long getLosses() {
+        return 2;
+      }
+
+      @Override
+      public long getDraws() {
+        return 1;
+      }
+    };
+    when(gameRepository.recordForAccount(accountId)).thenReturn(record);
+
+    GameService.GameTotals totals = service.recordForAccount(accountId);
+
+    assertThat(totals.wins()).isEqualTo(3);
+    assertThat(totals.losses()).isEqualTo(2);
+    assertThat(totals.draws()).isEqualTo(1);
+    assertThat(totals.played()).isEqualTo(6);
   }
 
   private GameEntity gameEntity() {

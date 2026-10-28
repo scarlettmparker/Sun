@@ -9,6 +9,7 @@ import com.sun.medusa.codegen.types.Game;
 import com.sun.medusa.codegen.types.GameArchiveInput;
 import com.sun.medusa.codegen.types.GameMove;
 import com.sun.medusa.codegen.types.GamePage;
+import com.sun.medusa.codegen.types.GamePlayer;
 import com.sun.medusa.codegen.types.GameResponse;
 import com.sun.medusa.codegen.types.PaginationInput;
 import com.sun.medusa.graphql.services.GameGraphQLService;
@@ -54,6 +55,20 @@ public class GameDataFetcher {
   @Transactional(readOnly = true)
   public GamePage myGames(PaginationInput pagination) {
     return gameGraphQLService.myGames(pagination);
+  }
+
+  /**
+   * Lists players by account id.
+   *
+   * @param ids the account ids
+   * @return the players
+   */
+  @Audited(event = "LIST", entity = "GamePlayer")
+  @DgsData(parentType = "MedusaQueries", field = "players")
+  @PreAuthorize("@permissions.has('graphql.medusa.players')")
+  @Transactional(readOnly = true)
+  public List<GamePlayer> players(List<String> ids) {
+    return gameGraphQLService.players(ids);
   }
 
   /**

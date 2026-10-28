@@ -7,6 +7,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.sun.gaia.model.AccountEntity;
+import com.sun.gaia.service.AccountService;
 import com.sun.gaia.service.UserContextHolder;
 import com.sun.medusa.codegen.types.Game;
 import com.sun.medusa.codegen.types.GameArchiveInput;
@@ -19,6 +21,7 @@ import com.sun.medusa.model.GameEntity;
 import com.sun.medusa.model.GameMoveEntity;
 import com.sun.medusa.service.GameService;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
@@ -39,6 +42,7 @@ class GameGraphQLServiceTest {
 
   @Mock private GameService gameService;
   @Mock private GameMapper gameMapper;
+  @Mock private AccountService accountService;
 
   @InjectMocks private GameGraphQLService service;
 
@@ -54,7 +58,8 @@ class GameGraphQLServiceTest {
     entity.setId(gameId);
     Game game = Game.newBuilder().id(gameId.toString()).build();
     when(gameService.findByCode("ARCHIVE")).thenReturn(Optional.of(entity));
-    when(gameMapper.map(entity, List.of())).thenReturn(game);
+    when(accountService.findAllByIds(List.of())).thenReturn(List.of());
+    when(gameMapper.map(entity, List.of(), Map.of(), null)).thenReturn(game);
 
     assertThat(service.game("ARCHIVE")).isSameAs(game);
   }
@@ -68,6 +73,22 @@ class GameGraphQLServiceTest {
     when(gameMapper.mapMoveEntities(moves)).thenReturn(mapped);
 
     assertThat(service.moves(gameId.toString())).isSameAs(mapped);
+  }
+
+  @Test
+  void playersMapsAccountsInRequestOrder() {
+    UUID first = UUID.randomUUID();
+    UUID second = UUID.randomUUID();
+    AccountEntity account = new AccountEntity();
+    account.setId(second);
+    account.setUsername("black-player");
+    when(accountService.findAllByIds(List.of(first, second))).thenReturn(List.of(account));
+
+    var players = service.players(List.of(first.toString(), second.toString()));
+
+    assertThat(players).hasSize(2);
+    assertThat(players.get(0).getUsername()).isEqualTo(first.toString());
+    assertThat(players.get(1).getUsername()).isEqualTo("black-player");
   }
 
   @Test
@@ -85,12 +106,15 @@ class GameGraphQLServiceTest {
     Game game = Game.newBuilder().id("game").build();
     Page<GameEntity> page = new PageImpl<>(List.of(entity), PageRequest.of(1, 10), 21);
     when(gameService.findForAccount(eq(caller), any(Pageable.class))).thenReturn(page);
-    when(gameMapper.map(entity, List.of())).thenReturn(game);
+    when(gameService.recordForAccount(caller)).thenReturn(new GameService.GameTotals(1, 2, 3));
+    when(accountService.findAllByIds(List.of())).thenReturn(List.of());
+    when(gameMapper.map(entity, List.of(), Map.of(), caller)).thenReturn(game);
 
     GamePage result = service.myGames(
         new PaginationInput(1, 10, null, null, null, null));
 
     assertThat(result.getItems()).containsExactly(game);
+    assertThat(result.getRecord().getPlayed()).isEqualTo(6);
     assertThat(result.getPageInfo().getPage()).isEqualTo(1);
     assertThat(result.getPageInfo().getTotalPages()).isEqualTo(3);
     assertThat(result.getPageInfo().getHasNextPage()).isTrue();
@@ -108,6 +132,7 @@ class GameGraphQLServiceTest {
     UserContextHolder.setUserId(caller);
     Page<GameEntity> page = Page.empty();
     when(gameService.findForAccount(eq(caller), any(Pageable.class))).thenReturn(page);
+    when(gameService.recordForAccount(caller)).thenReturn(new GameService.GameTotals(0, 0, 0));
 
     service.myGames(new PaginationInput(0, 5, "createdAt", SortDirection.ASC, null, null));
 

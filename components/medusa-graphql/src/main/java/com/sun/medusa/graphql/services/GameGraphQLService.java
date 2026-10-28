@@ -1,11 +1,15 @@
 package com.sun.medusa.graphql.services;
 
 import com.sun.base.util.PageRequests;
+import com.sun.gaia.model.AccountEntity;
+import com.sun.gaia.service.AccountService;
 import com.sun.gaia.service.UserContextHolder;
 import com.sun.medusa.codegen.types.Game;
 import com.sun.medusa.codegen.types.GameArchiveInput;
 import com.sun.medusa.codegen.types.GameMove;
 import com.sun.medusa.codegen.types.GamePage;
+import com.sun.medusa.codegen.types.GamePlayer;
+import com.sun.medusa.codegen.types.GameRecord;
 import com.sun.medusa.codegen.types.PageInfo;
 import com.sun.medusa.codegen.types.PaginationInput;
 import com.sun.medusa.graphql.mappers.GameMapper;
@@ -13,7 +17,11 @@ import com.sun.medusa.model.GameEntity;
 import com.sun.medusa.model.GameMoveEntity;
 import com.sun.medusa.service.GameService;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -24,10 +32,13 @@ public class GameGraphQLService {
 
   private final GameService gameService;
   private final GameMapper gameMapper;
+  private final AccountService accountService;
 
-  public GameGraphQLService(GameService gameService, GameMapper gameMapper) {
+  public GameGraphQLService(GameService gameService, GameMapper gameMapper,
+      AccountService accountService) {
     this.gameService = gameService;
     this.gameMapper = gameMapper;
+    this.accountService = accountService;
   }
 
   /**
@@ -38,8 +49,27 @@ public class GameGraphQLService {
    */
   public Game game(String code) {
     return gameService.findByCode(code)
-        .map(entity -> gameMapper.map(entity, List.of()))
+        .map(entity -> gameMapper.map(entity, List.of(), usernamesFor(List.of(entity)),
+            UserContextHolder.getUserId()))
         .orElse(null);
+  }
+
+  /**
+   * Lists players by account id.
+   *
+   * @param ids the account ids
+   * @return the players
+   */
+  public List<GamePlayer> players(List<String> ids) {
+    List<UUID> accountIds = ids.stream().map(UUID::fromString).toList();
+    Map<UUID, String> usernames = accountService.findAllByIds(accountIds).stream()
+        .collect(Collectors.toMap(AccountEntity::getId, AccountEntity::getUsername));
+    return accountIds.stream()
+        .map(id -> GamePlayer.newBuilder()
+            .id(id.toString())
+            .username(usernames.getOrDefault(id, id.toString()))
+            .build())
+        .toList();
   }
 
   /**
@@ -65,12 +95,14 @@ public class GameGraphQLService {
     }
     Pageable pageable = toPageable(pagination);
     Page<GameEntity> result = gameService.findForAccount(caller, pageable);
+    Map<UUID, String> usernames = usernamesFor(result.getContent());
     List<Game> items = result.getContent().stream()
-        .map(entity -> gameMapper.map(entity, List.of()))
+        .map(entity -> gameMapper.map(entity, List.of(), usernames, caller))
         .toList();
     return GamePage.newBuilder()
         .items(items)
         .pageInfo(pageInfo(result))
+        .record(mapRecord(gameService.recordForAccount(caller)))
         .build();
   }
 
@@ -85,6 +117,37 @@ public class GameGraphQLService {
     List<GameMoveEntity> moves = gameMapper.mapMoves(input);
     GameEntity saved = gameService.archive(entity, moves);
     return gameMapper.map(saved, List.of());
+  }
+
+  /**
+   * Resolves usernames for the players in a page of games.
+   *
+   * @param games the games
+   * @return usernames keyed by account id
+   */
+  private Map<UUID, String> usernamesFor(List<GameEntity> games) {
+    List<UUID> ids = games.stream()
+        .flatMap(game -> Stream.of(game.getWhiteAccountId(), game.getBlackAccountId()))
+        .filter(Objects::nonNull)
+        .distinct()
+        .toList();
+    return accountService.findAllByIds(ids).stream()
+        .collect(Collectors.toMap(AccountEntity::getId, AccountEntity::getUsername));
+  }
+
+  /**
+   * Maps account game totals.
+   *
+   * @param totals the totals
+   * @return the GraphQL record
+   */
+  private GameRecord mapRecord(GameService.GameTotals totals) {
+    return GameRecord.newBuilder()
+        .wins(totals.wins())
+        .losses(totals.losses())
+        .draws(totals.draws())
+        .played(totals.played())
+        .build();
   }
 
   /**

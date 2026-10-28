@@ -7,6 +7,7 @@ import com.sun.gaia.model.AccountEntity;
 import com.sun.gaia.model.enums.AccountStatus;
 import com.sun.gaia.model.enums.AccountType;
 import com.sun.gaia.repository.AccountRepository;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -52,6 +53,16 @@ public class AccountService extends BaseService<AccountEntity> {
 
   public Optional<AccountEntity> findById(UUID id) {
     return accountRepository.findById(id);
+  }
+
+  /**
+   * Finds accounts by id.
+   *
+   * @param ids the account ids
+   * @return the matching accounts
+   */
+  public List<AccountEntity> findAllByIds(Collection<UUID> ids) {
+    return accountRepository.findAllById(ids);
   }
 
   public AccountEntity createAccount(String username, String rawPassword, UUID personId) {
