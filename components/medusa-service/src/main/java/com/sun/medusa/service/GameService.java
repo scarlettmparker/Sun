@@ -72,6 +72,9 @@ public class GameService {
    */
   public GameTotals recordForAccount(UUID accountId) {
     GameRecordProjection record = gameRepository.recordForAccount(accountId);
+    if (record == null) {
+      return new GameTotals(0, 0, 0);
+    }
     return new GameTotals((int) record.getWins(), (int) record.getLosses(),
         (int) record.getDraws());
   }
