@@ -152,7 +152,7 @@ type Game {
   boardLayoutName: String!
   status: String!
   initialState: JSON!
-  finalState: JSON!
+  finalState: JSON
   creatorAccountId: ID!
   whiteAccountId: ID
   blackAccountId: ID
@@ -161,8 +161,8 @@ type Game {
   moveCount: Int!
   createdAt: DateTime!
   startedAt: DateTime
-  finishedAt: DateTime!
-  archivedAt: DateTime!
+  finishedAt: DateTime
+  archivedAt: DateTime
   moves: [GameMove!]!
 }
 
