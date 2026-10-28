@@ -18,11 +18,15 @@ import styles from "./profile.module.css";
 type CurrentUser = NonNullable<MeQuery["gaiaQueries"]["me"]>;
 
 /**
- * Manage profile page with danger zone.
+ * Manage account page with danger zone.
  */
 const ProfilePage = () => {
   const { t } = useTranslation("home");
-  const { data: currentUser } = usePageData<CurrentUser | null>("currentUser", "currentUser", {});
+  const { data: currentUser } = usePageData<CurrentUser | null>(
+    "currentUser",
+    "currentUser",
+    {},
+  );
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
