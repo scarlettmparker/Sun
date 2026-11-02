@@ -27,7 +27,8 @@ public interface GameRepository extends BaseRepository<GameEntity> {
           AND g.winnerAccountId <> :accountId THEN 1 ELSE 0 END), 0) AS losses,
         COALESCE(SUM(CASE WHEN g.winnerAccountId IS NULL THEN 1 ELSE 0 END), 0) AS draws
       FROM GameEntity g
-      WHERE g.whiteAccountId = :accountId OR g.blackAccountId = :accountId
+      WHERE (g.whiteAccountId = :accountId OR g.blackAccountId = :accountId)
+        AND (g.result IS NULL OR g.result <> 'aborted')
       """)
   GameRecordProjection recordForAccount(@Param("accountId") UUID accountId);
 }

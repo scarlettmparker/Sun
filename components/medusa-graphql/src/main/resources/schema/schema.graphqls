@@ -157,6 +157,18 @@ type GameRecord {
   played: Int!
 }
 
+type PlayerRating {
+  accountId: ID!
+  username: String
+  rating: Float!
+  deviation: Float!
+  volatility: Float!
+  ratedGames: Int!
+  peakRating: Float!
+  provisional: Boolean!
+  lastRatedAt: DateTime
+}
+
 type Game {
   id: ID!
   code: String!
@@ -227,6 +239,9 @@ type MedusaQueries {
   game(code: String!): Game
   myGames(pagination: PaginationInput): GamePage!
   players(ids: [ID!]!): [GamePlayer!]!
+  playerRatings(ids: [ID!]!): [PlayerRating!]!
+  myRating: PlayerRating
+  leaderboard(limit: Int): [PlayerRating!]!
 }
 
 type MedusaMutations {
