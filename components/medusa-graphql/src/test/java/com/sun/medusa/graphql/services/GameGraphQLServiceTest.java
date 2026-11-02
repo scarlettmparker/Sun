@@ -153,7 +153,7 @@ class GameGraphQLServiceTest {
 
   @Test
   void archiveGameMapsInputAndMoves() {
-    GameArchiveInput input = GameArchiveInput.newBuilder().build();
+    GameArchiveInput input = GameArchiveInput.newBuilder().rated(false).build();
     GameEntity entity = new GameEntity();
     List<GameMoveEntity> moves = List.of();
     GameEntity saved = new GameEntity();
@@ -161,9 +161,13 @@ class GameGraphQLServiceTest {
     Game game = Game.newBuilder().id(saved.getId().toString()).build();
     when(gameMapper.mapInput(input)).thenReturn(entity);
     when(gameMapper.mapMoves(input)).thenReturn(moves);
-    when(gameService.archive(entity, moves)).thenReturn(saved);
+    when(gameService.archive(entity, moves))
+        .thenReturn(new GameService.ArchiveResult(saved, List.of()));
     when(gameMapper.map(saved, List.of())).thenReturn(game);
 
-    assertThat(service.archiveGame(input)).isSameAs(game);
+    com.sun.medusa.codegen.types.GameResponse response = service.archiveGame(input);
+
+    assertThat(response.getGame()).isSameAs(game);
+    assertThat(response.getRatingChanges()).isEmpty();
   }
 }

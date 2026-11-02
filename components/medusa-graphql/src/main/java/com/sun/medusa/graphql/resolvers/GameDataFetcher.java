@@ -99,9 +99,6 @@ public class GameDataFetcher {
   @PreAuthorize("@permissions.has('graphql.medusa.archiveGame')")
   @Transactional
   public GameResponse archiveGame(GameArchiveInput input) {
-    return GameResponse.newBuilder()
-        .message("Game archived")
-        .game(gameGraphQLService.archiveGame(input))
-        .build();
+    return gameGraphQLService.archiveGame(input);
   }
 }

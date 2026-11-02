@@ -34,6 +34,7 @@ class GameServiceTest {
 
   @Mock private GameRepository gameRepository;
   @Mock private GameMoveRepository moveRepository;
+  @Mock private RatingService ratingService;
 
   @InjectMocks private GameService service;
 
@@ -49,7 +50,7 @@ class GameServiceTest {
       return saved;
     });
 
-    GameEntity result = service.archive(game, moves);
+    GameEntity result = service.archive(game, moves).game();
 
     assertThat(result.getId()).isEqualTo(gameId);
     assertThat(result.getMoveCount()).isEqualTo(2);
@@ -67,8 +68,9 @@ class GameServiceTest {
     GameEntity existing = gameEntity();
     existing.setId(UUID.randomUUID());
     when(gameRepository.findByCode("ARCHIVE")).thenReturn(Optional.of(existing));
+    when(ratingService.changesForGame(existing.getId())).thenReturn(java.util.List.of());
 
-    GameEntity result = service.archive(game, moves());
+    GameEntity result = service.archive(game, moves()).game();
 
     assertThat(result).isSameAs(existing);
     verify(gameRepository, never()).save(any(GameEntity.class));

@@ -5,6 +5,7 @@ import com.sun.medusa.codegen.types.GameArchiveInput;
 import com.sun.medusa.codegen.types.GameMove;
 import com.sun.medusa.codegen.types.GameMoveInput;
 import com.sun.medusa.codegen.types.GamePlayer;
+import com.sun.medusa.codegen.types.RatingChange;
 import com.sun.medusa.model.GameEntity;
 import com.sun.medusa.model.GameMoveEntity;
 import com.sun.medusa.model.GameMoveId;
@@ -57,12 +58,37 @@ public class GameMapper {
         .viewerSeat(viewerSeat(entity, viewerId))
         .result(entity.getResult())
         .winnerAccountId(mapString(entity.getWinnerAccountId()))
+        .rated(entity.isRated())
+        .unratedReason(entity.getUnratedReason())
+        .whiteRatingBefore(entity.getWhiteRatingBefore())
+        .whiteRatingAfter(entity.getWhiteRatingAfter())
+        .whiteRatingDelta(entity.getWhiteRatingDelta())
+        .blackRatingBefore(entity.getBlackRatingBefore())
+        .blackRatingAfter(entity.getBlackRatingAfter())
+        .blackRatingDelta(entity.getBlackRatingDelta())
         .moveCount(entity.getMoveCount())
         .createdAt(mapDate(entity.getGameCreatedAt()))
         .startedAt(mapDate(entity.getStartedAt()))
         .finishedAt(mapDate(entity.getFinishedAt()))
         .archivedAt(mapDate(entity.getArchivedAt()))
         .moves(mapMoveEntities(moves))
+        .build();
+  }
+
+  /**
+   * Maps a rating change to its GraphQL shape.
+   *
+   * @param change rating change
+   * @return GraphQL rating change
+   */
+  public RatingChange mapRatingChange(com.sun.medusa.rating.RatingChange change) {
+    return RatingChange.newBuilder()
+        .accountId(change.accountId().toString())
+        .ratingBefore(change.ratingBefore())
+        .ratingAfter(change.ratingAfter())
+        .deviationBefore(change.deviationBefore())
+        .deviationAfter(change.deviationAfter())
+        .delta(change.delta())
         .build();
   }
 
@@ -85,6 +111,7 @@ public class GameMapper {
     entity.setBlackAccountId(mapUuid(input.getBlackAccountId()));
     entity.setResult(input.getResult());
     entity.setWinnerAccountId(mapUuid(input.getWinnerAccountId()));
+    entity.setRated(input.getRated());
     entity.setGameCreatedAt(mapLocalDate(input.getCreatedAt()));
     entity.setStartedAt(mapLocalDate(input.getStartedAt()));
     entity.setFinishedAt(mapLocalDate(input.getFinishedAt()));

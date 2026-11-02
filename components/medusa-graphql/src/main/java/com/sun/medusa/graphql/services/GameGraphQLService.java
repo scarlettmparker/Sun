@@ -10,8 +10,10 @@ import com.sun.medusa.codegen.types.GameMove;
 import com.sun.medusa.codegen.types.GamePage;
 import com.sun.medusa.codegen.types.GamePlayer;
 import com.sun.medusa.codegen.types.GameRecord;
+import com.sun.medusa.codegen.types.GameResponse;
 import com.sun.medusa.codegen.types.PageInfo;
 import com.sun.medusa.codegen.types.PaginationInput;
+import com.sun.medusa.codegen.types.RatingChange;
 import com.sun.medusa.graphql.mappers.GameMapper;
 import com.sun.medusa.model.GameEntity;
 import com.sun.medusa.model.GameMoveEntity;
@@ -129,13 +131,21 @@ public class GameGraphQLService {
    * Archives a finished game and its moves.
    *
    * @param input the archive input
-   * @return the stored game
+   * @return the stored game and rating changes
    */
-  public Game archiveGame(GameArchiveInput input) {
+  public GameResponse archiveGame(GameArchiveInput input) {
     GameEntity entity = gameMapper.mapInput(input);
     List<GameMoveEntity> moves = gameMapper.mapMoves(input);
-    GameEntity saved = gameService.archive(entity, moves);
-    return gameMapper.map(saved, List.of());
+    GameService.ArchiveResult result = gameService.archive(entity, moves);
+    Game game = gameMapper.map(result.game(), List.of());
+    List<RatingChange> changes = result.ratingChanges().stream()
+        .map(gameMapper::mapRatingChange)
+        .toList();
+    return GameResponse.newBuilder()
+        .message("Game archived")
+        .game(game)
+        .ratingChanges(changes)
+        .build();
   }
 
   /**

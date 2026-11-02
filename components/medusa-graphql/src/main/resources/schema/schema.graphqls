@@ -169,6 +169,15 @@ type PlayerRating {
   lastRatedAt: DateTime
 }
 
+type RatingChange {
+  accountId: ID!
+  ratingBefore: Float!
+  ratingAfter: Float!
+  deviationBefore: Float!
+  deviationAfter: Float!
+  delta: Float!
+}
+
 type Game {
   id: ID!
   code: String!
@@ -185,6 +194,14 @@ type Game {
   viewerSeat: String!
   result: String
   winnerAccountId: ID
+  rated: Boolean!
+  unratedReason: String
+  whiteRatingBefore: Float
+  whiteRatingAfter: Float
+  whiteRatingDelta: Float
+  blackRatingBefore: Float
+  blackRatingAfter: Float
+  blackRatingDelta: Float
   moveCount: Int!
   createdAt: DateTime!
   startedAt: DateTime
@@ -202,6 +219,7 @@ type GamePage {
 type GameResponse {
   message: String!
   game: Game!
+  ratingChanges: [RatingChange!]!
 }
 
 input GameMoveInput {
@@ -221,6 +239,7 @@ input GameArchiveInput {
   blackAccountId: ID
   result: String
   winnerAccountId: ID
+  rated: Boolean!
   createdAt: DateTime!
   startedAt: DateTime
   finishedAt: DateTime!

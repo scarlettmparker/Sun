@@ -68,9 +68,14 @@ class GameDataFetcherTest {
 
   @Test
   void archiveGameBuildsResponse() {
-    GameArchiveInput input = GameArchiveInput.newBuilder().build();
+    GameArchiveInput input = GameArchiveInput.newBuilder().rated(false).build();
     Game game = Game.newBuilder().id("game").build();
-    when(gameGraphQLService.archiveGame(input)).thenReturn(game);
+    GameResponse response = GameResponse.newBuilder()
+        .message("Game archived")
+        .game(game)
+        .ratingChanges(java.util.List.of())
+        .build();
+    when(gameGraphQLService.archiveGame(input)).thenReturn(response);
 
     GameResponse result = fetcher.archiveGame(input);
 

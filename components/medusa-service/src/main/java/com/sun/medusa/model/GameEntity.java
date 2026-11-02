@@ -52,6 +52,30 @@ public class GameEntity extends BaseEntity {
   @Column(name = "winner_account_id")
   private UUID winnerAccountId;
 
+  @Column(name = "rated", nullable = false)
+  private boolean rated;
+
+  @Column(name = "unrated_reason", length = 64)
+  private String unratedReason;
+
+  @Column(name = "white_rating_before")
+  private Double whiteRatingBefore;
+
+  @Column(name = "white_rating_after")
+  private Double whiteRatingAfter;
+
+  @Column(name = "white_rating_delta")
+  private Double whiteRatingDelta;
+
+  @Column(name = "black_rating_before")
+  private Double blackRatingBefore;
+
+  @Column(name = "black_rating_after")
+  private Double blackRatingAfter;
+
+  @Column(name = "black_rating_delta")
+  private Double blackRatingDelta;
+
   @Column(name = "move_count", nullable = false)
   private int moveCount;
 
@@ -153,6 +177,70 @@ public class GameEntity extends BaseEntity {
 
   public void setWinnerAccountId(UUID winnerAccountId) {
     this.winnerAccountId = winnerAccountId;
+  }
+
+  public boolean isRated() {
+    return rated;
+  }
+
+  public void setRated(boolean rated) {
+    this.rated = rated;
+  }
+
+  public String getUnratedReason() {
+    return unratedReason;
+  }
+
+  public void setUnratedReason(String unratedReason) {
+    this.unratedReason = unratedReason;
+  }
+
+  public Double getWhiteRatingBefore() {
+    return whiteRatingBefore;
+  }
+
+  public void setWhiteRatingBefore(Double whiteRatingBefore) {
+    this.whiteRatingBefore = whiteRatingBefore;
+  }
+
+  public Double getWhiteRatingAfter() {
+    return whiteRatingAfter;
+  }
+
+  public void setWhiteRatingAfter(Double whiteRatingAfter) {
+    this.whiteRatingAfter = whiteRatingAfter;
+  }
+
+  public Double getWhiteRatingDelta() {
+    return whiteRatingDelta;
+  }
+
+  public void setWhiteRatingDelta(Double whiteRatingDelta) {
+    this.whiteRatingDelta = whiteRatingDelta;
+  }
+
+  public Double getBlackRatingBefore() {
+    return blackRatingBefore;
+  }
+
+  public void setBlackRatingBefore(Double blackRatingBefore) {
+    this.blackRatingBefore = blackRatingBefore;
+  }
+
+  public Double getBlackRatingAfter() {
+    return blackRatingAfter;
+  }
+
+  public void setBlackRatingAfter(Double blackRatingAfter) {
+    this.blackRatingAfter = blackRatingAfter;
+  }
+
+  public Double getBlackRatingDelta() {
+    return blackRatingDelta;
+  }
+
+  public void setBlackRatingDelta(Double blackRatingDelta) {
+    this.blackRatingDelta = blackRatingDelta;
   }
 
   public int getMoveCount() {

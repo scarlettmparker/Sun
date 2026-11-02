@@ -5,6 +5,8 @@ import com.sun.medusa.model.GameMoveEntity;
 import com.sun.medusa.model.GameMoveId;
 import com.sun.medusa.repository.GameMoveRepository;
 import com.sun.medusa.repository.GameRecordProjection;
+import com.sun.medusa.rating.RatingChange;
+import com.sun.medusa.rating.RatingResult;
 import com.sun.medusa.repository.GameRepository;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,10 +25,15 @@ public class GameService {
 
   private final GameRepository gameRepository;
   private final GameMoveRepository moveRepository;
+  private final RatingService ratingService;
 
-  public GameService(GameRepository gameRepository, GameMoveRepository moveRepository) {
+  public GameService(
+      GameRepository gameRepository,
+      GameMoveRepository moveRepository,
+      RatingService ratingService) {
     this.gameRepository = gameRepository;
     this.moveRepository = moveRepository;
+    this.ratingService = ratingService;
   }
 
   /**
@@ -84,12 +91,13 @@ public class GameService {
    *
    * @param game the game to archive
    * @param moves the ordered moves
-   * @return the stored game
+   * @return the stored game and rating changes
    */
-  public GameEntity archive(GameEntity game, List<GameMoveEntity> moves) {
+  public ArchiveResult archive(GameEntity game, List<GameMoveEntity> moves) {
     Optional<GameEntity> existing = gameRepository.findByCode(game.getCode());
     if (existing.isPresent()) {
-      return existing.get();
+      GameEntity stored = existing.get();
+      return new ArchiveResult(stored, ratingService.changesForGame(stored.getId()));
     }
 
     game.setArchivedAt(LocalDateTime.now());
@@ -104,7 +112,56 @@ public class GameService {
       move.setId(new GameMoveId(saved.getId(), id.getPly()));
     }
     moveRepository.saveAll(moves);
-    return saved;
+
+    RatingResult ratingResult = new RatingResult(false, null, List.of());
+    if (game.isRated()) {
+      ratingResult = ratingService.applyResult(
+          saved.getId(),
+          saved.getWhiteAccountId(),
+          saved.getBlackAccountId(),
+          saved.getResult(),
+          saved.getFinishedAt());
+      applyRatingResult(saved, ratingResult);
+      saved = gameRepository.save(saved);
+    }
+
+    return new ArchiveResult(saved, ratingResult.changes());
+  }
+
+  /**
+   * Applies rating snapshots to an archived game.
+   *
+   * @param game stored game
+   * @param result rating result
+   */
+  private void applyRatingResult(GameEntity game, RatingResult result) {
+    if (result.changes().isEmpty()) {
+      game.setRated(false);
+      game.setUnratedReason(result.unratedReason());
+      return;
+    }
+
+    for (RatingChange change : result.changes()) {
+      if (change.accountId().equals(game.getWhiteAccountId())) {
+        game.setWhiteRatingBefore(change.ratingBefore());
+        game.setWhiteRatingAfter(change.ratingAfter());
+        game.setWhiteRatingDelta(change.delta());
+      } else if (change.accountId().equals(game.getBlackAccountId())) {
+        game.setBlackRatingBefore(change.ratingBefore());
+        game.setBlackRatingAfter(change.ratingAfter());
+        game.setBlackRatingDelta(change.delta());
+      }
+    }
+    game.setRated(true);
+  }
+
+  /**
+   * Archived game and the rating changes produced for it.
+   *
+   * @param game stored game
+   * @param ratingChanges rating changes
+   */
+  public record ArchiveResult(GameEntity game, List<RatingChange> ratingChanges) {
   }
 
   /**
