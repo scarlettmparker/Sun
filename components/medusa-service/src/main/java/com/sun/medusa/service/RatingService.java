@@ -100,6 +100,19 @@ public class RatingService {
   }
 
   /**
+   * Loads stored rating changes for a game.
+   *
+   * @param gameId game id
+   * @return rating changes
+   */
+  @Transactional(readOnly = true)
+  public List<RatingChange> changesForGame(UUID gameId) {
+    return historyRepository.findByGameId(gameId).stream()
+        .map(this::toChange)
+        .toList();
+  }
+
+  /**
    * Applies a game result to both players.
    *
    * @param gameId archived game id
