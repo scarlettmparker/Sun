@@ -96,7 +96,7 @@ public class TorrentCompletionService {
           String matchedKey = null;
           for (String uk : uploadedKeys) {
             String ukName = uk.contains("/") ? uk.substring(uk.lastIndexOf('/') + 1) : uk;
-            if (ukName.equals(fileName) || fileName.startsWith(ukName) || ukName.startsWith(fileName)) {
+            if (ukName.equals(fileName)) {
               matchedKey = uk;
               break;
             }
@@ -117,7 +117,7 @@ public class TorrentCompletionService {
             });
             Path mp4 = result.output();
             try {
-              String mp4Key = matchedKey + ".mp4";
+              String mp4Key = toMp4Key(matchedKey);
               putFile(job.getBucket(), mp4Key, mp4);
               uploadedKeys.add(mp4Key);
               if (!transcodeProperties.isKeepOriginal()) {
@@ -372,6 +372,21 @@ public class TorrentCompletionService {
    */
   private String truncate(String value, int max) {
     return value.length() <= max ? value : value.substring(0, max);
+  }
+
+  /**
+   * Maps a source video key to its MP4 output key.
+   *
+   * @param key the source key.
+   * @return the source key with its extension replaced by .mp4.
+   */
+  static String toMp4Key(String key) {
+    int dot = key.lastIndexOf('.');
+    int slash = key.lastIndexOf('/');
+    if (dot > slash) {
+      return key.substring(0, dot) + ".mp4";
+    }
+    return key + ".mp4";
   }
 
   /**

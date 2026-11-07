@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import com.sun.dionysus.transcode.TranscodeProperties;
 import com.sun.dionysus.transcode.TranscodeResult;
 import com.sun.dionysus.transcode.TranscodeService;
 import java.io.ByteArrayInputStream;
@@ -42,6 +43,7 @@ class TranscodeControllerTest {
 
   @Mock private S3Client s3Client;
   @Mock private TranscodeService transcodeService;
+  @Mock private TranscodeProperties transcodeProperties;
   @Mock private S3Presigner s3Presigner;
   @Spy @InjectMocks private TranscodeController controller;
 
@@ -54,14 +56,15 @@ class TranscodeControllerTest {
     when(transcodeService.transcode(any(Path.class), isNull()))
         .thenReturn(new TranscodeResult(mp4, false, "h264_nvenc"));
     doNothing().when(controller).uploadViaPresign(anyString(), anyString(), any(Path.class));
+    when(transcodeProperties.isKeepOriginal()).thenReturn(false);
 
     ResponseEntity<String> response =
         controller.transcode(new TranscodeController.TranscodeRequest("bucket", "movie.mkv"));
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(response.getBody()).isEqualTo("movie.mkv.mp4");
+    assertThat(response.getBody()).isEqualTo("movie.mp4");
     verify(transcodeService).transcode(any(Path.class), isNull());
-    verify(controller).uploadViaPresign("bucket", "movie.mkv.mp4", mp4);
+    verify(controller).uploadViaPresign("bucket", "movie.mp4", mp4);
   }
 
   @Test

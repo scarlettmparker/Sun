@@ -1,5 +1,6 @@
 package com.sun.dionysus.rest;
 import com.sun.base.audit.annotation.Audited;
+import com.sun.dionysus.transcode.TranscodeProperties;
 import com.sun.dionysus.transcode.TranscodeResult;
 import com.sun.dionysus.transcode.TranscodeService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
@@ -54,6 +56,9 @@ public class FileViewController {
 
   @Autowired
   private TranscodeService transcodeService;
+
+  @Autowired
+  private TranscodeProperties transcodeProperties;
 
   /**
    * Streams the object for inline viewing. Supports HTTP Range for seeking.
@@ -177,8 +182,11 @@ public class FileViewController {
       TranscodeResult result = transcodeService.transcode(input, null);
       output = result.output();
 
-      String mp4Key = key + ".mp4";
+      String mp4Key = toMp4Key(key);
       uploadViaPresign(bucket, mp4Key, output);
+      if (!transcodeProperties.isKeepOriginal()) {
+        s3Client.deleteObject(DeleteObjectRequest.builder().bucket(bucket).key(key).build());
+      }
       log.info("Transcoded {} to {} using {}", key, mp4Key, result.encoder());
       return ResponseEntity.ok(mp4Key);
     } catch (Exception e) {
@@ -189,6 +197,21 @@ public class FileViewController {
       try { if (input != null) Files.deleteIfExists(input); } catch (Exception ignored) {}
       try { if (output != null) Files.deleteIfExists(output); } catch (Exception ignored) {}
     }
+  }
+
+  /**
+   * Maps a source video key to its MP4 output key.
+   *
+   * @param key the source key.
+   * @return the source key with its extension replaced by .mp4.
+   */
+  static String toMp4Key(String key) {
+    int dot = key.lastIndexOf('.');
+    int slash = key.lastIndexOf('/');
+    if (dot > slash) {
+      return key.substring(0, dot) + ".mp4";
+    }
+    return key + ".mp4";
   }
 
   /**

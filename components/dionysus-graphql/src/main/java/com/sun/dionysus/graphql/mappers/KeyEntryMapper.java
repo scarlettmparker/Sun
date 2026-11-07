@@ -31,7 +31,7 @@ public class KeyEntryMapper {
     KeyEntry entry = new KeyEntry();
     entry.setKey(prefix.prefix());
     entry.setIsDirectory(true);
-    entry.setSize(0);
+    entry.setSize(0L);
     return entry;
   }
 
@@ -47,7 +47,7 @@ public class KeyEntryMapper {
     KeyEntry entry = new KeyEntry();
     entry.setKey(prefix.prefix());
     entry.setIsDirectory(true);
-    entry.setSize(0);
+    entry.setSize(0L);
     if (keyDetail != null) {
       entry.setName(keyDetail.getName());
       entry.setDescription(keyDetail.getDescription());
@@ -66,7 +66,7 @@ public class KeyEntryMapper {
     KeyEntry entry = new KeyEntry();
     entry.setKey(object.key());
     entry.setIsDirectory(false);
-    entry.setSize(object.size() == null ? 0 : object.size().intValue());
+    entry.setSize(object.size() == null ? 0L : object.size().longValue());
     if (object.lastModified() != null) {
       entry.setLastModified(object.lastModified().toString());
     }
@@ -85,7 +85,7 @@ public class KeyEntryMapper {
     KeyEntry entry = new KeyEntry();
     entry.setKey(object.key());
     entry.setIsDirectory(false);
-    entry.setSize(object.size() == null ? 0 : object.size().intValue());
+    entry.setSize(object.size() == null ? 0L : object.size().longValue());
     if (object.lastModified() != null) {
       entry.setLastModified(object.lastModified().toString());
     }
@@ -103,7 +103,7 @@ public class KeyEntryMapper {
     KeyEntry entry = new KeyEntry();
     entry.setKey(job.getTargetKeyPath());
     entry.setIsDirectory(job.getTargetKeyPath().endsWith("/"));
-    entry.setSize((int) Math.min(job.getTotalBytes(), Integer.MAX_VALUE));
+    entry.setSize(job.getTotalBytes());
     if (job.getMagnetDetail() != null) {
       entry.setName(job.getMagnetDetail().getDisplayName());
     }

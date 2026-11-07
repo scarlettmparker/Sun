@@ -1,5 +1,6 @@
 package com.sun.dionysus.rest;
 import com.sun.base.audit.annotation.Audited;
+import com.sun.dionysus.transcode.TranscodeProperties;
 import com.sun.dionysus.transcode.TranscodeResult;
 import com.sun.dionysus.transcode.TranscodeService;
 import java.io.IOException;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
@@ -37,6 +39,9 @@ public class TranscodeController {
 
   @Autowired
   private TranscodeService transcodeService;
+
+  @Autowired
+  private TranscodeProperties transcodeProperties;
 
   @Autowired
   @Qualifier("internalS3Presigner")
@@ -79,8 +84,12 @@ public class TranscodeController {
       TranscodeResult result = transcodeService.transcode(input, null);
       output = result.output();
 
-      String mp4Key = key + ".mp4";
+      String mp4Key = toMp4Key(key);
       uploadViaPresign(req.bucket(), mp4Key, output);
+      if (!transcodeProperties.isKeepOriginal()) {
+        s3Client.deleteObject(DeleteObjectRequest.builder()
+            .bucket(req.bucket()).key(key).build());
+      }
 
       log.info("Transcoded {} to {} using {}", key, mp4Key, result.encoder());
       return ResponseEntity.ok(mp4Key);
@@ -101,6 +110,21 @@ public class TranscodeController {
       } catch (IOException ignored) {
       }
     }
+  }
+
+  /**
+   * Maps a source video key to its MP4 output key.
+   *
+   * @param key the source key.
+   * @return the source key with its extension replaced by .mp4.
+   */
+  static String toMp4Key(String key) {
+    int dot = key.lastIndexOf('.');
+    int slash = key.lastIndexOf('/');
+    if (dot > slash) {
+      return key.substring(0, dot) + ".mp4";
+    }
+    return key + ".mp4";
   }
 
   /**

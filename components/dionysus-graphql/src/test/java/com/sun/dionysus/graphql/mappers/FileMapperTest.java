@@ -25,7 +25,7 @@ class FileMapperTest {
     File result = fileMapper.mapObject(object);
 
     assertThat(result.getKey()).isEqualTo("folder/file.txt");
-    assertThat(result.getSize()).isEqualTo(123);
+    assertThat(result.getSize()).isEqualTo(123L);
     assertThat(result.getLastModified()).isEqualTo("2024-01-01T10:00:00Z");
   }
 }

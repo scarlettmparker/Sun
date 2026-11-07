@@ -82,13 +82,13 @@ class TorrentCompletionServiceTest {
 
     assertThat(job.getStatus()).isEqualTo(TorrentStatus.COMPLETED);
     assertThat(job.getProgress()).isEqualTo(1.0);
-    verify(service).putFile("bucket", "tv/movie/movie.mkv.mp4", mp4);
+    verify(service).putFile("bucket", "tv/movie/movie.mp4", mp4);
     verify(s3Client, never()).deleteObject(any(DeleteObjectRequest.class));
     verify(keyDetailService)
         .createOrUpdateDetail(eq("bucket"), eq("tv/movie/movie.mkv"), eq("movie.mkv"), anyString());
     verify(keyDetailService)
         .createOrUpdateDetail(
-            eq("bucket"), eq("tv/movie/movie.mkv.mp4"), eq("movie.mkv.mp4"), anyString());
+            eq("bucket"), eq("tv/movie/movie.mp4"), eq("movie.mp4"), anyString());
     verify(transmissionGateway).removeTransmission(jobId, true);
   }
 
@@ -124,7 +124,7 @@ class TorrentCompletionServiceTest {
             eq("bucket"), eq("tv/movie/movie.mkv"), eq("movie.mkv"), anyString());
     verify(keyDetailService)
         .createOrUpdateDetail(
-            eq("bucket"), eq("tv/movie/movie.mkv.mp4"), eq("movie.mkv.mp4"), anyString());
+            eq("bucket"), eq("tv/movie/movie.mp4"), eq("movie.mp4"), anyString());
   }
 
   @Test
@@ -151,7 +151,7 @@ class TorrentCompletionServiceTest {
         .createOrUpdateDetail(eq("bucket"), eq("tv/movie/movie.mkv"), eq("movie.mkv"), anyString());
     verify(keyDetailService, never())
         .createOrUpdateDetail(
-            eq("bucket"), eq("tv/movie/movie.mkv.mp4"), eq("movie.mkv.mp4"), anyString());
+            eq("bucket"), eq("tv/movie/movie.mp4"), eq("movie.mp4"), anyString());
   }
 
   @Test

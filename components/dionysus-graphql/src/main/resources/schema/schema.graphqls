@@ -22,7 +22,7 @@ type Bucket {
 # Represents a file object in a bucket.
 type File {
   key: String!
-  size: Int
+  size: Long
   lastModified: String
 }
 
@@ -63,7 +63,7 @@ type FilestoreQueries {
 type KeyEntry {
   key: String!
   isDirectory: Boolean!
-  size: Int
+  size: Long
   lastModified: String
   name: String
   description: String

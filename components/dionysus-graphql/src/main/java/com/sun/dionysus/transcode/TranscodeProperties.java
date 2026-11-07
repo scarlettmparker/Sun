@@ -41,7 +41,7 @@ public class TranscodeProperties {
   /**
    * Whether the original video is retained after a successful transcode.
    */
-  private boolean keepOriginal = true;
+  private boolean keepOriginal = false;
 
   /**
    * Maximum number of concurrent transcode processes.

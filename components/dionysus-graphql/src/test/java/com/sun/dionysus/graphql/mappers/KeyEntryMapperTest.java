@@ -29,7 +29,7 @@ class KeyEntryMapperTest {
 
     assertThat(result.getKey()).isEqualTo("folder/");
     assertThat(result.getIsDirectory()).isTrue();
-    assertThat(result.getSize()).isEqualTo(0);
+    assertThat(result.getSize()).isEqualTo(0L);
     assertThat(result.getLastModified()).isNull();
   }
 
@@ -60,7 +60,7 @@ class KeyEntryMapperTest {
 
     assertThat(result.getKey()).isEqualTo("folder/file.txt");
     assertThat(result.getIsDirectory()).isFalse();
-    assertThat(result.getSize()).isEqualTo(123);
+    assertThat(result.getSize()).isEqualTo(123L);
     assertThat(result.getLastModified()).isEqualTo("2024-01-01T10:00:00Z");
   }
 
@@ -102,7 +102,7 @@ class KeyEntryMapperTest {
 
     assertThat(result.getKey()).isEqualTo("ubuntu.iso");
     assertThat(result.getIsDirectory()).isFalse();
-    assertThat(result.getSize()).isEqualTo(500);
+    assertThat(result.getSize()).isEqualTo(500L);
     assertThat(result.getName()).isEqualTo("ubuntu.iso");
     assertThat(result.getTorrent()).isNotNull();
     assertThat(result.getTorrent().getStatus()).isEqualTo(TorrentJobStatus.DOWNLOADING);
