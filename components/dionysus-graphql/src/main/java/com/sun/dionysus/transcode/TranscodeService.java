@@ -26,7 +26,7 @@ import org.springframework.stereotype.Service;
 public class TranscodeService {
 
   private static final Logger logger = LoggerFactory.getLogger(TranscodeService.class);
-  private static final Set<String> MP4_AUDIO_CODECS = Set.of("aac", "mp3", "mp2", "ac3", "eac3");
+  private static final Set<String> MP4_AUDIO_CODECS = Set.of("aac", "mp3", "mp2");
   private static final Set<String> REMUX_PIXEL_FORMATS = Set.of("yuv420p", "yuvj420p", "nv12");
   private static final Set<String> NVDEC_CODECS = Set.of(
       "h264", "hevc", "av1", "vp9", "vp8", "mpeg2video", "vc1");
@@ -204,6 +204,8 @@ public class TranscodeService {
       } else {
         command.add("-c:a");
         command.add("aac");
+        command.add("-ac");
+        command.add("2");
         command.add("-b:a");
         command.add(AUDIO_BITRATE_KBPS + "k");
       }

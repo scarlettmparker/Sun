@@ -89,7 +89,7 @@ class TranscodeServiceTest {
 
     List<String> command = service.buildCommand(Path.of("/in.mkv"), Path.of("/out.mp4"), info, true);
 
-    assertThat(command).containsSequence("-c:a", "aac", "-b:a", "384k");
+    assertThat(command).containsSequence("-c:a", "aac", "-ac", "2", "-b:a", "384k");
   }
 
   @Test
@@ -110,7 +110,8 @@ class TranscodeServiceTest {
     TranscodeService service = new TranscodeService(new TranscodeProperties());
 
     assertThat(service.canCopyAudio("AAC")).isTrue();
-    assertThat(service.canCopyAudio("eac3")).isTrue();
+    assertThat(service.canCopyAudio("eac3")).isFalse();
+    assertThat(service.canCopyAudio("ac3")).isFalse();
     assertThat(service.canCopyAudio("dts")).isFalse();
     assertThat(service.canCopyAudio(null)).isFalse();
   }
