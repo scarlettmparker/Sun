@@ -110,7 +110,7 @@ type Run = {
 
 const SUN_ROOT = resolve(import.meta.dir, "../..");
 const ROOT = process.env.E2E_RUNNER_ROOT ?? join(homedir(), ".local/share/sun-e2e");
-const PORT = Number(process.env.E2E_RUNNER_PORT ?? "8090");
+const PORT = Number(process.env.E2E_RUNNER_PORT ?? "8091");
 const TOKEN = process.env.E2E_RUNNER_TOKEN ?? "";
 const JWT_SECRET =
   process.env.E2E_JWT_SECRET ??

@@ -96,8 +96,9 @@ and `run.json`. The long-lived backend log is at
 
 The PC does not accept inbound traffic, so the runner is exposed through the VPS.
 
-- `sun-e2e-tunnel.service` keeps an SSH reverse tunnel to `127.0.0.1:8090` on the VPS.
-- The VPS nginx site `e2e-runner.scarlettparker.co.uk` proxies to `127.0.0.1:8090`.
+- `sun-e2e-runner.service` listens on `127.0.0.1:8091` locally.
+- `sun-e2e-tunnel.service` keeps an SSH reverse tunnel from `127.0.0.1:8091` on the VPS to `127.0.0.1:8091`.
+- The VPS nginx site `e2e-runner.scarlettparker.co.uk` proxies to `127.0.0.1:8091`.
 - The Cloudflare A record points at the VPS.
 
 Woodpecker secrets:

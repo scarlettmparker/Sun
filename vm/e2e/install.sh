@@ -19,7 +19,7 @@ mkdir -p "$CONFIG_DIR" "$UNIT_DIR"
 if [[ ! -f "$ENV_FILE" ]]; then
   umask 077
   {
-    printf 'E2E_RUNNER_PORT=8090\n'
+    printf 'E2E_RUNNER_PORT=8091\n'
     printf 'E2E_RUNNER_TOKEN=%s\n' "$(openssl rand -hex 32)"
   } > "$ENV_FILE"
 fi
