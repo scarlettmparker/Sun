@@ -21,10 +21,10 @@ public class SubtitleEntity extends BaseEntity {
   @Column(nullable = false)
   private String bucket;
 
-  @Column(nullable = false)
+  @Column(nullable = false, columnDefinition = "text")
   private String keyPath;
 
-  @Column(nullable = false)
+  @Column(nullable = false, columnDefinition = "text")
   private String subtitleKey;
 
   @Column(nullable = false)

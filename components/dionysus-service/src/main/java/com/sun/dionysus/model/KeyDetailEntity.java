@@ -19,10 +19,10 @@ public class KeyDetailEntity extends BaseEntity {
   @Column(nullable = false)
   private String bucket;
 
-  @Column(nullable = false)
+  @Column(nullable = false, columnDefinition = "text")
   private String keyPath;
 
-  @Column
+  @Column(columnDefinition = "text")
   private String name;
 
   @Column(columnDefinition = "text")
